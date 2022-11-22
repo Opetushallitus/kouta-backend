@@ -13,7 +13,8 @@ import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
 
-trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
+trait SorakuvausFixture extends AccessControlSpec {
+  this: KoutaIntegrationSpec =>
 
   val SorakuvausPath = "/sorakuvaus"
 
@@ -21,7 +22,7 @@ trait SorakuvausFixture extends KoutaIntegrationSpec with AccessControlSpec {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
     val sorakuvausServiceValidation =
-      new SorakuvausServiceValidation(organisaatioService, koulutusKoodiClient, KoulutusDAO)
+      new SorakuvausServiceValidation(koulutusKoodiClient, KoulutusDAO)
     new SorakuvausService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

@@ -2,22 +2,18 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient}
-import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.service.{HakuServiceValidation, KoutaValidationException, OrganisaatioService}
+import fi.oph.kouta.service.{HakuServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{BaseServiceValidationSpec, BaseValidationSpec, ValidationError}
+import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import org.scalatest.Assertion
-import org.scalatest.matchers.must.Matchers.contain
-import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 import java.util.UUID
-import scala.util.{Failure, Try}
 
 class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
-  val organisaatioService  = mock[OrganisaatioService]
   val hakuKoodiClient      = mock[HakuKoodiClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val hakukohdeDao         = mock[HakukohdeDAO]
@@ -32,10 +28,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   val maxWithOidMetadata = maxWithOid.metadata.get
 
   override val validator =
-    new HakuServiceValidation(organisaatioService, hakuKoodiClient, hakemusPalveluClient, hakukohdeDao)
-  val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
-  val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
-  val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
+    new HakuServiceValidation(hakuKoodiClient, hakemusPalveluClient, hakukohdeDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -71,7 +64,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
         ValidationError("oid", notMissingMsg(Some(HakuOid("1.2.3"))))
       )
     )
-    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(), kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))

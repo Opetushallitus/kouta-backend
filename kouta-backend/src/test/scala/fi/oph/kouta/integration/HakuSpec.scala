@@ -5,13 +5,13 @@ import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.integration.fixture.HakuFixture
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 
-class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture {
+class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Haku)
 
@@ -245,6 +245,20 @@ class HakuSpec extends KoutaIntegrationSpec with AccessControlSpec with Everythi
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, readSessions(haku.organisaatioOid))
+  }
+
+  it should "allow organisaatioOid change if user had rights to new organisaatio" in {
+    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
+    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(organisaatioOid = LukioOid), lastModified, 403, yliopistotSession)
   }
 
   it should "deny indexer access" in {

@@ -1,15 +1,16 @@
 package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
 import org.json4s.jackson.Serialization.read
+import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-trait KeywordFixture extends KoutaIntegrationSpec with AccessControlSpec {
+trait KeywordFixture extends ScalatraFlatSpec {
+  this: KoutaIntegrationSpec =>
   val AsiasanaPath = "/asiasana"
   val AmmattinimikePath = "/ammattinimike"
 

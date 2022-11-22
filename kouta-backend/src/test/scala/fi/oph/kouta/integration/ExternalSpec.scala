@@ -9,7 +9,7 @@ import fi.oph.kouta.integration.fixture.ExternalFixture
 import fi.oph.kouta.security.{Authority, ExternalSession, Role}
 import fi.oph.kouta.servlet.Authenticated
 
-class ExternalSpec extends ExternalFixture with CreateTests with ModifyTests {
+class ExternalSpec extends KoutaIntegrationSpec with ExternalFixture with CreateTests with ModifyTests {
   override def beforeAll(): Unit = {
     super.beforeAll()
     externalSession = addTestSession(Role.External, OphOid)
@@ -146,7 +146,7 @@ trait TestBase {
 }
 
 trait CreateTests extends TestBase {
-  this: ExternalFixture with AccessControlSpec =>
+  this: KoutaIntegrationSpec with ExternalFixture with AccessControlSpec =>
 
   def executeCreateTests[E <: AnyRef](
       entityName: String,
@@ -188,7 +188,7 @@ trait CreateTests extends TestBase {
 }
 
 trait ModifyTests extends TestBase {
-  this: ExternalFixture with AccessControlSpec =>
+  this: KoutaIntegrationSpec with ExternalFixture with AccessControlSpec =>
 
   def executeModifyTests[E](
       entityName: String,

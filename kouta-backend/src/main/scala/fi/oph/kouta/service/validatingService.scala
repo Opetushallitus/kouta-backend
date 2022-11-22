@@ -8,13 +8,12 @@ import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
 
 import java.util.UUID
+import scala.util.{Failure, Success, Try}
 
 trait ValidatingService[E <: Validatable] {
   def validateEntity(e: E, oldE: Option[E]): IsValid
   def validateEntityOnJulkaisu(e: E): IsValid = NoErrors
   def validateInternalDependenciesWhenDeletingEntity(e: E): IsValid
-
-  def organisaatioService: OrganisaatioService
 
   def withValidation[R](e: E, oldE: Option[E])(f: E => R): R = {
     validate(e, oldE) match {
@@ -49,19 +48,26 @@ trait ValidatingService[E <: Validatable] {
     errors
   }
 
-  def throwValidationErrors(errors: IsValid): Unit =
-    if (errors.nonEmpty) throw KoutaValidationException(errors)
+  def koodiUriTipText(koodiUri: String): Option[String] =
+    Some(s"$koodiUri#<versionumero>, esim. $koodiUri#1")
+}
 
-  def validateTarjoajat(tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
+trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
+  def organisaatioService: OrganisaatioService
+  def koulutusKoodiClient: KoulutusKoodiClient
+  def sorakuvausDAO: SorakuvausDAO
+
+  def validateTarjoajat(koulutustyyppi: Koulutustyyppi, tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
     val newTarjoajat = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
     val validTarjoajat = newTarjoajat.filter(_.isValid)
-    var unknownTarjoajat = Set[OrganisaatioOid]()
+    var tarjoajatWoRequiredKoulutustyyppi = Seq[OrganisaatioOid]()
     var organisaatioServiceOk = true
-    if (validTarjoajat.nonEmpty)
-      organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(validTarjoajat.toSet) match {
-        case Right(unknownOrganisationOids) => unknownTarjoajat = unknownOrganisationOids
-        case _ => organisaatioServiceOk = false
-      }
+    Try[Seq[OrganisaatioOid]] {
+      validTarjoajat.filterNot(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(_)._2.contains(koulutustyyppi))
+    } match {
+      case Success(tarjoajaOidsWoRequiredKoulutustyyppi) => tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
+      case Failure(_) => organisaatioServiceOk = false
+    }
     validateIfTrueOrElse(
       organisaatioServiceOk,
       validateIfNonEmpty[OrganisaatioOid](
@@ -70,17 +76,12 @@ trait ValidatingService[E <: Validatable] {
         (oid, path) =>
           validateIfSuccessful(
             assertTrue(oid.isValid, path, validationMsg(oid.s)),
-            assertFalse(unknownTarjoajat.contains(oid), path, unknownTarjoajaOid(oid))
+            assertFalse(tarjoajatWoRequiredKoulutustyyppi.contains(oid), path, tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi))
           )
       ),
       error("tarjoajat", organisaatioServiceFailureMsg)
     )
   }
-}
-
-trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
-  def koulutusKoodiClient: KoulutusKoodiClient
-  def sorakuvausDAO: SorakuvausDAO
 
   def validateSorakuvausIntegrity(
       sorakuvausId: Option[UUID],
@@ -127,7 +128,6 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
       }
     )
   }
-
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {

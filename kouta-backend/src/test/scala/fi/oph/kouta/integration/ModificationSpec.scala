@@ -3,7 +3,6 @@ package fi.oph.kouta.integration
 import java.net.URLEncoder
 import java.time.Instant.now
 import java.util.UUID
-
 import fi.oph.kouta.TestData.inFuture
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -12,8 +11,7 @@ import fi.oph.kouta.security.Role
 import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
-
-class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with EverythingFixture with IndexerFixture {
+class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -50,6 +48,9 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   }
 
   def updateTestData(): Unit = {
+    // Ilman alla olevaa sleeppiä yksi testi feilasi joissakin (nopeammissa?) ympäristöissä.
+    // Syy oli se, että timestampAfterInserts osui samalle sekunnille alla olevien update-operaatioiden kanssa.
+    Thread.sleep(1500)
     updateInKoulutusTable(0)
     updateInKoulutuksenTarjoajatTable(1)
     deleteInKoulutuksenTarjoajatTable(2)
@@ -111,13 +112,12 @@ class ModificationSpec extends KoutaIntegrationSpec with AccessControlSpec with 
   }
 
   it should "return only modified oids 1" in {
-
     val lastModifiedEncoded = URLEncoder.encode(timestampAfterInserts, "UTF-8")
 
     get(s"$IndexerPath/modifiedSince/$lastModifiedEncoded", headers = Seq(sessionHeader(indexerSession))) {
       status should be(200)
       val result = read[ListEverything](body)
-      result.koulutukset should contain theSameElementsAs List(koulutusOids.head, koulutusOids(1), koulutusOids(2)).map(KoulutusOid)
+      result.koulutukset should contain theSameElementsAs List(koulutusOids.head, koulutusOids(1), koulutusOids(2), koulutusOids(4), koulutusOids(5)).map(KoulutusOid)
       result.toteutukset should contain theSameElementsAs List(toteutusOids(3), toteutusOids(4), toteutusOids(5)).map(ToteutusOid)
       result.haut should contain theSameElementsAs List(hakuOids(6), hakuOids(7)).map(HakuOid)
       result.hakukohteet should contain theSameElementsAs List(hakukohdeOids(8), hakukohdeOids(9), hakukohdeOids(10), hakukohdeOids(11)).map(HakukohdeOid)

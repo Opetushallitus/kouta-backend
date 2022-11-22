@@ -3,24 +3,18 @@ package fi.oph.kouta.security
 
 import java.net.InetAddress
 import java.util.UUID
-
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.mocks.OrganisaatioServiceMock
+import fi.oph.kouta.domain.oid.{OrganisaatioOid}
+import fi.oph.kouta.mocks.{SpecWithMocks}
 import fi.oph.kouta.service.{AuthorizationService, OrganisaatioFixture, OrganizationAuthorizationFailedException, RoleAuthorizationFailedException}
 import fi.oph.kouta.servlet.Authenticated
 
-class AuthorizationServiceSpec extends OrganisaatioFixture with OrganisaatioServiceMock {
+class AuthorizationServiceSpec extends SpecWithMocks with OrganisaatioFixture {
 
   lazy val oc = organisaatioService
 
   lazy val TestService: AuthorizationService = new AuthorizationService {
     override val organisaatioService = oc
-  }
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    mockOrganisaatioResponse()
   }
 
   val paakayttajaSession = CasSession(ServiceTicket("ST-123"), "1.2.3.1234",

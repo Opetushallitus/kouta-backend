@@ -44,10 +44,10 @@ object NameHelper {
     }
   }
   def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
-      lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
-        case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
-        case _             => None
-      }
+    lukioKoulutusMetadata.opintojenLaajuusKoodiUri match {
+      case Some(laajuus) => Some(laajuus.split("#").head.split('_').last)
+      case _             => None
+    }
   }
   def generateLukioToteutusDisplayName(
       toteutusMetadata: LukioToteutusMetadata,
@@ -57,7 +57,7 @@ object NameHelper {
   ): Kielistetty = {
     val yleislinjaNimiOsa = kaannokset.get("toteutuslomake.lukionYleislinjaNimiOsa")
     val opintopistetta    = kaannokset.get("yleiset.opintopistetta")
-    val lukiolinjat = toteutusMetadata.painotukset ++ toteutusMetadata.erityisetKoulutustehtavat
+    val lukiolinjat       = toteutusMetadata.painotukset ++ toteutusMetadata.erityisetKoulutustehtavat
 
     val hasYleislinja = toteutusMetadata.yleislinja
 
@@ -115,10 +115,27 @@ object NameHelper {
 
   def generateMuokkaajanNimi(henkilo: Henkilo): String = {
     val kutsumanimi = henkilo.kutsumanimi.getOrElse("")
-    val etunimet = henkilo.etunimet.getOrElse("")
-    val lastname = henkilo.sukunimi.getOrElse("")
+    val etunimet    = henkilo.etunimet.getOrElse("")
+    val lastname    = henkilo.sukunimi.getOrElse("")
 
     val firstname = if (kutsumanimi.nonEmpty) kutsumanimi else etunimet
     s"${firstname} ${lastname}".trim()
+  }
+
+  def kielistettyWoNullValues(kielistetty: Kielistetty): Kielistetty =
+    kielistetty.filter({case (_, valueStr) => valueStr != null})
+
+  def mergeNames(source: Kielistetty, target: Kielistetty, kielivalinta: Seq[Kieli]): Kielistetty = {
+    val targetWoNulls = kielistettyWoNullValues(target)
+    kielistettyWoNullValues(source)
+      .filterKeys(kielivalinta.contains(_))
+      .map({ case (kieli, nameItem) =>
+        if (targetWoNulls.getOrElse(kieli, "").isEmpty) (kieli, nameItem) else (kieli, target(kieli))
+      })
+  }
+
+  def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean = {
+    val nimiWoNullValues = kielistettyWoNullValues(nimi)
+    kielivalinta.exists(nimiWoNullValues.getOrElse(_, "").isEmpty)
   }
 }

@@ -3,7 +3,7 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, NoErrors, ValidatableSubEntity}
 
 package object toteutusMetadata {
 
@@ -837,9 +837,7 @@ case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
                   apuraha: Option[Apuraha] = None,
                   suunniteltuKestoVuodet: Option[Int] = None,
                   suunniteltuKestoKuukaudet: Option[Int] = None,
-                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends ValidatableSubEntity {
-  def validate(tila: Julkaisutila, kielivalinta: Seq[Kieli], path: String): IsValid = NoErrors
-
+                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends JulkaisuValidatableSubEntity {
   override def validateOnJulkaisu(path: String): IsValid = and(
     validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
   )

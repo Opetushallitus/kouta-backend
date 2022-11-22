@@ -1,0 +1,22 @@
+# Vaihda host_virkailija ja cas_url osoittamaan siihen ympäristöön, minkä palveluja haluat käyttää
+---
+host_postgresql_kouta: localhost
+host_postgresql_kouta_port: 5433
+postgres_app_user: oph
+host_postgresql_kouta_app_password: oph
+host_virkailija: virkailija.hahtuvaopintopolku.fi
+cas_url: https://virkailija.hahtuvaopintopolku.fi/cas
+kouta_backend_cas_username: kouta-backend
+kouta_backend_cas_password:
+kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login
+kouta_backend_sqs_endpoint: http://localhost:4566
+kouta_backend_sqs_queue_priority: koutaIndeksoijaPriority
+kouta_backend_sqs_region:
+kouta_backend_s3_region: eu-west-1
+kouta_backend_s3_image_bucket: konfo-files.untuvaopintopolku.fi
+kouta_backend_s3_image_bucket_public_url: https://konfo-files.untuvaopintopolku.fi
+kouta_external_api_modify_enabled: true
+kouta_backend_elasticsearch_url: http://localhost:9200
+kouta_backend_elasticsearch_auth_enabled: false
+kouta_backend_elasticsearch_username: DUMMY
+kouta_backend_elasticsearch_password: DUMMY

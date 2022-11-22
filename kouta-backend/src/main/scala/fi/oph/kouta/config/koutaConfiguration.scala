@@ -1,16 +1,14 @@
 package fi.oph.kouta.config
 
 import com.typesafe.config.{Config => TypesafeConfig}
+import fi.oph.kouta.util.{KoutaBaseConfig, KoutaConfigFactory}
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
-import fi.vm.sade.utils.slf4j.Logging
 
-import java.io.File
-import java.net.URL
 import scala.util.Try
 
 case class KoutaDatabaseConfiguration(
     url: String,
+    port: Int,
     username: String,
     password: String,
     numThreads: Option[Int],
@@ -57,9 +55,10 @@ case class ElasticSearchConfiguration(
 )
 
 case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperties)
-    extends ApplicationSettings(config) {
+    extends KoutaBaseConfig(config, urlProperties) {
   val databaseConfiguration: KoutaDatabaseConfiguration = KoutaDatabaseConfiguration(
     url = config.getString("kouta-backend.db.url"),
+    port = config.getInt("kouta-backend.db.port"),
     username = config.getString("kouta-backend.db.user"),
     password = config.getString("kouta-backend.db.password"),
     numThreads = Option(config.getInt("kouta-backend.db.numThreads")),
@@ -118,63 +117,7 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
   )
 }
 
-trait KoutaConfigurationConstants {
-  val SYSTEM_PROPERTY_NAME_CONFIG_PROFILE = "kouta-backend.config-profile"
-  val SYSTEM_PROPERTY_NAME_TEMPLATE       = "kouta-backend.template-file"
-
-  val CONFIG_PROFILE_DEFAULT  = "default"
-  val CONFIG_PROFILE_TEMPLATE = "template"
-}
-
-object KoutaConfigurationFactory extends Logging with KoutaConfigurationConstants {
-
-  val profile: String = System.getProperty(SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, CONFIG_PROFILE_DEFAULT)
-  logger.info(s"Using profile '$profile'")
-
-  val configuration: KoutaConfiguration = profile match {
-    case CONFIG_PROFILE_DEFAULT  => loadOphConfiguration()
-    case CONFIG_PROFILE_TEMPLATE => loadTemplatedConfiguration()
-    case _ =>
-      throw new IllegalArgumentException(
-        s"Unknown profile '$profile'! Cannot load oph-properties! Use either " +
-          s"'$CONFIG_PROFILE_DEFAULT' or '$CONFIG_PROFILE_TEMPLATE' profiles."
-      )
-  }
-
-  def init(): Unit = {}
-
-  private def loadOphConfiguration(): KoutaConfiguration = {
-    val configFilePath = System.getProperty("user.home") + "/oph-configuration/kouta-backend.properties"
-
-    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = (config: TypesafeConfig) =>
-      KoutaConfiguration(config, new OphProperties(configFilePath))
-
-    logger.info(s"Reading properties from '$configFilePath'")
-    ApplicationSettingsLoader.loadSettings(configFilePath)
-  }
-
-  private def loadTemplatedConfiguration(): KoutaConfiguration = {
-    val templateFilePath = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)).getOrElse(
-      throw new IllegalArgumentException(
-        s"Using 'template' profile but '$SYSTEM_PROPERTY_NAME_TEMPLATE' " +
-          "system property is missing. Cannot create oph-properties!"
-      )
-    )
-    val isLocalDev = Option(System.getProperty("kouta-backend.localDev")).exists("true".equalsIgnoreCase)
-    val prefix = if(isLocalDev) "kouta-backend/" else ""
-
-    implicit val applicationSettingsParser: ApplicationSettingsParser[KoutaConfiguration] = (c: TypesafeConfig) =>
-      KoutaConfiguration(
-        c,
-        new OphProperties(s"${prefix}src/test/resources/kouta-backend.properties") {
-          addDefault("host.virkailija", c.getString("host.virkailija"))
-        }
-      )
-
-    logger.info(s"Reading template variables from '$templateFilePath'. ${if(isLocalDev) "STARTING IN DEVELOPMENT MODE!"}")
-    val templateURL: URL = new File(
-      s"${prefix}src/main/resources/oph-configuration/kouta-backend.properties.template").toURI.toURL
-    val attributesURL = new File(templateFilePath).toURI.toURL
-    ConfigTemplateProcessor.createSettings(templateURL, attributesURL)
-  }
+object KoutaConfigurationFactory extends KoutaConfigFactory[KoutaConfiguration]("kouta-backend") {
+  def createConfigCaseClass(config: TypesafeConfig, urlProperties: OphProperties) =
+    KoutaConfiguration(config, urlProperties)
 }

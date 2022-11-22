@@ -26,8 +26,8 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
 
   def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
   def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
-  def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Option[Seq[String]], Option[Seq[UUID]])]
   def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int]
+  def getDependencyInformation(hakukohde: Hakukohde): Option[HakukohdeDependencyInformation]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -123,10 +123,17 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     case _   =>  KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
   }
 
-  override def getDependencyInformation(hakukohde: Hakukohde): Map[String, (Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Option[Seq[String]], Option[Seq[UUID]])] =
-    KoutaDatabase.runBlocking(selectDependencyInformation(hakukohde)).map { case (name, tila, tyyppi, toteutusMetadata, koulutusKoodiUrit, valintaKoeIds) =>
-      name -> (tila, tyyppi, toteutusMetadata, Some(koulutusKoodiUrit), Some(valintaKoeIds))
-    }.toMap
+  override def getDependencyInformation(hakukohde: Hakukohde): Option[HakukohdeDependencyInformation] = {
+    val toteutusDependencyInfo: Option[HakukohdeToteutusDependencyInfo] =
+      KoutaDatabase.runBlocking(selectToteutusDependencyInformation(hakukohde))
+    val valintaperusteDependencyInfo: Option[HakukohdeValintaperusteDependencyInfo] =
+      KoutaDatabase.runBlocking(selectValintaperusteDependencyInformation(hakukohde))
+    (toteutusDependencyInfo, valintaperusteDependencyInfo) match {
+      case (Some(toteutusInfo), Some(valintaperusteInfo)) => Some(HakukohdeDependencyInformation(toteutusInfo, Some(valintaperusteInfo)))
+      case (Some(toteutusInfo), None) => Some(HakukohdeDependencyInformation(toteutusInfo, None))
+      case (None, _) => None
+    }
+  }
 
   def getOidsByJarjestyspaikka(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[String] = {
     KoutaDatabase.runBlocking(selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids, tilaFilter))
@@ -554,20 +561,26 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           #${tilaConditions(tilaFilter)}""".as[String]
   }
 
-  def selectDependencyInformation(hakukohde: Hakukohde): DBIO[Seq[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String], Seq[UUID])]] =
-    sql"""select t.oid, t.tila, k.tyyppi, t.metadata, k.koulutukset_koodi_uri, null::uuid[]
+  def selectToteutusDependencyInformation(hakukohde: Hakukohde): DBIO[Option[HakukohdeToteutusDependencyInfo]] =
+    sql"""select t.oid, t.tila, t.nimi, k.tyyppi, t.metadata, k.koulutukset_koodi_uri, tarjoajat.tarjoajaOids
           from toteutukset t
           inner join koulutukset k on t.koulutus_oid = k.oid and k.tila != 'poistettu'::julkaisutila
+          left join
+             (select toteutus_oid toteutusOid, array_agg(tarjoaja_oid) tarjoajaOids
+                from toteutusten_tarjoajat
+                group by toteutus_oid) tarjoajat on tarjoajat.toteutusOid = t.oid
           where t.oid = ${hakukohde.toteutusOid} and t.tila != 'poistettu'::julkaisutila
-          union all
-          select vp.id::text, vp.tila, vp.koulutustyyppi, null, null, vk.ids
+    """.as[HakukohdeToteutusDependencyInfo].headOption
+
+  def selectValintaperusteDependencyInformation(hakukohde: Hakukohde): DBIO[Option[HakukohdeValintaperusteDependencyInfo]] =
+    sql"""select vp.id::text, vp.tila, vp.koulutustyyppi, vk.ids
           from valintaperusteet vp
             left join
-              (select valintaperuste_id vpid, array_agg(id) ids
-                  from valintaperusteiden_valintakokeet
-                  group by valintaperuste_id) vk on vk.vpid = vp.id
+                (select valintaperuste_id vpid, array_agg(id) ids
+                    from valintaperusteiden_valintakokeet
+                    group by valintaperuste_id) vk on vk.vpid = vp.id
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
-    """.as[(String, Julkaisutila, Option[Koulutustyyppi], Option[ToteutusMetadata], Seq[String], Seq[UUID] )]
+    """.as[HakukohdeValintaperusteDependencyInfo].headOption
 
   def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
     sql"""select

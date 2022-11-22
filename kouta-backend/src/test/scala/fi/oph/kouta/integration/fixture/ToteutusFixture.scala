@@ -5,7 +5,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
+import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
@@ -16,8 +16,8 @@ import org.scalactic.Equality
 
 import java.util.UUID
 
-trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
-  this: KoulutusFixture =>
+trait ToteutusFixture extends KoulutusFixture with AccessControlSpec with DefaultMocks {
+  this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
   val ToteutusCopyPath = "/toteutus/copy"
@@ -34,7 +34,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
       koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
-}
+  }
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -58,6 +58,7 @@ trait ToteutusFixture extends KoutaIntegrationSpec with AccessControlSpec {
   def toteutus(koulutusOid: String, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Toteutus =
     toteutus.copy(koulutusOid = KoulutusOid(koulutusOid), organisaatioOid = organisaatioOid, tila = tila)
   def tuvaToteutus(koulutusOid: String): Toteutus = tuvaToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
+  def lukioToteutus(koulutusOid: String): Toteutus = LukioToteutus.copy(koulutusOid = KoulutusOid(koulutusOid), nimi = Map())
   def toteutus(oid:String, koulutusOid:String, externalId: String): Toteutus = toteutus.copy(oid = Some(ToteutusOid(oid)), koulutusOid = KoulutusOid(koulutusOid), tila = Tallennettu, externalId = Some(externalId))
 
   implicit val toteutusEquality: Equality[Toteutus] = (a: Toteutus, b: Any) => b match {

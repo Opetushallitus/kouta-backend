@@ -16,14 +16,15 @@ import slick.jdbc.GetResult
 
 import java.util.UUID
 
-trait ValintaperusteFixture extends KoutaIntegrationSpec with AccessControlSpec  {
+trait ValintaperusteFixture extends AccessControlSpec  {
+  this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(organisaatioService, hakuKoodiClient, HakukohdeDAO)
+    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(hakuKoodiClient, HakukohdeDAO)
     new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
   }
 

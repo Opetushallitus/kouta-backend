@@ -1,7 +1,7 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
-import fi.oph.kouta.domain.{Fi, Sv, Tallennettu}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, LukioKoulutusKoodit, Sv, Tallennettu}
 import fi.oph.kouta.validation.CrudOperations.create
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 import fi.oph.kouta.validation.Validations._
@@ -18,7 +18,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   val koulutusKoodiClient  = mock[KoulutusKoodiClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val kielet               = Seq(Fi, Sv)
-  val ataruId = UUID.randomUUID()
+  val ataruId              = UUID.randomUUID()
 
   "findMissingKielet" should "return all kielet when kielistetty is an empty map" in {
     findMissingKielet(Seq(Fi, Sv), Map()) should contain theSameElementsAs Seq(Fi, Sv)
@@ -32,16 +32,41 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     findMissingKielet(Seq(Fi, Sv), Map(Fi -> "text", Sv -> "")) should contain theSameElementsAs Seq(Sv)
   }
 
+  "findNonAllowedKielet" should "return all kielet in kielistetty when kielivalinta is empty" in {
+    findNonAllowedKielet(Seq(), Map(Fi -> "text", Sv -> "text sv")) should contain theSameElementsAs Seq(Fi, Sv)
+  }
+
+  it should "return non-allowed kielet when some texts empty" in {
+    findNonAllowedKielet(Seq(), Map(Fi -> "text", Sv -> "", En -> null)) should contain theSameElementsAs Seq(Fi)
+  }
+
+  it should "return nothing when only allowed kielet populated" in {
+    findNonAllowedKielet(Seq(Fi), Map(Fi -> "text", Sv -> "")) shouldEqual NoErrors
+  }
+
   "validateKielistetty" should "return all kielet when kielistetty is an empty map" in {
-    validateKielistetty(Seq(Fi, Sv), Map(), "test") should contain(ValidationError("test", invalidKielistetty(Seq(Fi, Sv))))
+    validateKielistetty(Seq(Fi, Sv), Map(), "test") should contain(
+      ValidationError("test", invalidKielistetty(Seq(Fi, Sv)))
+    )
   }
 
   it should "return the missing kielet when there are some texts" in {
-    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text"), "test") should contain(ValidationError("test", invalidKielistetty(Seq(Sv))))
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text"), "test") should contain(
+      ValidationError("test", invalidKielistetty(Seq(Sv)))
+    )
   }
 
   it should "return the missing kielet when there are some empty texts" in {
-    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> ""), "test") should contain(ValidationError("test", invalidKielistetty(Seq(Sv))))
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> ""), "test") should contain(
+      ValidationError("test", invalidKielistetty(Seq(Sv)))
+    )
+  }
+
+  it should "return both missing and non-allowed kielet" in {
+    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> "", En -> "something"), "test") should contain theSameElementsAs Seq(
+      ValidationError("test", invalidKielistetty(Seq(Sv))),
+      ValidationError("test", notAllowedKielistetty(Seq(En)))
+    )
   }
 
   "assertValidEmail" should "accept an email with a plus" in {
@@ -49,7 +74,9 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail an email without a TLD" in {
-    assertValidEmail("foo@bar", "test") should contain theSameElementsAs Seq(ValidationError("test", invalidEmail("foo@bar")))
+    assertValidEmail("foo@bar", "test") should contain theSameElementsAs Seq(
+      ValidationError("test", invalidEmail("foo@bar"))
+    )
   }
 
   it should "accept an email with a funny TLD" in {
@@ -65,12 +92,78 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail an url without the protocol" in {
-    assertValidUrl("www.url.fi", "url") should contain theSameElementsAs Seq(ValidationError("url", invalidUrl("www.url.fi")))
+    assertValidUrl("www.url.fi", "url") should contain theSameElementsAs Seq(
+      ValidationError("url", invalidUrl("www.url.fi"))
+    )
+  }
+
+  "assertNimiMatchExternal" should "accept matching nimi" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "nimi sv"),
+      Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en"),
+      "nimi",
+      "koulutuksessa"
+    ) shouldEqual NoErrors
+  }
+
+  it should "not accept nimi if language not found from external" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "nimi sv"),
+      Map(Fi -> "nimi", En -> "nimi en"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.sv", nameNotAllowedForFixedlyNamedEntityMsg("koulutuksessa"))
+    )
+  }
+
+  it should "ignore empty names" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "", En -> null),
+      Map(Fi -> "nimi"),
+      "nimi",
+      "koulutuksessa"
+    ) shouldEqual NoErrors
+  }
+
+  it should "not accept nimi if single language item not matching" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv     -> "nimi sv"),
+      Map(Fi -> "eri nimi", Sv -> "nimi sv", En -> "nimi en"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("eri nimi", "koulutuksessa"))
+    )
+  }
+
+  it should "not accept nimi if several language items not matching" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv     -> "nimi sv"),
+      Map(Fi -> "eri nimi", Sv -> "eri nimi sv", En -> "nimi en"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("eri nimi", "koulutuksessa")),
+      ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("eri nimi sv", "koulutuksessa"))
+    )
+  }
+
+  it should "not accept nimi when both invalid and non-allowed names" in {
+    assertNimiMatchExternal(
+      Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en"),
+      Map(Fi -> "eri nimi", Sv -> "nimi sv"),
+      "nimi",
+      "koulutuksessa"
+    ) should contain theSameElementsAs Seq(
+      ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("eri nimi", "koulutuksessa")),
+      ValidationError("nimi.en", nameNotAllowedForFixedlyNamedEntityMsg("koulutuksessa"))
+    )
   }
 
   private def doAssertKoodistoQuery(
-                                     validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-                                   ): IsValid =
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
     assertKoodistoQueryResult(
       "valintakokeentyyppi_1#1",
       hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
@@ -104,11 +197,11 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   private def doAssertKoulutustyyppiKoodistoQuery(
-                                                   validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-                                                 ): IsValid =
-    assertKoulutustyyppiQueryResult(
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
+    assertKoulutuskoodiQueryResult(
       "koulutus_371101#1",
-      ammatillisetKoulutustyypit,
+      AmmatillisetKoulutusKoodit,
       koulutusKoodiClient,
       "path",
       validationContext,
@@ -116,19 +209,19 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     )
 
   "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -136,7 +229,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(ammatillisetKoulutustyypit, "koulutus_371101#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
@@ -144,11 +237,11 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   private def doAssertKoulutusKoodiUriQuery(
-                                             validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
-                                           ): IsValid =
+      validationContext: ValidationContext = ValidationContext(Tallennettu, kielet, create)
+  ): IsValid =
     assertKoulutuskoodiQueryResult(
       "koulutus_301104#1",
-      lukioKoulutusKoodiUrit,
+      LukioKoulutusKoodit,
       koulutusKoodiClient,
       "path",
       validationContext,
@@ -156,19 +249,19 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     )
 
   "KoulutusKoodiUri-validation" should "succeed when valid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     doAssertKoulutusKoodiUriQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutusKoodiUriQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_301104#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -176,7 +269,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(lukioKoulutusKoodiUrit, "koulutus_301104#1"))
+    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
@@ -184,7 +277,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   private def doAssertAtaruQuery(): IsValid =
-    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path", unknownAtaruId(ataruId))
+    assertAtaruQueryResult(ataruId, hakemusPalveluClient, "path")
 
   "AtaruId-validation" should "succeed when valid ataruId" in {
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
@@ -200,6 +293,4 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(queryFailed)
     doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
   }
-
-
 }

@@ -145,6 +145,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Hakukohde
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan hakukohteen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

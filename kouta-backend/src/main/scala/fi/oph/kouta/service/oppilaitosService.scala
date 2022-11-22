@@ -11,13 +11,12 @@ import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OppilaitosDAO)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OppilaitosServiceValidation, OppilaitosDAO)
 
 class OppilaitosService(
   sqsInTransactionService: SqsInTransactionService,
@@ -26,8 +25,9 @@ class OppilaitosService(
   val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
-  oppilaitosDAO: OppilaitosDAO,
-) extends ValidatingService[Oppilaitos] with RoleEntityAuthorizationService[Oppilaitos] with LogoService {
+  oppilaitosServiceValidation: OppilaitosServiceValidation,
+  oppilaitosDAO: OppilaitosDAO
+) extends RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
 
@@ -84,7 +84,7 @@ class OppilaitosService(
     val enrichedMetadata: Option[OppilaitosMetadata] = enrichOppilaitosMetadata(oppilaitos)
     val enrichedOppilaitos = oppilaitos.copy(metadata = enrichedMetadata)
     authorizePut(enrichedOppilaitos) { o =>
-      withValidation(o, None)(doPut)
+      oppilaitosServiceValidation.withValidation(o, None)(doPut)
     }.oid
   }
 
@@ -92,7 +92,7 @@ class OppilaitosService(
     val enrichedMetadata: Option[OppilaitosMetadata] = enrichOppilaitosMetadata(oppilaitos)
     val enrichedOppilaitos = oppilaitos.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid), enrichedOppilaitos) { (oldOppilaitos, o) =>
-      withValidation(o, Some(oldOppilaitos)) {
+      oppilaitosServiceValidation.withValidation(o, Some(oldOppilaitos)) {
         doUpdate(_, notModifiedSince, oldOppilaitos)
       }
     }.nonEmpty
@@ -147,13 +147,9 @@ class OppilaitosService(
 
   private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
-
-  override def validateEntity(oppilaitos: Oppilaitos, oldOppilaitos: Option[Oppilaitos]): IsValid = oppilaitos.validate()
-
-  override def validateInternalDependenciesWhenDeletingEntity(oppilaitos: Oppilaitos): IsValid = NoErrors
 }
 
-object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient)
+object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OppilaitosServiceValidation, OppilaitoksenOsaServiceValidation)
 
 class OppilaitoksenOsaService(
   sqsInTransactionService: SqsInTransactionService,
@@ -161,9 +157,10 @@ class OppilaitoksenOsaService(
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-  kayttooikeusClient: KayttooikeusClient
-) extends ValidatingService[OppilaitoksenOsa]
-    with RoleEntityAuthorizationService[OppilaitoksenOsa]
+  kayttooikeusClient: KayttooikeusClient,
+  oppilaitosServiceValidation: OppilaitosServiceValidation,
+  oppilaitoksenOsaServiceValidation: OppilaitoksenOsaServiceValidation
+) extends RoleEntityAuthorizationService[OppilaitoksenOsa]
     with TeemakuvaService[OrganisaatioOid, OppilaitoksenOsa] {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -203,8 +200,7 @@ class OppilaitoksenOsaService(
     }
 
     authorizePut(enrichedOppilaitoksenOsa) { o =>
-      withValidation(o, None) { o =>
-        validateOppilaitosIntegrity(o)
+      oppilaitoksenOsaServiceValidation.withValidation(o, None) { o =>
         doPut(o)
       }
     }.oid
@@ -219,8 +215,7 @@ class OppilaitoksenOsaService(
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), enrichedOppilaitoksenOsa) { (oldOsa, o) =>
-      withValidation(o, Some(oldOsa)) { o =>
-        validateOppilaitosIntegrity(o)
+      oppilaitoksenOsaServiceValidation.withValidation(o, Some(oldOsa)) { o =>
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
@@ -229,12 +224,24 @@ class OppilaitoksenOsaService(
   def getJulkaistutOppilaitoksenOsat(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[OppilaitoksenOsa] =
     OppilaitoksenOsaDAO.getJulkaistutByOppilaitosOid(oid)
 
-  private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): Unit = {
-    val oppilaitosTila = OppilaitosDAO.getTila(oppilaitoksenOsa.oppilaitosOid)
+  private def updateJarjestaaUrheilijanAmmKoulutustaForOppilaitos(oppilaitoksenOsa: OppilaitoksenOsa, jarjestaaUrheilijanAmmKoulutusta: Boolean)(implicit authenticated: Authenticated): Unit = {
+    OppilaitosDAO.get(oppilaitoksenOsa.oppilaitosOid) match {
+      case Some(oppilaitosWithInstant) => {
+        val oppilaitos = oppilaitosWithInstant._1
+        val metadata = oppilaitos.metadata match {
+          case Some(metadata) => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+          case None => OppilaitosMetadata(jarjestaaUrheilijanAmmKoulutusta = jarjestaaUrheilijanAmmKoulutusta)
+        }
 
-    throwValidationErrors(
-      Validations.validateDependency(oppilaitoksenOsa.tila, oppilaitosTila, oppilaitoksenOsa.oppilaitosOid, "Oppilaitosta", "oppilaitosOid")
-    )
+        val oppilaitosCopy = oppilaitos.copy(metadata = Some(metadata))
+        OppilaitosService.authorizeUpdate(Some(oppilaitosWithInstant), oppilaitosCopy) { (oldOppilaitos, o) =>
+          oppilaitosServiceValidation.withValidation(o, Some(oldOppilaitos)) {
+            OppilaitosService.doUpdate(_, Instant.now(), oldOppilaitos)
+          }
+        }
+      }
+      case None =>
+    }
   }
 
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
@@ -271,8 +278,4 @@ class OppilaitoksenOsaService(
 
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
-
-  override def validateEntity(oppilaitoksenOsa: OppilaitoksenOsa, oldOppilaitoksenOsa: Option[OppilaitoksenOsa]): IsValid = oppilaitoksenOsa.validate()
-
-  override def validateInternalDependenciesWhenDeletingEntity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = NoErrors
 }

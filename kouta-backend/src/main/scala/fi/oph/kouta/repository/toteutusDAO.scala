@@ -1,14 +1,14 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{AikuistenPerusopetus, AmmOsaamisala, AmmTutkinnonOsa, Ataru, OidAndNimi, TilaFilter, Toteutus, ToteutusEnrichedData, ToteutusListItem, VapaaSivistystyoMuu}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.instantToModified
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
@@ -360,8 +360,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                  or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
                 and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi )
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmMuu.toString}::koulutustyyppi
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi)
                      or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
                     #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }

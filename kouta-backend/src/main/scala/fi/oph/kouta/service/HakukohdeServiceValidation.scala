@@ -1,37 +1,46 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToisenAsteenYhteishaku}
+import fi.oph.kouta.util.MiscUtils.{
+  isDIAlukiokoulutus,
+  isEBlukiokoulutus,
+  isToisenAsteenYhteishaku,
+  isYhteishakuHakutapa
+}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 
 import java.time.LocalDateTime
 import java.util.UUID
+import scala.util.{Failure, Success, Try}
 
 object HakukohdeServiceValidation
     extends HakukohdeServiceValidation(
-      OrganisaatioServiceImpl,
       HakuKoodiClient,
       KoulutusKoodiClient,
       HakemusPalveluClient,
+      OrganisaatioServiceImpl,
+      LokalisointiClient,
       HakukohdeDAO,
       HakuDAO
     )
 
 class HakukohdeServiceValidation(
-    val organisaatioService: OrganisaatioService,
     hakuKoodiClient: HakuKoodiClient,
     koulutusKoodiClient: KoulutusKoodiClient,
     hakemusPalveluClient: HakemusPalveluClient,
+    organisaatioService: OrganisaatioService,
+    lokalisointiClient: LokalisointiClient,
     hakukohdeDAO: HakukohdeDAO,
     hakuDAO: HakuDAO
 ) extends ValidatingService[Hakukohde] {
-
   def withValidation[R](hakukohde: Hakukohde, oldHakukohde: Option[Hakukohde], authenticated: Authenticated)(
       f: Hakukohde => R
   ): R = {
@@ -65,29 +74,12 @@ class HakukohdeServiceValidation(
       ),
       assertValid(hk.toteutusOid, "toteutusOid"),
       assertValid(hk.hakuOid, "hakuOid"),
-      // Joko hakukohdeKoodiUri tai nimi täytyy olla, mutta ei molempia!
-      assertTrue(hk.hakukohdeKoodiUri.nonEmpty != hk.nimi.nonEmpty, "nimi", oneNotBoth("nimi", "hakukohdeKoodiUri")),
-      validateIfDefined[String](
-        hakukohdeDiffResolver.newHakukohdeKoodiUri(),
-        koodiUri =>
-          assertKoodistoQueryResult(
-            koodiUri,
-            hakuKoodiClient.hakukohdeKoodiUriExists,
-            "hakukohdeKoodiUri",
-            vCtx,
-            invalidHakukohdeKooriuri(koodiUri)
-          )
-      ),
-      validateIfTrue(
-        hk.nimi.nonEmpty,
-        validateKielistetty(vCtx.kielivalinta, hk.nimi, "nimi")
-      ),
       assertFalse(
         hk.kaytetaanHaunAikataulua.getOrElse(false) && hk.hakuajat.nonEmpty,
         "hakuajat",
         noneOrOneNotBoth("kaytetaanHaunAikataulua", "hakuajat")
       ),
-      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validate(vCtx, _)),
       validateIfNonEmpty[String](
         hakukohdeDiffResolver.newPohjakoulutusvaatimusKoodiUrit(),
         "pohjakoulutusvaatimusKoodiUrit",
@@ -176,8 +168,7 @@ class HakukohdeServiceValidation(
             assertAtaruQueryResult(
               ataruId,
               hakemusPalveluClient,
-              "hakulomakeAtaruId",
-              unknownAtaruId(ataruId)
+              "hakulomakeAtaruId"
             )
         )
       ),
@@ -279,7 +270,7 @@ class HakukohdeServiceValidation(
       path: String,
       validationContext: ValidationContext
   ): IsValid = and(
-    osoite.osoite.deepValidate(
+    osoite.osoite.validate(
       path,
       osoiteWithNewValues,
       validationContext,
@@ -322,59 +313,7 @@ class HakukohdeServiceValidation(
           assertNotOptional(m.aloituspaikat, "metadata.aloituspaikat"),
           validateIfDefined[Aloituspaikat](
             m.aloituspaikat,
-            _.validate(vCtx.tila, vCtx.kielivalinta, "metadata.aloituspaikat")
-          ),
-          // NOTE: hakukohteenLinja validoidaan pakolliseksi lukiotyyppisille
-          validateIfDefined[HakukohteenLinja](
-            m.hakukohteenLinja,
-            l =>
-              and(
-                validateIfDefined[Double](
-                  l.alinHyvaksyttyKeskiarvo,
-                  assertNotNegative(_, "metadata.hakukohteenLinja.alinHyvaksyttyKeskiarvo")
-                ),
-                validateOptionalKielistetty(vCtx.kielivalinta, l.lisatietoa, "metadata.hakukohteenLinja.lisatietoa"),
-                validateIfNonEmptySeq[PainotettuOppiaine](
-                  l.painotetutArvosanat,
-                  hakukohdeDiffResolver.newPainotetutArvosanat(),
-                  "metadata.hakukohteenLinja.painotetutArvosanat",
-                  (oppiaine, newOppiaine, path) =>
-                    and(
-                      assertNotOptional(oppiaine.koodiUrit, s"$path.koodiUrit"),
-                      validateIfDefined[OppiaineKoodiUrit](
-                        oppiaine.koodiUrit,
-                        uri =>
-                          and(
-                            assertNotOptional(uri.oppiaine, s"$path.oppiaine"),
-                            validateIfDefined[String](
-                              newOppiaine.flatMap(_.koodiUrit).flatMap(_.oppiaine),
-                              oppiaineKoodiUri =>
-                                assertKoodistoQueryResult(
-                                  oppiaineKoodiUri,
-                                  hakuKoodiClient.oppiaineKoodiUriExists,
-                                  s"$path.oppiaine",
-                                  vCtx,
-                                  invalidOppiaineKoodiuri(oppiaineKoodiUri)
-                                )
-                            ),
-                            validateIfDefined[String](
-                              newOppiaine.flatMap(_.koodiUrit).flatMap(_.kieli),
-                              kieliKoodiUri =>
-                                assertKoodistoQueryResult(
-                                  kieliKoodiUri,
-                                  hakuKoodiClient.kieliKoodiUriExists,
-                                  s"$path.kieli",
-                                  vCtx,
-                                  invalidOppiaineKieliKoodiuri(kieliKoodiUri)
-                                )
-                            )
-                          )
-                      ),
-                      assertNotOptional(oppiaine.painokerroin, s"$path.painokerroin"),
-                      validateIfDefined[Double](oppiaine.painokerroin, assertNotNegative(_, s"$path.painokerroin"))
-                    )
-                )
-              )
+            _.validate(vCtx, "metadata.aloituspaikat")
           )
         )
       ),
@@ -383,25 +322,138 @@ class HakukohdeServiceValidation(
 
   override def validateInternalDependenciesWhenDeletingEntity(e: Hakukohde): IsValid = NoErrors
 
+  private def validateHakukohteenLinjaAndNimi(
+      hkLinja: HakukohteenLinja,
+      nimi: Kielistetty,
+      allowedLinjaUris: Seq[String],
+      vCtx: ValidationContext,
+      hakukohdeDiffResolver: HakukohdeDiffResolver
+  ): IsValid = {
+    and(
+      validateIfSuccessful(
+        validateIfDefined[String](
+          hkLinja.linja,
+          linja =>
+            assertTrue(
+              allowedLinjaUris.contains(linja),
+              "metadata.hakukohteenLinja.linja",
+              invalidHakukohteenLinja(linja)
+            )
+        ),
+        validateIfTrue(
+          hakukohdeDiffResolver.newNimi().isDefined,
+          validateIfTrueOrElse(
+            hkLinja.linja.isDefined,
+            hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
+              case Left(_) => error("metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
+              case Right(uri) =>
+                assertNimiMatchExternal(
+                  nimi,
+                  uri.nimi,
+                  "nimi",
+                  "hakukohteen linjalla"
+                )
+              case _ => error("metadata.hakukohteenLinja.linja", invalidHakukohteenLinja(hkLinja.linja.get))
+            },
+            Try[Kielistetty] {
+              lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja")
+            } match {
+              case Success(yleisLinjaKaannos) =>
+                assertNimiMatchExternal(nimi, yleisLinjaKaannos, "nimi", "toteutuksen yleislinjalla")
+              case Failure(_) => error("nimi", lokalisointiServiceFailureMsg)
+            }
+          )
+        )
+      ),
+      validateIfDefined[Double](
+        hkLinja.alinHyvaksyttyKeskiarvo,
+        assertNotNegative(_, "metadata.hakukohteenLinja.alinHyvaksyttyKeskiarvo")
+      ),
+      validateOptionalKielistetty(vCtx.kielivalinta, hkLinja.lisatietoa, "metadata.hakukohteenLinja.lisatietoa"),
+      validateIfNonEmptySeq[PainotettuOppiaine](
+        hkLinja.painotetutArvosanat,
+        hakukohdeDiffResolver.newPainotetutArvosanat(),
+        "metadata.hakukohteenLinja.painotetutArvosanat",
+        (oppiaine, newOppiaine, path) =>
+          and(
+            assertNotOptional(oppiaine.koodiUrit, s"$path.koodiUrit"),
+            validateIfDefined[OppiaineKoodiUrit](
+              oppiaine.koodiUrit,
+              uri =>
+                and(
+                  assertNotOptional(uri.oppiaine, s"$path.oppiaine"),
+                  validateIfDefined[String](
+                    newOppiaine.flatMap(_.koodiUrit).flatMap(_.oppiaine),
+                    oppiaineKoodiUri =>
+                      assertKoodistoQueryResult(
+                        oppiaineKoodiUri,
+                        hakuKoodiClient.oppiaineKoodiUriExists,
+                        s"$path.oppiaine",
+                        vCtx,
+                        invalidOppiaineKoodiuri(oppiaineKoodiUri)
+                      )
+                  ),
+                  validateIfDefined[String](
+                    newOppiaine.flatMap(_.koodiUrit).flatMap(_.kieli),
+                    kieliKoodiUri =>
+                      assertKoodistoQueryResult(
+                        kieliKoodiUri,
+                        hakuKoodiClient.kieliKoodiUriExists,
+                        s"$path.kieli",
+                        vCtx,
+                        invalidOppiaineKieliKoodiuri(kieliKoodiUri)
+                      )
+                  )
+                )
+            ),
+            assertNotOptional(oppiaine.painokerroin, s"$path.painokerroin"),
+            validateIfDefined[Double](oppiaine.painokerroin, assertNotNegative(_, s"$path.painokerroin"))
+          )
+      )
+    )
+  }
+
   private def validateDependencyIntegrity(
       hakukohde: Hakukohde,
       isOphPaakayttaja: Boolean,
       crudOperation: CrudOperation,
       hakukohdeDiffResolver: HakukohdeDiffResolver
   ) = {
-    val deps = hakukohdeDAO.getDependencyInformation(hakukohde)
+    val dependencyInfo = hakukohdeDAO.getDependencyInformation(hakukohde)
 
     val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
     val hakuOid             = hakukohde.hakuOid.s
     val toteutusOid         = hakukohde.toteutusOid.s
-    val koulutustyyppi      = deps.get(toteutusOid).flatMap(_._2)
-    val haunJulkaisutila    = haku.map { haku => Some(haku.tila) }.getOrElse(None)
-    val koulutuksetKoodiUri = deps.get(toteutusOid).flatMap(_._4).getOrElse(Seq())
+    val koulutustyyppi      = dependencyInfo.map(_.toteutus.koulutustyyppi)
+    val haunJulkaisutila    = haku.map(_.tila)
+    val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
+    val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
     val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
 
     and(
-      validateDependency(hakukohde.tila, deps.get(toteutusOid).map(_._1), toteutusOid, "Toteutusta", "toteutusOid"),
+      validateIfSuccessful(
+        validateDependency(
+          hakukohde.tila,
+          dependencyInfo.map(_.toteutus.tila),
+          toteutusOid,
+          "Toteutusta",
+          "toteutusOid"
+        ),
+        validateIfDefined[OrganisaatioOid](
+          hakukohde.jarjestyspaikkaOid,
+          jarjestysPaikkaOid =>
+            assertTrue(
+              tarjoajat
+                .map(org => organisaatioService.getAllChildOidsFlat(org))
+                .flatten
+                .distinct
+                .contains(jarjestysPaikkaOid),
+              "jarjestyspaikkaOid",
+              invalidJarjestyspaikkaOid(jarjestysPaikkaOid, hakukohde.toteutusOid)
+            )
+        )
+      ),
       validateDependencyExistence(haunJulkaisutila, hakuOid, "Hakua", "hakuOid"),
       validateIfDefined[UUID](
         hakukohde.valintaperusteId,
@@ -409,13 +461,13 @@ class HakukohdeServiceValidation(
           and(
             validateDependency(
               hakukohde.tila,
-              deps.get(valintaperusteId.toString).map(_._1),
+              dependencyInfo.flatMap(_.valintaperuste).map(_.tila),
               valintaperusteId,
               "Valintaperustetta",
               "valintaperusteId"
             ),
             validateIfDefined[Koulutustyyppi](
-              deps.get(valintaperusteId.toString).flatMap(_._2),
+              dependencyInfo.flatMap(_.valintaperuste).map(_.koulutustyyppi),
               valintaperusteTyyppi =>
                 validateIfDefined[Koulutustyyppi](
                   koulutustyyppi,
@@ -443,28 +495,12 @@ class HakukohdeServiceValidation(
           )
         )
       ),
-      validateIfDefined[ToteutusMetadata](
-        deps.get(toteutusOid).flatMap(_._3),
-        metadata =>
-          metadata match {
-            case m: AmmatillinenTutkinnonOsaToteutusMetadata =>
-              assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case m: AmmatillinenOsaamisalaToteutusMetadata =>
-              assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case m: VapaaSivistystyoMuuToteutusMetadata  => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case m: AmmatillinenMuuToteutusMetadata      => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case m: AikuistenPerusopetusToteutusMetadata => assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
-            case _: LukioToteutusMetadata =>
-              validateIfFalse(
-                isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri),
-                assertTrue(
-                  hakukohde.metadata.isDefined && hakukohde.metadata.get.hakukohteenLinja.isDefined,
-                  "metadata.hakukohteenLinja",
-                  missingMsg
-                )
-              )
-            case _ => NoErrors
-          }
+      validateToteutusmetadataDependentParameters(
+        hakukohde,
+        dependencyInfo,
+        haku.flatMap(_.hakutapaKoodiUri),
+        vCtx,
+        hakukohdeDiffResolver
       ),
       validateIfJulkaistu(
         hakukohde.tila,
@@ -482,9 +518,9 @@ class HakukohdeServiceValidation(
           validateIfTrue(
             metadata.valintaperusteenValintakokeidenLisatilaisuudet.nonEmpty, {
               val valintaperusteenValintakokeet: Seq[UUID] =
-                if (hakukohde.valintaperusteId.isDefined)
-                  deps.get(hakukohde.valintaperusteId.get.toString).flatMap(_._5).getOrElse(Seq())
-                else Seq()
+                if (hakukohde.valintaperusteId.isDefined) {
+                  dependencyInfo.flatMap(_.valintaperuste).map(_.valintakoeIdt).getOrElse(Seq())
+                } else Seq()
               validateValintaperusteenValintakokeidenLisatilaisuudet(
                 metadata.valintaperusteenValintakokeidenLisatilaisuudet,
                 hakukohdeDiffResolver.newValintaperusteenValintakokeidenLisatilaisuudet(),
@@ -513,9 +549,9 @@ class HakukohdeServiceValidation(
             case Some(Amm) =>
               koulutuksetKoodiUri
                 .map(
-                  assertKoulutustyyppiQueryResult(
+                  assertKoulutuskoodiQueryResult(
                     _,
-                    Seq(ammatillinenPerustutkintoKoulutustyyppi),
+                    AmmatillisetKoulutuskooditAllowedForKaksoistutkinto,
                     koulutusKoodiClient,
                     "toinenAsteOnkoKaksoistutkinto",
                     vCtx,
@@ -530,7 +566,7 @@ class HakukohdeServiceValidation(
                 .map(
                   assertKoulutuskoodiQueryResult(
                     _,
-                    lukioKoulutusKoodiUritAllowedForKaksoistutkinto,
+                    LukioKoulutusKooditAllowedForKaksoistutkinto,
                     koulutusKoodiClient,
                     "toinenAsteOnkoKaksoistutkinto",
                     vCtx,
@@ -547,6 +583,126 @@ class HakukohdeServiceValidation(
     )
   }
 
+  private def validateToteutusmetadataDependentParameters(
+      hk: Hakukohde,
+      dependencyInfo: Option[HakukohdeDependencyInformation],
+      hakutapaKoodiUri: Option[String],
+      vCtx: ValidationContext,
+      hakukohdeDiffResolver: HakukohdeDiffResolver
+  ): IsValid = {
+    val toteutusOid = hk.toteutusOid.s
+    dependencyInfo.map(_.toteutus) match {
+      case Some(toteutus) =>
+        toteutus.metadata match {
+          case Some(metadata) =>
+            metadata match {
+              case m: AmmatillinenToteutusMetadata if isYhteishakuHakutapa(hakutapaKoodiUri) =>
+                val erityisOpetus = m.ammatillinenPerustutkintoErityisopetuksena.contains(true)
+                val koodisto =
+                  if (erityisOpetus) hakukohdeKoodistoAmmErityisopetus else hakukohdeKoodistoPoJalkYhteishaku
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertEmptyKielistetty(hk.nimi, "nimi"),
+                  validateIfSuccessful(
+                    assertNotOptional[String](hk.hakukohdeKoodiUri, "hakukohdeKoodiUri"),
+                    validateIfDefined[String](
+                      hakukohdeDiffResolver.newHakukohdeKoodiUri(),
+                      koodiUri =>
+                        assertKoodistoQueryResult(
+                          koodiUri,
+                          if (erityisOpetus)
+                            hakuKoodiClient.hakukohdeKoodiUriAmmErityisopetusExists
+                          else hakuKoodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists,
+                          "hakukohdeKoodiUri",
+                          vCtx,
+                          invalidHakukohdeKooriuri(koodiUri, koodisto)
+                        )
+                    )
+                  )
+                )
+              case _: TuvaToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  validateIfSuccessful(
+                    assertNimiNotHakukohdeKoodiuri(hk),
+                    assertNimiMatchExternal(hk.nimi, toteutus.nimi, "nimi", "toteutuksella")
+                  )
+                )
+              case m: AmmatillinenTutkinnonOsaToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                )
+              case m: AmmatillinenOsaamisalaToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                )
+              case m: VapaaSivistystyoMuuToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                )
+              case m: AmmatillinenMuuToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                )
+              case m: AikuistenPerusopetusToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                )
+              case m: LukioToteutusMetadata =>
+                and(
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  validateIfTrueOrElse(
+                    isDIAlukiokoulutus(toteutus.koulutusKoodiUrit) || isEBlukiokoulutus(toteutus.koulutusKoodiUrit),
+                    and(
+                      assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                      assertNimiMatchExternal(hk.nimi, toteutus.nimi, "nimi", "toteutuksella")
+                    ),
+                    validateIfSuccessful(
+                      assertNotOptional[HakukohteenLinja](
+                        hk.metadata.flatMap(_.hakukohteenLinja),
+                        "metadata.hakukohteenLinja"
+                      ),
+                      validateIfDefined[HakukohteenLinja](
+                        hk.metadata.flatMap(_.hakukohteenLinja),
+                        linja =>
+                          validateHakukohteenLinjaAndNimi(
+                            linja,
+                            hk.nimi,
+                            m.erityisetKoulutustehtavat.map(_.koodiUri) ++ m.painotukset.map(_.koodiUri),
+                            vCtx,
+                            hakukohdeDiffResolver
+                          )
+                      )
+                    )
+                  )
+                )
+              case _ =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk)
+                )
+            }
+          case _ => NoErrors
+        }
+      case _ => NoErrors
+    }
+  }
+
+  private def assertNimiNotHakukohdeKoodiuri(hakukohde: Hakukohde): IsValid =
+    and(
+      assertNotDefined[String](hakukohde.hakukohdeKoodiUri, "hakukohdeKoodiUri"),
+      validateKielistetty(hakukohde.kielivalinta, hakukohde.nimi, "nimi")
+    )
   private def validateValintaperusteenValintakokeidenLisatilaisuudet(
       tilaisuudet: Seq[ValintakokeenLisatilaisuudet],
       newTilaisuudet: Seq[ValintakokeenLisatilaisuudet],

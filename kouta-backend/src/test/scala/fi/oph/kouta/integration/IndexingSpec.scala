@@ -1,11 +1,10 @@
 package fi.oph.kouta.integration
 
-import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.IndexingFixture
-import fi.oph.kouta.mocks.KoodistoServiceMock
-import fi.oph.kouta.validation.ammatillisetKoulutustyypit
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
+
+import java.util.UUID
 
 class IndexingSpec extends KoutaIntegrationSpec
   with IndexingFixture with KonfoIndexingQueues with EventuallyMessages with AccessControlSpec {
@@ -96,7 +95,7 @@ class IndexingSpec extends KoutaIntegrationSpec
 
     val lastModified = get(oid, withValintaperusteenValintakokeet(tallennettuHakukohde(oid)))
     val muokattuHakukohde = withValintaperusteenValintakokeet(tallennettuHakukohde(oid)).copy(
-      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
+      nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv"),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeAtaruId = Some(UUID.randomUUID()),
       hakulomakeKuvaus = Map(),

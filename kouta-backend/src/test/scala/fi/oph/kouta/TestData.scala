@@ -26,6 +26,8 @@ object TestData {
 
   val Osoite1: Osoite =
     Osoite(osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"), postinumeroKoodiUri = Some("posti_04230#2"))
+  val Osoite2: Osoite =
+    Osoite(osoite = Map(Fi -> "Hauskatie 1", Sv -> "Hauskavägen 1"), postinumeroKoodiUri = Some("posti_61100#2"))
   val LiitteenToimitusosoite1 = LiitteenToimitusosoite(
     osoite = Osoite1,
     sahkoposti = Some("foo@bar.fi"),
@@ -152,7 +154,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(YoOid, HkiYoOid),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -183,7 +185,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(AmkOid),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -214,7 +216,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(AmkOid),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -245,7 +247,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(HkiYoOid),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -273,10 +275,10 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(false),
         avoinKorkeakoulutus = Some(true),
         tunniste = Some("XZY-123"),
-        orgsAllowedToReadKoulutus =  List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+        orgsAllowedToReadKoulutus =  List(YoOid, HkiYoOid),
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(YoOid, HkiYoOid),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -303,7 +305,7 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(HkiYoOid),
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -323,7 +325,7 @@ object TestData {
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
     isMuokkaajaOphVirkailija = Some(false),
-    orgsAllowedToReadKoulutus =  List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    orgsAllowedToReadKoulutus =  List(HkiYoOid, YoOid),
   )
 
   val KkOpintokokonaisuusKoulutus: Koulutus = Koulutus(
@@ -333,7 +335,7 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto),
-    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    tarjoajat = List(HkiYoOid, YoOid),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -727,11 +729,11 @@ object TestData {
     lisatietoa = Map(Fi -> "Linjan lisatieto fi", Sv -> "Linjan lisatieto sv"),
     painotetutArvosanat = Seq(
       PainotettuOppiaine(
-        Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_b3pt"), Some("kieli_fi"))),
+        Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_b3pt"), Some("kieli_FI"))),
         Some(2.5)
       ),
       PainotettuOppiaine(
-        Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_b1lt"), Some("kieli_sv"))),
+        Some(OppiaineKoodiUrit(Some("painotettavatoppiaineetlukiossa_b1lt"), Some("kieli_SV"))),
         Some(2.8)
       )
     )
@@ -1085,14 +1087,14 @@ object TestData {
     )
   )
 
-  val JulkaistuYoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto))
+  val JulkaistuYoToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto))
+    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
   val JulkaistuKkOpintokokonaisuusToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto))
+    JulkaistuAmmToteutus.copy(metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
   val JulkaistuAmkToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)))
+    JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)), tarjoajat = List(AmkOid))
 
   val AmmOpettajaToteutuksenMetatieto = AmmOpeErityisopeJaOpoToteutusMetadata(
     tyyppi = AmmOpeErityisopeJaOpo,
@@ -1106,9 +1108,9 @@ object TestData {
   )
 
   val JulkaistuAmmOpettajaToteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto))
+    JulkaistuAmmToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto), tarjoajat = List(AmkOid))
   val JulkaistuYoOpettajaToteutus =
-    JulkaistuAmmOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot)))
+    JulkaistuAmmOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot)), tarjoajat = List(HkiYoOid))
 
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,
@@ -1144,6 +1146,7 @@ object TestData {
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       yhteyshenkilot = Seq(Yhteystieto1),
+      isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false))
 
   val VapaaSivistystyoOpistovuosiToteutus: Toteutus =
@@ -1240,7 +1243,7 @@ object TestData {
     koulutusOid = KoulutusOid("1.2.246.562.13.123"),
     tila = Julkaistu,
     esikatselu = true,
-    tarjoajat = List(OtherOid, AmmOid),
+    tarjoajat = List(OtherOid, LukioOid),
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(LukioToteutuksenMetatieto),
     muokkaaja = TestUserOid,
@@ -1347,8 +1350,7 @@ object TestData {
       hasJotpaRahoitus = Some(false)
     )
 
-  val AmmMuuToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata =
-    Some(
+  val AmmMuuToteutusMetatieto: AmmatillinenMuuToteutusMetadata =
       AmmatillinenMuuToteutusMetadata(
         kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
         opetus = Some(ToteutuksenOpetus),
@@ -1363,8 +1365,9 @@ object TestData {
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)
       )
-    )
-  )
+
+  val AmmMuuToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata =
+    Some(AmmMuuToteutusMetatieto))
 
   val JulkaistuOppilaitos: Oppilaitos = Oppilaitos(
     oid = ChildOid,
@@ -1382,6 +1385,7 @@ object TestData {
           Yhteystieto(
             nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
             postiosoite = Some(Osoite1),
+            kayntiosoite = Some(Osoite2),
             puhelinnumero = Map(Fi -> "123", Sv -> "123"),
             sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi")
           )
@@ -1425,6 +1429,14 @@ object TestData {
     esikatselu = true,
     metadata = Some(
       OppilaitoksenOsaMetadata(
+        hakijapalveluidenYhteystiedot = Some(
+          Yhteystieto(
+            nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+            postiosoite = Some(Osoite1),
+            kayntiosoite = Some(Osoite2),
+            puhelinnumero = Map(Fi -> "123", Sv -> "123"),
+            sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi")
+          )),
         wwwSivu = Some(
           NimettyLinkki(
             url = Map(Fi -> "http://www.oppilaitos.fi", Sv -> "http://www.oppilaitos.sv"),
