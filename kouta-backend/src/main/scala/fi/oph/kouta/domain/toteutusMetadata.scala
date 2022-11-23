@@ -750,7 +750,7 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          aloituspaikat: Option[Int] = None,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                          hasJotpaRahoitus: Option[Boolean] = None,
-                                         avoinKorkeakoulutus: Option[Boolean] = None,
+                                         isAvoinKorkeakoulutus: Option[Boolean] = None,
                                          tunniste: Option[String] = None,
                                          opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
@@ -772,7 +772,7 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                                hasJotpaRahoitus: Option[Boolean] = None,
                                                liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
-                                               avoinKorkeakoulutus: Option[Boolean] = None,
+                                               isAvoinKorkeakoulutus: Option[Boolean] = None,
                                                tunniste: Option[String] = None,
                                                opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
