@@ -485,7 +485,8 @@ case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                opintojenLaajuusNumeroMin: Option[Double] = None,
                                                opintojenLaajuusNumeroMax: Option[Double] = None,
                                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
+                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                               avoinKorkeakoulutus: Option[Boolean] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
