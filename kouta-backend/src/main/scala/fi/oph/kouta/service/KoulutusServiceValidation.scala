@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.CrudOperations.{create, update}
@@ -22,7 +22,7 @@ object KoulutusServiceValidation
 class KoulutusServiceValidation(
     val koulutusKoodiClient: KoulutusKoodiClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
-    val organisaatioService: OrganisaatioService,
+    val organisaatioService: OrganisaatioServiceImpl,
     toteutusDAO: ToteutusDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {

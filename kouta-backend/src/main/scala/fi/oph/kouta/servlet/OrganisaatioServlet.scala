@@ -1,9 +1,10 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OrganisaatioServiceImpl => OrganisaatioService}
-import org.scalatra.{NotFound, Ok}
+import org.scalatra.{ActionResult, NotFound, Ok}
 
 class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends KoutaServlet {
   def this() = this(OrganisaatioService)
@@ -69,9 +70,9 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
     implicit val authenticated: Authenticated = authenticate()
 
-    organisaatioService.getOrganisaatiot(parsedBody.extract[List[OrganisaatioOid]]) match {
-      case List() => NotFound("error" -> "Unknown organisaatio oids")
-      case organisaatiot => Ok(organisaatiot)
+    organisaatioService.getOrganisaatiot(parsedBody.extract[Seq[OrganisaatioOid]]) match {
+      case Left(e: OrganisaatioServiceQueryException) => ActionResult(status = e.status, body = e.message, headers = Map())
+      case Right(organisaatiot) => Ok(organisaatiot)
     }
   }
 
