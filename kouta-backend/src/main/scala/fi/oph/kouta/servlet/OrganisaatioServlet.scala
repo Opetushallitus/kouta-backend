@@ -29,7 +29,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |          content:
       |            application/json:
       |              schema:
-      |                $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
+      |                $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin)
   get("/:oid") {
 
@@ -63,7 +63,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |              schema:
       |                type: array
       |                items:
-      |                  $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
+      |                  $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin)
   post("/organisaatiot") {
 
@@ -142,9 +142,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |          content:
       |            application/json:
       |              schema:
-      |                type: array
-      |                items:
-      |                  $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
+      |                  $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin)
   get("/hierarkia") {
 
