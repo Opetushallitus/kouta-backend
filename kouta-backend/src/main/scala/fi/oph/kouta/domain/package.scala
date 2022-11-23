@@ -981,7 +981,7 @@ package object domain {
     )
   }
 
-  def oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus = List(
+  def oppilaitostyypitForAvoinKorkeakoulutus = List(
     "oppilaitostyyppi_41#1", //Ammattikorkeakoulut
     "oppilaitostyyppi_42#1", //Yliopistot
     "oppilaitostyyppi_43#1", //Sotilaskorkeakoulut
