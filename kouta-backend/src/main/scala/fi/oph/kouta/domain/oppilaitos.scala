@@ -470,7 +470,7 @@ case class OrgServiceOrganisaatio(
     oppilaitostyyppi: Option[String] = None,
     nimi: Kielistetty,
     kotipaikkaUri: String,
-    children: List[OrganisaationOsa],
+    children: List[Organisaatio],
     status: Option[String] = None,
     organisaatiotyypit: Option[List[String]] = None
 )

@@ -3,6 +3,8 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus}
+import fi.oph.kouta.util.MiscUtils
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.Params
 
@@ -16,18 +18,28 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       override val organisaatioUrl: String = urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", RootOrganisaatioOid.s)
     }
 
-  def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]) =
+  def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
     organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
 
   def getOrganisaatio(organisaatioOid: OrganisaatioOid) = {
     organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
   }
 
-  def getOrganisaatiot(organisaatioOids: List[OrganisaatioOid]) = {
+  def getOrganisaatiot(organisaatioOids: List[OrganisaatioOid]): Seq[Organisaatio] = {
     organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
   }
 
   def getOrganisaatioHierarkia(params: Params) = {
     organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(params)
+  }
+
+  def getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus(params: Params): OrganisaatioHierarkia = {
+    val oppilaitosOrganisaatiotyyppi = "organisaatiotyyppi_02"
+    val oppilaitostyypit = oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus
+    val filtered = MiscUtils.filterOrganisaatiotWithOrganisaatiotyyppi(
+      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(params, oppilaitostyypit).organisaatiot,
+      oppilaitosOrganisaatiotyyppi
+    )
+    OrganisaatioHierarkia(organisaatiot = filtered)
   }
 }
