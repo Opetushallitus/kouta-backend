@@ -77,4 +77,81 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       case organisaatiot => Ok(organisaatiot)
     }
   }
+
+  registerPath("/organisaatio/hierarkia",
+    """    get:
+      |      summary: Hae organisaatiohierarkian organisaatiopalvelusta
+      |      operationId: getHierarkia
+      |      description: Hakee organisaatiohierarkian organisaatiopalvelusta
+      |      tags:
+      |        - Organisaatio
+      |      parameters:
+      |        - in: query
+      |          name: searchStr
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Hakumerkkijono
+      |          example: "Tampereen yliopisto"
+      |        - in: query
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Haettavan organisaation oid
+      |          example: "1.2.246.562.10.60198812360"
+      |        - in: query
+      |          name: oidRestrictionList
+      |          style: form
+      |          explode: false
+      |          schema:
+      |            type: array
+      |            items:
+      |              type: string
+      |          required: false
+      |          description: Lista haettavien organisaatioiden oideja
+      |          example: ["1.2.246.562.10.60198812368", "1.2.246.562.10.60198812360"]
+      |        - in: query
+      |          name: aktiiviset
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Otetaanko aktiiviset organisaatiot mukaan hakutuloksiin
+      |          example: false
+      |        - in: query
+      |          name: suunnitellut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Otetaanko suunnitellut organisaatiot mukaan hakutuloksiin
+      |          example: false
+      |        - in: query
+      |          name: lakkautetut
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Otetaanko lakkautetut organisaatiot mukaan hakutuloksiin
+      |          example: false
+      |        - in: query
+      |          name: skipParents
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Jätetäänkö yläorganisaatiot pois hakutuloksista
+      |          example: false
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
+      |""".stripMargin)
+  get("/hierarkia") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(organisaatioService.getOrganisaatioHierarkia(params))
+  }
 }
