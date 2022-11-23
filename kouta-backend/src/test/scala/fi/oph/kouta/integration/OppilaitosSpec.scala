@@ -371,7 +371,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   "Get oppilaitokset by oids" should "not return oppilaitos data for oppilaitos not in kouta" in {
     val organisaatioServiceHierarkia = organisaatioHierarkia(UnknownOid.toString)
-    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOids(List(UnknownOid))).thenReturn(organisaatioServiceHierarkia)
+    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(List(UnknownOid))).thenReturn(organisaatioServiceHierarkia)
     when(mockOppilaitosDao.get(List(UnknownOid))).thenReturn(Vector())
     post(s"$OppilaitosPath/oppilaitokset", bytes(List(UnknownOid)), headers = defaultHeaders) {
       status should equal (200)
@@ -382,7 +382,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "succeed in sending oppilaitos data for existing oppilaitos" in {
     val oid = put(oppilaitos)
     val organisaatioServiceHierarkia = organisaatioHierarkia(oid)
-    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOids(List(OrganisaatioOid(oid)))).thenReturn(organisaatioServiceHierarkia)
+    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(List(OrganisaatioOid(oid)))).thenReturn(organisaatioServiceHierarkia)
     when(mockOppilaitosDao.get(List(OrganisaatioOid(oid)))).thenReturn(
       Vector(OppilaitosAndOsa(oppilaitos = oppilaitos.copy(oid = OrganisaatioOid(oid)), osa = Some(oppilaitoksenOsa))))
 
