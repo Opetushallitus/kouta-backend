@@ -207,7 +207,7 @@ class KoulutusService(
           case aikuistenPerusopetusKoulutusMetadata: AikuistenPerusopetusKoulutusMetadata =>
             Some(aikuistenPerusopetusKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
           case kkOpintojaksoMetadata: KkOpintojaksoKoulutusMetadata =>
-            Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija), orgsAllowedToReadKoulutus = koulutus.tarjoajat))
           case m: ErikoislaakariKoulutusMetadata =>
             val koulutusalaKoodiUrit =
               if (m.koulutusalaKoodiUrit.nonEmpty) m.koulutusalaKoodiUrit
@@ -220,7 +220,7 @@ class KoulutusService(
               )
             )
           case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata =>
-            Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+            Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija), orgsAllowedToReadKoulutus = koulutus.tarjoajat))
         }
       case None => None
     }

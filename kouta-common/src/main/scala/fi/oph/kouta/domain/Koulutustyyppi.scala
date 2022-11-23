@@ -129,7 +129,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Telma,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      AikuistenPerusopetus
+      AikuistenPerusopetus,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Kansanopistot
     "oppilaitostyyppi_64#1" -> Seq(
       Amm,
@@ -137,7 +139,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Muu,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      AikuistenPerusopetus
+      AikuistenPerusopetus,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Kansalaisopistot
     "oppilaitostyyppi_65#1" -> Seq(
       Amm,
@@ -147,7 +151,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Lk,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      Muu
+      Muu,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Opintokeskukset
     "oppilaitostyyppi_66#1" -> Seq(
       Amm,
@@ -157,7 +163,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Lk,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      Muu
+      Muu,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Kesäyliopistot
     "oppilaitostyyppi_91#1" -> Seq(Muu), //Kirjeoppilaitokset
     "oppilaitostyyppi_92#1" -> Seq(Muu), //Neuvontajärjestöt
@@ -169,7 +177,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmMuu,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      Muu
+      Muu,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Muut oppilaitokset
     "oppilaitostyyppi_XX#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
   )

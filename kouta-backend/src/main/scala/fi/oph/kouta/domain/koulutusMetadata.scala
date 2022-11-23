@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations.{assertNotOptional, _}
 
@@ -478,7 +479,8 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                          avoinKorkeakoulutus: Option[Boolean] = None,
                                          tunniste: Option[String] = None,
-                                         opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
+                                         opinnonTyyppiKoodiUri: Option[String] = None,
+                                         orgsAllowedToReadKoulutus: Seq[OrganisaatioOid] = Seq()) extends KoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -490,7 +492,8 @@ case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                                avoinKorkeakoulutus: Option[Boolean] = None,
                                                tunniste: Option[String] = None,
-                                               opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
+                                               opinnonTyyppiKoodiUri: Option[String] = None,
+                                               orgsAllowedToReadKoulutus: Seq[OrganisaatioOid] = Seq()) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
