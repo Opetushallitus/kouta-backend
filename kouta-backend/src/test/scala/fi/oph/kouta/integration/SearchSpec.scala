@@ -145,7 +145,7 @@ class SearchSpec
             oid = k.oid.get,
             nimi = k.nimi,
             koulutustyyppi = k.koulutustyyppi,
-            organisaatio = Organisaatio(
+            organisaatio = IndexedOrganisaatio(
               oid = k.organisaatioOid,
               nimi = Map(Fi -> "fi"),
             ),
@@ -158,7 +158,7 @@ class SearchSpec
                 KoulutusSearchItemToteutus(
                   t.oid.get,
                   nimi = t.nimi,
-                  organisaatio = Organisaatio(
+                  organisaatio = IndexedOrganisaatio(
                     oid = t.organisaatioOid,
                     nimi = Map(Fi -> "fi"),
                   ),
