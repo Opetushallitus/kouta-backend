@@ -61,18 +61,24 @@ object Validations {
     msg = s"Koulutusalakoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutusAlaKoodiuri"
   )
+
   def invalidOpintojenLaajuusyksikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
 
   def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage =
-    ErrorMessage(
-      msg =
-        s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
-      id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
-      meta = Some(Map("toteutukset" -> toteutukset))
-    )
+  ErrorMessage(
+    msg =
+      s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
+    id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
+    meta = Some(Map("toteutukset" -> toteutukset))
+  )
+
+  def invalidOpinnonTyyppiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua opinnontyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidOpinnonTyyppiKoodiuri"
+  )
 
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
       laajuusMin: Double,
