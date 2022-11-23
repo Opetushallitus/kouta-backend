@@ -1,26 +1,24 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.domain.{En, Fi, OrgServiceOrganisaatio, OrganisaatioHierarkia, OrganisaationOsa, Sv}
+import fi.oph.kouta.domain.{En, Fi, Organisaatio, OrganisaatioHierarkia, OrganisaationOsa, Sv}
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
   val organisaationOsa = OrganisaationOsa(
     oid = TestOids.GrandChildOid.toString,
     parentOidPath = s"${TestOids.GrandChildOid.toString}/${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
-    kotipaikkaUri = "kunta_179",
+    kotipaikkaUri = Some("kunta_179"),
     children = List(),
-    status = "AKTIIVINEN",
     organisaatiotyypit = List("organisaatiotyyppi_03"))
 
-  val organisaatio = OrgServiceOrganisaatio(
+  val organisaatio = Organisaatio(
     oid = TestOids.ChildOid.toString,
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
-    kotipaikkaUri = "kunta_179",
+    kotipaikkaUri = Some("kunta_179"),
     children = List(),
-    status = Some("AKTIIVINEN"),
     organisaatiotyypit = Some(List("organisaatiotyyppi_03")))
 
   "getOidsFromChildren" should "return one oid for one child org" in {

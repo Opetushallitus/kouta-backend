@@ -270,85 +270,6 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
-  val OrganisaationOsaModel =
-    """    OrganisaationOsa:
-      |      type: object
-      |      properties:
-      |        oid:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895666
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895666/1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
-      |        nimi:
-      |          type: object
-      |          $ref: '#/components/schemas/Nimi'
-      |        kotipaikkaUri:
-      |          type: string
-      |          example:
-      |            - kunta_091
-      |            - kunta_398
-      |        children:
-      |          type: array
-      |          items:
-      |            $ref: '#/components/schemas/OrganisaationOsa'
-      |        status:
-      |          type: string
-      |          example: AKTIIVINEN
-      |        organisaatiotyypit:
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |""".stripMargin
-
-  val OrgServiceOrganisaatioModel =
-    """    OrgServiceOrganisaatio:
-      |      type: object
-      |      properties:
-      |        oid:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
-      |        oppilaitostyyppi:
-      |          type: string
-      |          example: oppilaitostyyppi_21
-      |        nimi:
-      |          type: object
-      |          $ref: '#/components/schemas/Nimi'
-      |        kotipaikkaUri:
-      |          type: string
-      |          example:
-      |            - kunta_091
-      |            - kunta_398
-      |        children:
-      |          type: array
-      |          items:
-      |            $ref: '#/components/schemas/OrganisaationOsa'
-      |        status:
-      |          type: string
-      |          example: AKTIIVINEN
-      |        organisaatiotyypit:
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |""".stripMargin
-
-  val OrganisaatioHierarkiaModel =
-    """    OrganisaatioHierarkia:
-      |      type: object
-      |      properties:
-      |        organisaatiot:
-      |          type: array
-      |          items:
-      |            $ref: '#/components/schemas/OrgServiceOrganisaatio'
-      |""".stripMargin
-
   val OppilaitoksetResponseModel =
     """    OppilaitoksetResponse:
       |      type: object
@@ -362,27 +283,6 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin
 
-  val OrganisaatioServiceOrganisaatioModel =
-    """    OrganisaatioServiceOrganisaatio:
-      |      type: object
-      |      properties:
-      |        oid:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
-      |        nimi:
-      |          type: object
-      |          $ref: '#/components/schemas/Nimi'
-      |        tyypit:
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |""".stripMargin
-
   def models = Seq(
     OppilaitosModel,
     OppilaitoksenOsaModel,
@@ -391,11 +291,7 @@ package object oppilaitos {
     OppilaitoksenOsaListItemModel,
     YhteystietoModel,
     TietoaOpiskelustaModel,
-    OrganisaationOsaModel,
-    OrgServiceOrganisaatioModel,
-    OrganisaatioHierarkiaModel,
     OppilaitoksetResponseModel,
-    OrganisaatioServiceOrganisaatioModel
   )
 }
 
@@ -574,20 +470,6 @@ case class OrgServiceOrganisaatio(
     children: List[OrganisaationOsa],
     status: Option[String] = None,
     organisaatiotyypit: Option[List[String]] = None
-)
-
-case class OrganisaationOsa(
-    oid: String,
-    parentOidPath: String,
-    nimi: Kielistetty,
-    kotipaikkaUri: String,
-    children: List[OrganisaationOsa],
-    status: String,
-    organisaatiotyypit: List[String]
-)
-
-case class OrganisaatioHierarkia(
-    organisaatiot: List[OrgServiceOrganisaatio]
 )
 
 case class OrganisaatioServiceOrganisaatio(oid: String,
