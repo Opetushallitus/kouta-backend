@@ -1,25 +1,9 @@
 package fi.oph.kouta.util
-import fi.oph.kouta.TestData.{
-  JulkaistuHakukohde,
-  LukioToteutuksenMetatieto,
-  TelmaToteutuksenMetatieto,
-  TuvaToteutuksenMetatieto,
-  TuvaToteutus
-}
-import fi.oph.kouta.domain.{
-  En,
-  Fi,
-  Hakukohde,
-  Kielistetty,
-  LukioKoulutusMetadata,
-  Sv,
-  TelmaToteutusMetadata,
-  Toteutus,
-  TuvaToteutusMetadata
-}
-import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import com.softwaremill.diffx.generic.auto._
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.client.Henkilo
+import fi.oph.kouta.domain._
 
 class NameHelperSpec extends UnitSpec {
   val tuvaToteutus: Toteutus                        = TuvaToteutus
@@ -115,11 +99,10 @@ class NameHelperSpec extends UnitSpec {
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
-      opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
-      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
-    )
-
+    opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
+  )
 
   "generateToteutusDisplayName" should "generate Toteutus display name for lukio with yleislinja, painotus and erityinen koulutustehtävä" in {
     val esitysnimi = NameHelper.generateLukioToteutusDisplayName(
@@ -128,7 +111,7 @@ class NameHelperSpec extends UnitSpec {
       toteutusKaannokset,
       koodiKaannokset
     )
-    esitysnimi shouldMatchTo(
+    esitysnimi shouldMatchTo (
       Map(
         Fi -> "Lukio, 40 opintopistettä\nlukion painotus 1 fi, 40 opintopistettä\nlukio erityinen koulutustehtävä 1 fi, 40 opintopistettä",
         Sv -> "Gymnasium, 40 studiepoäng\nlukion painotus 1 sv, 40 studiepoäng\nlukio erityinen koulutustehtävä 1 sv, 40 studiepoäng"
@@ -143,7 +126,7 @@ class NameHelperSpec extends UnitSpec {
       toteutusKaannokset,
       koodiKaannokset
     )
-    esitysnimi shouldMatchTo(
+    esitysnimi shouldMatchTo (
       Map(
         Fi -> "Lukio, 40 opintopistettä",
         Sv -> "Gymnasium, 40 studiepoäng",
@@ -170,5 +153,41 @@ class NameHelperSpec extends UnitSpec {
   it should "return empty string if kutsumanimi, etunimet and sukunimi are all unspecified" in {
     val henkilo = Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
     assert(NameHelper.generateMuokkaajanNimi(henkilo) == "")
+  }
+
+  "mergeNames" should "merge names from kielistetty to another" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
+    assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv, En)) == from)
+  }
+
+  it should "ignore null values" in {
+    val from = Map(Fi -> "suomi", Sv -> "ruotsi", En -> null)
+    assert(
+      NameHelper.mergeNames(from, Map(Fi -> "", Sv -> null, En -> null), Seq(Fi, Sv, En)) == Map(
+        Fi -> "suomi",
+        Sv -> "ruotsi"
+      )
+    )
+  }
+
+  it should "merge only selected languauges" in {
+    val from     = Map(Fi -> "suomi", Sv -> "ruotsi", En -> "englanti")
+    val expected = Map(Fi -> "suomi", Sv -> "ruotsi")
+    assert(NameHelper.mergeNames(from, Map(), Seq(Fi, Sv)) == expected)
+  }
+
+  it should "preserve existing language versions" in {
+    val from     = Map(Fi -> "suomi", Sv -> "ruotsi")
+    val target   = Map(Fi -> "suomeksi", Sv -> "", En -> "englanti")
+    val expected = Map(Fi -> "suomeksi", Sv -> "ruotsi")
+    assert(NameHelper.mergeNames(from, target, Seq(Fi, Sv)) == expected)
+    assert(NameHelper.mergeNames(from, target - Sv, Seq(Fi, Sv)) == expected)
+  }
+
+  "notFullyPopulated" should "find missing language versions" in {
+    assert(NameHelper.notFullyPopulated(Map[Kieli, String](), Seq(Fi, Sv)))
+    assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi"), Seq(Fi, Sv)))
+    assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> null), Seq(Fi, Sv)))
+    assert(!NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> "Ruåtsiksi"), Seq(Fi, Sv)))
   }
 }

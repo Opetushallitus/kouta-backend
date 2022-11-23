@@ -712,6 +712,9 @@
             "oid": "1.2.246.562.10.99999999999",
             "parentOidPath": "1.2.246.562.10.99999999999/1.2.246.562.10.00000000001",
             "oppilaitostyyppi": "oppilaitostyyppi_21#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
             "children" : [],
             "status": "AKTIIVINEN"
         },
@@ -719,6 +722,19 @@
             "oid": "1.2.246.562.10.463122068666",
             "parentOidPath": "1.2.246.562.10.463122068666/1.2.246.562.10.00000000001",
             "oppilaitostyyppi": "oppilaitostyyppi_21#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
+            "children" : [],
+            "status": "AKTIIVINEN"
+        },
+        {
+            "oid": "1.2.246.562.10.463122068777",
+            "parentOidPath": "1.2.246.562.10.463122068777/1.2.246.562.10.00000000001",
+            "oppilaitostyyppi": "oppilaitostyyppi_22#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
             "children" : [],
             "status": "AKTIIVINEN"
         },
@@ -726,8 +742,118 @@
             "oid": "1.2.246.562.10.67476956288",
             "parentOidPath": "1.2.246.562.10.67476956288/1.2.246.562.10.00000000001",
             "oppilaitostyyppi": "oppilaitostyyppi_21#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
             "children" : [],
             "status": "AKTIIVINEN"
+        },
+        {
+            "oid": "1.2.246.562.10.99682778883",
+            "parentOidPath": "1.2.246.562.10.99682778883/1.2.246.562.10.00000000001",
+            "oppilaitostyyppi": "oppilaitostyyppi_15#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
+            "children" : [],
+            "status": "AKTIIVINEN"
+        },
+        {
+            "oid": "1.2.246.562.10.54453921329",
+            "alkuPvm": 838846800000,
+            "parentOid": "1.2.246.562.10.2014041511401945349694",
+            "parentOidPath": "1.2.246.562.10.2014041511401945349694/1.2.246.562.10.00000000001",
+            "oppilaitosKoodi": "02472",
+            "oppilaitostyyppi": "oppilaitostyyppi_41#1",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_02"
+            ],
+            "toimipistekoodi": "02472",
+            "nimi": {
+                "fi": "Seinäjoen ammattikorkeakoulu",
+                "sv": "Seinäjoen ammattikorkeakoulu",
+                "en": "Seinäjoki University of Applied Sciences"
+            },
+            "kieletUris": [
+                "oppilaitoksenopetuskieli_1#1",
+                "oppilaitoksenopetuskieli_4#2"
+            ],
+            "kotipaikkaUri": "kunta_743",
+            "children": [],
+            "status": "AKTIIVINEN"
+        },
+        {
+            "oid": "1.2.246.562.10.73999728683",
+            "alkuPvm": 725839200000,
+            "parentOid": "1.2.246.562.10.00000000001",
+            "parentOidPath": "1.2.246.562.10.73999728683/1.2.246.562.10.00000000001",
+            "ytunnus": "0245904-2",
+            "toimipistekoodi": "",
+            "match": true,
+            "nimi": {
+                "fi": "Lappeenrannan-Lahden teknillinen yliopisto LUT"
+            },
+            "kieletUris": [
+                "oppilaitoksenopetuskieli_1#1"
+            ],
+            "kotipaikkaUri": "kunta_405",
+            "organisaatiotyypit": [
+                "organisaatiotyyppi_01"
+            ],
+            "status": "AKTIIVINEN",
+            "children":[
+                {
+                    "oid": "1.2.246.562.10.42777795784",
+                    "alkuPvm": 725839200000,
+                    "parentOid": "1.2.246.562.10.73999728683",
+                    "parentOidPath": "1.2.246.562.10.42777795784/1.2.246.562.10.73999728683/1.2.246.562.10.00000000001",
+                    "oppilaitosKoodi": "01914",
+                    "oppilaitostyyppi": "oppilaitostyyppi_42#1",
+                    "toimipistekoodi": "01914",
+                    "match": true,
+                    "nimi": {
+                        "fi": "Lappeenrannan-Lahden teknillinen yliopisto LUT",
+                        "sv": "Lappeenrannan-Lahden teknillinen yliopisto LUT",
+                        "en": "Lappeenranta-Lahti University of Technology LUT"
+                    },
+                    "kieletUris": [
+                        "oppilaitoksenopetuskieli_1#1",
+                        "oppilaitoksenopetuskieli_4#2"
+                    ],
+                    "kotipaikkaUri": "kunta_405",
+                    "organisaatiotyypit": [
+                        "organisaatiotyyppi_02"
+                    ],
+                    "status": "AKTIIVINEN",
+                    "aliOrganisaatioMaara": 1,
+                    "children": [
+                        {
+                            "oid":"1.2.246.562.10.84551363298",
+                            "alkuPvm":1466370000000,
+                            "parentOid":"1.2.246.562.10.42777795784",
+                            "parentOidPath":"1.2.246.562.10.84551363298/1.2.246.562.10.42777795784/1.2.246.562.10.73999728683/1.2.246.562.10.00000000001",
+                            "toimipistekoodi":"0191407",
+                            "match":true,
+                            "nimi": {
+                                "fi":"Avoin yliopisto",
+                                "sv":"Avoin yliopisto",
+                                "en":"LUT Open University"
+                            },
+                            "lyhytNimi":{},
+                            "kieletUris":[
+                                "oppilaitoksenopetuskieli_1#1",
+                                "oppilaitoksenopetuskieli_4#2"
+                            ],
+                            "kotipaikkaUri":"kunta_405",
+                            "children":[],
+                            "subRows":[],
+                            "aliOrganisaatioMaara":0,
+                            "organisaatiotyypit":["organisaatiotyyppi_03"],
+                            "status":"AKTIIVINEN"
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

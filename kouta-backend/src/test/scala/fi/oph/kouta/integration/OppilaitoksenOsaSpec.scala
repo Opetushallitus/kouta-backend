@@ -78,16 +78,6 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = testUser.oid))
   }
 
-  it should "fail to store oppilaitoksen osa if oppilaitos doesn't exist" in {
-    val oppilaitosOid = randomOrganisaatioOid.s
-    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "oppilaitosOid", nonExistent("Oppilaitosta", oppilaitosOid))
-  }
-
-  it should "fail to store oppilaitoksen osa if oppilaitos is not yet julkaistu" in {
-    val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
-    put(OppilaitoksenOsaPath, oppilaitoksenOsa(oppilaitosOid), 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
-  }
-
   it should "return 401 if no session is found" in {
     put(s"$OppilaitoksenOsaPath", bytes(oppilaitoksenOsa(oppilaitosOid))) {
       status should equal (401)
@@ -99,10 +89,6 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val oid = put(oppilaitoksenOsa(oppilaitosOid).withModified(LocalDateTime.parse("1000-01-01T12:00:00")))
     MockAuditLogger.find(oid, "oppilaitoksen_osa_create") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
-  }
-
-  it should "fail to store oppilaitoksen osa if oppilaitos does not exist" in {
-    put(OppilaitoksenOsaPath, oppilaitoksenOsa, 400, "oppilaitosOid", nonExistent("Oppilaitosta", oppilaitoksenOsa.oppilaitosOid))
   }
 
   it should "allow a user of the oppilaitoksen osa organization to create the oppilaitoksen osa" in {
@@ -130,7 +116,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   it should "validate new oppilaitoksen osa" in {
-    put(OppilaitoksenOsaPath, bytes(oppilaitoksenOsa.copy(organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
+    put(OppilaitoksenOsaPath, bytes(oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid), organisaatioOid = OrganisaatioOid("saippua"))), defaultHeaders) {
       withClue(body) {
         status should equal(400)
       }
@@ -155,16 +141,6 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     get(oid, oppilaitoksenOsaWithImage.copy(oid = OrganisaatioOid(oid)))
   }
 
-  it should "fail validation if wwwPage undefined for published oppilaitoksen osa" in {
-    val osaWithoutWwwPage = oppilaitoksenOsa.copy(metadata = Some(oppilaitoksenOsa.metadata.get.copy(wwwSivu = None)))
-    put(OppilaitoksenOsaPath, bytes(osaWithoutWwwPage), defaultHeaders) {
-      withClue(body) {
-        status should equal(400)
-      }
-      body should equal (validationErrorBody(missingMsg, "metadata.wwwSivu"))
-    }
-  }
-
   "Update oppilaitoksen osa" should "update oppilaitoksen osa" in {
     val oid = put(oppilaitoksenOsa(oppilaitosOid))
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
@@ -178,20 +154,6 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid).copy(muokkaaja = userOid))
     update(oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
     get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Arkistoitu).copy(muokkaaja = testUser.oid))
-  }
-
-  it should "fail to update oppilaitoksen osa if oppilaitos doesn't exist" in {
-    val oid = put(oppilaitoksenOsa(oppilaitosOid))
-    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid))
-    val nonExistentOppilaitosOid = randomOrganisaatioOid.s
-    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, nonExistentOppilaitosOid), lastModified, 400, "oppilaitosOid", nonExistent("Oppilaitosta", nonExistentOppilaitosOid))
-  }
-
-  it should "fail to update oppilaitoksen osa if oppilaitos is not yet julkaistu" in {
-    val oppilaitosOid = put(oppilaitos.copy(tila = Tallennettu))
-    val oid = put(oppilaitoksenOsa(oppilaitosOid).copy(tila = Tallennettu))
-    val lastModified = get(oid, oppilaitoksenOsa(oid, oppilaitosOid, Tallennettu))
-    update(OppilaitoksenOsaPath, oppilaitoksenOsa(oid, oppilaitosOid, Julkaistu), lastModified, 400, "tila", notYetJulkaistu("Oppilaitosta", oppilaitosOid))
   }
 
   it should "write oppilaitoksen osa update to audit log" in {

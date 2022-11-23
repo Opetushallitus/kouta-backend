@@ -89,6 +89,8 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Oppilaitos
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan oppilaitoksen kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true
@@ -267,6 +269,8 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |        ja muuttuneet tiedot tallennetaan kantaan.
       |      tags:
       |        - Oppilaitoksen osa
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |      requestBody:
       |        description: Muokattavan oppilaitoksen osan kaikki tiedot. Kantaan tallennetaan muuttuneet tiedot.
       |        required: true

@@ -29,11 +29,11 @@ class LokalisointiClient(urlProperties: OphProperties)
     )
 
   private def getKaannoksetWithKey(key: String): Map[Kieli, String] = {
-    get (lokalisointiUrl + s"&key=$key", followRedirects = true) {response =>
-    parseKaannokset (parse (response).extract[List[Kaannos]] )
-  }
+    get(lokalisointiUrl + s"&key=$key", followRedirects = true) { response =>
+      parseKaannokset(parse(response).extract[List[Kaannos]])
+    }
   }
   def getKaannoksetWithKeyFromCache(key: String): Map[Kieli, String] = {
-   LokalisointiCache.get(key, key => getKaannoksetWithKey(key))
+    LokalisointiCache.get(key, key => getKaannoksetWithKey(key))
   }
 }

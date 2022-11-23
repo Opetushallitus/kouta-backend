@@ -1,15 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{
-  Hakukohde,
-  HakukohdeMetadata,
-  KoulutuksenAlkamiskausi,
-  Liite,
-  Osoite,
-  PainotettuOppiaine,
-  Valintakoe,
-  ValintakokeenLisatilaisuudet
-}
+import fi.oph.kouta.domain.{Hakukohde, HakukohdeMetadata, Kielistetty, KoulutuksenAlkamiskausi, Liite, Osoite, PainotettuOppiaine, Valintakoe, ValintakokeenLisatilaisuudet}
 
 import java.util.UUID
 
@@ -21,6 +12,9 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
     metadata.flatMap(_.koulutuksenAlkamiskausi).flatMap(_.koulutuksenAlkamiskausiKoodiUri)
   private def painotetutArvosanat(metadata: Option[HakukohdeMetadata]): Seq[PainotettuOppiaine] =
     metadata.flatMap(_.hakukohteenLinja).map(_.painotetutArvosanat).getOrElse(Seq())
+
+  def newNimi(): Option[Kielistetty] =
+    if (oldHakukohde.map(_.nimi).getOrElse(Map()) != hakukohde.nimi) Some(hakukohde.nimi) else None
 
   def newHakukohdeKoodiUri(): Option[String] =
     if (oldHakukohde.flatMap(_.hakukohdeKoodiUri) != hakukohde.hakukohdeKoodiUri)

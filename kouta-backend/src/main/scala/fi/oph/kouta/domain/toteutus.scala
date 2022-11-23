@@ -1,7 +1,7 @@
 package fi.oph.kouta.domain
 
 import java.util.UUID
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
@@ -243,7 +243,11 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
                    )
   extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
 
-  override def validate(): IsValid = super.validate()
+  override def validate(): IsValid = and(
+    validateIfDefined[Oid](oid, assertValid(_, "oid")),
+    assertValid(organisaatioOid, "organisaatioOid"),
+    assertNotEmpty(kielivalinta, "kielivalinta")
+  )
 
   def withOid(oid: ToteutusOid): Toteutus = copy(oid = Some(oid))
 

@@ -22,7 +22,7 @@ trait SorakuvausFixture extends AccessControlSpec {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
     val sorakuvausServiceValidation =
-      new SorakuvausServiceValidation(organisaatioService, koulutusKoodiClient, KoulutusDAO)
+      new SorakuvausServiceValidation(koulutusKoodiClient, KoulutusDAO)
     new SorakuvausService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

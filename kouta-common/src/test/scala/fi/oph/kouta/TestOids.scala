@@ -19,8 +19,14 @@ object TestOids {
   val UnknownOid = OrganisaatioOid("1.2.246.562.10.99999999998")
   val YoOid = OrganisaatioOid("1.2.246.562.10.46312206843")
   val AmmOid = OrganisaatioOid("1.2.246.562.10.463122068666")
+  val AmmErityisOid = OrganisaatioOid("1.2.246.562.10.463122068777")
   val OtherOid = OrganisaatioOid("1.2.246.562.10.67476956288")
   val LukioOid = OrganisaatioOid("1.2.246.562.10.99682778883")
+  val AmkOid = OrganisaatioOid("1.2.246.562.10.54453921329")
+
+  val HkiYoOid = OrganisaatioOid("1.2.246.562.10.39218317368")
+  val LutYoOid = OrganisaatioOid("1.2.246.562.10.42777795784")
+  val LutYoChildOid = OrganisaatioOid("1.2.246.562.10.84551363298")
 
   val TestUserOid = UserOid("1.2.246.562.24.10000000000")
   val OphUserOid = UserOid("1.2.246.562.24.10000000099")

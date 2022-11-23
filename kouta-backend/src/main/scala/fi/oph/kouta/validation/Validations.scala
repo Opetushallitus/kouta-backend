@@ -2,9 +2,10 @@ package fi.oph.kouta.validation
 
 import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, itemNotFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 import java.time.temporal.ChronoUnit
@@ -44,8 +45,11 @@ object Validations {
     id = "invalidKoulutuskoodiuri"
   )
 
-  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koulutustyyppiKoodi: String): ErrorMessage = ErrorMessage(
-    msg = s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin $ammatillinenPerustutkintoKoulutustyyppiKoodiUri että se voidaan järjestää erityisopetuksena",
+  def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(
+      koulutustyyppiKoodi: String
+  ): ErrorMessage = ErrorMessage(
+    msg =
+      s"Koulutuksen koulutustyyppi $koulutustyyppiKoodi on virheellinen, koulutustyyppillä täytyy olla koodistorelaatio tyyppiin ${AmmatillisetPerustutkintoKoodit.koulutusTyypit.head} että se voidaan järjestää erityisopetuksena",
     id = "invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena"
   )
 
@@ -62,28 +66,40 @@ object Validations {
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
 
-  def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
-    msg = s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
-    id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
-    meta = Some(Map("toteutukset" -> toteutukset))
-  )
+  def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage =
+    ErrorMessage(
+      msg =
+        s"Ainakin yhdellä Koulutukseen liitetyllä toteutuksella on eri opintojenlaajuusyksikko-koodiUri kuin koulutuksella ($koodiUri).",
+      id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
+      meta = Some(Map("toteutukset" -> toteutukset))
+    )
 
-  def invalidKoulutusOpintojenLaajuusNumeroIntegrity(laajuusMin: Double, laajuusMax: Double, toteutukset: Seq[ToteutusOid]): ErrorMessage = ErrorMessage(
-    msg = s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
+  def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
+      laajuusMin: Double,
+      laajuusMax: Double,
+      toteutukset: Seq[ToteutusOid]
+  ): ErrorMessage = ErrorMessage(
+    msg =
+      s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
     id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
     meta = Some(Map("toteutukset" -> toteutukset))
   )
 
-  def invalidToteutusOpintojenLaajuusyksikkoIntegrity(koulutusLaajuusyksikkoKoodiUri: Option[String], toteutusLaajuusyksikkoKoodiUri: Option[String]) = {
+  def invalidToteutusOpintojenLaajuusyksikkoIntegrity(
+      koulutusLaajuusyksikkoKoodiUri: Option[String],
+      toteutusLaajuusyksikkoKoodiUri: Option[String]
+  ) = {
     ErrorMessage(
-      msg = s"Toteutuksella on eri opintojen laajuusyksikkö (${toteutusLaajuusyksikkoKoodiUri.getOrElse("-")}) kuin koulutuksella (${koulutusLaajuusyksikkoKoodiUri.getOrElse("-")})",
+      msg = s"Toteutuksella on eri opintojen laajuusyksikkö (${toteutusLaajuusyksikkoKoodiUri
+        .getOrElse("-")}) kuin koulutuksella (${koulutusLaajuusyksikkoKoodiUri.getOrElse("-")})",
       id = "invalidToteutusOpintojenLaajuusyksikkoIntegrity"
     )
   }
 
   def invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
       id = "invalidKoulutustyyppiForLiitettyOpintojakso",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -91,7 +107,8 @@ object Validations {
 
   def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
       id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -99,7 +116,8 @@ object Validations {
 
   def invalidTilaForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
+      msg =
+        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
       id = "invalidTilaForLiitettyOpintojakso",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
@@ -121,10 +139,11 @@ object Validations {
     msg = s"Lukiototeutukselle valittua $linjaField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidLukioLinjaKoodiUri"
   )
-  def unknownTarjoajaOid(oid: OrganisaatioOid): ErrorMessage = ErrorMessage(
-    msg = s"Tarjoaja-organisaatiota oid:illa $oid ei löydy, tai organisaatio ei ole aktiivinen",
-    id = "unknownTarjoajaOid"
-  )
+  def tarjoajaOidWoRequiredKoulutustyyppi(oid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi): ErrorMessage =
+    ErrorMessage(
+      msg = s"Tarjoaja-organisaatiolla $oid ei ole oikeuksia koulutustyyppiin $koulutustyyppi",
+      id = "tarjoajaOidWoRequiredKoulutustyyppi"
+    )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
     msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa",
     id = "invalidEPerusteId"
@@ -181,8 +200,8 @@ object Validations {
     msg = s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKausiKoodiuri"
   )
-  def invalidHakukohdeKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg = s"Hakukohde-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+  def invalidHakukohdeKooriuri(koodiUri: String, koodisto: String): ErrorMessage = ErrorMessage(
+    msg = s"Hakukohde-koodiuria $koodiUri ei löydy koodistosta $koodisto, tai ei ole voimassa",
     id = "invalidHakukohdeKooriuri"
   )
   def invalidPohjakoulutusVaatimusKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
@@ -238,6 +257,20 @@ object Validations {
     msg = s"Valintatapa-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidValintatapaKoodiUri"
   )
+  def invalidTietoaOpiskelustaOtsikkoKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Tietoa opiskelusta -otsikon koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidTietoaOpiskelustaOtsikkoKoodiUri"
+  )
+  def invalidJarjestyspaikkaOid(oid: OrganisaatioOid, toteutusOid: ToteutusOid): ErrorMessage = ErrorMessage(
+    msg =
+      s"JärjestyspaikkaOID:ia ${oid.s} ei löydy toteutuksen ${toteutusOid.s} tarjoajista eikä niiden ali-organisaatioista",
+    id = "invalidJarjestyspaikkaOid"
+  )
+  def invalidHakukohteenLinja(linja: String): ErrorMessage = ErrorMessage(
+    msg =
+      s"Hakukohteen linja $linja ei ole sallittu. Linjan täytyy olla tyhjä (jolloin kyseessä yleislinja), tai vastata toteutuksen lukiopainotuksia tai erityis-koulutustehtäviä",
+    id = "invalidHakukohteenLinja"
+  )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 
@@ -247,6 +280,10 @@ object Validations {
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
     msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]",
     id = "invalidKielistetty"
+  )
+  def notAllowedKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
+    msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}",
+    id = "notAllowedKielistetty"
   )
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
@@ -307,11 +344,24 @@ object Validations {
       s"Kentän täytyy sisältää täsmälleen yksi arvo: $fixedValDesc. Ko. arvo asetetaan automaattisesti jos kenttä on tyhjä",
     id = "illegalValueForFixedValueSeq"
   )
+  def illegalNameForFixedlyNamedEntityMsg(expectedValue: String, nameSourceDesc: String): ErrorMessage = ErrorMessage(
+    msg =
+      s"Nimen täytyy olla '$expectedValue', vastaava kuin $nameSourceDesc. Nimi asetetaan automaattisesti jos kenttä on tyhjä.",
+    id = "illegalNameForFixedlyNamedEntity"
+  )
+  def nameNotAllowedForFixedlyNamedEntityMsg(nameSourceDesc: String): ErrorMessage = ErrorMessage(
+    msg = s"Ei saa sisältää arvoa, vastaavaa kielistettyä arvoa ei ole asetettu $nameSourceDesc",
+    id = "nameNotAllowedForFixedlyNamedEntity"
+  )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
   def invalidArkistointiDate(months: Int): ErrorMessage =
-    ErrorMessage(msg = s"Arkistointipäivämäärän tulee olla vähintään $months kuukautta haun viimeisimmästä päättymispäivämäärästä.", id = "invalidArkistointiDate")
+    ErrorMessage(
+      msg =
+        s"Arkistointipäivämäärän tulee olla vähintään $months kuukautta haun viimeisimmästä päättymispäivämäärästä.",
+      id = "invalidArkistointiDate"
+    )
   def unknownLiiteId(liiteId: String): ErrorMessage =
     ErrorMessage(msg = s"Liitettä ID:llä $liiteId ei löydy", id = "unknownLiiteId")
 
@@ -348,10 +398,15 @@ object Validations {
   val organisaatioServiceFailureMsg: ErrorMessage =
     ErrorMessage(
       msg =
-        s"Organisaatioiden voimassaoloa ei voitu tarkistaa, Organisaatiopalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+        s"Organisaatioiden tietoja ei voitu tarkistaa, Organisaatiopalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
       id = "organisaatioServiceFailure"
     )
 
+  val lokalisointiServiceFailureMsg: ErrorMessage =
+    ErrorMessage(
+      msg = "Käännöksiä ei voitu hakea, Lokalisointipalvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+      id = "lokalisointiServiceFailureMsg"
+    )
   def uuidToString(uuid: Option[UUID]): String = uuid.map(_.toString).getOrElse("")
 
   val InvalidKoulutuspaivamaarat: ErrorMessage = ErrorMessage(
@@ -364,9 +419,9 @@ object Validations {
   def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
     ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
 
-  val KoulutusKoodiPattern: Pattern                     = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
-  val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern     = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
-  val PostinumeroKoodiPattern: Pattern             = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")
+  val KoulutusKoodiPattern: Pattern                 = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
+  val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
+  val PostinumeroKoodiPattern: Pattern              = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")
 
   val VuosiPattern: Pattern = Pattern.compile("""\d{4}""")
 
@@ -398,7 +453,7 @@ object Validations {
   def assertCertainValue(
       value: Option[String],
       expectedValuePrefix: String,
-      path: String,
+      path: String
   ): IsValid =
     assertTrue(
       value.isDefined && value.get.startsWith(expectedValuePrefix),
@@ -437,6 +492,28 @@ object Validations {
   def assertInFuture(date: LocalDateTime, path: String): IsValid =
     assertTrue(date.isAfter(LocalDateTime.now()), path, pastDateMsg(date))
 
+  def assertNimiMatchExternal(
+      nimi: Kielistetty,
+      nimiFromExternalSource: Kielistetty,
+      path: String,
+      externalSourceDesc: String
+  ): IsValid = {
+    val nameNotAllowedLngs = nimi.keySet.filter(lng => !nimiFromExternalSource.contains(lng) && nimi(lng) != null && nimi(lng).nonEmpty)
+    val nameNotMatchingLngs =
+      nimi.keySet.filter(lng => nimiFromExternalSource.contains(lng) && nimi(lng) != nimiFromExternalSource(lng))
+    nameNotAllowedLngs
+      .map(lng => ValidationError(s"$path.${lng.name}", nameNotAllowedForFixedlyNamedEntityMsg(externalSourceDesc)))
+      .toList ++
+      nameNotMatchingLngs
+        .map(lng =>
+          ValidationError(
+            s"$path.${lng.name}",
+            illegalNameForFixedlyNamedEntityMsg(nimiFromExternalSource(lng), externalSourceDesc)
+          )
+        )
+        .toList
+  }
+
   def assertKoodistoQueryResult(
       koodiUri: String,
       queryMethod: String => ExternalQueryResult,
@@ -454,70 +531,53 @@ object Validations {
     )
   }
 
-  def assertKoulutustyyppiQueryResult(
-      koulutusKoodiUri: String,
-      koulutusTyypit: Seq[String],
-      koulutusKoodiClient: KoulutusKoodiClient,
-      path: String,
-      validationContext: ValidationContext,
-      errorMessage: ErrorMessage,
-      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
-  ): IsValid = {
-    val queryResult =
-      if (validationContext.isKoodistoServiceOk())
-        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutusTyypit, koulutusKoodiUri)
-      else queryFailed
-    validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
-    assertExternalQueryResult(
-      queryResult,
-      path,
-      errorMessage,
-      koodistoServiceFailureMessage
-    )
-  }
-
   def assertKoulutuskoodiQueryResult(
       koulutusKoodiUri: String,
-      koulutusKoodiFilter: Seq[String],
+      koulutusKoodiFilter: KoulutusKoodiFilter,
       koulutusKoodiClient: KoulutusKoodiClient,
       path: String,
       validationContext: ValidationContext,
       errorMessage: ErrorMessage,
-      koodistoServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
+      externalServiceFailureMessage: ErrorMessage = koodistoServiceFailureMsg
   ): IsValid = {
     val queryResult =
-      if (validationContext.isKoodistoServiceOk())
-        koulutusKoodiClient.koulutusKoodiUriExists(koulutusKoodiFilter, koulutusKoodiUri)
-      else queryFailed
+      if (validationContext.isKoodistoServiceOk()) {
+        if (koulutusKoodiFilter.filterType() == koulutusTyyppi) {
+          koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+            koulutusKoodiFilter.koulutusTyypit,
+            koulutusKoodiUri
+          )
+        } else
+          koulutusKoodiClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
+      } else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(
       queryResult,
       path,
       errorMessage,
-      koodistoServiceFailureMessage
+      externalServiceFailureMessage
     )
   }
 
   def assertAtaruQueryResult(
       ataruId: UUID,
       hakemusPalveluClient: HakemusPalveluClient,
-      path: String,
-      errorMessage: ErrorMessage
+      path: String
   ): IsValid = {
     assertExternalQueryResult(
       hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId),
       path,
-      errorMessage,
+      unknownAtaruId(ataruId),
       ataruServiceFailureMsg
     )
   }
 
   def assertAtaruFormAllowsOnlyYhteisHakuResult(
-    ataruId: UUID,
-    hakutapa: Option[String],
-    hakemusPalveluClient: HakemusPalveluClient,
-    path: String,
-    errorMessage: ErrorMessage
+      ataruId: UUID,
+      hakutapa: Option[String],
+      hakemusPalveluClient: HakemusPalveluClient,
+      path: String,
+      errorMessage: ErrorMessage
   ): IsValid = {
     assertExternalQueryResult(
       hakemusPalveluClient.isFormAllowedForHakutapa(ataruId, hakutapa),
@@ -534,18 +594,19 @@ object Validations {
       externalServiceFailureMessage: ErrorMessage
   ): IsValid =
     externalQueryResult match {
-      case e if e == itemFound => NoErrors
+      case e if e == itemFound   => NoErrors
       case e if e == queryFailed => error(path, externalServiceFailureMessage)
-      case _ => error(path, errorMessage)
+      case _                     => error(path, errorMessage)
     }
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
-  def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid = (value, oldValue) match {
-    case (Some(value), Some(oldValue)) => if (value != oldValue) f(value) else NoErrors
-    case (Some(value), None) => f(value)
-    case _ => NoErrors
-  }
+  def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid =
+    (value, oldValue) match {
+      case (Some(value), Some(oldValue)) => if (value != oldValue) f(value) else NoErrors
+      case (Some(value), None)           => f(value)
+      case _                             => NoErrors
+    }
 
   def validateIfNonEmpty[T](values: Seq[T], path: String, f: (T, String) => IsValid): IsValid =
     values.zipWithIndex.flatMap { case (t, i) => f(t, s"$path[$i]") }
@@ -576,14 +637,23 @@ object Validations {
   def validateOidList(values: Seq[Oid], path: String): IsValid = validateIfNonEmpty(values, path, assertValid _)
 
   def findMissingKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] = {
-    kielivalinta.diff(k.keySet.toSeq).union(k.filter { case (_, arvo) => arvo.isEmpty }.keySet.toSeq)
+    kielivalinta.diff(k.keySet.toSeq).union(k.filter { case (_, arvo) => arvo == null || arvo.isEmpty }.keySet.toSeq)
   }
 
-  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
-    findMissingKielet(kielivalinta, k) match {
+  def findNonAllowedKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
+    k.keySet.filter(lng => !kielivalinta.contains(lng) && k(lng) != null && k(lng).nonEmpty).toSeq
+
+  def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
+    val missing = findMissingKielet(kielivalinta, k) match {
       case x if x.isEmpty => NoErrors
       case kielet         => error(path, invalidKielistetty(kielet))
     }
+    val notAllowed = findNonAllowedKielet(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case kielet         => error(path, notAllowedKielistetty(kielet))
+    }
+    missing ++ notAllowed
+  }
 
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
@@ -622,14 +692,22 @@ object Validations {
       )
   }
 
-  def validateArkistointiPaivamaara(ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime], haunPaattymisPaivamaarat: List[Option[LocalDateTime]]): IsValid = {
+  def validateArkistointiPaivamaara(
+      ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime],
+      haunPaattymisPaivamaarat: List[Option[LocalDateTime]]
+  ): IsValid = {
     val arkistointiAikaisintaanKuukautta = 3
     ajastettuHaunJaHakukohteidenArkistointi match {
-      case Some(pvm) => haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
-        case paattymisPaivamaarat if paattymisPaivamaarat.nonEmpty && paattymisPaivamaarat.last.toLocalDate.until(pvm.toLocalDate, ChronoUnit.MONTHS) < arkistointiAikaisintaanKuukautta =>
-          error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(arkistointiAikaisintaanKuukautta))
-        case _ => NoErrors
-      }
+      case Some(pvm) =>
+        haunPaattymisPaivamaarat.flatten.sortWith(_.isBefore(_)) match {
+          case paattymisPaivamaarat
+              if paattymisPaivamaarat.nonEmpty && paattymisPaivamaarat.last.toLocalDate.until(
+                pvm.toLocalDate,
+                ChronoUnit.MONTHS
+              ) < arkistointiAikaisintaanKuukautta =>
+            error("ajastettuHaunJaHakukohteidenArkistointi", invalidArkistointiDate(arkistointiAikaisintaanKuukautta))
+          case _ => NoErrors
+        }
       case _ => NoErrors
     }
   }
@@ -709,4 +787,13 @@ object Validations {
       assertTrue(!subEntityId.isDefined || allowedIds.contains(subEntityId.get), path, notAllowedMsg),
       assertNotDefined(subEntityId, path)
     )
+
+  def assertKoulutusKoodiuriAmount(koodiUrit: Seq[String], maxNbrOfKoodit: Option[Int]): IsValid = and(
+    assertNotEmpty(koodiUrit, "koulutuksetKoodiUri"),
+    validateIfDefined[Int](
+      maxNbrOfKoodit,
+      nbr => assertTrue(koodiUrit.size <= nbr, "koulutuksetKoodiUri", tooManyKoodiUris)
+    )
+  )
+
 }

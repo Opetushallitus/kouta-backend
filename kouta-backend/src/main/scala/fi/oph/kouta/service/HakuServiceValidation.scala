@@ -10,9 +10,8 @@ import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
 import java.util.UUID
 
 object HakuServiceValidation
-    extends HakuServiceValidation(OrganisaatioServiceImpl, HakuKoodiClient, HakemusPalveluClient, HakukohdeDAO)
+    extends HakuServiceValidation(HakuKoodiClient, HakemusPalveluClient, HakukohdeDAO)
 class HakuServiceValidation(
-    val organisaatioService: OrganisaatioService,
     hakuKoodiClient: HakuKoodiClient,
     hakemusPalveluClient: HakemusPalveluClient,
     hakukohdeDAO: HakukohdeDAO
@@ -70,7 +69,7 @@ class HakuServiceValidation(
             invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
           )
       ),
-      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(vCtx.tila, vCtx.kielivalinta, _)),
+      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validate(vCtx, _)),
       validateIfDefined[HakuMetadata](
         haku.metadata,
         validateMetadata(_, hakuDiffResolver, vCtx)
@@ -83,8 +82,7 @@ class HakuServiceValidation(
             assertAtaruQueryResult(
               ataruId,
               hakemusPalveluClient,
-              "hakulomakeAtaruId",
-              unknownAtaruId(ataruId)
+              "hakulomakeAtaruId"
             )
         )
       ),
@@ -132,12 +130,12 @@ class HakuServiceValidation(
       validateIfNonEmpty[Yhteyshenkilo](
         m.yhteyshenkilot,
         "metadata.yhteyshenkilot",
-        _.validate(vCtx.tila, vCtx.kielivalinta, _)
+        _.validate(vCtx, _)
       ),
       validateIfNonEmpty[Ajanjakso](
         m.tulevaisuudenAikataulu,
         "metadata.tulevaisuudenAikataulu",
-        _.validate(vCtx.tila, vCtx.kielivalinta, _)
+        _.validate(vCtx, _)
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
         m.koulutuksenAlkamiskausi,

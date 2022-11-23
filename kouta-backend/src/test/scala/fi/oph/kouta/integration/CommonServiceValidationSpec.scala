@@ -24,7 +24,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
   val kielistettyWoSvenska = invalidKielistetty(Seq(Sv))
   val fullKielistetty      = Map(Fi -> "suomeksi", Sv -> "på svenska")
   val kielet               = Seq(Fi, Sv)
-  val ataruId = UUID.randomUUID()
+  val ataruId              = UUID.randomUUID()
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -196,7 +196,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.deepValidate(
+    e.validate(
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
@@ -207,7 +207,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     }
 
   "Osoite validation" should "Succeed if postinumeroKoodiUri not changed in modify operation" in {
-    Osoite(postinumeroKoodiUri = Some("posti_99999#2")).deepValidate(
+    Osoite(postinumeroKoodiUri = Some("posti_99999#2")).validate(
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
@@ -224,13 +224,6 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Tallennettu,
       Seq(ValidationError("path.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("posti_99999#2")))
     )
-  }
-
-  it should "fail if invalid postinumeroKoodiUri" in {
-    Osoite(postinumeroKoodiUri = Some("puppu")).validate(Tallennettu, kielet, "path") match {
-      case NoErrors => fail("Expecting validation failure, but it succeeded")
-      case errors => errors should contain theSameElementsAs Seq(ValidationError("path.postinumeroKoodiUri", validationMsg("puppu")))
-    }
   }
 
   it should "fail if values missing from julkaistu Osoite" in {
@@ -422,7 +415,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate(tila, Seq(Fi, Sv), "path") match {
+    e.validate(ValidationContext(tila, kielet, create), "path") match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
@@ -454,7 +447,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate(tila, Seq(Fi, Sv), "path") match {
+    e.validate(ValidationContext(tila, kielet, create), "path") match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }

@@ -15,7 +15,6 @@ import java.util.UUID
 
 class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuvaus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
-  val organisaatioService = mock[OrganisaatioService]
   val koulutusDao = mock[KoulutusDAO]
 
   val sorakuvausId = UUID.randomUUID()
@@ -26,7 +25,7 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
   val min: Sorakuvaus = MinSorakuvaus
   val maxMetadata = max.metadata.get
 
-  override val validator = new SorakuvausServiceValidation(organisaatioService, koulutusKoodiClient, koulutusDao)
+  override val validator = new SorakuvausServiceValidation(koulutusKoodiClient, koulutusDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -47,7 +46,7 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
 
   it should "fail if perustiedot is invalid" in {
     failsValidation(min.copy(id = Some(sorakuvausId)), "id", notMissingMsg(Some(sorakuvausId)))
-    failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
+    failsValidation(min.copy(nimi = Map(), kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(min.copy(nimi = Map(Fi -> "nimi")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(max.copy(nimi = Map(Fi -> "nimi", Sv -> "")), "nimi", invalidKielistetty(Seq(Sv)))
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
