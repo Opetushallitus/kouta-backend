@@ -19,7 +19,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     .build()
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  private def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
+  def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
     val url = urlProperties.url(
       s"organisaatio-service.organisaatio.hierarkia.with.oids",
