@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceClient}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -11,24 +11,23 @@ import fi.oph.kouta.repository.{KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDA
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
-import fi.oph.kouta.validation.CrudOperations.CrudOperation
 import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OrganisaatioServiceClient, OppilaitosServiceValidation)
+object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient,  OppilaitosServiceValidation, OppilaitosDAO)
 
 class OppilaitosService(
   sqsInTransactionService: SqsInTransactionService,
   val s3ImageService: S3ImageService,
   auditLog: AuditLog,
-  val organisaatioService: OrganisaatioService,
+  val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
-  organisaatioClient: OrganisaatioServiceClient,
-  oppilaitosServiceValidation: OppilaitosServiceValidation
+  oppilaitosServiceValidation: OppilaitosServiceValidation,
+  oppilaitosDAO: OppilaitosDAO,
 ) extends RoleEntityAuthorizationService[Oppilaitos] with LogoService {
 
   protected val roleEntity: RoleEntity = Role.Oppilaitos
@@ -51,9 +50,9 @@ class OppilaitosService(
   }
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
-    val hierarkia = organisaatioClient.getOrganisaatioHierarkiaWithOidsFromCache(tarjoajaOids)
+    val hierarkia = organisaatioService.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
     val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
-    val oppilaitokset = OppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
+    val oppilaitokset = oppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
 
     val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
       val oppilaitos = oppilaitosAndOsatByOid._2.head.oppilaitos

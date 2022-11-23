@@ -3,6 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.HakuKoodiClient
+import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Oppilaitos}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -18,11 +19,14 @@ trait OppilaitosFixture extends AccessControlSpec {
 
   val OppilaitosPath = "/oppilaitos"
 
+  val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+  val mockOppilaitosDao             = mock[OppilaitosDAO]
+
   def oppilaitosService: OppilaitosService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
+    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get, mockOrganisaatioServiceClient)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
     val oppilaitosServiceValidation = new OppilaitosServiceValidation(hakuKoodiClient)
-    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, mockOrganisaatioClient, oppilaitosServiceValidation)
+    new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, oppilaitosServiceValidation, mockOppilaitosDao)
   }
 
   override def beforeAll(): Unit = {
