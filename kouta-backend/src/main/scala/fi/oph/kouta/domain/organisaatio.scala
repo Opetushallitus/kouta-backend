@@ -2,40 +2,6 @@ package fi.oph.kouta.domain
 
 package object organisaatio {
 
-  val OrganisaationOsaModel =
-    """    OrganisaationOsa:
-      |      type: object
-      |      properties:
-      |        oid:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895666
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895666/1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
-      |        nimi:
-      |          type: object
-      |          $ref: '#/components/schemas/Nimi'
-      |          example: Esimerkkiorganisaatio
-      |        kotipaikkaUri:
-      |          type: string
-      |          example:
-      |            - kunta_091
-      |            - kunta_398
-      |        children:
-      |          type: array
-      |          items:
-      |            $ref: '#/components/schemas/OrganisaationOsa'
-      |        status:
-      |          type: string
-      |          example: AKTIIVINEN
-      |        organisaatiotyypit:
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |""".stripMargin
-
   val OrganisaatioModel =
     """    Organisaatio:
       |      type: object
@@ -60,7 +26,7 @@ package object organisaatio {
       |        children:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/OrganisaationOsa'
+      |            $ref: '#/components/schemas/Organisaatio'
       |        status:
       |          type: string
       |          example: AKTIIVINEN
@@ -88,7 +54,7 @@ package object organisaatio {
       |            $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
-  def models = Seq(OrganisaationOsaModel, OrganisaatioModel, OrganisaatioHierarkiaModel)
+  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel)
 }
 
 case class Organisaatio(oid: String,
@@ -96,15 +62,8 @@ case class Organisaatio(oid: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
                         kotipaikkaUri: Option[String] = None,
-                        children: List[OrganisaationOsa] = List(),
-                        organisaatiotyypit: Option[List[String]] = None,
+                        children: List[Organisaatio] = List(),
+                        organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List())
-
-case class OrganisaationOsa(oid: String,
-                            parentOidPath: String,
-                            nimi: Kielistetty,
-                            kotipaikkaUri: Option[String] = None,
-                            children: List[OrganisaationOsa] = List(),
-                            organisaatiotyypit: List[String] = List())
 
 case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])

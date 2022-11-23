@@ -1,10 +1,10 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.domain.{En, Fi, Organisaatio, OrganisaatioHierarkia, OrganisaationOsa, Sv}
+import fi.oph.kouta.domain.{En, Fi, Organisaatio, OrganisaatioHierarkia, Sv}
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
-  val organisaationOsa = OrganisaationOsa(
+  val organisaationOsa = Organisaatio(
     oid = TestOids.GrandChildOid.toString,
     parentOidPath = s"${TestOids.GrandChildOid.toString}/${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
@@ -19,7 +19,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
     kotipaikkaUri = Some("kunta_179"),
     children = List(),
-    organisaatiotyypit = Some(List("organisaatiotyyppi_03")))
+    organisaatiotyypit = List("organisaatiotyyppi_03"))
 
   "getOidsFromChildren" should "return one oid for one child org" in {
     assert(OppilaitosServiceUtil.getOidsFromChildren(List(organisaationOsa)) == List(TestOids.GrandChildOid))
