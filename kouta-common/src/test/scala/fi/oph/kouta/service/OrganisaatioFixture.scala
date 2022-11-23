@@ -25,7 +25,7 @@ trait OrganisaatioFixture extends OrganisaatioServiceMock with BeforeAndAfterAll
   override def beforeAll(): Unit = {
     super.beforeAll()
     organisaatioService = OrganisaatioServiceImpl(
-      s"${mocker.getMockBaseUrl(withProtocol = true)}/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset"
+      s"${mocker.getMockBaseUrl(withProtocol = true)}/organisaatio-service/api/$RootOrganisaatioOid/jalkelaiset"
     )
     mockOrganisaatioResponse()
   }
