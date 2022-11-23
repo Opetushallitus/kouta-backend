@@ -64,6 +64,8 @@ case class Organisaatio(oid: String,
                         kotipaikkaUri: Option[String] = None,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
-                        tyypit: List[String] = List())
+                        tyypit: List[String] = List()) {
+  def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
+}
 
 case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])

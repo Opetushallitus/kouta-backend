@@ -274,7 +274,7 @@ object TestData {
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
         isMuokkaajaOphVirkailija = Some(false),
-        isAvoinKorkeakoulutus = Some(true),
+        isAvoinKorkeakoulutus = Some(false),
         tunniste = Some("XZY-123"),
       )
     ),
@@ -1049,7 +1049,7 @@ object TestData {
     aloituspaikat = None,
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false),
-    avoinKorkeakoulutus = Some(true),
+    isAvoinKorkeakoulutus = Some(true),
   )
 
   val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata = KkOpintokokonaisuusToteutusMetadata(
