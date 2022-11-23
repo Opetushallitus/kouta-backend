@@ -342,10 +342,18 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter) = {
+    // Needed for passing ARRAY to Slick (https://stackoverflow.com/a/69232529)
+    implicit val strArrayParameter: slick.jdbc.SetParameter[Array[String]] =
+      slick.jdbc.SetParameter[Array[String]] { (param, pointedParameters) =>
+        pointedParameters.setObject(param, java.sql.Types.ARRAY)
+      }
+
     sql"""#$selectKoulutusListSql
           where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
                   (organisaatio_oid <> ${RootOrganisaatioOid} or
                    tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+              or ((array(select jsonb_array_elements_text(metadata->'orgsAllowedToReadKoulutus')) && ${organisaatioOids.map(_.toString).toArray}::text[])
+                   and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
               or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
               #${tilaConditions(tilaFilter)}
       """.as[KoulutusListItem]

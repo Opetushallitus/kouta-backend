@@ -30,14 +30,14 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   }
 
   def getOrganisaatioHierarkia(params: Params) = {
-    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(params)
+    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params))
   }
 
-  def getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus(params: Params): OrganisaatioHierarkia = {
+  def getOppilaitoksetForKkOpintojaksoAndOpintokokonaisuus(): OrganisaatioHierarkia = {
     val oppilaitosOrganisaatiotyyppi = "organisaatiotyyppi_02"
     val oppilaitostyypit = oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus
     val filtered = MiscUtils.filterOrganisaatiotWithOrganisaatiotyyppi(
-      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(params, oppilaitostyypit).organisaatiot,
+      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(None, oppilaitostyypit).organisaatiot,
       oppilaitosOrganisaatiotyyppi
     )
     OrganisaatioHierarkia(organisaatiot = filtered)
