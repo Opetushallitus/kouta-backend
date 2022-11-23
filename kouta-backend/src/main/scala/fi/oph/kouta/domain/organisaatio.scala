@@ -15,6 +15,7 @@ package object organisaatio {
       |        nimi:
       |          type: object
       |          $ref: '#/components/schemas/Nimi'
+      |          example: Esimerkkiorganisaatio
       |        kotipaikkaUri:
       |          type: string
       |          example:
@@ -36,7 +37,7 @@ package object organisaatio {
       |""".stripMargin
 
   val OrganisaatioModel =
-    """    OrgServiceOrganisaatio:
+    """    Organisaatio:
       |      type: object
       |      properties:
       |        oid:
@@ -84,7 +85,7 @@ package object organisaatio {
       |        organisaatiot:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/OrgServiceOrganisaatio'
+      |            $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
   def models = Seq(OrganisaationOsaModel, OrganisaatioModel, OrganisaatioHierarkiaModel)

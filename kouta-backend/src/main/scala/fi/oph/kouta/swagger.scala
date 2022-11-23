@@ -60,22 +60,23 @@ class SwaggerServlet extends ScalatraServlet {
          |      description: Vastaavan GETin ${KoutaServlet.LastModifiedHeader}
          |  schemas:
          |""".stripMargin +
-      fi.oph.kouta.domain.models.mkString +
-      fi.oph.kouta.domain.keyword.models.mkString +
-      fi.oph.kouta.domain.koulutus.models.mkString +
-      fi.oph.kouta.domain.koulutusMetadata.models.mkString +
-      fi.oph.kouta.domain.toteutus.models.mkString +
-      fi.oph.kouta.domain.toteutusMetadata.models.mkString +
-      fi.oph.kouta.domain.hakutieto.models.mkString +
-      fi.oph.kouta.domain.hakukohde.models.mkString +
-      fi.oph.kouta.domain.haku.models.mkString +
-      fi.oph.kouta.domain.valintatapa.models.mkString +
-      fi.oph.kouta.domain.valintaperusteMetadata.models.mkString +
-      fi.oph.kouta.domain.valintaperuste.models.mkString +
-      fi.oph.kouta.domain.sorakuvaus.models.mkString +
-      fi.oph.kouta.domain.oppilaitos.models.mkString +
-      fi.oph.kouta.domain.searchResults.models.mkString +
-      fi.oph.kouta.domain.koulutustyyppiToOppilaitostyyppiResult.models.mkString
+        fi.oph.kouta.domain.models.mkString +
+        fi.oph.kouta.domain.keyword.models.mkString +
+        fi.oph.kouta.domain.koulutus.models.mkString +
+        fi.oph.kouta.domain.koulutusMetadata.models.mkString +
+        fi.oph.kouta.domain.toteutus.models.mkString +
+        fi.oph.kouta.domain.toteutusMetadata.models.mkString +
+        fi.oph.kouta.domain.hakutieto.models.mkString +
+        fi.oph.kouta.domain.hakukohde.models.mkString +
+        fi.oph.kouta.domain.haku.models.mkString +
+        fi.oph.kouta.domain.valintatapa.models.mkString +
+        fi.oph.kouta.domain.valintaperusteMetadata.models.mkString +
+        fi.oph.kouta.domain.valintaperuste.models.mkString +
+        fi.oph.kouta.domain.sorakuvaus.models.mkString +
+        fi.oph.kouta.domain.oppilaitos.models.mkString +
+        fi.oph.kouta.domain.organisaatio.models.mkString +
+        fi.oph.kouta.domain.searchResults.models.mkString +
+        fi.oph.kouta.domain.koulutustyyppiToOppilaitostyyppiResult.models.mkString
     yaml
   }
 }
