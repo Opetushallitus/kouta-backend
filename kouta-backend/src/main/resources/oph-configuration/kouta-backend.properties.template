@@ -33,7 +33,7 @@ kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kaytt
 
 organisaatio-service=https://{{host_virkailija}}/organisaatio-service/api
 organisaatio-service.organisaatio.oid.jalkelaiset={{organisaatio-service}}/$1/jalkelaiset
-organisaatio-service.organisaatio.hierarkia.with.oids={{organisaatio-service}}/hierarkia/hae
+organisaatio-service.organisaatio.hierarkia={{organisaatio-service}}/hierarkia/hae
 organisaatio-service.organisaatio.with.oid={{organisaatio-service}}/$1
 organisaatio-service.organisaatiot.with.oids={{organisaatio-service}}/findbyoids
 
