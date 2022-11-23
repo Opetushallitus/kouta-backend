@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Koulutustyyppi, Organisaatio, oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus}
+import fi.oph.kouta.domain.{Koulutustyyppi, Organisaatio, oppilaitostyypitForAvoinKorkeakoulutus}
 
 object MiscUtils {
   def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
@@ -22,7 +22,7 @@ object MiscUtils {
   def retryStatusCodes = Set(500, 502, 504)
 
   def hasCorrectOrganisaatioAndOppilaitostyyppi(organisaatio: Organisaatio, organisaatiotyyppi: String): Boolean = {
-    organisaatio.organisaatiotyypit.contains(organisaatiotyyppi) && organisaatio.oppilaitostyyppi.exists(tyyppi => oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus.contains(tyyppi))
+    organisaatio.organisaatiotyypit.contains(organisaatiotyyppi) && organisaatio.oppilaitostyyppi.exists(tyyppi => oppilaitostyypitForAvoinKorkeakoulutus.contains(tyyppi))
   }
 
   def filterOrganisaatiotWithOrganisaatiotyyppi(organisaatiot: List[Organisaatio], organisaatiotyyppi: String): List[Organisaatio] = {
