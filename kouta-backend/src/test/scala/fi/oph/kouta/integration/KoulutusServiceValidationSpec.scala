@@ -139,14 +139,16 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   private def kkOpintoJaksoWithParams(
       koulutusalaKoodiUrit: Seq[String] = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_6#1"),
-      opintojenLaajuusNumero: Option[Double] = Some(12)
+      opintojenLaajuusNumero: Option[Double] = Some(12),
+      opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1")
   ): Koulutus =
     KkOpintojaksoKoulutus.copy(
       metadata = Some(
         KkOpintojaksoKoulutusMetadata(
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
-          opintojenLaajuusNumero = opintojenLaajuusNumero
+          opintojenLaajuusNumero = opintojenLaajuusNumero,
+          opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri
         )
       ),
       oid = Some(KoulutusOid("1.2.246.562.13.125")),
@@ -1418,7 +1420,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       kkOpintoJaksoWithParams(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
         opintojenLaajuusNumero = Some(-1),
-        koulutusalaKoodiUrit = Seq("puppu")
+        koulutusalaKoodiUrit = Seq("puppu"),
+        opinnonTyyppiKoodiUri = Some("opinnontyyppi_100#1")
       ).copy(oid = None),
       Seq(
         ValidationError(
@@ -1428,6 +1431,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           invalidOpintojenLaajuusyksikkoKoodiuri("opintojenlaajuusyksikko_66#1")
+        ),
+        ValidationError(
+          "metadata.opinnonTyyppiKoodiUri",
+          invalidOpinnonTyyppiKoodiuri("opinnontyyppi_100#1")
         ),
         ValidationError("metadata.opintojenLaajuusNumero", notNegativeMsg)
       )
@@ -1443,7 +1450,6 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
-  val ammWithOid = AmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
   it should "fail if invalid metadata for luonnos Kk-opintokokonaisuus koulutus" in {
     val opintojenLaajuusNumeroMin = -5.0
     val opintojenLaajuusNumeroMax = -15.0
@@ -1455,7 +1461,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
             opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
             opintojenLaajuusNumeroMin = Some(opintojenLaajuusNumeroMin),
             opintojenLaajuusNumeroMax = Some(opintojenLaajuusNumeroMax),
-            koulutusalaKoodiUrit = Seq("puppu")
+            koulutusalaKoodiUrit = Seq("puppu"),
+            opinnonTyyppiKoodiUri = Some("opinnontyyppi_100#1")
           )
         )
       ),
@@ -1467,6 +1474,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           invalidOpintojenLaajuusyksikkoKoodiuri("opintojenlaajuusyksikko_66#1")
+        ),
+        ValidationError(
+          "metadata.opinnonTyyppiKoodiUri",
+          invalidOpinnonTyyppiKoodiuri("opinnontyyppi_100#1")
         ),
         ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
         ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
@@ -1614,6 +1625,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     passesValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
   }
 
+  val ammWithOid = AmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))
   }
