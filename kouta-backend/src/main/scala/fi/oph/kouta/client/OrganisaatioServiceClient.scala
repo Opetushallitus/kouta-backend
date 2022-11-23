@@ -2,22 +2,30 @@ package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.OrganisaatioHierarkia
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatioServiceOrganisaatio}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
+case class OrganisaatioQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
+case class OrganisaatioNotFoundException(message: String) extends RuntimeException(message)
 
 object OrganisaatioServiceClient extends OrganisaatioServiceClient
 
 class OrganisaatioServiceClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
+  private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+
   implicit val organisaatioHierarkiaCache: Cache[List[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
-  private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
+  implicit val organisaatioCache: Cache[OrganisaatioOid, OrganisaatioServiceOrganisaatio] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
@@ -37,6 +45,38 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatioHierarkiaWithOidsFromCache(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
+  }
+
+  def get(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
+    val url = urlProperties.url(
+      s"organisaatio-service.organisaatio.with.oid", oid)
+    get(url, followRedirects = true) {
+      response => {
+        parse(response).extract[OrganisaatioServiceOrganisaatio]
+      }
+    }
+  }
+
+  def getOrganisaatioWithOid(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
+    Try[OrganisaatioServiceOrganisaatio] {
+      get(oid)
+    } match {
+      case Success(organisaatio) => organisaatio
+      case Failure(exp: OrganisaatioQueryException) if exp.status == 404 =>
+        throw OrganisaatioNotFoundException(s"Failed to find organisaatio with oid $oid, got response ${exp.status}, ${exp.message}")
+      case Failure(exp: OrganisaatioQueryException) =>
+        throw new RuntimeException(s"Failed to get organisaatio with oid $oid, got response ${exp.status}, ${exp.message}")
+    }
+  }
+
+  def getOrganisaatioWithOidFromCache(oid: OrganisaatioOid): Option[OrganisaatioServiceOrganisaatio] = {
+    try {
+      val organisaatio = organisaatioCache.get(oid, oid => getOrganisaatioWithOid(oid))
+      Some(organisaatio)
+    } catch {
+      case exp: RuntimeException => throw exp
+      case _=> None
+    }
   }
 }
 
