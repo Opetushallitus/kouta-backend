@@ -14,13 +14,6 @@ trait OrganisaatioService {
 
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
-  def getOrganisaatio(oid: OrganisaatioOid): Option[OidAndChildren] = {
-    getHierarkiaFromCache(oid) match {
-      case hierarkia => find(_.oid == oid, hierarkia.toSet)
-    }
-
-  }
-
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
     case _ => children(getPartialHierarkia(oid, lakkautetut))
