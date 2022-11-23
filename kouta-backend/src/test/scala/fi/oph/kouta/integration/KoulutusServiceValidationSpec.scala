@@ -14,7 +14,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService}
+import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService, OrganisaatioServiceImpl}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{ValidationError, _}
@@ -25,7 +25,7 @@ import java.util.UUID
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
   val koulutusKoodiClient = mock[KoulutusKoodiClient]
   val ePerusteKoodiClient = mock[EPerusteKoodiClient]
-  var organisaatioService = mock[OrganisaatioService]
+  var organisaatioService = mock[OrganisaatioServiceImpl]
   val toteutusDao         = mock[ToteutusDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
 
@@ -1624,7 +1624,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
     passesValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
   }
-
+  
   val ammWithOid = AmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))
