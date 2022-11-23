@@ -477,10 +477,9 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          opintojenLaajuusNumero: Option[Double] = None,
                                          opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                         avoinKorkeakoulutus: Option[Boolean] = None,
+                                         isAvoinKorkeakoulutus: Option[Boolean] = None,
                                          tunniste: Option[String] = None,
-                                         opinnonTyyppiKoodiUri: Option[String] = None,
-                                         orgsAllowedToReadKoulutus: Seq[OrganisaatioOid] = Seq()) extends KoulutusMetadata
+                                         opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -490,10 +489,9 @@ case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                opintojenLaajuusNumeroMax: Option[Double] = None,
                                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               avoinKorkeakoulutus: Option[Boolean] = None,
+                                               isAvoinKorkeakoulutus: Option[Boolean] = None,
                                                tunniste: Option[String] = None,
-                                               opinnonTyyppiKoodiUri: Option[String] = None,
-                                               orgsAllowedToReadKoulutus: Seq[OrganisaatioOid] = Seq()) extends KoulutusMetadata
+                                               opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
