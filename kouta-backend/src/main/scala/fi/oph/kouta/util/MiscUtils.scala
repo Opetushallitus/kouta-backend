@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.Koulutustyyppi
+import fi.oph.kouta.domain.{Koulutustyyppi, Organisaatio, oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus}
 
 object MiscUtils {
   def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
@@ -20,4 +20,21 @@ object MiscUtils {
   def isDIAlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(DIAkoodiuri)
 
   def retryStatusCodes = Set(500, 502, 504)
+
+  def hasCorrectOrganisaatioAndOppilaitostyyppi(organisaatio: Organisaatio, organisaatiotyyppi: String): Boolean = {
+    organisaatio.organisaatiotyypit.contains(organisaatiotyyppi) && organisaatio.oppilaitostyyppi.exists(tyyppi => oppilaitostyypitForKkOpintojaksoAndOpintokokonaisuus.contains(tyyppi))
+  }
+
+  def filterOrganisaatiotWithOrganisaatiotyyppi(organisaatiot: List[Organisaatio], organisaatiotyyppi: String): List[Organisaatio] = {
+    organisaatiot.foldLeft(List[Organisaatio]()) { (accumulator, org) =>
+      val filteredChildren = filterOrganisaatiotWithOrganisaatiotyyppi(org.children, organisaatiotyyppi)
+      val filteredOrg = org.copy(children = filteredChildren)
+
+      if (hasCorrectOrganisaatioAndOppilaitostyyppi(filteredOrg, organisaatiotyyppi) || filteredChildren.nonEmpty) {
+        accumulator :+ filteredOrg
+      } else {
+        accumulator
+      }
+    }
+  }
 }
