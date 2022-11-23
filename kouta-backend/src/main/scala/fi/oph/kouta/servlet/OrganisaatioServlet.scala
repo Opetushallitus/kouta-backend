@@ -29,7 +29,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |          content:
       |            application/json:
       |              schema:
-      |                $ref: '#/components/schemas/Organisaatio'
+      |                $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
       |""".stripMargin)
   get("/:oid") {
 
@@ -38,6 +38,43 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     organisaatioService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
       case Some(organisaatio) => Ok(organisaatio)
+    }
+  }
+
+  registerPath("/organisaatio/organisaatiot",
+    """    post:
+      |      summary: Hae organisaatioiden tiedot organisaatiopalvelusta
+      |      operationId: getOrganisaatiot
+      |      description: Hakee organisaatioiden tiedot organisaatiopalvelusta
+      |      tags:
+      |        - Organisaatio
+      |      requestBody:
+      |        description: Lista haettavien organisaatioiden oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.10.60198812368", "1.2.246.562.10.60198812360"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/OrganisaatioServiceOrganisaatio'
+      |""".stripMargin)
+  post("/organisaatiot") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    organisaatioService.get(parsedBody.extract[List[OrganisaatioOid]]) match {
+      case List() => NotFound("error" -> "Unknown organisaatio oids")
+      case organisaatiot => Ok(organisaatiot)
     }
   }
 }
