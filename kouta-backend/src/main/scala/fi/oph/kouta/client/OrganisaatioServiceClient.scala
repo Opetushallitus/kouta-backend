@@ -47,16 +47,18 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   def getOrganisaatioHierarkia(queryParams: OrganisaatioHierarkiaQueryParams): OrganisaatioHierarkia = {
     val oidsAsQueryParams = queryParams.oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
 
-    val params = List(
+    val params = Seq(
       "aktiiviset"   -> queryParams.aktiiviset,
       "suunnitellut" -> queryParams.suunnitellut,
       "lakkautetut"  -> queryParams.lakkautetut,
-      "skipParents"  -> queryParams.skipParents
-    ) ++
-      List(
-        "searchStr" -> queryParams.searchStr,
-        "oid"       -> queryParams.oid
-      ).filter(_._2.isDefined).map(queryParam => queryParam._1 -> queryParam._2.get.toString)
+      "skipParents"  -> queryParams.skipParents,
+      "searchStr"    -> queryParams.searchStr,
+      "oid"          -> queryParams.oid
+    ).collect {
+      case (key, Some(s: String))            => (key, s)
+      case (key, Some(oid: OrganisaatioOid)) => (key, oid.toString)
+      case (key, s: String)                  => (key, s)
+    }
 
     val url =
       urlProperties.url(s"organisaatio-service.organisaatio.hierarkia", toQueryParams(params: _*)) + oidsAsQueryParams
