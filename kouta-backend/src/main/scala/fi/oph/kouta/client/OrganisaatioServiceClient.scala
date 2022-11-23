@@ -26,6 +26,9 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   implicit val organisaatioCache: Cache[OrganisaatioOid, OrganisaatioServiceOrganisaatio] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
+  implicit val organisaatiotCache: Cache[List[OrganisaatioOid], Seq[OrganisaatioServiceOrganisaatio]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
     val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
@@ -47,7 +50,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
   }
 
-  def get(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
+  def getOrganisaatio(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
     val url = urlProperties.url(
       s"organisaatio-service.organisaatio.with.oid", oid)
     get(url, followRedirects = true) {
@@ -59,7 +62,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatioWithOid(oid: OrganisaatioOid): OrganisaatioServiceOrganisaatio = {
     Try[OrganisaatioServiceOrganisaatio] {
-      get(oid)
+      getOrganisaatio(oid)
     } match {
       case Success(organisaatio) => organisaatio
       case Failure(exp: OrganisaatioQueryException) if exp.status == 404 =>
@@ -75,8 +78,39 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
       Some(organisaatio)
     } catch {
       case exp: RuntimeException => throw exp
-      case _=> None
+      case _: Throwable => None
     }
   }
+
+  def getOrganisaatiot(oids: List[OrganisaatioOid]): Seq[OrganisaatioServiceOrganisaatio] = {
+    val url = urlProperties.url(
+      s"organisaatio-service.organisaatiot.with.oids")
+    post(url, oids, followRedirects = true) {
+      response => {
+        parse(response).extract[Seq[OrganisaatioServiceOrganisaatio]]
+      }
+    }
+  }
+
+  def getOrganisaatiotWithOids(oids: List[OrganisaatioOid]): Seq[OrganisaatioServiceOrganisaatio] = {
+    Try[Seq[OrganisaatioServiceOrganisaatio]] {
+      getOrganisaatiot(oids)
+    } match {
+      case Success(organisaatiot) => organisaatiot
+      case Failure(exp: OrganisaatioQueryException) if exp.status == 404 =>
+        throw OrganisaatioNotFoundException(s"Failed to find organisaatiot with oids $oids, got response ${exp.status}, ${exp.message}")
+      case Failure(exp: OrganisaatioQueryException) =>
+        throw new RuntimeException(s"Failed to get organisaatiot with oids $oids, got response ${exp.status}, ${exp.message}")
+    }
+  }
+
+  def getOrganisaatiotWithOidsFromCache(oids: List[OrganisaatioOid]): Seq[OrganisaatioServiceOrganisaatio] = {
+    try {
+      organisaatiotCache.get(oids, oids => getOrganisaatiotWithOids(oids))
+    } catch {
+      case exp: RuntimeException => throw exp
+    }
+  }
+
 }
 

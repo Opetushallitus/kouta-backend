@@ -569,4 +569,5 @@ case class OrganisaatioHierarkia(
 )
 
 case class OrganisaatioServiceOrganisaatio(oid: String,
+                                           parentOidPath: String,
                                            nimi: Kielistetty)
