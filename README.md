@@ -8,14 +8,14 @@ jakelee muille palveluille.
 ## Arkkitehtuuri
 
 Kouta-backend on Scalalla ja Scalatra frameworkilla toteutettu web api. Kouta-ui:n kautta syötetään koulutustarjonnan
-tiedot, jotka kouta-backend validoi ja tallentaa. Tallennuksen yhteydessä lähetetään sqs-viesti jonoon jota 
-[kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kuuntelee. Viestissä on tallennetun entiteetin 
+tiedot, jotka kouta-backend validoi ja tallentaa. Tallennuksen yhteydessä lähetetään sqs-viesti jonoon jota
+[kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kuuntelee. Viestissä on tallennetun entiteetin
 id, jonka avulla [kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) kysyy kouta-backendilta entiteetin tarkemmat
 tiedot.
 
 Kouta-backendin tarkoitus on olla uuden koulutustarjonnan tietomallin vartija. Tänne ei duplikoida muiden palvelujen dataa,
-vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. eperusteId). 
-[Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen 
+vaan muihin palveluihin viittaavasta datasta tallennetaan ainoastaan id (esim. eperusteId).
+[Kouta-indeksoija](https://github.com/Opetushallitus/kouta-indeksoija) huolehtii näiden id-arvojen avulla tietojen
 rikastamisesta esim. oppijan käyttäliittymää ([konfo-ui](https://github.com/Opetushallitus/konfo-ui)) varten.
 
 Kuva koutan arkkitehtuurista löytyy [OPH:n wikistä.](https://wiki.eduuni.fi/display/OPHSS/Koutan+arkkitehtuuri)
@@ -53,7 +53,8 @@ Asenna haluamallasi tavalla koneellesi
 4. [Maven](https://maven.apache.org/) Jos haluat ajaa komentoriviltä Mavenia,
    mutta idean Mavenilla pärjää kyllä hyvin, joten tämä ei ole pakollinen
 
-Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Kirjoitushetkellä käytössä openJDK8 (Java 11 käy myös) ja scala 2.12.10.
+Lisäksi tarvitset Java SDK:n ja Scala SDK:n (Unix pohjaisissa käyttöjärjestelmissä auttaa esim. [SDKMAN!](https://sdkman.io/)). Katso [.github/workflows/build.yml](.github/workflows/build.yml) mitä versioita sovellus käyttää.
+Kirjoitushetkellä käytössä Amazon Corretto 11 ja scala 2.12.10.
 
 PostgreSQL Kontti-imagen luonti (tarvitsee tehdä vain kerran):
 
@@ -90,7 +91,7 @@ Tähän voi tehdä korjauksen ainakin seuraavalla tavalla: lisää ko. polkuun s
 
 ### Migraatiot
 
-Tietokantamigraatiot on toteutettu [flywaylla](https://flywaydb.org/) ja ajetaan automaattisesti testien ja asennuksen 
+Tietokantamigraatiot on toteutettu [flywaylla](https://flywaydb.org/) ja ajetaan automaattisesti testien ja asennuksen
 yhteydessä. Migraatiotiedostot löytyvät kansiosta `kouta-backend/src/main/resources/db/migration`
 
 ### Ajaminen lokaalisti
@@ -152,7 +153,7 @@ Gitin kanssa on pyritty noudattamaan seuraavia käytänteitä:
 - Branchit on nimetty jira-tiketin perusteella
 - Jos masteriin on tullut committeja haaran tekemisen jälkeen, rebase on
   mergeä suositeltavampi tapa päivittää haara ajan tasalle
-- Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle 
+- Tekeminen on pyritty pilkkomaan mahdollisimman pieneksi, jotta haarat olisivat lyhytikäisiä (jos mahdollista, alle
   2 työpäivää)
 
 ## Ympäristöt
@@ -187,7 +188,7 @@ Tarvittava muutos `./.github/workflows/build.yml` tiedostoon on tällainen (`dep
 
 ### Lokit
 
-Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend). 
+Kouta-backendin lokit löytyvät AWS:n cloudwatchista log groupista <testiympäristön nimi>-app-kouta-backend (esim. hahtuva-app-kouta-backend).
 Lisäohjeita näihin ylläpidolta.
 
 
