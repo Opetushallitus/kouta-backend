@@ -262,20 +262,20 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           kuvaus = kuvaus,
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
-          avoinKorkeakoulutus = Some(true),
+          isAvoinKorkeakoulutus = Some(true),
           opintojenLaajuusNumeroMin = opintojenLaajuusPistetta,
           opintojenLaajuusNumeroMax = opintojenLaajuusPistetta,
           opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
-          orgsAllowedToReadKoulutus = opetusJarjestajat
+          jarjestajat = opetusJarjestajat
         )
         case KkOpintojakso => KkOpintojaksoKoulutusMetadata(
           kuvaus = kuvaus,
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
-          avoinKorkeakoulutus = Some(true),
+          isAvoinKorkeakoulutus = Some(true),
           opintojenLaajuusNumero = opintojenLaajuusPistetta,
           opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
-          orgsAllowedToReadKoulutus = opetusJarjestajat
+          jarjestajat = opetusJarjestajat
         )
         case Erikoislaakari => ErikoislaakariKoulutusMetadata(
           kuvaus = kuvaus,
