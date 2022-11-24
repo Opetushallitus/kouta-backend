@@ -166,7 +166,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
       |              schema:
       |                  $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin)
-  get("/oppilaitokset-for-opintojakso-and-opintokokonaisuus") {
+  get("/oppilaitokset-for-avoin-korkeakoulutus") {
     implicit val authenticated: Authenticated = authenticate()
     Ok(organisaatioService.getOppilaitoksetForAvoinKorkeakoulutus())
   }
