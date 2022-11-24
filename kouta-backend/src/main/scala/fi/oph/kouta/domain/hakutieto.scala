@@ -69,6 +69,10 @@ package object hakutieto {
       |                 type: string
       |                 description: Haun luoneen organisaation oid
       |                 example: 1.2.246.562.10.00101010101
+      |              kohdejoukkoKoodiUri:
+      |                 type: string
+      |                 description: Haun kohdejoukko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/haunkohdejoukko/1)
+      |                 example: haunkohdejoukko_17#1
       |              hakuajat:
       |                type: array
       |                description: Haun hakuajat. Hakukohteella voi olla omat hakuajat.
@@ -207,6 +211,7 @@ case class HakutietoHaku(hakuOid: HakuOid,
                          hakulomakeKuvaus: Kielistetty = Map(),
                          hakulomakeLinkki: Kielistetty = Map(),
                          organisaatioOid: OrganisaatioOid,
+                         kohdejoukkoKoodiUri: Option[String] = None,
                          hakuajat: Seq[Ajanjakso] = Seq(),
                          muokkaaja: UserOid,
                          modified: Option[Modified],
