@@ -169,6 +169,7 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2_091", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
     mockLatestKoodiUriResponse("opintojenlaajuus_60", 1)
+    mockLatestKoodiUriResponse("opintojenlaajuusyksikko_2", 1)
     mockKoodistoResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
     mockKoulutustyyppiResponse(AmmatillisetKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_371101", 12, None)), AmmatillisetKoulutusKoodit.koulutusTyypit.init)
     mockKoulutustyyppiResponse(YoKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), YoKoulutusKoodit.koulutusTyypit.init)
@@ -178,6 +179,8 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
     mockKoodistoResponse("opintojenlaajuus", Seq(
       ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None), ("opintojenlaajuus_60", 1, None)))
+    mockKoodistoResponse("opintojenlaajuusyksikko", Seq(
+      ("opintojenlaajuusyksikko_2", 1, None), ("opintojenlaajuusyksikko_6", 1, None), ("opintojenlaajuusyksikko_8", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockKoodistoResponse(
