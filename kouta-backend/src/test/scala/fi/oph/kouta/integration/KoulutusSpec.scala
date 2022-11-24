@@ -579,7 +579,8 @@ class KoulutusSpec
     val oid            = put(ammOpeKoulutus)
     val expectedMetadata = Some(
       AmmOpeErityisopeJaOpoKoulutusMetadata(
-        opintojenLaajuusKoodiUri = Some("opintojenlaajuus_60#1"),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+        opintojenLaajuusNumero = Some(60),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01#1"),
         isMuokkaajaOphVirkailija = Some(false)
       )
