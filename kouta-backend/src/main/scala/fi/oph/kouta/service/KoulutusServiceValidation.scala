@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
 import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.CrudOperations.{create, update}
@@ -66,6 +66,13 @@ class KoulutusServiceValidation(
   private def validateCommonParameters(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val tila   = koulutus.tila
     val tyyppi = koulutus.koulutustyyppi
+
+    val isAvoinKorkeakoulutus = (koulutus.metadata match {
+      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.isAvoinKorkeakoulutus
+      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.isAvoinKorkeakoulutus
+      case _ => None
+    }).getOrElse(false)
+
     and(
       koulutus.validate(),
       validateIfTrueOrElse(
@@ -80,7 +87,12 @@ class KoulutusServiceValidation(
         ),
         assertNotDefined(koulutus.oid, "oid")
       ),
-      validateTarjoajat(tyyppi, koulutus.tarjoajat, oldKoulutus.map(_.tarjoajat).getOrElse(List())),
+      validateTarjoajat(
+        tyyppi,
+        koulutus.tarjoajat,
+        oldKoulutus.map(_.tarjoajat).getOrElse(List()),
+        if (isAvoinKorkeakoulutus) oppilaitostyypitForAvoinKorkeakoulutus else Seq()
+      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -793,7 +805,7 @@ class KoulutusServiceValidation(
             ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(ePerusteId) match {
               case Right(koodiUritForEperuste) =>
                 validateIfSuccessful(
-                  // ePeruste oletetaan tuntemattomaksi, ellei sille löydy yhtään koulutusKoodiUria
+                  // ePeruste oletetaan tuntemattomaksi, jos sille ei löydy yhtään koulutusKoodiUria
                   assertTrue(koodiUritForEperuste.nonEmpty, path, invalidEPerusteId(ePerusteId)),
                   validateIfNonEmpty[String](
                     koulutusKoodiUrit,
