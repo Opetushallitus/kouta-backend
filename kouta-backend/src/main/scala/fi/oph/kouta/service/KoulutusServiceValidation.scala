@@ -67,11 +67,7 @@ class KoulutusServiceValidation(
     val tila   = koulutus.tila
     val tyyppi = koulutus.koulutustyyppi
 
-    val isAvoinKorkeakoulutus = (koulutus.metadata match {
-      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.isAvoinKorkeakoulutus
-      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.isAvoinKorkeakoulutus
-      case _ => None
-    }).getOrElse(false)
+    val isAvoinKorkeakoulutus = koulutus.isAvoinKorkeakoulutus()
 
     and(
       koulutus.validate(),
