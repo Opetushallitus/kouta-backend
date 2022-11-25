@@ -63,7 +63,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
     var tarjoajatWoRequiredKoulutustyyppi = Seq[OrganisaatioOid]()
     var organisaatioServiceOk = true
     Try[Seq[OrganisaatioOid]] {
-      validTarjoajat.filterNot(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(_)._2.contains(koulutustyyppi))
+      validTarjoajat.filterNot(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(_)._2.contains(koulutustyyppi))
     } match {
       case Success(tarjoajaOidsWoRequiredKoulutustyyppi) => tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
       case Failure(_) => organisaatioServiceOk = false

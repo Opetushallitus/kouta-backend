@@ -207,20 +207,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   override def beforeEach(): Unit = {
     super.beforeEach()
     // yleiset
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(AmmOid)).thenAnswer(
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmmOid)).thenAnswer(
       Seq(AmmOid),
       Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi)
     )
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid))
       .thenAnswer(Seq(YoOid), Seq(Yo, KkOpintojakso, KkOpintokokonaisuus))
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(HkiYoOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(HkiYoOid))
       .thenAnswer(Seq(HkiYoOid), Seq(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot))
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(AmkOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmkOid))
       .thenAnswer(Seq(AmkOid), Seq(Amk, AmmOpeErityisopeJaOpo))
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OtherOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(OtherOid))
       .thenAnswer(Seq(OtherOid), Koulutustyyppi.values)
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
     when(organisaatioService.getAllChildOidsFlat(ChildOid)).thenAnswer(Seq(ChildOid, GrandChildOid, GrandGrandChildOid))
     when(koulutusKoodiClient.opetusKieliKoodiUriExists("oppilaitoksenopetuskieli_1#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opetusAikaKoodiUriExists("opetusaikakk_1#1")).thenAnswer(itemFound)
@@ -298,7 +298,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_ES#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(itemFound)
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus, koulutusOidStr: String): Assertion = {
@@ -1192,11 +1192,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(
         Seq(lukioToteutusWithOid, opintojaksoToteutusWithOid)
       )
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(opintojaksoOppilaitosOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(opintojaksoOppilaitosOid))
       .thenAnswer(
         (Seq(opintojaksoOppilaitosOid), Seq(Amk))
       )
-    when(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(lukioOid))
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(lukioOid))
       .thenAnswer(
         (Seq(lukioOid), Seq(Lk))
       )

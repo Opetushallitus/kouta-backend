@@ -10,7 +10,7 @@ import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
 trait OrganisaatioService {
-  type OrganisaatioOidsAndOppilaitostyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
+  type OrganisaatioOidsAndKoulutustyypitFlat = (Seq[OrganisaatioOid], Seq[Koulutustyyppi])
 
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
@@ -19,14 +19,14 @@ trait OrganisaatioService {
     case _ => children(getPartialHierarkia(oid, lakkautetut))
   }
 
-  def getAllChildOidsAndOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
+  def getAllChildOidsAndKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (children(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkiaFromCache(oid)))
+    case _ => (children(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
   }
 
-  def getAllChildAndParentOidsWithOppilaitostyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndOppilaitostyypitFlat = oid match {
+  def getAllChildAndParentOidsWithKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (parentsAndChildren(getPartialHierarkia(oid)), oppilaitostyypit(getHierarkiaFromCache(oid)))
+    case _ => (parentsAndChildren(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
   }
 
   def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
@@ -37,7 +37,6 @@ trait OrganisaatioService {
       case Some(hierarkia) => childOidsFlat(hierarkia) :+ hierarkia.oid
       case _ => Seq()
     }
-
 
   def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): Either[Throwable, Set[OrganisaatioOid]] = {
     def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
@@ -66,15 +65,21 @@ trait OrganisaatioService {
   private def parentsAndChildren(hierarkia: Option[OidAndChildren]): Seq[OrganisaatioOid] =
     hierarkia.map(x => parentOidsFlat(x) ++ Seq(x.oid) ++ childOidsFlat(x)).getOrElse(Seq()).distinct
 
-  private def oppilaitostyypit(hierarkia: Option[OidAndChildren]): Seq[Koulutustyyppi] =
+  private def oppilaitostyypit(hierarkia: Option[OidAndChildren]): Seq[String] =
     hierarkia
       .map(x => parentOppilaitostyypitFlat(x, hierarkia) ++ Seq(x.oppilaitostyyppi) ++ childOppilaitostyypitFlat(x))
       .getOrElse(Seq())
       .flatten
       .distinct
-      .map(Koulutustyyppi.fromOppilaitostyyppi)
-      .flatten
-      .distinct
+
+  private def hierarkiaToKoulutustyypit(hierarkia: Option[OidAndChildren]): Seq[Koulutustyyppi] = {
+    hierarkia
+      .map(h => oppilaitostyypit(Some(h)))
+      .map(oppilaitostyypitToKoulutustyypit)
+      .getOrElse(Seq())
+  }
+  private def oppilaitostyypitToKoulutustyypit(oppilaitostyypit: Seq[String]) =
+    oppilaitostyypit.map(Koulutustyyppi.fromOppilaitostyyppi).flatten.distinct
 
   @tailrec
   private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
