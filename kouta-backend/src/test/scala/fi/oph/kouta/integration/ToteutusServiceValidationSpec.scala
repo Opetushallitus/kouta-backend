@@ -299,6 +299,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_ET#1")).thenAnswer(itemFound)
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
+    when(organisaatioService.withoutOppilaitostyypit(anySeq[OrganisaatioOid], anySeq[String])).thenReturn(Seq())
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus, koulutusOidStr: String): Assertion = {
