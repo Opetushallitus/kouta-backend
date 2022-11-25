@@ -16,18 +16,27 @@ trait OrganisaatioService {
 
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
-    case _ => children(getPartialHierarkia(oid, lakkautetut))
+    case _                   => children(getPartialHierarkia(oid, lakkautetut))
   }
 
   def getAllChildOidsAndKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (children(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
+    case _                   => (children(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
   }
 
-  def getAllChildAndParentOidsWithKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat = oid match {
-    case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
-    case _ => (parentsAndChildren(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
+  def withoutOppilaitostyypit(oids: Seq[OrganisaatioOid], oppilaitostyypit: Seq[String]) = {
+    if (oppilaitostyypit.isEmpty) {
+      Seq()
+    } else {
+      oids.filter(oid => !(this.oppilaitostyypit(getHierarkiaFromCache(oid)).exists(oppilaitostyypit.contains(_))))
+    }
   }
+
+  def getAllChildAndParentOidsWithKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat =
+    oid match {
+      case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
+      case _                   => (parentsAndChildren(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
+    }
 
   def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
     find(_.isOppilaitos, getHierarkiaFromCache(oid).toSet).map(_.oid)
@@ -35,10 +44,12 @@ trait OrganisaatioService {
   def findOrganisaatioOidsFlatByMemberOid(oid: OrganisaatioOid): Seq[OrganisaatioOid] =
     getHierarkiaFromCache(oid) match {
       case Some(hierarkia) => childOidsFlat(hierarkia) :+ hierarkia.oid
-      case _ => Seq()
+      case _               => Seq()
     }
 
-  def findUnknownOrganisaatioOidsFromHierarkia(checkedOrganisaatiot: Set[OrganisaatioOid]): Either[Throwable, Set[OrganisaatioOid]] = {
+  def findUnknownOrganisaatioOidsFromHierarkia(
+      checkedOrganisaatiot: Set[OrganisaatioOid]
+  ): Either[Throwable, Set[OrganisaatioOid]] = {
     def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
       item.children.flatMap(c => {
         if (checkedOrganisaatiot.contains(c.oid)) c.oid +: findChildren(c)
@@ -47,13 +58,18 @@ trait OrganisaatioService {
     }
 
     var returnValue: Either[Throwable, Set[OrganisaatioOid]] = Right(Set())
-    var allChildren: Seq[OrganisaatioOid] = Seq()
+    var allChildren: Seq[OrganisaatioOid]                    = Seq()
     Try[OidAndChildren] {
-      OidAndChildren(RootOrganisaatioOid, cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
-        RootOrganisaatioOid.s, None, "AKTIIVINEN")
+      OidAndChildren(
+        RootOrganisaatioOid,
+        cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
+        RootOrganisaatioOid.s,
+        None,
+        "AKTIIVINEN"
+      )
     } match {
       case Success(topLevelItem) => allChildren = findChildren(topLevelItem)
-      case Failure(exp) =>  returnValue = Left(exp)
+      case Failure(exp)          => returnValue = Left(exp)
     }
 
     if (returnValue.left.toOption.isDefined) returnValue else Right(checkedOrganisaatiot diff allChildren.toSet)
@@ -85,8 +101,8 @@ trait OrganisaatioService {
   private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
     level.find(pred) match {
       case None if level.isEmpty => None
-      case Some(c) => Some(c)
-      case None => find(pred, level.flatMap(_.children))
+      case Some(c)               => Some(c)
+      case None                  => find(pred, level.flatMap(_.children))
     }
 
   private def childOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
@@ -101,23 +117,23 @@ trait OrganisaatioService {
   private def parentOppilaitostyypitFlat(item: OidAndChildren, hierarkia: Option[OidAndChildren]): Seq[Option[String]] =
     parentOidsFlat(item).map { case oid =>
       find(_.oid == oid, hierarkia.toSet)
-    }.collect {
-      case Some(org) => org.oppilaitostyyppi
+    }.collect { case Some(org) =>
+      org.oppilaitostyyppi
     }
 
   private def pickChildrenRecursively(current: OidAndChildren, oid: OrganisaatioOid): Option[OidAndChildren] = {
     if (current.oid.equals(oid)) {
       Some(current)
     } else {
-      current.children
-        .iterator
+      current.children.iterator
         .map(pickChildrenRecursively(_, oid))
         .collectFirst { case Some(child) => current.copy(children = List(child)) }
     }
   }
 
   private def findHierarkia(oid: OrganisaatioOid): Option[OidAndChildren] =
-    cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached()
+    cachedOrganisaatioHierarkiaClient
+      .getWholeOrganisaatioHierarkiaCached()
       .organisaatiot
       .iterator
       .map(pickChildrenRecursively(_, oid))

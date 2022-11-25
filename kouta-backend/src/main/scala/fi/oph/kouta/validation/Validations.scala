@@ -150,6 +150,12 @@ object Validations {
       msg = s"Tarjoaja-organisaatiolla $oid ei ole oikeuksia koulutustyyppiin $koulutustyyppi",
       id = "tarjoajaOidWoRequiredKoulutustyyppi"
     )
+
+  def tarjoajaOidWoRequiredOppilaitostyyppi(oid: OrganisaatioOid, oppilaitostyypit: Seq[String]): ErrorMessage =
+    ErrorMessage(
+      msg = s"Tarjoaja $oid ei ole sallittua oppilaitostyyppiä (${oppilaitostyypit.mkString(", ")}",
+      id = "tarjoajaOidWoRequiredOppilaitostyyppi"
+    )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
     msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa",
     id = "invalidEPerusteId"
