@@ -484,11 +484,7 @@ class KoulutusService(
     val newTarjoajatForKoulutus      = (koulutus.tarjoajat.toSet diff tarjoajatSafeToDelete) ++ tarjoajatAddedToKoulutus
     val tarjoajatRemovedFromKoulutus = koulutus.tarjoajat.toSet diff newTarjoajatForKoulutus
 
-    val isAvoinKorkeakoulutus = (koulutus.metadata match {
-      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.isAvoinKorkeakoulutus
-      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.isAvoinKorkeakoulutus
-      case _                                            => None
-    }).getOrElse(false)
+    val isAvoinKorkeakoulutus = koulutus.isAvoinKorkeakoulutus()
 
     if (isAvoinKorkeakoulutus || (tarjoajatAddedToKoulutus.isEmpty && tarjoajatRemovedFromKoulutus.isEmpty)) {
       DBIO.successful((koulutus, None))

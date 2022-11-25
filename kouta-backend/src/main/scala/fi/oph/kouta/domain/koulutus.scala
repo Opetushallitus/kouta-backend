@@ -228,6 +228,12 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   def withMuokkaaja(oid: UserOid): Koulutus = this.copy(muokkaaja = oid)
 
   def getEntityDescriptionAllative(): String = "koulutukselle"
+
+  def isAvoinKorkeakoulutus(): Boolean = (metadata match {
+    case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.isAvoinKorkeakoulutus
+    case Some(m: KkOpintojaksoKoulutusMetadata)       => m.isAvoinKorkeakoulutus
+    case _                                            => None
+  }).getOrElse(false)
 }
 
 case class KoulutusListItem(oid: KoulutusOid,
