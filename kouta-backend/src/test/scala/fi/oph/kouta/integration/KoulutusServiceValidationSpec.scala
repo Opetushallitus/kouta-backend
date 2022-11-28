@@ -3,21 +3,15 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
-import fi.oph.kouta.client.{
-  EPerusteKoodiClient,
-  KoodiUri,
-  KoodistoQueryException,
-  KoulutusKoodiClient,
-  TutkinnonOsaServiceItem
-}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioService, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{KoulutusServiceValidation, OrganisaatioServiceImpl}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{ValidationError, _}
+import fi.oph.kouta.validation._
 import org.scalatest.Assertion
 
 import java.util.UUID
@@ -136,11 +130,12 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       tila = Tallennettu
     )
 
-  private def kkOpintoJaksoWithParams(
+  private def kkOpintojaksoWithParams(
       koulutusalaKoodiUrit: Seq[String] = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
       opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumero: Option[Double] = Some(12),
-      opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1")
+      opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1"),
+      isAvoinKorkeakoulutus: Option[Boolean] = Some(false)
   ): Koulutus =
     KkOpintojaksoKoulutus.copy(
       metadata = Some(
@@ -148,10 +143,30 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
           opintojenLaajuusNumero = opintojenLaajuusNumero,
-          opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri
+          opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
+          isAvoinKorkeakoulutus = isAvoinKorkeakoulutus
         )
       ),
-      oid = Some(KoulutusOid("1.2.246.562.13.125")),
+      oid = Some(KoulutusOid("1.2.246.562.13.129")),
+      tila = Tallennettu
+    )
+
+  private def kkOpintokokonaisuusWithParams(
+      koulutusalaKoodiUrit: Seq[String] = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_6#1"),
+      opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1"),
+      isAvoinKorkeakoulutus: Option[Boolean] = Some(false)
+  ): Koulutus =
+    KkOpintokokonaisuusKoulutus.copy(
+      metadata = Some(
+        KkOpintokokonaisuusKoulutusMetadata(
+          koulutusalaKoodiUrit = koulutusalaKoodiUrit,
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
+          opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
+          isAvoinKorkeakoulutus = isAvoinKorkeakoulutus
+        )
+      ),
+      oid = Some(KoulutusOid("1.2.246.562.13.126")),
       tila = Tallennettu
     )
 
@@ -557,7 +572,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       vstMuuWithParams(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_66"))
     passesValidation(nonChangedVst, nonChangedVst)
     val nonChangedKkOj =
-      kkOpintoJaksoWithParams(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_66"))
+      kkOpintojaksoWithParams(koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_66"))
     passesValidation(nonChangedKkOj, nonChangedKkOj)
   }
 
@@ -605,7 +620,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       aikuistenPerusopetusWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
     passesValidation(nonChangedAikPer, nonChangedAikPer)
     val nonChangedKkOj =
-      kkOpintoJaksoWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
+      kkOpintojaksoWithParams(opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_9#1"))
     passesValidation(nonChangedKkOj, nonChangedKkOj)
   }
 
@@ -1419,7 +1434,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   it should "fail if invalid metadata for luonnos Kk-opintojakso koulutus" in {
     failsValidation(
-      kkOpintoJaksoWithParams(
+      kkOpintojaksoWithParams(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
         opintojenLaajuusNumero = Some(-1),
         koulutusalaKoodiUrit = Seq("puppu"),
@@ -1626,7 +1641,94 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
     passesValidation(kkOpintokokonaisuusKoulutus, kkOpintokokonaisuusKoulutus)
   }
-  
+
+  it should "pass when saving kk-opintojakso with no toteutus and changed isAvoinKorkeakulutus" in {
+      val oldOpintojaksoKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(true))
+      val newOpintojaksoKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(false))
+
+      when(toteutusDao.getByKoulutusOid(newOpintojaksoKoulutus.oid.get, TilaFilter.onlyOlemassaolevat()))
+        .thenReturn(
+          Nil
+        )
+
+      passesValidation(newOpintojaksoKoulutus, oldOpintojaksoKoulutus)
+  }
+
+  it should "fail when kk-opintojakso has attached julkaistu toteutus and trying change isAvoinKorkeakoulutus" in {
+
+    val oldOpintojaksoKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(true))
+    val newOpintojaksoKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(false))
+    val opintojaksoToteutusOid = randomToteutusOid
+
+    when(toteutusDao.getByKoulutusOid(oldOpintojaksoKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())).thenReturn(
+      Seq(
+        JulkaistuKkOpintojaksoToteutus.copy(
+          oid = Some(opintojaksoToteutusOid),
+          koulutusOid = oldOpintojaksoKoulutus.oid.get,
+          metadata = Some(
+            KkOpintojaksoToteutuksenMetatieto.copy(
+              isAvoinKorkeakoulutus = Some(true)
+            )
+          )
+        )
+      )
+    )
+
+    failsModifyValidation(
+      newOpintojaksoKoulutus,
+      oldOpintojaksoKoulutus,
+      Seq(
+        ValidationError(
+          "metadata.isAvoinKorkeakoulutus",
+          cannotChangeIsAvoinKorkeakoulutus
+        )
+      )
+    )
+  }
+
+  it should "pass when saving kk-opintokokonaisuus with no toteutus and changed isAvoinKorkeakulutus" in {
+    val oldOpintokokonaisuusKoulutus = kkOpintokokonaisuusWithParams(isAvoinKorkeakoulutus = Some(false))
+    val newOpintokokonaisuusKoulutus = kkOpintokokonaisuusWithParams(isAvoinKorkeakoulutus = Some(true))
+
+    when(toteutusDao.getByKoulutusOid(newOpintokokonaisuusKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())).thenReturn(
+      Nil
+    )
+
+    passesValidation(newOpintokokonaisuusKoulutus, oldOpintokokonaisuusKoulutus)
+  }
+
+  it should "fail when kk-opintokokonaisuus has attached julkaistu toteutus and trying change isAvoinKorkeakoulutus" in {
+      val oldOpintokokonaisuusKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(true))
+      val newOpintokokonaisuusKoulutus = kkOpintojaksoWithParams(isAvoinKorkeakoulutus = Some(false))
+      val opintokokonaisuusToteutusOid = randomToteutusOid
+
+      when(toteutusDao.getByKoulutusOid(oldOpintokokonaisuusKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())).thenReturn(
+        Seq(
+          JulkaistuKkOpintokokonaisuusToteutus.copy(
+            oid = Some(opintokokonaisuusToteutusOid),
+            koulutusOid = oldOpintokokonaisuusKoulutus.oid.get,
+            metadata = Some(
+              KkOpintokokonaisuusToteutuksenMetatieto.copy(
+                isAvoinKorkeakoulutus = Some(true)
+              )
+            )
+          )
+        )
+      )
+
+      failsModifyValidation(
+        newOpintokokonaisuusKoulutus,
+        oldOpintokokonaisuusKoulutus,
+        Seq(
+          ValidationError(
+            "metadata.isAvoinKorkeakoulutus",
+            cannotChangeIsAvoinKorkeakoulutus
+          )
+        )
+      )
+
+  }
+
   val ammWithOid = AmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(ammWithOid, AmmKoulutus.copy(tila = Tallennettu))

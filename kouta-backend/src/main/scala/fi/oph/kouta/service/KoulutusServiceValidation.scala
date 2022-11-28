@@ -373,6 +373,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
+          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintojenLaajuusyksikkoAndNumero(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -385,6 +386,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
+          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintojenLaajuusyksikko(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -411,6 +413,18 @@ class KoulutusServiceValidation(
       case _ => NoErrors
     }
   }
+
+  private def validateIsAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) =
+    validateIfTrue(
+      koulutusDiffResolver.isAvoinKkChanged(), {
+        val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
+        assertTrue(
+          toteutukset.isEmpty,
+          "metadata.isAvoinKorkeakoulutus",
+          cannotChangeIsAvoinKorkeakoulutus
+        )
+      }
+    )
 
   private def assertOpettajankoulutusMetadata(
       opintojenLaajuusYksikkoKoodiUri: Option[String],
