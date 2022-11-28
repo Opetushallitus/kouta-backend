@@ -537,11 +537,6 @@ package object domain {
 
   type Kielistetty = Map[Kieli, String]
 
-  case class Pistetieto(tarjoaja: OrganisaatioOid,
-                        hakukohdekoodi: String,
-                        pisteet: Double,
-                        vuosi: String)
-
   case class Yhteyshenkilo(
       nimi: Kielistetty = Map(),
       titteli: Kielistetty = Map(),
