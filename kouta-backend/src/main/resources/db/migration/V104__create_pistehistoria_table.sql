@@ -6,5 +6,6 @@ create table if not exists pistehistoria (
     valintatapajonoOid varchar,
     hakukohdeOid varchar,
     hakuOid varchar,
+    updated TIMESTAMP not null default now(),
     primary key (tarjoajaOid, hakukohdekoodi, vuosi)
 );

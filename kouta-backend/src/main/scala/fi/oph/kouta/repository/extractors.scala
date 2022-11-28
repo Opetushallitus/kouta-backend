@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.{HakukohdeService, ToteutusService}
+import fi.oph.kouta.service.{HakukohdeService, Pistetieto, ToteutusService}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
@@ -559,7 +559,10 @@ trait PistehistoriaExtractors extends ExtractorBase {
     tarjoaja = OrganisaatioOid(r.nextString()),
     hakukohdekoodi = r.nextString(),
     pisteet = r.nextDouble(),
-    vuosi = r.nextString())
+    vuosi = r.nextString(),
+    valintatapajonoOid = r.nextString,
+    hakukohdeOid = HakukohdeOid(r.nextString()),
+    hakuOid = HakuOid(r.nextString()))
   )
 }
 

@@ -690,4 +690,33 @@ class IndexerServlet(koulutusService: KoulutusService,
       case (Some(t), Some(h)) => Ok(pistehistoriaService.getPistehistoria(t, h))
     }
   }
+
+  registerPath("/indexer/pistehistoria/sync",
+    """    get:
+      |      summary: Hakee haun hakukohteiden alimmat pisteet ja tallentaa ne kantaan
+      |      operationId: indexerSyncHaunPistetiedot
+      |      description: Hakee haun hakukohteiden alimmat pisteet ja tallentaa ne kantaan
+      |      tags:
+      |        - Indexer
+      |      parameters:
+      |        - in: query
+      |          name: hakuOid
+      |          schema:
+      |            type: String
+      |          required: true
+      |          description: Haun oid
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin)
+  get("/pistehistoria/sync") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val hakuOid: Option[HakuOid] = params.get("hakuOid").map(HakuOid).filter(_.isValid)
+    hakuOid match {
+      case None => BadRequest("error" -> "Pakollinen parametri puuttuu: hakuOid")
+      case Some(oid) => Ok(pistehistoriaService.syncPistehistoriaForHaku(oid))
+    }
+  }
 }
