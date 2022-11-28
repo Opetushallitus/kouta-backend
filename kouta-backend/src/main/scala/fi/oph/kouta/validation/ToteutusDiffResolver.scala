@@ -111,6 +111,11 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
     if (kielivalikoima(oldMetadata()).map(_.muutKielet).getOrElse(Seq()).toSet != kielet.toSet) kielet else Seq()
   }
 
+  def isAvoinKkChanged(): Boolean = oldToteutus match {
+    case Some(old: Toteutus) => toteutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+  }
+
   private def ammatillisetOsaamisalat(metadata: Option[ToteutusMetadata]): Seq[AmmatillinenOsaamisala] =
     if (!metadata.isDefined) Seq()
     else
