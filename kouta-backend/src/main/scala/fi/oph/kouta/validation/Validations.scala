@@ -137,6 +137,11 @@ object Validations {
     )
   }
 
+  val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
+    "isAvoinKorkeakoulutusIntegrity",
+    "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
+  )
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"
