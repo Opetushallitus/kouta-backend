@@ -47,6 +47,8 @@ case class KayttooikeusClientConfiguration(username: String, password: String)
 
 case class HakemuspalveluClientConfiguration(username: String, password: String)
 
+case class ValintaTulosServiceClientConfiguration(username: String, password: String)
+
 case class ElasticSearchConfiguration(
     elasticUrl: String,
     authEnabled: Boolean,
@@ -109,6 +111,12 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     username = config.getString("kouta-backend.cas.username"),
     password = config.getString("kouta-backend.cas.password")
   )
+
+  val valintaTulosServiceClientConfiguration: ValintaTulosServiceClientConfiguration = ValintaTulosServiceClientConfiguration(
+    username = config.getString("kouta-backend.cas.username"),
+    password = config.getString("kouta-backend.cas.password")
+  )
+
   val elasticSearchConfiguration = ElasticSearchConfiguration(
     config.getString("kouta-backend.elasticsearch.url"),
     config.getBoolean("kouta-backend.elasticsearch.auth-enabled"),
