@@ -964,6 +964,41 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "pass when koulutus has isAvoinKorkeakoulutus = false" in {
+      when(koulutusDao.get(kkOpintojaksoToteutus.koulutusOid))
+        .thenReturn(
+          Some(KkOpintojaksoKoulutus.copy(metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false))))
+        ))
+
+      passesValidation(
+        kkOpintojaksoToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false))))
+      )
+
+      passesValidation(
+        kkOpintojaksoToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))))
+      )
+    }
+
+  it should "fail with isAvoinKorkeakoulutus = false when corresponding koulutus value is true" in {
+      val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(metadata =
+        Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
+      )
+      when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
+        .thenReturn(
+          Some(
+            KkOpintojaksoKoulutus.copy(metadata =
+              Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+            )
+          )
+        )
+
+      failsValidation(
+        kkOpintojaksoToteutus,
+        "metadata.isAvoinKorkeakoulutus",
+        invalidIsAvoinKorkeakoulutusIntegrity
+      )
+    }
+
   "Kk-opintokokonaisuus validation" should "fail if ammattinimikkeet given" in {
     failsValidation(
       kkOpintokokonaisuusToteutus.copy(metadata =

@@ -261,6 +261,11 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
 
   def getEntityDescriptionAllative(): String = "toteutukselle"
+  def isAvoinKorkeakoulutus(): Boolean = (metadata match {
+    case Some(m: KkOpintojaksoToteutusMetadata) => m.isAvoinKorkeakoulutus
+    case Some(m: KkOpintokokonaisuusToteutusMetadata) => m.isAvoinKorkeakoulutus
+    case _ => None
+  }).getOrElse(false)
 }
 
 case class ToteutusListItem(oid: ToteutusOid,
