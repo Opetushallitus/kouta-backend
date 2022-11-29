@@ -582,12 +582,13 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     val nonChangedVst = VapaaSivistystyoOpistovuosiKoulutus.copy(
       metadata = Some(
         VapaaSivistystyoOpistovuosiKoulutusMetadata(
-          kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")
+          kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         )
       ),
       oid = Some(KoulutusOid("1.2.246.562.13.125"))
     )
-    //passesValidation(nonChangedVst, nonChangedVst) fixme
+    passesValidation(nonChangedVst, nonChangedVst)
   }
 
   it should "Succeed when laajuusYksikkoKoodiUri not changed in modify operation, even though invalid koodiUrit" in {
