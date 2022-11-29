@@ -302,6 +302,37 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(min)
   }
 
+  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta" in {
+    passesValidation(
+      initMockSeq(
+        max.copy(
+          metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))
+        )
+      )
+    )
+  }
+
+  it should "succeed when new lk-hakukohde with jarjestaaUrheilijanAmmKoulutusta" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "painotus", Sv -> "painotus sv"),
+      metadata = Some(
+        maxMetadata.copy(
+          hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))),
+          jarjestaaUrheilijanAmmKoulutusta = Some(true)
+        )
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    failsValidation(
+      lkHakukohde,
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
+        "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+      )
+    )
+  }
+
   it should "succeed when new amm-hakukohde for yhteishaku with correct hakukohdeKoodiUri" in {
     passesValidation(
       initMockSeq(
