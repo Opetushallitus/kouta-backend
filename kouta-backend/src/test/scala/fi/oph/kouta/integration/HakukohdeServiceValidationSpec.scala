@@ -110,7 +110,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Amm,
         Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
       )
-    )
+    ),
+    None
   )
 
   val lukioDependencies = HakukohdeDependencyInformation(
@@ -130,7 +131,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Lk,
         Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
       )
-    )
+    ),
+    None
   )
 
   def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
@@ -162,7 +164,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
               toteutusMetadata.tyyppi,
               Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
             )
-          )
+          ),
+          None
         )
       )
     )

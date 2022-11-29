@@ -128,10 +128,13 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       KoutaDatabase.runBlocking(selectToteutusDependencyInformation(hakukohde))
     val valintaperusteDependencyInfo: Option[HakukohdeValintaperusteDependencyInfo] =
       KoutaDatabase.runBlocking(selectValintaperusteDependencyInformation(hakukohde))
-    (toteutusDependencyInfo, valintaperusteDependencyInfo) match {
-      case (Some(toteutusInfo), Some(valintaperusteInfo)) => Some(HakukohdeDependencyInformation(toteutusInfo, Some(valintaperusteInfo)))
-      case (Some(toteutusInfo), None) => Some(HakukohdeDependencyInformation(toteutusInfo, None))
-      case (None, _) => None
+    val jarjestyspaikkaDependencyInfo: Option[HakukohdeJarjestyspaikkaDependencyInfo] = hakukohde.jarjestyspaikkaOid match {
+      case Some(jarjestyspaikkaOid) => KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid))
+      case None                     => None
+    }
+    toteutusDependencyInfo match {
+      case Some(toteutusInfo) => Some(HakukohdeDependencyInformation(toteutusInfo, valintaperusteDependencyInfo, jarjestyspaikkaDependencyInfo))
+      case None => None
     }
   }
 
@@ -581,6 +584,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
                     group by valintaperuste_id) vk on vk.vpid = vp.id
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[HakukohdeValintaperusteDependencyInfo].headOption
+
+  def selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Option[HakukohdeJarjestyspaikkaDependencyInfo]] =
+    sql"""select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitokset where oid = ${jarjestyspaikkaOid.toString}
+          union
+          select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitosten_osat where oid = ${jarjestyspaikkaOid.toString}
+       """.as[HakukohdeJarjestyspaikkaDependencyInfo].headOption
 
   def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
     sql"""select

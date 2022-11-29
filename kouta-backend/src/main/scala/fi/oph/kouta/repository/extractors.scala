@@ -402,6 +402,11 @@ trait HakukohdeExctractors extends ExtractorBase {
     valintakoeIdt = extractArray[UUID](r.nextObjectOption())
   ))
 
+  implicit val getHakukohdeJarjestyspaikkaDependencyInfoResult: GetResult[HakukohdeJarjestyspaikkaDependencyInfo] = GetResult(r => HakukohdeJarjestyspaikkaDependencyInfo(
+    oid = OrganisaatioOid(r.nextString()),
+    jarjestaaUrheilijanAmmKoulutusta = r.nextBooleanOption()
+  ))
+
   //implicit val getUUIDSequenceResult: GetResult[Seq[UUID]] = GetResult(r => extractArray[UUID](r.nextObjectOption()))
 }
 

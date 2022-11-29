@@ -86,7 +86,7 @@ class OppilaitosService(
     val enrichedMetadata: Option[OppilaitosMetadata] = enrichOppilaitosMetadata(oppilaitos)
     val enrichedOppilaitos = oppilaitos.copy(metadata = enrichedMetadata)
     authorizePut(enrichedOppilaitos) { o =>
-      oppilaitosServiceValidation.withValidation(o, None)(doPut)
+      oppilaitosServiceValidation.withValidation(o, None, authenticated)(doPut)
     }.oid
   }
 
@@ -94,7 +94,7 @@ class OppilaitosService(
     val enrichedMetadata: Option[OppilaitosMetadata] = enrichOppilaitosMetadata(oppilaitos)
     val enrichedOppilaitos = oppilaitos.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitosDAO.get(oppilaitos.oid), enrichedOppilaitos) { (oldOppilaitos, o) =>
-      oppilaitosServiceValidation.withValidation(o, Some(oldOppilaitos)) {
+      oppilaitosServiceValidation.withValidation(o, Some(oldOppilaitos), authenticated) {
         doUpdate(_, notModifiedSince, oldOppilaitos)
       }
     }.nonEmpty
@@ -198,7 +198,7 @@ class OppilaitoksenOsaService(
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
 
     authorizePut(enrichedOppilaitoksenOsa) { o =>
-      oppilaitoksenOsaServiceValidation.withValidation(o, None) { o =>
+      oppilaitoksenOsaServiceValidation.withValidation(o, None, authenticated) { o =>
         doPut(o)
       }
     }.oid
@@ -209,7 +209,7 @@ class OppilaitoksenOsaService(
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
     val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
     authorizeUpdate(OppilaitoksenOsaDAO.get(oppilaitoksenOsa.oid), enrichedOppilaitoksenOsa) { (oldOsa, o) =>
-      oppilaitoksenOsaServiceValidation.withValidation(o, Some(oldOsa)) { o =>
+      oppilaitoksenOsaServiceValidation.withValidation(o, Some(oldOsa), authenticated) { o =>
         doUpdate(o, notModifiedSince, oldOsa)
       }
     }.nonEmpty
