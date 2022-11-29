@@ -213,6 +213,8 @@ class KoulutusService(
             )
           case kkOpintokokonaisuusMetadata: KkOpintokokonaisuusKoulutusMetadata =>
             Some(kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case erikoistumiskoulutusMetadata: ErikoistumiskoulutusMetadata =>
+            Some(erikoistumiskoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
