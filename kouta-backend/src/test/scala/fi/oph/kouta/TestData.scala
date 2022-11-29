@@ -211,7 +211,7 @@ object TestData {
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01"),
         opintojenLaajuusNumero = None,
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         lisatiedot = Seq(Lisatieto1),
         isMuokkaajaOphVirkailija = Some(true)
       )
