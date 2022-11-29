@@ -463,7 +463,7 @@ case class OppilaitosMetadata(
     toimipisteita: Option[Int] = None,
     akatemioita: Option[Int] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-    jarjestaaUrheilijanAmmKoulutusta: Boolean = false
+    jarjestaaUrheilijanAmmKoulutusta: Option[Boolean] = None
 )
 
 case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty)
@@ -474,7 +474,7 @@ case class OppilaitoksenOsaMetadata(
     opiskelijoita: Option[Int] = None,
     kampus: Kielistetty = Map(),
     esittely: Kielistetty = Map(),
-    jarjestaaUrheilijanAmmKoulutusta: Boolean = false,
+    jarjestaaUrheilijanAmmKoulutusta: Option[Boolean] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 )
 

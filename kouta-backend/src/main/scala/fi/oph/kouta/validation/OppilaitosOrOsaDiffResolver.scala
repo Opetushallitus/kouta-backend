@@ -37,13 +37,13 @@ case class OppilaitosOrOsaDiffResolver[E <: Validatable](oppilaitosOrOsa: E, old
 
   def jarjestaaUrheilijanAmmatillistakoulutustaChanged(): Boolean = {
     val oldValue: Option[Boolean] = oldOppilaitosOrOsa match {
-      case oppilaitos: Oppilaitos => oppilaitos.metadata.map(_.jarjestaaUrheilijanAmmKoulutusta)
-      case osa: OppilaitoksenOsa => osa.metadata.map(_.jarjestaaUrheilijanAmmKoulutusta)
+      case oppilaitos: Oppilaitos => oppilaitos.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
+      case osa: OppilaitoksenOsa => osa.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
       case _ => None
     }
     val newValue: Option[Boolean] = oppilaitosOrOsa match {
-      case oppilaitos: Oppilaitos => oppilaitos.metadata.map(_.jarjestaaUrheilijanAmmKoulutusta)
-      case osa: OppilaitoksenOsa => osa.metadata.map(_.jarjestaaUrheilijanAmmKoulutusta)
+      case oppilaitos: Oppilaitos => oppilaitos.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
+      case osa: OppilaitoksenOsa => osa.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
       case _ => None
     }
     (oldValue, newValue) match {

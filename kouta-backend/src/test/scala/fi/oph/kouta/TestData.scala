@@ -1445,7 +1445,6 @@ object TestData {
         esittely = Map(Fi -> "Esittely", Sv -> "Esittely sv"),
         opiskelijoita = Some(100),
         kampus = Map(Fi -> "Kampus fi", Sv -> "Kampus sv"),
-        jarjestaaUrheilijanAmmKoulutusta = false,
         isMuokkaajaOphVirkailija = Some(false)
       )
     ),
