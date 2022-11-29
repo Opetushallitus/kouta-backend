@@ -99,10 +99,11 @@ class NameHelperSpec extends UnitSpec {
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
-    opintojenLaajuusKoodiUri = Some("opintojenlaajuus_40#1"),
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
-  )
+      opintojenLaajuusNumero = Some(40),
+      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2"),
+      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
+    )
 
   "generateToteutusDisplayName" should "generate Toteutus display name for lukio with yleislinja, painotus and erityinen koulutustehtävä" in {
     val esitysnimi = NameHelper.generateLukioToteutusDisplayName(
