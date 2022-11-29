@@ -227,11 +227,11 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
-  it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+  it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
     passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
   }
 
-  it should "pass if non oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+  it should "fail if non oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
     failsValidation(
       max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))),
       "metadata.jarjestaaUrheilijanAmmKoulutusta",
