@@ -27,7 +27,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
   }
 
-  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]]= {
+  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]] = {
     Try[Seq[Organisaatio]] {
       organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
     } match {
