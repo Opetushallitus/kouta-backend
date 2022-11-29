@@ -27,7 +27,9 @@ object PistehistoriaDAO extends PistetietoSQL {
 sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
 
   def selectPistehistoria(tarjoaja: OrganisaatioOid, hakukohdekoodi: String): DBIO[Vector[Pistetieto]] = {
-    val hakukohdekoodiInParam = hakukohdekoodi match {
+    println(s"select pistehistoria $tarjoaja, $hakukohdekoodi")
+    val koodiWithoutVersion = hakukohdekoodi.split("#").head
+    val hakukohdekoodiInParam = koodiWithoutVersion match {
       case koodi if koodi.startsWith("hakukohteetperusopetuksenjalkeinenyhteishaku") =>
         "'"+hakukohdekoodi+"','"+ koodi.replace("hakukohteetperusopetuksenjalkeinenyhteishaku", "hakukohteet")+"'"
       case _ => "'"+hakukohdekoodi+"'"

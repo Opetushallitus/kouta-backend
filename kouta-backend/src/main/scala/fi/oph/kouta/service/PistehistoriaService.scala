@@ -38,7 +38,7 @@ class PistehistoriaService extends Logging {
       val hakukohde = koutaHakukohteet.find(hk => hk.oid.toString.equals(pt.hakukohdeOid)).getOrElse(throw new RuntimeException(s"No hakukohde ${pt.hakukohdeOid} found"))
       Pistetieto(
         tarjoaja = hakukohde.jarjestyspaikkaOid.get, //option, mutta onko tämä käytännössä aina tiedossa?
-        hakukohdekoodi = hakukohde.hakukohdeKoodiUri.getOrElse("SOS"), //todo lukiolinja -> hakukohdeKoodiUri?
+        hakukohdekoodi = hakukohde.hakukohdeKoodiUri.map(_.split("#").head).getOrElse("SOS"), //todo lukiolinja -> hakukohdeKoodiUri?
         pt.alinHyvaksyttyPistemaara,
         vuosi = "2022", //fixme, haetaan haun tiedoista
         valintatapajonoOid = pt.valintatapajonoOid,
@@ -68,7 +68,7 @@ class PistehistoriaService extends Logging {
       hakukohde.tarjoajaOids.map(tarjoaja => {
         Pistetieto(
           tarjoaja = OrganisaatioOid(tarjoaja),
-          hakukohdekoodi = hakukohde.hakukohteenNimiUri.getOrElse("SOS"),
+          hakukohdekoodi = hakukohde.hakukohteenNimiUri.map(_.split("#").head).getOrElse("SOS"),
           pt.alinHyvaksyttyPistemaara,
           vuosi = haku.hakukausiVuosi.getOrElse("9999"), //todo, fallback to sijoitteluajoId?
           valintatapajonoOid = pt.valintatapajonoOid,
