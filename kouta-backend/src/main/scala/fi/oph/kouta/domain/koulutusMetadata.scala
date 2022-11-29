@@ -390,9 +390,47 @@ package object koulutusMetadata {
       |                - tutkintonimikekk_111#2
       |""".stripMargin
 
+  val ErikoistumiskoulutusMetadataModel: String =
+    """    ErikoistumiskoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoistumiskoulutus
+      |              enum:
+      |                - erikoistumiskoulutus
+      |            erikoistumiskoulutusKoodiUri:
+      |              type: string
+      |              description: Erikoistumiskoulutuksen koodiURI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/erikoistumiskoulutukset/2)
+      |              example:
+      |                - erikoistumiskoulutukset_001#2
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusNumeroMin:
+      |              type: integer
+      |              description: Opintojen laajuuden tai keston vähimmäismäärä numeroarvona
+      |              example: 10
+      |            opintojenLaajuusNumeroMax:
+      |              type: integer
+      |              description: Opintojen laajuuden tai keston enimmäismäärä numeroarvona
+      |              example: 20
+      |""".stripMargin
+
   val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel, OpePedagOpinnotKoulutusMetadataModel,
     YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel, KkOpintokokonaisuusKoulutusMetadataModel)
+    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel, KkOpintokokonaisuusKoulutusMetadataModel, ErikoistumiskoulutusMetadataModel)
 }
 
 sealed trait KoulutusMetadata {
@@ -553,3 +591,14 @@ case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakar
                                           koulutusalaKoodiUrit: Seq[String] = Seq(),
                                           isMuokkaajaOphVirkailija: Option[Boolean] = None
                                          ) extends KoulutusMetadata
+
+case class ErikoistumiskoulutusMetadata(tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
+                                        kuvaus: Kielistetty = Map(),
+                                        lisatiedot: Seq[Lisatieto] = Seq(),
+                                        erikoistumiskoulutusKoodiUri: Option[String] = None,
+                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                        opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                        opintojenLaajuusNumeroMin: Option[Double] = None,
+                                        opintojenLaajuusNumeroMax: Option[Double] = None,
+                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                       ) extends KoulutusMetadata

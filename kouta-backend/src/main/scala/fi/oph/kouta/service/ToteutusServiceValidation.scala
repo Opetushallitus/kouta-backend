@@ -8,7 +8,6 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.ToteutusServiceUtil
-import fi.oph.kouta.validation
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
@@ -33,7 +32,7 @@ class ToteutusServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO,
     toteutusDAO: ToteutusDAO
-) extends KoulutusToteutusValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] {
+) extends KoulutusToteutusValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus]  {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -175,7 +174,7 @@ class ToteutusServiceValidation(
       relativePath: String,
       validationContext: ValidationContext,
       koodistoFunc: String => ExternalQueryResult,
-      errorFunc: String => validation.ErrorMessage
+      errorFunc: String => ErrorMessage
   ): IsValid =
     validateIfNonEmpty[String](
       koodiUrit,

@@ -41,7 +41,7 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
       )
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children 2" in {
-    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus)
+    organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoistumiskoulutus)
   }
 
   it should "return a flat list of oppilaitostyyppi present in parents and children 3" in {
@@ -60,15 +60,16 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
         AikuistenPerusopetus
       )
   }
+
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
     organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should
-      contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
+      contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Erikoistumiskoulutus, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
     organisaatioService
       .getAllChildAndParentOidsWithOppilaitostyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))
-      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
+      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Erikoistumiskoulutus, OpePedagOpinnot, Lk, Muu, Tuva, AikuistenPerusopetus)
   }
 
   "findUnknownOrganisaatioOidsFromHierarkia" should "return correct organisaatioOids" in {

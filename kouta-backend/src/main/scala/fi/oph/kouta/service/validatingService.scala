@@ -5,7 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable}
+import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, Validatable, ValidationContext}
 
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
@@ -52,20 +52,26 @@ trait ValidatingService[E <: Validatable] {
     Some(s"$koodiUri#<versionumero>, esim. $koodiUri#1")
 }
 
-trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] {
+trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] with KoulutusKoodiValidator {
   def organisaatioService: OrganisaatioService
-  def koulutusKoodiClient: KoulutusKoodiClient
   def sorakuvausDAO: SorakuvausDAO
 
-  def validateTarjoajat(koulutustyyppi: Koulutustyyppi, tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
-    val newTarjoajat = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
-    val validTarjoajat = newTarjoajat.filter(_.isValid)
+  def validateTarjoajat(
+      koulutustyyppi: Koulutustyyppi,
+      tarjoajat: List[OrganisaatioOid],
+      oldTarjojat: List[OrganisaatioOid]
+  ): IsValid = {
+    val newTarjoajat                      = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
+    val validTarjoajat                    = newTarjoajat.filter(_.isValid)
     var tarjoajatWoRequiredKoulutustyyppi = Seq[OrganisaatioOid]()
-    var organisaatioServiceOk = true
+    var organisaatioServiceOk             = true
     Try[Seq[OrganisaatioOid]] {
-      validTarjoajat.filterNot(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(_)._2.contains(koulutustyyppi))
+      validTarjoajat.filterNot(
+        organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(_)._2.contains(koulutustyyppi)
+      )
     } match {
-      case Success(tarjoajaOidsWoRequiredKoulutustyyppi) => tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
+      case Success(tarjoajaOidsWoRequiredKoulutustyyppi) =>
+        tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
       case Failure(_) => organisaatioServiceOk = false
     }
     validateIfTrueOrElse(
@@ -76,7 +82,11 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
         (oid, path) =>
           validateIfSuccessful(
             assertTrue(oid.isValid, path, validationMsg(oid.s)),
-            assertFalse(tarjoajatWoRequiredKoulutustyyppi.contains(oid), path, tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi))
+            assertFalse(
+              tarjoajatWoRequiredKoulutustyyppi.contains(oid),
+              path,
+              tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi)
+            )
           )
       ),
       error("tarjoajat", organisaatioServiceFailureMsg)
@@ -128,6 +138,96 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
       }
     )
   }
+}
+
+trait KoulutusKoodiValidator {
+  def koulutusKoodiClient: KoulutusKoodiClient
+
+  def validateKoulutusKoodiUrit(
+      koodiUriFilter: KoulutusKoodiFilter,
+      koulutusKoodiUrit: Seq[String],
+      newKoulutusKoodiUrit: Seq[String],
+      maxNbrOfKoodit: Option[Int],
+      vCtx: ValidationContext
+  ): IsValid =
+    validateIfJulkaistu(
+      vCtx.tila,
+      validateIfSuccessful(
+        assertKoulutusKoodiuriAmount(koulutusKoodiUrit, maxNbrOfKoodit),
+        validateIfNonEmpty[String](
+          newKoulutusKoodiUrit,
+          "koulutuksetKoodiUri",
+          (koodiUri, path) =>
+            assertKoulutuskoodiQueryResult(
+              koodiUri,
+              koodiUriFilter,
+              koulutusKoodiClient,
+              path,
+              vCtx,
+              invalidKoulutuskoodiuri(koodiUri)
+            )
+        )
+      )
+    )
+
+  def assertKoulutusalaKoodiUrit(koodiUrit: Seq[String], validationContext: ValidationContext): IsValid =
+    validateIfNonEmpty[String](
+      koodiUrit,
+      "metadata.koulutusalaKoodiUrit",
+      (koodiUri, path) =>
+        assertKoodistoQueryResult(
+          koodiUri,
+          koulutusKoodiClient.koulutusalaKoodiUriExists,
+          path,
+          validationContext,
+          invalidKoulutusAlaKoodiuri(koodiUri)
+        )
+    )
+
+  def assertOpintojenLaajuusyksikkoKoodiUri(
+      koodiUri: Option[String],
+      validationContext: ValidationContext
+  ): IsValid =
+    validateIfDefined[String](
+      koodiUri,
+      uri =>
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          validationContext,
+          invalidOpintojenLaajuusyksikkoKoodiuri(uri)
+        )
+    )
+
+  def validateOpintojenLaajuusyksikkoAndNumero(
+      laajuusyksikkoKoodiUri: Option[String],
+      newLaajuusyksikkoKoodiUri: Option[String],
+      laajuusNumero: Option[Double],
+      mandatoryIfJulkaistu: Boolean,
+      validationContext: ValidationContext
+  ): IsValid =
+    and(
+      assertOpintojenLaajuusyksikkoKoodiUri(newLaajuusyksikkoKoodiUri, validationContext),
+      validateIfDefined[Double](
+        laajuusNumero,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumero")
+      ),
+      validateIfTrue(
+        mandatoryIfJulkaistu,
+        validateIfJulkaistu(
+          validationContext.tila,
+          and(
+            assertNotOptional(laajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri"),
+            assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
+          )
+        )
+      )
+    )
+}
+
+trait ValidatingSubService[E] {
+  def validate(entity: E, oldEntity: Option[E], vCtx: ValidationContext): IsValid
 }
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {

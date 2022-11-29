@@ -292,6 +292,20 @@ package object toteutusMetadata {
       |                - erikoislaakari
       |""".stripMargin
 
+  val ErikoistumiskoulutusToteutusMetadataModel: String =
+    """    ErikoistumiskoulutusToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: erikoistumiskoulutus
+      |              enum:
+      |                - erikoistumiskoulutus
+      |""".stripMargin
+
   val AmmatillinenToteutusMetadataModel: String =
     """    AmmatillinenToteutusMetadata:
       |      allOf:
@@ -606,7 +620,8 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, OpePedagOpinnotToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel)
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel,
+    ErikoistumiskoulutusToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {
@@ -902,3 +917,19 @@ case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakar
                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                                           isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                           hasJotpaRahoitus: Option[Boolean] = None) extends ToteutusMetadata
+
+case class ErikoistumiskoulutusToteutusMetadata(tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
+                                                kuvaus: Kielistetty = Map(),
+                                                opetus: Option[Opetus] = None,
+                                                asiasanat: List[Keyword] = List(),
+                                                ammattinimikkeet: List[Keyword] = List(),
+                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                hakutermi: Option[Hakutermi] = None,
+                                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                                hakulomakeLinkki: Kielistetty = Map(),
+                                                hakuaika: Option[Ajanjakso] = None,
+                                                aloituspaikat: Option[Int] = None,
+                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                                hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
