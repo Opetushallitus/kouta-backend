@@ -13,21 +13,22 @@ trait PistehistoriaDAO {
 object PistehistoriaDAO extends PistetietoSQL {
 
   def getPistehistoria(tarjoaja: OrganisaatioOid, hakukohdekoodi: String): Seq[Pistetieto] = {
-    println("Haetaan pistehistoria organisaatiolle " + tarjoaja)
     KoutaDatabase.runBlocking(selectPistehistoria(tarjoaja, hakukohdekoodi))
   }
 
   def savePistehistorias(pisteet: Seq[Pistetieto]) = {
-    logger.info(s"Saving ${pisteet.size} pistetietos, first: ${pisteet.head}")
-    KoutaDatabase.runBlocking(persistPistehistoria(pisteet)).toList.sum
+    if (pisteet.isEmpty) {
+      0
+    } else {
+      logger.info(s"Saving ${pisteet.size} pistetietos, first: ${pisteet.head}")
+      KoutaDatabase.runBlocking(persistPistehistoria(pisteet)).toList.sum
+    }
   }
-
 }
 
 sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
 
   def selectPistehistoria(tarjoaja: OrganisaatioOid, hakukohdekoodi: String): DBIO[Vector[Pistetieto]] = {
-    println(s"select pistehistoria $tarjoaja, $hakukohdekoodi")
     val koodiWithoutVersion = hakukohdekoodi.split("#").head
     val hakukohdekoodiInParam = koodiWithoutVersion match {
       case koodi if koodi.startsWith("hakukohteetperusopetuksenjalkeinenyhteishaku") =>
