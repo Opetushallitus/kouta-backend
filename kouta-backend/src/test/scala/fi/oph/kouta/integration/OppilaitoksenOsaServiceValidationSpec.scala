@@ -79,10 +79,10 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
   ): Assertion = failsValidation(oppilaitoksenOsa, Seq(ValidationError(path, message)), authenticatedNonPaakayttaja)
 
   def failsValidation(
-                       oppilaitoksenOsa: OppilaitoksenOsa,
-                       expected: Seq[ValidationError],
-                       authenticated: Authenticated = authenticatedNonPaakayttaja
-                     ): Assertion =
+     oppilaitoksenOsa: OppilaitoksenOsa,
+     expected: Seq[ValidationError],
+     authenticated: Authenticated = authenticatedNonPaakayttaja
+   ): Assertion =
     Try(validator.withValidation(oppilaitoksenOsa, None, authenticated)(o => o)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _ => fail("Expecting validation failure, but it succeeded")
@@ -144,6 +144,21 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
 
   it should "fail if invalid data" in {
     failsValidation(minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)), "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("puppu"))
+  }
+
+  it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+    passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
+  }
+
+  it should "pass if non oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))),
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        msg = "Vain OPH:n pääkäyttäjä voi muuttaa tiedon järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta",
+        id = "invalidRightsForChangingJarjestaaUrheilijanAmmatillistaKoulutusta"
+      )
+    )
   }
 
   val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")

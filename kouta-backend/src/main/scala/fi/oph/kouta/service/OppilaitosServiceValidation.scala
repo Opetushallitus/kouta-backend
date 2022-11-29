@@ -20,7 +20,6 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
     val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
     val oppilaitosDiffResolver = OppilaitosOrOsaDiffResolver(oppilaitos, oldOppilaitos)
     var errors = super.validate(oppilaitos, oldOppilaitos)
-    println("METADATA: " + oppilaitos.metadata)
     if (errors.isEmpty)
       errors = validateIfDefined[OppilaitosMetadata](
         oppilaitos.metadata,

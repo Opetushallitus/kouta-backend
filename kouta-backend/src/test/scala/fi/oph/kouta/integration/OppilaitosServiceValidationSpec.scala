@@ -227,5 +227,20 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+    passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
+  }
+
+  it should "pass if non oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))),
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        msg = "Vain OPH:n pääkäyttäjä voi muuttaa tiedon järjestääkö oppilaitos urheilijan ammatillista koulutusta",
+        id = "invalidRightsForChangingJarjestaaUrheilijanAmmatillistaKoulutusta"
+      )
+    )
+  }
+
   val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
 }
