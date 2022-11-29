@@ -33,15 +33,15 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
       case _ => "'"+hakukohdekoodi+"'"
     }
 
-    sql"""select tarjoajaOid, hakukohdekoodi, pisteet, vuosi, valintatapajonooid, hakukohdeoid, hakuoid from pistehistoria
-          where tarjoajaOid = #${"'"+tarjoaja.toString+"'"}
+    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid from pistehistoria
+          where tarjoaja_oid = #${"'"+tarjoaja.toString+"'"}
             and hakukohdekoodi in (#$hakukohdekoodiInParam)""".as[Pistetieto]
   }
 
   def persistPistehistoria(pisteet: Seq[Pistetieto]) = {
     DBIO.sequence(
       pisteet.map((pistetieto: Pistetieto) => {
-        sqlu"""insert into pistehistoria (tarjoajaOid, hakukohdekoodi, vuosi, pisteet, valintatapajonooid, hakukohdeoid, hakuoid)
+        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid)
               values (
                       ${pistetieto.tarjoaja},
                       ${pistetieto.hakukohdekoodi},
@@ -50,10 +50,10 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
                       ${pistetieto.valintatapajonoOid},
                       ${pistetieto.hakukohdeOid},
                       ${pistetieto.hakuOid}
-                ) on conflict (tarjoajaOid, hakukohdekoodi, vuosi) do update set pisteet = excluded.pisteet,
-                                                                                 valintatapajonooid = excluded.valintatapajonooid,
-                                                                                 hakukohdeoid = excluded.hakukohdeoid,
-                                                                                 hakuoid = excluded.hakuoid,
+                ) on conflict (tarjoaja_oid, hakukohdekoodi, vuosi) do update set pisteet = excluded.pisteet,
+                                                                                 valintatapajono_oid = excluded.valintatapajono_oid,
+                                                                                 hakukohde_oid = excluded.hakukohde_oid,
+                                                                                 haku_oid = excluded.haku_oid,
                                                                                  updated = now()"""
       }))
   }

@@ -1,11 +1,11 @@
 create table if not exists pistehistoria (
-    tarjoajaOid varchar not null,
+    tarjoaja_oid varchar not null,
     hakukohdekoodi varchar not null,
     vuosi varchar not null,
     pisteet numeric not null,
-    valintatapajonoOid varchar,
-    hakukohdeOid varchar,
-    hakuOid varchar,
+    valintatapajono_oid varchar,
+    hakukohde_oid varchar,
+    haku_oid varchar,
     updated TIMESTAMP not null default now(),
-    primary key (tarjoajaOid, hakukohdekoodi, vuosi)
+    primary key (tarjoaja_oid, hakukohdekoodi, vuosi)
 );
