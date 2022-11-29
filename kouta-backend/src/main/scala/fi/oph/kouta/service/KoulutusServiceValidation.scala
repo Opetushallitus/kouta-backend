@@ -683,11 +683,11 @@ class KoulutusServiceValidation(
     and(
       assertEmpty(lisatiedot, "metadata.lisatiedot"),
       validateIfNonEmpty(linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
-      assertOpintojenLaajuusKoodiUri(newOpintojenLaajuusYksikkoKoodiUri, validationContext),
+      assertOpintojenLaajuusyksikkoKoodiUri(newOpintojenLaajuusYksikkoKoodiUri, validationContext),
       validateIfJulkaistu(
         validationContext.tila,
         and(
-          assertNotOptional(opintojenLaajuusYksikkoKoodiUri, "metadata.opintojenLaajuusYksikkoKoodiUri"), //fixme, check tyyppi?
+          assertNotOptional(opintojenLaajuusYksikkoKoodiUri, "metadata.opintojenLaajuusYksikkoKoodiUri"),
           validateOptionalKielistetty(
             validationContext.kielivalinta,
             linkkiEPerusteisiin,
@@ -839,19 +839,6 @@ class KoulutusServiceValidation(
         )
     )
   }
-
-  private def assertOpintojenLaajuusKoodiUri(koodiUri: Option[String], validationContext: ValidationContext): IsValid =
-    validateIfDefined[String](
-      koodiUri,
-      uri =>
-        assertKoodistoQueryResult(
-          uri,
-          koulutusKoodiClient.opintojenLaajuusKoodiUriExists,
-          "metadata.opintojenLaajuusKoodiUri",
-          validationContext,
-          invalidOpintojenLaajuusKoodiuri(uri)
-        )
-    )
 
   private def assertOpintojenLaajuusyksikkoKoodiUri(
       koodiUri: Option[String],
