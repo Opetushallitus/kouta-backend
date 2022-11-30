@@ -211,7 +211,15 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     else organisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
   }
 
-  def parseKoulutusFromResult(result: JValue, komo: JValue, koulutuskoodi2koulutusala: (String, Int) => Seq[String]): Koulutus = {
+  def parseKoulutusFromResult(koulutusResult: JValue, komoResult: JValue, tarjojanKoulutusResult: Option[JValue], tarjojanKomo: Option[JValue], koulutuskoodi2koulutusala: (String, Int) => Seq[String]): Koulutus = {
+    val result = tarjojanKoulutusResult match {
+      case Some(r) => r
+      case None => koulutusResult
+    }
+    val komo = tarjojanKomo match {
+      case Some(r) => r
+      case None => komoResult
+    }
     val koulutusmoduuliTyyppi = (result \ "koulutusmoduuliTyyppi").extract[String]
 
     val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(oid => resolveOrganisationOidForKoulutus(OrganisaatioOid(oid))).distinct
@@ -221,15 +229,11 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val nimi: Map[Kieli, String] =
       opetuskielet.flatten.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
 
-    val tila = toJulkaisutila((result \ "tila").extract[String])
-    //val koulutusKoodiUri = s"${(result \ "koulutuskoodi" \ "uri").extractOpt[String]}#${(result \ "koulutuskoodi" \ "versio").extractOpt[Int]}"
-    //val koulutuksetKoodiUri = Seq(koulutusKoodiUri)
     val koulutuksetKoodiUri = ((result \ "koulutuskoodi" \ "uri").extractOpt[String], (result \ "koulutuskoodi" \ "versio").extractOpt[Int]) match {
       case (Some(uri), Some(version)) => Seq(s"${uri}#${version}")
       case (_, _) => Seq()
     }
-    //val koulutusasteUri = (result \ "koulutusaste" \ "uri").extractOpt[String]
-    //val koulutustyyppi: Koulutustyyppi = Koulutustyyppi.koulutusaste2koulutustyyppi.getOrElse(koulutusasteUri, Muu)
+
     val koulutustyyppi: Koulutustyyppi = koulutusmoduuliTyyppi match {
       case "OPINTOKOKONAISUUS" => KkOpintokokonaisuus
       case "OPINTOJAKSO" => KkOpintojakso
@@ -244,8 +248,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val kuvaus: Map[Kieli, String] = (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map())
 
-    val opintojenLaajuusarvo = (result \ "opintojenLaajuusarvo" \ "uri").extractOpt[String]
-    val opintojenLaajuusarvoVersio = (result \ "opintojenLaajuusarvo" \ "versio").extractOpt[Int]
     val opintojenLaajuusPistetta = (result \ "opintojenLaajuusPistetta").extractOpt[Double]
     val opintojenLaajuusyksikkoKoodiUri = if(opintojenLaajuusPistetta.isDefined) Some("opintojenlaajuusyksikko_2#1") else None
     val tutkintonimeksOpt = (result \ "tutkintonimikes" \ "uris").extractOpt[Map[String, Int]]
@@ -293,7 +295,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       johtaaTutkintoon = false,
       tila = Tallennettu,
       kielivalinta = opetuskielet.flatten.toSeq,
-      tarjoajat = if(isAvoin) opetusTarjoajat ++ opetusJarjestajat else opetusTarjoajat,
+      tarjoajat = if(isAvoin && opetusJarjestajat.nonEmpty) opetusJarjestajat else opetusTarjoajat,
       koulutuksetKoodiUri = koulutuksetKoodiUri,
       nimi = nimi,
       koulutustyyppi = koulutustyyppi,
@@ -451,12 +453,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       nimi = nimi,
       hakukohdeKoodiUri = None,
       jarjestyspaikkaOid = Some(OrganisaatioOid(tarjoajaOids.head)),
-//      hakulomaketyyppi = hakulomakeAtaruId match {
-//        case Some(_) => Some(Ataru)
-//        case None => None
-//      },
       hakulomaketyyppi = None,
-      //hakulomakeAtaruId = hakulomakeAtaruId,
       hakulomakeAtaruId = None,
       hakulomakeKuvaus = Map(),
       hakulomakeLinkki = Map(),
@@ -515,7 +512,6 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       ajastettuJulkaisu = None,
       kohdejoukkoKoodiUri = (result \ "kohdejoukkoUri").extractOpt[String],
       kohdejoukonTarkenneKoodiUri = None,
-      //hakulomakeAtaruId = hakulomakeAtaruId,
       hakulomakeAtaruId = None,
       hakulomaketyyppi = hakulomakeAtaruId match {
         case Some(_) => Some(Ataru)

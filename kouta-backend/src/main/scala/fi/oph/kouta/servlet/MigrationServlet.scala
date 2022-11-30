@@ -312,25 +312,41 @@ class MigrationServlet(koulutusService: KoulutusService,
           for(koulutusOid <- hakukohdeKoulutusOids) {
             logger.warn(s"Migration begins for koulutus $koulutusOid!")
             val result = parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", koulutusOid))) \ "result"
+            val tarjoajanKoulutusOid = (result \ "tarjoajanKoulutus").extractOpt[String]
+            val tarjojanKoulutusResult = tarjoajanKoulutusOid match {
+              case Some(oid) => Some(parse(fetch(urlProperties.url("tarjonta-service.koulutus.oid", oid))) \ "result")
+              case None => None
+            }
             val tarjontaKomotoTila: String = (result \ "tila").extract[String]
             if(tarjontaKomotoTila.equals("JULKAISTU")) {
               val komoOid = (result \ "komoOid").extract[String]
               val komo = parse(fetch(urlProperties.url("tarjonta-service.komo.oid", komoOid))) \ "result"
-              val koulutusTemp: Koulutus = migrationService.parseKoulutusFromResult(result, komo, koulutuskoodi2koulutusala)
+              val tarjojanKomo = tarjoajanKoulutusOid match {
+                case Some(_) => {
+                  val tarjoajanKomoOid = (result \ "komoOid").extract[String]
+                  Some(parse(fetch(urlProperties.url("tarjonta-service.komo.oid", tarjoajanKomoOid))) \ "result")
+                }
+                case None => None
+              }
+              val koulutusTemp: Koulutus = migrationService.parseKoulutusFromResult(result, komo, tarjojanKoulutusResult, tarjojanKomo, koulutuskoodi2koulutusala)
+              val komoOidForUpdate = tarjojanKoulutusResult match {
+                case Some(r) => (r \ "komoOid").extract[String]
+                case None => komoOid
+              }
               val koutaKoulutusOid = getMappedOidAsOption(KoulutusOid(komoOid))
-              if(updateAllowed(KoulutusOid(komoOid))) {
+              if(updateAllowed(KoulutusOid(komoOidForUpdate))) {
                 val koulutus = koutaKoulutusOid.map(oid => koulutusTemp.withOid(KoulutusOid(oid))).getOrElse(koulutusTemp)
-                tryPutAndPostForKoulutus(KoulutusOid(komoOid),
+                tryPutAndPostForKoulutus(KoulutusOid(komoOidForUpdate),
                   koulutus,
                   koulutusService.put, koulutusService.update)
               } else {
-                logger.warn(s"Skipped koulutus update because updating is not allowed | TarjontaOid: ${komoOid} | KoutaOid: ${koutaKoulutusOid.get}")
+                logger.warn(s"Skipped koulutus update because updating is not allowed | TarjontaOid: ${komoOidForUpdate} | KoutaOid: ${koutaKoulutusOid.get}")
               }
 
               val komotoOid = (result \ "oid").extract[String]
               val koutaToteutusOid = getMappedOidAsOption(ToteutusOid(komotoOid))
               val toteutusTemp: Toteutus = migrationService.parseToteutusFromResult(result)
-                .copy(koulutusOid = KoulutusOid(getMappedOid(KoulutusOid(komoOid))))
+                .copy(koulutusOid = KoulutusOid(getMappedOid(KoulutusOid(komoOidForUpdate))))
               if(updateAllowed(ToteutusOid(komotoOid))) {
                 val toteutus = koutaToteutusOid.map(oid => toteutusTemp.withOid(ToteutusOid(oid))).getOrElse(toteutusTemp)
                 tryPutAndPost(ToteutusOid(komotoOid),
