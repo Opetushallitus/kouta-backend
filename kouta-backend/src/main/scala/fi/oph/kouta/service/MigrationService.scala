@@ -215,7 +215,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val koulutusmoduuliTyyppi = (result \ "koulutusmoduuliTyyppi").extract[String]
 
     val opetusTarjoajat = (result \ "opetusTarjoajat").extract[List[String]].map(oid => resolveOrganisationOidForKoulutus(OrganisaatioOid(oid))).distinct
-    val opetusJarjestajat = (result \ "opetusJarjestajat").extract[List[String]].map(OrganisaatioOid(_))
+    val opetusJarjestajat = (result \ "opetusJarjestajat").extract[List[String]].map(oid => resolveOrganisationOidForKoulutus(OrganisaatioOid(oid))).distinct
     val opetuskielet = (result \ "opetuskielis" \ "meta").extract[Map[String, Any]].keys.map(toKieli)
     val hakukohteenNimet = toKieliMap((result \ "koulutusohjelma" \ "tekstis").extract[Map[String,String]])
     val nimi: Map[Kieli, String] =
@@ -234,6 +234,11 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       case "OPINTOKOKONAISUUS" => KkOpintokokonaisuus
       case "OPINTOJAKSO" => KkOpintojakso
       case "TUTKINTO" => Erikoislaakari
+    }
+    val isAvoin = koulutustyyppi match {
+      case KkOpintokokonaisuus => true
+      case KkOpintojakso => true
+      case _ => false
     }
     val oid = KoulutusOid((komo \ "oid").extract[String])
 
@@ -265,8 +270,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           isAvoinKorkeakoulutus = Some(true),
           opintojenLaajuusNumeroMin = opintojenLaajuusPistetta,
           opintojenLaajuusNumeroMax = opintojenLaajuusPistetta,
-          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
-          jarjestajat = opetusJarjestajat
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri
         )
         case KkOpintojakso => KkOpintojaksoKoulutusMetadata(
           kuvaus = kuvaus,
@@ -274,8 +278,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           isAvoinKorkeakoulutus = Some(true),
           opintojenLaajuusNumero = opintojenLaajuusPistetta,
-          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
-          jarjestajat = opetusJarjestajat
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri
         )
         case Erikoislaakari => ErikoislaakariKoulutusMetadata(
           kuvaus = kuvaus,
@@ -290,7 +293,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
       johtaaTutkintoon = false,
       tila = Tallennettu,
       kielivalinta = opetuskielet.flatten.toSeq,
-      tarjoajat = opetusTarjoajat,
+      tarjoajat = if(isAvoin) opetusTarjoajat ++ opetusJarjestajat else opetusTarjoajat,
       koulutuksetKoodiUri = koulutuksetKoodiUri,
       nimi = nimi,
       koulutustyyppi = koulutustyyppi,
@@ -336,7 +339,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
           hakutermi = Some(Hakeutuminen),
           hakulomaketyyppi = Some(Ataru),
-          avoinKorkeakoulutus = Some(true)
+          isAvoinKorkeakoulutus = Some(true)
         )
         case KkOpintojakso => KkOpintojaksoToteutusMetadata(
           kuvaus = kuvaus,
@@ -347,7 +350,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
           hakutermi = Some(Hakeutuminen),
           hakulomaketyyppi = Some(Ataru),
-          avoinKorkeakoulutus = Some(true)
+          isAvoinKorkeakoulutus = Some(true)
         )
         case Erikoislaakari => ErikoislaakariToteutusMetadata(
           kuvaus = kuvaus,
