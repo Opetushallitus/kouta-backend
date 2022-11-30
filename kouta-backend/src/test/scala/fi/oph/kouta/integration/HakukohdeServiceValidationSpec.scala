@@ -111,7 +111,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
       )
     ),
-    None
+    Some(HakukohdeJarjestyspaikkaDependencyInfo(
+      oid = OrganisaatioOid("DUMMY"),
+      jarjestaaUrheilijanAmmKoulutusta = Some(true)
+    ))
   )
 
   val lukioDependencies = HakukohdeDependencyInformation(
@@ -302,7 +305,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(min)
   }
 
-  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta" in {
+  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta when orgganisaatio is allowed" in {
     passesValidation(
       initMockSeq(
         max.copy(
@@ -325,10 +328,21 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
     failsValidation(
       lkHakukohde,
-      "metadata.jarjestaaUrheilijanAmmKoulutusta",
-      ErrorMessage(
-        "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
-        "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+      Seq(
+        ValidationError(
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          ErrorMessage(
+            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
+            "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+          )
+        ),
+        ValidationError(
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          ErrorMessage(
+            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on false",
+            "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+          )
+        )
       )
     )
   }
