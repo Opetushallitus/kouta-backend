@@ -341,25 +341,46 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
       """.as[KoulutusListItem]
   }
 
-  def selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter) = {
-    // Needed for passing ARRAY to Slick (https://stackoverflow.com/a/69232529)
-    implicit val strArrayParameter: slick.jdbc.SetParameter[Array[String]] =
-      slick.jdbc.SetParameter[Array[String]] { (param, pointedParameters) =>
-        pointedParameters.setObject(param, java.sql.Types.ARRAY)
-      }
+  def selectByCreatorOrJulkinenForKoulutustyyppi(
+      organisaatioOids: Seq[OrganisaatioOid],
+      koulutustyypit: Seq[Koulutustyyppi],
+      tilaFilter: TilaFilter
+  ) = {
 
-    sql"""#$selectKoulutusListSql
-          where ((organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and
-                  (organisaatio_oid <> ${RootOrganisaatioOid} or
-                   tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-              or ((array(select jsonb_array_elements_text(metadata->'tarjoajat')) && ${organisaatioOids.map(_.toString).toArray}::text[])
-                  and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}) and metadata ->> 'isAvoinKorkeakoulutus' = 'true')
-              or (julkinen = ${true} and tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-              #${tilaConditions(tilaFilter)}
-      """.as[KoulutusListItem]
+    sql"""
+select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
+    from koulutukset k
+        inner join (
+        select k.oid oid, greatest(
+            max(lower(k.system_time)),
+            max(lower(ta.system_time)),
+            max(upper(kh.system_time)),
+            max(upper(tah.system_time))) modified
+        from koulutukset k
+            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
+            left join koulutukset_history kh on k.oid = kh.oid
+            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+        where
+            -- Listauksissa halutaan näyttää ne annettuihin koulutustyyppeihin täsmäävät koulutukset, jotka
+            -- 1. omistaa jokin annetuista organisaatioista, mutta *ei* OPH
+            (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+                and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
+            -- 2. ovat julkisia
+            or (k.julkinen = ${true} and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+            -- 3. ovat avointa korkeakoulutusta ja tarjojista (järjestäjistä) löytyy annettuja organisaatioita
+            or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
+                and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
+                and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+        group by k.oid) m on k.oid = m.oid
+    #${tilaConditions(tilaFilter, glueWord="where")}
+""".as[KoulutusListItem]
   }
 
-  def selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter) = {
+  def selectByCreatorOrJulkinenForSpecificKoulutustyyppi(
+      organisaatioOids: Seq[OrganisaatioOid],
+      koulutustyyppi: Koulutustyyppi,
+      tilaFilter: TilaFilter
+  ) = {
     sql"""#$selectKoulutusListSql
           where tyyppi = ${koulutustyyppi.toString}::koulutustyyppi and
               (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) or julkinen = ${true})
