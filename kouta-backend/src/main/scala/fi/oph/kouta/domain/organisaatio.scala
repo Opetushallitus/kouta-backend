@@ -61,11 +61,13 @@ case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
+                        status: String,
                         kotipaikkaUri: Option[String] = None,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List()) {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
+  def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
 
 case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])

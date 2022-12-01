@@ -9,6 +9,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOidPath = s"${TestOids.GrandChildOid.toString}/${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
     kotipaikkaUri = Some("kunta_179"),
+    status = "AKTIIVINEN",
     children = List(),
     organisaatiotyypit = List("organisaatiotyyppi_03"))
 
@@ -17,6 +18,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+    status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_179"),
     children = List(),
     organisaatiotyypit = List("organisaatiotyyppi_03"))

@@ -94,6 +94,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       children = List(),
       parentOidPath = "",
       oppilaitostyyppi = None,
+      status = "AKTIIVINEN",
       organisaatiotyypit = List("organisaatiotyyppi_02"),
       nimi = Map(Fi -> "", Sv -> "", En -> "")
     )
@@ -141,6 +142,7 @@ class MigrationSpec extends KoutaIntegrationSpec with AuthFixture with BeforeAnd
       children = List(),
       parentOidPath = "",
       oppilaitostyyppi = None,
+      status = "AKTIIVINEN",
       organisaatiotyypit = List("organisaatiotyyppi_02"),
       nimi = Map(Fi -> "", Sv -> "", En -> "")
     )

@@ -246,9 +246,6 @@ class MigrationServlet(koulutusService: KoulutusService,
       migrationService.parseHakuFromResult(result)
     val haku = koutaHakuOid.map(oid => hakuTemp.withOid(HakuOid(oid))).getOrElse(hakuTemp)
 
-    println("HAKU_TEMP: " + hakuTemp)
-    println("HAKU: " + haku)
-
     if(updateAllowed(hakuOid)) {
       tryPutAndPost(hakuOid,
         haku.copy(nimi = haku.nimi.mapValues(nimi => s"$nimi (migraatio)")),
@@ -333,7 +330,7 @@ class MigrationServlet(koulutusService: KoulutusService,
                 case Some(r) => (r \ "komoOid").extract[String]
                 case None => komoOid
               }
-              val koutaKoulutusOid = getMappedOidAsOption(KoulutusOid(komoOid))
+              val koutaKoulutusOid = getMappedOidAsOption(KoulutusOid(komoOidForUpdate))
               if(updateAllowed(KoulutusOid(komoOidForUpdate))) {
                 val koulutus = koutaKoulutusOid.map(oid => koulutusTemp.withOid(KoulutusOid(oid))).getOrElse(koulutusTemp)
                 tryPutAndPostForKoulutus(KoulutusOid(komoOidForUpdate),
