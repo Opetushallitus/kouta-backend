@@ -1,9 +1,9 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{LegacyTarjontaClient, ValintaTulosServiceClient}
-import fi.oph.kouta.domain.{HakukohdeListItem, TilaFilter}
+import fi.oph.kouta.client.{BasicCachedKoodistoClient, JononAlimmatPisteet, LegacyTarjontaClient, ValintaTulosServiceClient}
+import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid}
-import fi.oph.kouta.repository.{HakukohdeDAO, PistehistoriaDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, PistehistoriaDAO}
 import fi.vm.sade.utils.slf4j.Logging
 
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -29,32 +29,74 @@ class PistehistoriaService extends Logging {
       PistehistoriaDAO.getPistehistoria(tarjoaja, hakukohdeKoodi)
     }
 
+  def getPistehistoriaForLukiolinja(tarjoaja: OrganisaatioOid, lukiolinjaKoodi: String): Seq[Pistetieto] = {
+    logger.info(s"Haetaan pistetiedot tarjoajalle $tarjoaja, lukiolinja $lukiolinjaKoodi")
+    val hakukohdekoodit = lukiolinjaToHakukohdekoodi(lukiolinjaKoodi) //Näitä voi periaatteessa olla useita, mutta useimmiten käytännössä yksi.
+    if (hakukohdekoodit.isEmpty) {
+      logger.warn(s"Lukiolinjalle $lukiolinjaKoodi ei löytynyt rinnasteista hakukohdekoodia!")
+      Seq()
+    } else {
+      hakukohdekoodit.flatMap(hk => PistehistoriaDAO.getPistehistoria(tarjoaja, hk))
+    }
+  }
+
+  private def lukiolinjaToHakukohdekoodi(koodiUri: String) = {
+    BasicCachedKoodistoClient.getRinnasteisetCached(koodiUri, "hakukohteet").map(_.koodiUri)
+  }
+
+  private def getHakukohdekoodiUris(hakukohde: Hakukohde) = {
+    if (hakukohde.hakukohdeKoodiUri.isDefined) {
+      Seq(hakukohde.hakukohdeKoodiUri.get)
+    } else {
+      val lukiolinja: Option[HakukohteenLinja] = hakukohde.metadata.flatMap(_.hakukohteenLinja)
+      //Jos lukiolinja on määritelty, mutta sen linjaUria ei ole määritelty,
+      //kyseessä on tavallinen lukiokoulutus eli vastaa hakukohdekoodia hakukohteet_000
+      lukiolinja match {
+        case Some(ll) => ll.linja.map(lukiolinjaToHakukohdekoodi).getOrElse(Seq("hakukohteet_000"))
+        case None => Seq()
+      }
+    }
+  }
+
   private def syncPistehistoriaForKoutaHaku(hakuOid: HakuOid): Int = {
     logger.info(s"Käsitellään kouta-haku ${hakuOid}")
-    val pistetiedot = ValintaTulosServiceClient.fetchPisteet(hakuOid)
-    val koutaHakukohteet: Seq[HakukohdeListItem] = HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.all()).toList
+    val rawPistetiedot: Seq[JononAlimmatPisteet] = ValintaTulosServiceClient.fetchPisteet(hakuOid)
+    val haku = HakuDAO.get(hakuOid, TilaFilter.all()).getOrElse(throw new RuntimeException(s"Hakua $hakuOid ei löytynyt kannasta!"))._1
+    val alkamisvuosi: String = haku.metadata.flatMap(_.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi))
+      .getOrElse(throw new RuntimeException(s"Haulle $hakuOid ei löytynyt koulutuksen alkamiskautta. Haku: $haku"))
 
-    val result = pistetiedot.map(pt => {
-      val hakukohde = koutaHakukohteet.find(hk => hk.oid.toString.equals(pt.hakukohdeOid)).getOrElse(throw new RuntimeException(s"No hakukohde ${pt.hakukohdeOid} found"))
-      Pistetieto(
-        tarjoaja = hakukohde.jarjestyspaikkaOid.get, //option, mutta onko tämä käytännössä aina tiedossa?
-        hakukohdekoodi = hakukohde.hakukohdeKoodiUri.map(_.split("#").head).getOrElse("SOS"), //todo lukiolinja -> hakukohdeKoodiUri?
-        pt.alinHyvaksyttyPistemaara,
-        vuosi = "2022", //fixme, haetaan haun tiedoista
-        valintatapajonoOid = pt.valintatapajonoOid,
-        hakuOid = hakuOid,
-        hakukohdeOid = HakukohdeOid(pt.hakukohdeOid))
+    logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
 
-    }).filter(p => p.hakukohdekoodi != "SOS")
+    val result = rawPistetiedot.flatMap(pt => {
+      HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()).map(hk => {
+        val hakukohde: Hakukohde = hk._1
+        logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohde ${hakukohde.oid}")
+        val result = for {
+          hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
+          tarjoaja <- hakukohde.jarjestyspaikkaOid
+        } yield {
+          Pistetieto(
+            tarjoaja = tarjoaja,
+            hakukohdekoodi = hakukohdekoodi,
+            pt.alinHyvaksyttyPistemaara,
+            vuosi = alkamisvuosi,
+            valintatapajonoOid = pt.valintatapajonoOid,
+            hakuOid = hakuOid,
+            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid))
+        }
+        logger.info(s"syncPistehistoria: syntyi ${result.size} pistetietoa haun $hakuOid hakukohteelle ${hakukohde.oid}")
+        result
+      })
+    }).flatten
     val changed = PistehistoriaDAO.savePistehistorias(result)
     logger.info(s"result: $changed")
     changed
   }
 
   private def syncPistehistoriaForLegacyHaku(hakuOid: HakuOid) = {
+    logger.info(s"Käsitellään legacy-haku ${hakuOid}")
     val parallelism = 8
     lazy val forkJoinPool = new java.util.concurrent.ForkJoinPool(parallelism)
-    logger.info(s"Käsitellään legacy-haku ${hakuOid}")
     val pistetiedot = ValintaTulosServiceClient.fetchPisteet(hakuOid).par
     pistetiedot.tasksupport = new ForkJoinTaskSupport(forkJoinPool)
 
@@ -81,7 +123,7 @@ class PistehistoriaService extends Logging {
     changed
   }
 
-  def syncPistehistoriaForHaku(hakuOid: HakuOid) = {
+  def syncPistehistoriaForHaku(hakuOid: HakuOid): Int = {
     hakuOid.toString match {
       case oid if oid.length != 35 => syncPistehistoriaForLegacyHaku(hakuOid)
       case _ => syncPistehistoriaForKoutaHaku(hakuOid)

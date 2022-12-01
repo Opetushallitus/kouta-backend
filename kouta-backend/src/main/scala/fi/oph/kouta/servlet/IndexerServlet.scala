@@ -650,9 +650,9 @@ class IndexerServlet(koulutusService: KoulutusService,
 
   registerPath("/indexer/pistehistoria",
     """    get:
-      |      summary: Palauttaa tarjoajan ja hakukohdekoodin yhdistelmään liittyvät pistetiedot
+      |      summary: Palauttaa tarjoajan ja hakukohdekoodin tai lukiolinjakoodin yhdistelmään liittyvät pistetiedot
       |      operationId: indexerListPistetiedot
-      |      description: Listaa pistetiedot
+      |      description: Listaa pistetiedot. Tarjoaja JA joko hakukohdekoodi TAI lukiolinjakoodi annettava.
       |      tags:
       |        - Indexer
       |      parameters:
@@ -666,8 +666,14 @@ class IndexerServlet(koulutusService: KoulutusService,
       |          name: hakukohdekoodi
       |          schema:
       |            type: String
-      |          required: true
+      |          required: false
       |          description: hakukohdekoodi
+      |        - in: query
+      |          name: lukiolinjakoodi
+      |          schema:
+      |            type: String
+      |          required: false
+      |          description: lukiolinjakoodi
       |      responses:
       |        '200':
       |          description: Ok
@@ -683,11 +689,14 @@ class IndexerServlet(koulutusService: KoulutusService,
     implicit val authenticated: Authenticated = authenticate()
 
     val tarjoaja = params.get("tarjoaja").map(OrganisaatioOid)
-    val hk = params.get("hakukohdekoodi").map(koodi => koodi.split("#")(0))
-    (tarjoaja, hk) match {
-      case (None, _) => BadRequest("error" -> "Pakollinen parametri puuttui: tarjoaja")
-      case (_, None) => BadRequest("error" -> "Pakollinen parametri puuttui: hakukohdekoodi")
-      case (Some(t), Some(h)) => Ok(pistehistoriaService.getPistehistoria(t, h))
+    val hk = params.get("hakukohdekoodi").map(koodi => koodi.split("#").head)
+    val lukiolinja = if (hk.isDefined) None else params.get("lukiolinjakoodi").map(koodi => koodi.split("#").head)
+
+    (tarjoaja, hk, lukiolinja) match {
+      case (None, _, _) => BadRequest("error" -> "Pakollinen parametri puuttui: tarjoaja")
+      case (_, None, None) => BadRequest("error" -> "Pakollinen parametri puuttui: hakukohdekoodi TAI lukiolinjakoodi")
+      case (Some(t), Some(h), _) => Ok(pistehistoriaService.getPistehistoria(t, h))
+      case (Some(t), _, Some(ll)) => Ok(pistehistoriaService.getPistehistoriaForLukiolinja(t, ll))
     }
   }
 
