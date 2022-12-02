@@ -361,13 +361,14 @@ select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modifi
             left join koulutukset_history kh on k.oid = kh.oid
             left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
         where
-            -- Listauksissa halutaan näyttää ne annettuihin koulutustyyppeihin täsmäävät koulutukset, jotka
-            -- 1. omistaa jokin annetuista organisaatioista, mutta *ei* OPH
+            -- Listauksissa halutaan näyttää..
+            -- 1. koulutukset, jotka omistaa jokin annetuista organisaatioista, mutta OPH:n omistamat vain, jos koulutustyyppi täsmää.
             (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                 and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
-            -- 2. ovat julkisia
+            -- 2. koulutustyyppeihin täsmäävät koulutukset, jotka ovat julkisia
             or (k.julkinen = ${true} and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
-            -- 3. ovat avointa korkeakoulutusta ja tarjojista (järjestäjistä) löytyy annettuja organisaatioita
+            -- 3. koulutustyyppeihin täsmäävät koulutukset, jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä)
+            -- löytyy annettuja organisaatioita
             or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
                 and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
                 and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
