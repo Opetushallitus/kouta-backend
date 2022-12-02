@@ -55,7 +55,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
       "skipParents"      -> queryParams.skipParents,
       "searchStr"        -> queryParams.searchStr,
       "oid"              -> queryParams.oid,
-      "oppilaitostyypit" -> queryParams.oppilaitostyypit
+      "oppilaitostyyppi" -> queryParams.oppilaitostyypit
     ).collect {
       case (key, Some(s: String))            => (key, s)
       case (key, Some(oid: OrganisaatioOid)) => (key, oid.toString)
