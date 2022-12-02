@@ -153,9 +153,9 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
   registerPath("/organisaatio/oppilaitokset-for-avoin-korkeakoulutus",
     """    get:
-      |      summary: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
+      |      summary: Hakee avoimen korkeakoulutuksen oppilaitokset
       |      operationId: getHierarkiaForAvoinKorkeakoulutus
-      |      description: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
+      |      description: Hakee avoimen korkeakoulutuksen oppilaitokset organisaatiopalvelusta
       |      tags:
       |        - Organisaatio
       |      responses:
