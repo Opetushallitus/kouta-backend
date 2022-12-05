@@ -10,6 +10,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatra.Params
 
+import java.net.{URLDecoder, URLEncoder}
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -47,24 +48,30 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatioHierarkia(queryParams: OrganisaatioHierarkiaQueryParams): OrganisaatioHierarkia = {
     val oidsAsQueryParams = queryParams.oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
+    val oppilaitostyypitAsQueryParams = queryParams.oppilaitostyypit
+      .map(URLEncoder.encode(_, "UTF-8"))
+      .mkString("&oppilaitostyyppi=", "&oppilaitostyyppi=", "")
 
     val params = Seq(
-      "aktiiviset"       -> queryParams.aktiiviset,
-      "suunnitellut"     -> queryParams.suunnitellut,
-      "lakkautetut"      -> queryParams.lakkautetut,
-      "skipParents"      -> queryParams.skipParents,
-      "searchStr"        -> queryParams.searchStr,
-      "oid"              -> queryParams.oid,
-      "oppilaitostyyppi" -> queryParams.oppilaitostyypit
+      "aktiiviset"   -> queryParams.aktiiviset,
+      "suunnitellut" -> queryParams.suunnitellut,
+      "lakkautetut"  -> queryParams.lakkautetut,
+      "skipParents"  -> queryParams.skipParents,
+      "searchStr"    -> queryParams.searchStr,
+      "oid"          -> queryParams.oid
     ).collect {
       case (key, Some(s: String))            => (key, s)
       case (key, Some(oid: OrganisaatioOid)) => (key, oid.toString)
       case (key, s: String)                  => (key, s)
       case (key, list: List[_])              => (key, list.toString())
-    }
+    }.filter(_._2.nonEmpty)
 
-    val url =
-      urlProperties.url(s"organisaatio-service.organisaatio.hierarkia", toQueryParams(params: _*)) + oidsAsQueryParams
+    val queryParamsStr = toQueryParams(params: _*)
+    val url = urlProperties.url(
+      s"organisaatio-service.organisaatio.hierarkia",
+      queryParamsStr
+    ) + oidsAsQueryParams + oppilaitostyypitAsQueryParams
+
     get(url, followRedirects = true) { response =>
       {
         parse(response).extract[OrganisaatioHierarkia]
