@@ -150,18 +150,24 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
 
   def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiUri] = {
     logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
-    get(
-      urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
-      errorHandler,
-      followRedirects = true
-    ) { response => {
-          parse(response)
-            .extract[List[KoodistoElement]]
-            .filter((koodiUri: KoodistoElement) => koodiUri.belongsToKoodisto(koodisto) &&
-              isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm))
-            .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
-        }
+    try {
+      get(
+        urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
+        errorHandler,
+        followRedirects = true
+      ) { response => {
+        parse(response)
+          .extract[List[KoodistoElement]]
+          .filter((koodiUri: KoodistoElement) => koodiUri.belongsToKoodisto(koodisto) &&
+            isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm))
+          .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
       }
+      }
+    } catch {
+      case e: KoodistoQueryException if e.status == 404 => List.empty
+      case e => logger.error("Rinnasteisten koodien haku epäonnistui: ", e)
+        throw e
+    }
   }
 
   private def getAndUpdateFromKoodiUri(koodisto: String): Seq[KoodiUri] = {
