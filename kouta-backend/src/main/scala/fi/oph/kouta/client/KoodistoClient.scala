@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import fi.oph.kouta.client.KoodistoUtils.splitToBaseAndVersion
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, splitToBaseAndVersion}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.{Kieli, Kielistetty}
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
@@ -152,7 +152,7 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
     try {
       get(
-        urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
+        urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", splitToBaseAndVersion(koodiUri)._1),
         errorHandler,
         followRedirects = true
       ) { response => {
