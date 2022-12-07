@@ -39,9 +39,6 @@ object ValintaTulosServiceClient extends ValintaTulosServiceClient with HttpClie
   )
 
   def fetchPisteet(hakuOid: HakuOid): List[JononAlimmatPisteet] = {
-    logger.info(s"Haetaan pisteet haulle $hakuOid")
-    val uri = Uri.fromString(urlProperties.url("valinta-tulos-service.haku.alimmatpisteet", hakuOid.toString))
-    logger.info(s"uri $uri")
     Uri.fromString(urlProperties.url("valinta-tulos-service.haku.alimmatpisteet", hakuOid.toString))
       .fold(Task.fail, url => {
         client.fetch(Request(method = GET, uri = url)) {
