@@ -115,12 +115,11 @@ object KoodistoUtils {
 }
 
 object BasicCachedKoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configuration.urlProperties) {
-  implicit val rinnasteinenKoodiUriCache: Cache[(String, String), Seq[KoodiUri]] = Scaffeine()
-    .expireAfterWrite(1.hours)
+  val rinnasteinenKoodiUriCache: Cache[(String, String), Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(10.minutes)
     .build()
 
   def getRinnasteisetCached(koodiUri: String, koodisto: String) = {
-    logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
     rinnasteinenKoodiUriCache.get((koodiUri, koodisto), params => getRinnasteisetKooditInKoodisto(params._1, params._2))
   }
 }
@@ -150,6 +149,7 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     }
 
   def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiUri] = {
+    logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
     get(
       urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
       errorHandler,

@@ -36,12 +36,17 @@ class PistehistoriaService extends Logging {
       logger.warn(s"Lukiolinjalle $lukiolinjaKoodi ei löytynyt rinnasteista hakukohdekoodia!")
       Seq()
     } else {
+      logger.info(s"Lukiolinjalle $lukiolinjaKoodi löytyi hakukohdekoodit: $hakukohdekoodit")
       hakukohdekoodit.flatMap(hk => PistehistoriaDAO.getPistehistoria(tarjoaja, hk))
     }
   }
 
   private def lukiolinjaToHakukohdekoodi(koodiUri: String) = {
-    BasicCachedKoodistoClient.getRinnasteisetCached(koodiUri, "hakukohteet").map(_.koodiUri)
+    val result =
+      BasicCachedKoodistoClient.getRinnasteisetCached(koodiUri, "hakukohteet")
+        .map(_.koodiUri)
+    logger.info(s"Löydettiin rinnakkaisia hakukohdekoodeja lukiolinjalle $koodiUri: $result")
+    result
   }
 
   private def getHakukohdekoodiUris(hakukohde: Hakukohde) = {
@@ -49,7 +54,7 @@ class PistehistoriaService extends Logging {
       Seq(hakukohde.hakukohdeKoodiUri.get)
     } else {
       val lukiolinja: Option[HakukohteenLinja] = hakukohde.metadata.flatMap(_.hakukohteenLinja)
-      //Jos lukiolinja on määritelty, mutta sen linjaUria ei ole määritelty,
+      //Jos lukiolinja on määritelty mutta sen linjaUria ei ole määritelty,
       //kyseessä on tavallinen lukiokoulutus eli vastaa hakukohdekoodia hakukohteet_000
       lukiolinja match {
         case Some(ll) => ll.linja.map(lukiolinjaToHakukohdekoodi).getOrElse(Seq("hakukohteet_000"))
@@ -60,36 +65,40 @@ class PistehistoriaService extends Logging {
 
   private def syncPistehistoriaForKoutaHaku(hakuOid: HakuOid): Int = {
     logger.info(s"Käsitellään kouta-haku ${hakuOid}")
+
     val rawPistetiedot: Seq[JononAlimmatPisteet] = ValintaTulosServiceClient.fetchPisteet(hakuOid)
+    logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
+
     val haku = HakuDAO.get(hakuOid, TilaFilter.all()).getOrElse(throw new RuntimeException(s"Hakua $hakuOid ei löytynyt kannasta!"))._1
     val alkamisvuosi: String = haku.metadata.flatMap(_.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi))
       .getOrElse(throw new RuntimeException(s"Haulle $hakuOid ei löytynyt koulutuksen alkamiskautta. Haku: $haku"))
 
-    logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
-
     val result = rawPistetiedot.flatMap(pt => {
-      HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()).map(hk => {
-        val hakukohde: Hakukohde = hk._1
-        logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohde ${hakukohde.oid}")
-        val result = for {
-          hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
-          tarjoaja <- hakukohde.jarjestyspaikkaOid
-        } yield {
-          Pistetieto(
-            tarjoaja = tarjoaja,
-            hakukohdekoodi = hakukohdekoodi,
-            pt.alinHyvaksyttyPistemaara,
-            vuosi = alkamisvuosi,
-            valintatapajonoOid = pt.valintatapajonoOid,
-            hakuOid = hakuOid,
-            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid))
-        }
-        logger.info(s"syncPistehistoria: syntyi ${result.size} pistetietoa haun $hakuOid hakukohteelle ${hakukohde.oid}")
-        result
-      })
-    }).flatten
+      val result: Seq[Pistetieto] = HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()) match {
+        case Some((hakukohde, _)) =>
+          logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohteen ${hakukohde.oid} pistetieto $pt")
+          for {
+            hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
+            tarjoaja <- hakukohde.jarjestyspaikkaOid
+          } yield {
+            Pistetieto(
+              tarjoaja = tarjoaja,
+              hakukohdekoodi = hakukohdekoodi,
+              pt.alinHyvaksyttyPistemaara,
+              vuosi = alkamisvuosi,
+              valintatapajonoOid = pt.valintatapajonoOid,
+              hakuOid = hakuOid,
+              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid))
+          }
+        case None =>
+          logger.warn(s"syncPistehistoria: Ei löytynyt hakukohdetta oidilla ${pt.hakukohdeOid}, ei voida käsitellä pistetietoa $pt")
+          Seq()
+      }
+      logger.info(s"syncPistehistoria: syntyi ${result.size} pistetieto(a) haun $hakuOid hakukohteelle ${pt.hakukohdeOid}")
+      result
+    })
     val changed = PistehistoriaDAO.savePistehistorias(result)
-    logger.info(s"result: $changed")
+    logger.info(s"syncPistehistoria: tallennettiin $changed uutta pistehistoriatietoa ${rawPistetiedot.size} jonon ${result.size} tulokselle")
     changed
   }
 
