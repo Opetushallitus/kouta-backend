@@ -45,7 +45,8 @@ class PistehistoriaService extends Logging {
     val result =
       BasicCachedKoodistoClient.getRinnasteisetCached(koodiUri, "hakukohteet")
         .map(_.koodiUri)
-    logger.info(s"Löydettiin rinnakkaisia hakukohdekoodeja lukiolinjalle $koodiUri: $result")
+    if (result.nonEmpty) logger.info(s"Löydettiin rinnakkaisia hakukohdekoodeja lukiolinjalle $koodiUri: $result")
+    else logger.warn(s"Ei löydetty rinnakkaisia hakukohdekoodeja lukiolinjalle $koodiUri")
     result
   }
 
