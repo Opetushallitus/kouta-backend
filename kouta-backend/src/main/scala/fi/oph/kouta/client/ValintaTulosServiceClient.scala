@@ -52,6 +52,9 @@ object ValintaTulosServiceClient extends ValintaTulosServiceClient with HttpClie
               .map(responseBody => {
                 parse(responseBody).extract[List[JononAlimmatPisteet]]
               })
+          case r if r.status.code == 404 =>
+            logger.info(s"Ei löydetty pisteitä valinta-tulos-servicestä haulle $hakuOid")
+            Task.now(List())
           case r =>
             r.bodyAsText
               .runLog
