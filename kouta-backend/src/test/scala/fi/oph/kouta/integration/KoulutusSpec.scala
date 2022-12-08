@@ -3,14 +3,28 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.{
   AikuistenPerusopetusKoulutus,
+  AmkKoulutus,
   AmmMuuKoulutus,
   AmmOpettajaKoulutus,
   AmmOsaamisalaKoulutus,
   AmmTutkinnonOsaKoulutus,
   ErikoislaakariKoulutus,
+  ErikoistumisKoulutuksenMetatieto,
+  ErikoistumisKoulutus,
+  KkOpintojaksoKoulutus,
+  KkOpintokokonaisuusKoulutuksenMetatieto,
+  KkOpintokokonaisuusKoulutus,
   LukioKoulutus,
   LukiokoulutuksenMetatieto,
-  YoKoulutus
+  TelmaKoulutuksenMetatieto,
+  TelmaKoulutus,
+  TuvaKoulutuksenMetatieto,
+  TuvaKoulutus,
+  VapaaSivistystyoOpistovuosiKoulutuksenMetatieto,
+  VapaaSivistystyoOpistovuosiKoulutus,
+  YoKoulutus,
+  YoOpettajaKoulutus,
+  defaultKuvaus
 }
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -574,6 +588,33 @@ class KoulutusSpec
     get(oid, ammKoulutus.copy(oid = Some(KoulutusOid(oid)), nimi = Map(Fi -> "nimi", Sv -> "nimi sv")))
   }
 
+  it should "set opintojen laajuus of Yo -koulutus automatically if not given" in {
+    val yoKoulutus = YoKoulutus.copy(metadata = Some(YliopistoKoulutusMetadata(opintojenLaajuusNumero = Some(10))))
+    val oid        = put(yoKoulutus)
+    val expectedMetadata = Some(
+      YliopistoKoulutusMetadata(
+        opintojenLaajuusNumero = Some(10),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+    get(oid, yoKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
+  }
+
+  it should "set opintojen laajuus of Amk -koulutus automatically if not given" in {
+    val amkKoulutus =
+      AmkKoulutus.copy(metadata = Some(AmmattikorkeakouluKoulutusMetadata(opintojenLaajuusNumero = Some(10))))
+    val oid = put(amkKoulutus)
+    val expectedMetadata = Some(
+      AmmattikorkeakouluKoulutusMetadata(
+        opintojenLaajuusNumero = Some(10),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+    get(oid, amkKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
+  }
+
   it should "set opintojen laajuus and koulutusala of AmmOpe -koulutus automatically if not given" in {
     val ammOpeKoulutus = AmmOpettajaKoulutus.copy(metadata = Some(AmmOpeErityisopeJaOpoKoulutusMetadata()))
     val oid            = put(ammOpeKoulutus)
@@ -588,21 +629,115 @@ class KoulutusSpec
     get(oid, ammOpeKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
   }
 
-  it should "set koulutusala of lukio-koulutus automatically if not given" in {
-    val lkKoulutus = LukioKoulutus.copy(metadata = Some(LukiokoulutuksenMetatieto.copy(koulutusalaKoodiUrit = Seq())))
-    val oid        = put(lkKoulutus, ophSession)
-    get(oid, lkKoulutus.copy(oid = Some(KoulutusOid(oid)), metadata = Some(LukiokoulutuksenMetatieto)))
+  it should "set opintojen laajuus and koulutusala of opettajien pedagogiset koulutukset automatically if not given" in {
+    val yoOpeKoulutus = YoOpettajaKoulutus.copy(metadata = Some(OpePedagOpinnotKoulutusMetadata()))
+    val oid           = put(yoOpeKoulutus)
+    val expectedMetadata = Some(
+      OpePedagOpinnotKoulutusMetadata(
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+        opintojenLaajuusNumero = Some(60),
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01#1"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+    get(oid, yoOpeKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
+  }
+
+  it should "set koulutusala and opintojen laajuus of lukio-koulutus automatically if not given" in {
+    val lkKoulutus = LukioKoulutus.copy(metadata =
+      Some(LukiokoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None, koulutusalaKoodiUrit = Seq()))
+    )
+    val oid              = put(lkKoulutus, ophSession)
+    val expectedKoulutus = lkKoulutus.copy(oid = Some(KoulutusOid(oid)), metadata = Some(LukiokoulutuksenMetatieto))
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of Tuva-koulutus automatically if not given" in {
+    val tuva             = TuvaKoulutus.copy(metadata = Some(TuvaKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None)))
+    val oid              = put(tuva, ophSession)
+    val expectedKoulutus = tuva.copy(oid = Some(KoulutusOid(oid)), metadata = Some(TuvaKoulutuksenMetatieto))
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of Telma-koulutus automatically if not given" in {
+    val telma =
+      TelmaKoulutus.copy(metadata = Some(TelmaKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None)))
+    val oid              = put(telma, ophSession)
+    val expectedKoulutus = telma.copy(oid = Some(KoulutusOid(oid)), metadata = Some(TelmaKoulutuksenMetatieto))
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of vapaa sivistystyö opistovuosi automatically if not given" in {
+    val vst = VapaaSivistystyoOpistovuosiKoulutus.copy(metadata =
+      Some(VapaaSivistystyoOpistovuosiKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None))
+    )
+    val oid = put(vst, ophSession)
+    val expectedKoulutus =
+      vst.copy(oid = Some(KoulutusOid(oid)), metadata = Some(VapaaSivistystyoOpistovuosiKoulutuksenMetatieto))
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of KK-opintojakso-koulutus automatically if not given" in {
+    val kkOpintojakso =
+      KkOpintojaksoKoulutus.copy(metadata =
+        Some(
+          KkOpintojaksoKoulutusMetadata(
+            opintojenLaajuusNumeroMin = Some(10),
+            opintojenLaajuusNumeroMax = Some(10),
+            kuvaus = defaultKuvaus
+          )
+        )
+      )
+    val oid = put(kkOpintojakso)
+    val expectedKoulutus = kkOpintojakso.copy(
+      oid = Some(KoulutusOid(oid)),
+      metadata = Some(
+        KkOpintojaksoKoulutusMetadata(
+          kuvaus = defaultKuvaus,
+          opintojenLaajuusNumeroMin = Some(10),
+          opintojenLaajuusNumeroMax = Some(10),
+          opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+          isMuokkaajaOphVirkailija = Some(false)
+        )
+      )
+    )
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of KK-opintokokonaisuus-koulutus automatically if not given" in {
+    val kkOpintokokonaisuus =
+      KkOpintokokonaisuusKoulutus.copy(metadata =
+        Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None))
+      )
+    val oid = put(kkOpintokokonaisuus)
+    val expectedKoulutus = kkOpintokokonaisuus.copy(
+      oid = Some(KoulutusOid(oid)),
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto)
+    )
+    get(oid, expectedKoulutus)
+  }
+
+  it should "set opintojen laajuus of erikoistumiskoulutus-koulutus automatically if not given" in {
+    val erikoistumisKoulutus =
+      ErikoistumisKoulutus.copy(metadata =
+        Some(ErikoistumisKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None))
+      )
+    val oid = put(erikoistumisKoulutus)
+    val expectedKoulutus = erikoistumisKoulutus.copy(
+      oid = Some(KoulutusOid(oid)),
+      metadata = Some(ErikoistumisKoulutuksenMetatieto)
+    )
+    get(oid, expectedKoulutus)
   }
 
   it should "set koulutusala of erikoislääkäri-koulutus automatically if not given" in {
-    val elKoulutus = ErikoislaakariKoulutus.copy(metadata =
-      Some(ErikoislaakariKoulutusMetadata(kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")))
-    )
+    val elKoulutus =
+      ErikoislaakariKoulutus.copy(metadata = Some(ErikoislaakariKoulutusMetadata(kuvaus = defaultKuvaus)))
     val oid = put(elKoulutus)
     val expectedMetadata = Some(
       ErikoislaakariKoulutusMetadata(
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
-        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        kuvaus = defaultKuvaus,
         isMuokkaajaOphVirkailija = Some(false)
       )
     )

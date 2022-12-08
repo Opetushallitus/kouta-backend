@@ -965,4 +965,8 @@ package object domain {
       "painotettavatoppiaineetlukiossa_b3"
     )
   }
+
+  val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"
+  val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6"
+  val opintojenLaajuusViikko       = "opintojenlaajuusyksikko_8"
 }
