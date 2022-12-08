@@ -7,7 +7,7 @@ import fi.oph.kouta.TestSetups
 import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmkKoulutusKoodit, AmmatillisetKoulutusKoodit, YoKoulutusKoodit}
 import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks._
 import fi.oph.kouta.repository.SessionDAO
@@ -166,17 +166,17 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 1)
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2_091", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
-    mockLatestKoodiUriResponse("opintojenlaajuus_60", 1)
     mockLatestKoodiUriResponse("opintojenlaajuusyksikko_2", 1)
+    mockLatestKoodiUriResponse("opintojenlaajuusyksikko_6", 1)
+    mockLatestKoodiUriResponse("opintojenlaajuusyksikko_8", 1)
     mockKoodistoResponse("koulutuksenlisatiedot", Seq(("koulutuksenlisatiedot_03", 1, None)))
     mockKoulutustyyppiResponse(AmmatillisetKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_371101", 12, None)), AmmatillisetKoulutusKoodit.koulutusTyypit.init)
     mockKoulutustyyppiResponse(YoKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), YoKoulutusKoodit.koulutusTyypit.init)
+    mockKoulutustyyppiResponse(AmkKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201000", 12, None),("koulutus_371101", 12, None)), AmkKoulutusKoodit.koulutusTyypit.init)
     mockKoodistoResponse("koulutus", Seq(("koulutus_000002", 12, None), ("koulutus_301101", 1, None), ("koulutus_371101", 1, None), ("koulutus_775101", 1, None), ("koulutus_301104", 1, None)))
     mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
     mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
-    mockKoodistoResponse("opintojenlaajuus", Seq(
-      ("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 1, None), ("opintojenlaajuus_60", 1, None)))
     mockKoodistoResponse("opintojenlaajuusyksikko", Seq(
       ("opintojenlaajuusyksikko_2", 1, None), ("opintojenlaajuusyksikko_6", 1, None), ("opintojenlaajuusyksikko_8", 1, None)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
@@ -190,7 +190,7 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
         ("kansallinenkoulutusluokitus2016koulutusalataso1_001", 2, None)
       )
     )
-    mockKoodistoResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_6", 1, None)))
+    mockKoodistoResponse("erikoistumiskoulutukset", Seq(("erikoistumiskoulutukset_001", 2, None)))
   }
 
   def addDefaultKoodistoMockResponsesForToteutus(): Unit = {
