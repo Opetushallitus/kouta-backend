@@ -254,6 +254,16 @@ package object toteutusMetadata {
       |              example: kk-opintojakso
       |              enum:
       |                - kk-opintojakso
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val KkOpintokokonaisuusToteutusMetadataModel: String =
@@ -276,6 +286,16 @@ package object toteutusMetadata {
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val ErikoislaakariToteutusMetadataModel: String =
