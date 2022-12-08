@@ -73,6 +73,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     organisaatioService.getOrganisaatiot(parsedBody.extract[Seq[OrganisaatioOid]]) match {
       case Left(e: OrganisaatioServiceQueryException) => ActionResult(status = e.status, body = e.message, headers = Map())
       case Right(organisaatiot) => Ok(organisaatiot)
+      case Left(e) => throw e
     }
   }
 
