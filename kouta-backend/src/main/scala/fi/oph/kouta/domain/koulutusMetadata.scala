@@ -163,7 +163,7 @@ package object koulutusMetadata {
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
-      |              example: opintojenlaajuusyksikko_6#1
+      |              example: opintojenlaajuusyksikko_2#1
       |            opintojenLaajuusNumeroMin:
       |              type: integer
       |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
@@ -274,10 +274,14 @@ package object koulutusMetadata {
       |                type: string
       |                example:
       |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_40#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_2#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val TuvaKoulutusMetadataModel: String =
@@ -296,10 +300,14 @@ package object koulutusMetadata {
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
       |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_38#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_8#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val TelmaKoulutusMetadataModel: String =
@@ -318,10 +326,14 @@ package object koulutusMetadata {
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
       |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_60#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val VapaaSivistystyoKoulutusMetadataModel: String =
@@ -344,10 +356,14 @@ package object koulutusMetadata {
       |                type: string
       |                example:
       |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
-      |            opintojenLaajuusKoodiUri:
+      |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Tutkinnon laajuus. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuus/1)"
-      |              example: opintojenlaajuus_40#1
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_2#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val AikuistenPerusopetusKoulutusMetadataModel: String =
@@ -425,7 +441,7 @@ package object koulutusMetadata {
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)
-      |              example: opintojenlaajuusyksikko_6#1
+      |              example: opintojenlaajuusyksikko_2#1
       |            opintojenLaajuusNumeroMin:
       |              type: integer
       |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
