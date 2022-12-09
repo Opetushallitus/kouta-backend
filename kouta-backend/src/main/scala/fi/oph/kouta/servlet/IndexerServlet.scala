@@ -811,8 +811,7 @@ class IndexerServlet(
         hakuOid match {
           case None => BadRequest("error" -> "Pakollinen parametri puuttuu: hakuOid")
           case Some(oid) =>
-            val result = pistehistoriaService.syncPistehistoriaForHaku(oid)
-            Ok(s"Tallennettiin $result pistetietoa")
+            Ok(pistehistoriaService.syncPistehistoriaForHaku(oid))
         }
       }
     } catch {

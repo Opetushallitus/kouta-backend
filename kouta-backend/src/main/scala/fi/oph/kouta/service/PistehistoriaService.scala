@@ -177,22 +177,21 @@ class PistehistoriaService extends Logging {
     )
     logger.info(s"Synkataan alimmat pisteet oletushauille: $hakuOids")
     hakuOids.map(oid => {
-      val hakuResult =
-        try {
-          s"Tallennettiin ${syncPistehistoriaForHaku(oid)} pistetietoa"
-        } catch {
-          case t: Throwable =>
-            logger.error(s"Ei saatu synkattua default-hakua $oid: ${t.getMessage}. Jatketaan kuitenkin muille hauille.")
-            s"Virhe: ${t.getMessage}"
-        }
-      s"${oid.toString}: $hakuResult"
+      syncPistehistoriaForHaku(oid)
     }).mkString("\n")
   }
 
-  def syncPistehistoriaForHaku(hakuOid: HakuOid): Int = {
-    hakuOid.toString match {
-      case oid if oid.length != 35 => syncPistehistoriaForLegacyHaku(hakuOid)
-      case _                       => syncPistehistoriaForKoutaHaku(hakuOid)
+  def syncPistehistoriaForHaku(hakuOid: HakuOid): String = {
+    try {
+      val result = hakuOid.toString match {
+        case oid if oid.length != 35 => syncPistehistoriaForLegacyHaku(hakuOid)
+        case _ => syncPistehistoriaForKoutaHaku(hakuOid)
+      }
+      s"Tallennettiin haulle $hakuOid yhteensä $result pistetietoa."
+    } catch {
+      case t: Throwable =>
+        logger.error(s"Ei saatu synkattua hakua $hakuOid: ${t.getMessage}.")
+        s"Haun $hakuOid pistetietojen tallennuksessa tapahtui virhe: ${t.getMessage}"
     }
   }
 }
