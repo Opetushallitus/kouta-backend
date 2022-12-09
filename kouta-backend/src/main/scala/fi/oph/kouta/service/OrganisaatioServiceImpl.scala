@@ -38,8 +38,8 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     Try[Seq[Organisaatio]] {
       organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
     } match {
-      case Success(organisaatiot: Seq[Organisaatio])             => Right(organisaatiot)
-      case Failure(exception: OrganisaatioServiceQueryException) => Left(exception)
+      case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
+      case Failure(exception)                        => Left(exception)
     }
   }
 
@@ -52,6 +52,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       organisaatioServiceClient
         .getOrganisaatioHierarkiaFromCache(None, oppilaitostyypitForAvoinKorkeakoulutus)
         .organisaatiot
+        .map(_.copy(children = List()))
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 }
