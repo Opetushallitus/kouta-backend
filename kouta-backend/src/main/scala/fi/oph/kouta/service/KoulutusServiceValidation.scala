@@ -313,7 +313,6 @@ class KoulutusServiceValidation(
       case m: TuvaKoulutusMetadata =>
         validateTuvaTelma(
           validationContext,
-          m.lisatiedot,
           m.linkkiEPerusteisiin,
           m.opintojenLaajuusyksikkoKoodiUri,
           m.opintojenLaajuusNumero,
@@ -322,7 +321,6 @@ class KoulutusServiceValidation(
       case m: TelmaKoulutusMetadata =>
         validateTuvaTelma(
           validationContext,
-          m.lisatiedot,
           m.linkkiEPerusteisiin,
           m.opintojenLaajuusyksikkoKoodiUri,
           m.opintojenLaajuusNumero,
@@ -548,14 +546,12 @@ class KoulutusServiceValidation(
 
   private def validateTuvaTelma(
       validationContext: ValidationContext,
-      lisatiedot: Seq[Lisatieto],
       linkkiEPerusteisiin: Kielistetty,
       opintojenLaajuusYksikkoKoodiUri: Option[String],
       opintojenLaajuusNumero: Option[Double],
       expectedLaajuusYksikkoKoodiUri: String
   ): IsValid = {
     and(
-      assertEmpty(lisatiedot, "metadata.lisatiedot"),
       validateIfNonEmpty(linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
       assertCertainValue(
         opintojenLaajuusYksikkoKoodiUri,
