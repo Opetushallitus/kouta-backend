@@ -165,7 +165,8 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       }
     } catch {
       case e: KoodistoQueryException if e.status == 404 => List.empty
-      case e => logger.error("Rinnasteisten koodien haku epäonnistui: ", e)
+      case e: Throwable =>
+        logger.error("Rinnasteisten koodien haku epäonnistui: ", e)
         throw e
     }
   }
