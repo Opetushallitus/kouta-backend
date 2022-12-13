@@ -11,7 +11,6 @@ import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validations}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -110,6 +109,14 @@ class OppilaitosService(
       OppilaitoksenOsaDAO.listByOppilaitosOidAndOrganisaatioOids(oid, _)
     }
 
+  private def removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitos: Oppilaitos): DBIO[Int] = {
+    val jarjestaaUrheilijanAmmatillistaKoulutustaOpt: Option[Boolean] = oppilaitos.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
+    jarjestaaUrheilijanAmmatillistaKoulutustaOpt match {
+      case Some(jarjestaaUrheilijanAmmatillistaKoulutusta) if !jarjestaaUrheilijanAmmatillistaKoulutusta => HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitos.oid)
+      case _ => DBIO.successful(0)
+    }
+  }
+
   private def doPut(oppilaitos: Oppilaitos)(implicit authenticated: Authenticated): Oppilaitos =
     KoutaDatabase.runBlockingTransactionally {
       for {
@@ -119,7 +126,7 @@ class OppilaitosService(
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- maybeCopyLogo(logo, o)
         o          <- teema.orElse(logo).map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
-        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitos.oid)
+        _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitos)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, logo, o)
@@ -136,7 +143,7 @@ class OppilaitosService(
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitos)
         (logo, o) <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
-        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitos.oid)
+        _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitos)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, logo, o)
@@ -214,6 +221,14 @@ class OppilaitoksenOsaService(
     }.nonEmpty
   }
 
+  private def removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Int] = {
+    val jarjestaaUrheilijanAmmatillistaKoulutustaOpt: Option[Boolean] = oppilaitoksenOsa.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
+    jarjestaaUrheilijanAmmatillistaKoulutustaOpt match {
+      case Some(jarjestaaUrheilijanAmmatillistaKoulutusta) if !jarjestaaUrheilijanAmmatillistaKoulutusta => HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitoksenOsa.oid)
+      case _ => DBIO.successful(0)
+    }
+  }
+
   private def doPut(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OppilaitoksenOsa =
     KoutaDatabase.runBlockingTransactionally {
       for {
@@ -222,7 +237,7 @@ class OppilaitoksenOsaService(
         o          <- OppilaitoksenOsaDAO.getPutActions(o)
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
-        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitoksenOsa.oid)
+        _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitoksenOsa)
         _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, o)
@@ -237,7 +252,7 @@ class OppilaitoksenOsaService(
         _          <- OppilaitoksenOsaDAO.checkNotModified(oppilaitoksenOsa.oid, notModifiedSince)
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
-        _          <- HakukohdeDAO.removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(oppilaitoksenOsa.oid)
+        _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitoksenOsa)
         _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, o)
