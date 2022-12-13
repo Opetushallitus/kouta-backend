@@ -271,6 +271,14 @@ object Validations {
       s"Hakukohteen linja $linja ei ole sallittu. Linjan täytyy olla tyhjä (jolloin kyseessä yleislinja), tai vastata toteutuksen lukiopainotuksia tai erityis-koulutustehtäviä",
     id = "invalidHakukohteenLinja"
   )
+  def invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta(koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = ErrorMessage(
+    msg = s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on ${koulutustyyppi.getOrElse("").toString}",
+    id = "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+  )
+  def invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta: Boolean): ErrorMessage = ErrorMessage(
+    msg = s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
+    id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+  )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 
@@ -600,6 +608,8 @@ object Validations {
     }
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
+
+  def validateIfDefinedAndTrue(value: Option[Boolean], f: IsValid): IsValid = value.map(validateIfTrue(_, f)).getOrElse(NoErrors)
 
   def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid =
     (value, oldValue) match {

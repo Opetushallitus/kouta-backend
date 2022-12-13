@@ -423,13 +423,14 @@ class HakukohdeServiceValidation(
 
     val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
-    val hakuOid             = hakukohde.hakuOid.s
-    val toteutusOid         = hakukohde.toteutusOid.s
-    val koulutustyyppi      = dependencyInfo.map(_.toteutus.koulutustyyppi)
-    val haunJulkaisutila    = haku.map(_.tila)
-    val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
-    val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
-    val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+    val hakuOid                                           = hakukohde.hakuOid.s
+    val toteutusOid                                       = hakukohde.toteutusOid.s
+    val koulutustyyppi                                    = dependencyInfo.map(_.toteutus.koulutustyyppi)
+    val haunJulkaisutila                                  = haku.map(_.tila)
+    val koulutuksetKoodiUri                               = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
+    val tarjoajat                                         = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
+    val vCtx                                              = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+    val jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta   = dependencyInfo.flatMap(di => di.jarjestyspaikka.flatMap(j => j.jarjestaaUrheilijanAmmKoulutusta))
 
     and(
       validateIfSuccessful(
@@ -444,14 +445,28 @@ class HakukohdeServiceValidation(
           hakukohde.jarjestyspaikkaOid,
           jarjestysPaikkaOid =>
             assertTrue(
-              tarjoajat
-                .map(org => organisaatioService.getAllChildOidsFlat(org))
-                .flatten
+              tarjoajat.flatMap(org => organisaatioService.getAllChildOidsFlat(org))
                 .distinct
                 .contains(jarjestysPaikkaOid),
               "jarjestyspaikkaOid",
               invalidJarjestyspaikkaOid(jarjestysPaikkaOid, hakukohde.toteutusOid)
             )
+        )
+      ),
+      validateIfDefinedAndTrue(
+        hakukohde.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta),
+        assertTrue(
+          koulutustyyppi.contains(Amm),
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta(koulutustyyppi)
+        )
+      ),
+      validateIfDefinedAndTrue(
+        hakukohde.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta),
+        assertTrue(
+          jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.contains(true) || !hakukohdeDiffResolver.jarjestaaUrheilijanAmmatillistakoulutustaChanged(),
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.getOrElse(false))
         )
       ),
       validateDependencyExistence(haunJulkaisutila, hakuOid, "Hakua", "hakuOid"),
@@ -547,34 +562,26 @@ class HakukohdeServiceValidation(
         hakukohdeDiffResolver.toinenAsteOnkoKaksoistutkintoNewlyActivated(), {
           koulutustyyppi match {
             case Some(Amm) =>
-              koulutuksetKoodiUri
-                .map(
-                  assertKoulutuskoodiQueryResult(
-                    _,
-                    AmmatillisetKoulutuskooditAllowedForKaksoistutkinto,
-                    koulutusKoodiClient,
-                    "toinenAsteOnkoKaksoistutkinto",
-                    vCtx,
-                    toinenAsteOnkoKaksoistutkintoNotAllowed,
-                    kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg
-                  )
-                )
-                .flatten
+              koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
+                _,
+                AmmatillisetKoulutuskooditAllowedForKaksoistutkinto,
+                koulutusKoodiClient,
+                "toinenAsteOnkoKaksoistutkinto",
+                vCtx,
+                toinenAsteOnkoKaksoistutkintoNotAllowed,
+                kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg
+              ))
 
             case Some(Lk) =>
-              koulutuksetKoodiUri
-                .map(
-                  assertKoulutuskoodiQueryResult(
-                    _,
-                    LukioKoulutusKooditAllowedForKaksoistutkinto,
-                    koulutusKoodiClient,
-                    "toinenAsteOnkoKaksoistutkinto",
-                    vCtx,
-                    toinenAsteOnkoKaksoistutkintoNotAllowed,
-                    kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg
-                  )
-                )
-                .flatten
+              koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
+                _,
+                LukioKoulutusKooditAllowedForKaksoistutkinto,
+                koulutusKoodiClient,
+                "toinenAsteOnkoKaksoistutkinto",
+                vCtx,
+                toinenAsteOnkoKaksoistutkintoNotAllowed,
+                kaksoistutkintoValidationFailedDuetoKoodistoFailureMsg
+              ))
 
             case _ => error("toinenAsteOnkoKaksoistutkinto", toinenAsteOnkoKaksoistutkintoNotAllowed)
           }

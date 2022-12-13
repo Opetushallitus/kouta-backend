@@ -1,50 +1,40 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{
-  NimettyLinkki,
-  OppilaitoksenOsa,
-  OppilaitoksenOsaMetadata,
-  Oppilaitos,
-  OppilaitosMetadata,
-  Osoite,
-  TietoaOpiskelusta,
-  Yhteystieto
-}
+import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, Osoite, TietoaOpiskelusta, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
+import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{
-  and,
-  assertKoodistoQueryResult,
-  assertNotEmpty,
-  assertNotNegative,
-  assertNotOptional,
-  assertValid,
-  assertValidEmail,
-  assertValidUrl,
-  invalidTietoaOpiskelustaOtsikkoKoodiUri,
-  validateDependency,
-  validateIfDefined,
-  validateIfJulkaistu,
-  validateIfNonEmpty,
-  validateIfNonEmptySeq,
-  validateIfSuccessful,
-  validateKielistetty,
-  validateOptionalKielistetty
-}
-import fi.oph.kouta.validation.{IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidEmail, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(HakuKoodiClient)
 
 class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends ValidatingService[Oppilaitos] {
-  override def validateEntity(ol: Oppilaitos, oldOl: Option[Oppilaitos]): IsValid = {
-    val vCtx                                                            = ValidationContext(ol.tila, ol.kielivalinta, if (oldOl.isDefined) update else create)
-    val oppilaitosDiffResolver: OppilaitosOrOsaDiffResolver[Oppilaitos] = OppilaitosOrOsaDiffResolver(ol, oldOl)
 
+  def withValidation[R](oppilaitos: Oppilaitos, oldOppilaitos: Option[Oppilaitos], authenticated: Authenticated)(
+    f: Oppilaitos => R
+  ): R = {
+    val vCtx  = ValidationContext(oppilaitos.tila, oppilaitos.kielivalinta, if (oldOppilaitos.isDefined) update else create)
+    val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
+    val oppilaitosDiffResolver = OppilaitosOrOsaDiffResolver(oppilaitos, oldOppilaitos)
+    var errors = super.validate(oppilaitos, oldOppilaitos)
+    if (errors.isEmpty)
+      errors = validateIfDefined[OppilaitosMetadata](
+        oppilaitos.metadata,
+        validateMetadata(_, isOphPaakayttaja, vCtx, oppilaitosDiffResolver))
+
+    errors match {
+      case NoErrors => f(oppilaitos)
+      case errors => throw KoutaValidationException(errors)
+    }
+  }
+
+  override def validateEntity(ol: Oppilaitos, oldOl: Option[Oppilaitos]): IsValid = {
     and(
       assertValid(ol.oid, "oid"),
       assertValid(ol.organisaatioOid, "organisaatioOid"),
-      validateIfDefined[OppilaitosMetadata](ol.metadata, validateMetadata(_, vCtx, oppilaitosDiffResolver)),
       validateIfDefined[String](ol.teemakuva, assertValidUrl(_, "teemakuva")),
       validateIfDefined[String](ol.logo, assertValidUrl(_, "logo")),
       assertNotEmpty(ol.kielivalinta, "kielivalinta")
@@ -53,6 +43,7 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
 
   private def validateMetadata(
       m: OppilaitosMetadata,
+      isOphPaakayttaja: Boolean,
       vCtx: ValidationContext,
       oppilaitosDiffResolver: OppilaitosOrOsaDiffResolver[Oppilaitos]
   ): IsValid = and(
@@ -61,6 +52,14 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
       oppilaitosDiffResolver.newTietoaOpiskelusta(),
       "metadata.tietoaOpiskelusta",
       (tietoa, newTietoa, path) => validateTietoaOpiskelusta(tietoa, newTietoa, path, vCtx)
+    ),
+    assertTrue(
+      !oppilaitosDiffResolver.jarjestaaUrheilijanAmmatillistakoulutustaChanged() || isOphPaakayttaja,
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        msg = "Vain OPH:n pääkäyttäjä voi muuttaa tiedon järjestääkö oppilaitos urheilijan ammatillista koulutusta",
+        id = "invalidRightsForChangingJarjestaaUrheilijanAmmatillistaKoulutusta"
+      )
     ),
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
     validateIfDefined[Yhteystieto](
@@ -117,15 +116,29 @@ object OppilaitoksenOsaServiceValidation extends OppilaitoksenOsaServiceValidati
 
 class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppilaitosDAO: OppilaitosDAO)
     extends ValidatingService[OppilaitoksenOsa] {
-  override def validateEntity(osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa]): IsValid = {
-    val vCtx                                                        = ValidationContext(osa.tila, osa.kielivalinta, if (oldOsa.isDefined) update else create)
-    val diffResolver: OppilaitosOrOsaDiffResolver[OppilaitoksenOsa] = OppilaitosOrOsaDiffResolver(osa, oldOsa)
 
+  def withValidation[R](osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa], authenticated: Authenticated)(
+    f: OppilaitoksenOsa => R
+  ): R = {
+    val vCtx = ValidationContext(osa.tila, osa.kielivalinta, if (oldOsa.isDefined) update else create)
+    val isOphPaakayttaja = authenticated.session.roles.contains(Role.Paakayttaja)
+    val oppilaitosDiffResolver = OppilaitosOrOsaDiffResolver(osa, oldOsa)
+    var errors = super.validate(osa, oldOsa)
+    if (errors.isEmpty)
+      errors = validateIfDefined[OppilaitoksenOsaMetadata](
+        osa.metadata,
+        validateMetadata(_, isOphPaakayttaja, vCtx, oppilaitosDiffResolver))
+
+    errors match {
+      case NoErrors => f(osa)
+      case errors => throw KoutaValidationException(errors)
+    }
+  }
+  override def validateEntity(osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa]): IsValid = {
     and(
       assertValid(osa.oid, "oid"),
       validateIfSuccessful(assertValid(osa.oppilaitosOid, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
       assertValid(osa.organisaatioOid, "organisaatioOid"),
-      validateIfDefined[OppilaitoksenOsaMetadata](osa.metadata, validateMetadata(_, vCtx, diffResolver)),
       validateIfDefined[String](osa.teemakuva, assertValidUrl(_, "teemakuva")),
       assertNotEmpty(osa.kielivalinta, "kielivalinta")
     )
@@ -133,6 +146,7 @@ class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppila
 
   private def validateMetadata(
       m: OppilaitoksenOsaMetadata,
+      isOphPaakayttaja: Boolean,
       vCtx: ValidationContext,
       diffResolver: OppilaitosOrOsaDiffResolver[OppilaitoksenOsa]
   ): IsValid = and(
@@ -144,6 +158,14 @@ class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppila
         diffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
         hakuKoodiClient.postiosoitekoodiExists
+      )
+    ),
+    assertTrue(
+      !diffResolver.jarjestaaUrheilijanAmmatillistakoulutustaChanged() || isOphPaakayttaja,
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        msg = "Vain OPH:n pääkäyttäjä voi muuttaa tiedon järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta",
+        id = "invalidRightsForChangingJarjestaaUrheilijanAmmatillistaKoulutusta"
       )
     ),
     validateIfDefined[Int](m.opiskelijoita, assertNotNegative(_, "metadata.opiskelijoita")),

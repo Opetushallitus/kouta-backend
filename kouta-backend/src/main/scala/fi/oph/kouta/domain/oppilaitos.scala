@@ -108,6 +108,9 @@ package object oppilaitos {
       |          type: string
       |          description: Oppilaitoksen Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
+      |        jarjestaaUrheilijanAmmKoulutusta:
+      |          type: boolean
+      |          description: Järjestääkö oppilaitos urheilijan ammatillista koulutusta?
       |""".stripMargin
 
   val OppilaitoksenOsaModel =
@@ -460,7 +463,7 @@ case class OppilaitosMetadata(
     toimipisteita: Option[Int] = None,
     akatemioita: Option[Int] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-    jarjestaaUrheilijanAmmKoulutusta: Boolean = false
+    jarjestaaUrheilijanAmmKoulutusta: Option[Boolean] = None
 )
 
 case class TietoaOpiskelusta(otsikkoKoodiUri: String, teksti: Kielistetty)
@@ -471,7 +474,7 @@ case class OppilaitoksenOsaMetadata(
     opiskelijoita: Option[Int] = None,
     kampus: Kielistetty = Map(),
     esittely: Kielistetty = Map(),
-    jarjestaaUrheilijanAmmKoulutusta: Boolean = false,
+    jarjestaaUrheilijanAmmKoulutusta: Option[Boolean] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 )
 

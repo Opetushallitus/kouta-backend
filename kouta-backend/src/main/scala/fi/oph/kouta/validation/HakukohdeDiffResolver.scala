@@ -84,6 +84,16 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
     if (oldValue == false && newValue == true) true else false
   }
 
+  def jarjestaaUrheilijanAmmatillistakoulutustaChanged(): Boolean = {
+    val oldValue: Option[Boolean] = oldHakukohde.flatMap(hk => hk.metadata.flatMap(m => m.jarjestaaUrheilijanAmmKoulutusta))
+    val newValue: Option[Boolean] = hakukohde.metadata.flatMap(m => m.jarjestaaUrheilijanAmmKoulutusta)
+    (oldValue, newValue) match {
+      case (Some(o), Some(n))   => !o.equals(n)
+      case (None, None)         => false
+      case (_, _)               => true
+    }
+  }
+
   def liitteenOsoiteWithNewValues(liite: Option[Liite]): Option[Osoite] = {
     val postinumeroKoodiUri =
       liite.flatMap(_.toimitusosoite).map(_.osoite).flatMap(_.postinumeroKoodiUri)
