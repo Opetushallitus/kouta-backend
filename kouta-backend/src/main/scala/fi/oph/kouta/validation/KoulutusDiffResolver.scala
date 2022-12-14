@@ -53,7 +53,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
 
   def isAvoinKkChanged(): Boolean = oldKoulutus match {
     case Some(old: Koulutus) => koulutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
-    case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
   private def tutkinnonosat(metadata: Option[KoulutusMetadata]): Seq[TutkinnonOsa] =
@@ -92,13 +92,11 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     }
 
   private def opinnonTyyppiKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
-    if (!metadata.isDefined) None
-    else
-      metadata.get match {
-        case m: KkOpintojaksoKoulutusMetadata       => m.opinnonTyyppiKoodiUri
-        case m: KkOpintokokonaisuusKoulutusMetadata => m.opinnonTyyppiKoodiUri
-        case _                                      => None
-      }
+    metadata match {
+      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.opinnonTyyppiKoodiUri
+      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.opinnonTyyppiKoodiUri
+      case _                                            => None
+    }
 
   private def tutkintonimikeKoodiUrit(metadata: Option[KoulutusMetadata]): Seq[String] =
     metadata match {

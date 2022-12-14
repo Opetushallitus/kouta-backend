@@ -38,7 +38,7 @@ object SqsService extends Logging {
         new EndpointConfiguration(
           endpoint,
           region))
-      case None => case Some(region) => clientBuilder.setRegion(region)
+      case None => clientBuilder.setRegion(region)
     }
 
     clientBuilder.build()

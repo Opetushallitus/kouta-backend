@@ -132,6 +132,16 @@ package object koulutusMetadata {
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val KkOpintokokonaisuusKoulutusMetadataModel: String =
@@ -155,7 +165,7 @@ package object koulutusMetadata {
       |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              description: "Opintojen laajuusyksikko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
       |            opintojenLaajuusNumeroMin:
       |              type: integer
@@ -165,6 +175,16 @@ package object koulutusMetadata {
       |              type: integer
       |              description: Opintojen laajuuden tai keston enimmäismäärä numeroarvona
       |              example: 20
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val AmmatillinenKoulutusMetadataModel: String =

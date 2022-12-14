@@ -1,6 +1,11 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient, OrganisaatioServiceQueryException}
+import fi.oph.kouta.client.{
+  CachedOrganisaatioHierarkiaClient,
+  CallerId,
+  OrganisaatioServiceClient,
+  OrganisaatioServiceQueryException
+}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
@@ -12,12 +17,14 @@ import scala.util.{Failure, Success, Try}
 
 object OrganisaatioServiceImpl extends OrganisaatioServiceImpl(KoutaConfigurationFactory.configuration.urlProperties)
 
-class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceClient: OrganisaatioServiceClient) extends OrganisaatioService {
+class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceClient: OrganisaatioServiceClient)
+    extends OrganisaatioService {
   def this(urlProperties: OphProperties) = this(urlProperties, new OrganisaatioServiceClient)
 
   override protected val cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient =
     new CachedOrganisaatioHierarkiaClient with CallerId {
-      override val organisaatioUrl: String = urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", RootOrganisaatioOid.s)
+      override val organisaatioUrl: String =
+        urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", RootOrganisaatioOid.s)
     }
 
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
@@ -27,12 +34,12 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
   }
 
-  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]]= {
+  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]] = {
     Try[Seq[Organisaatio]] {
       organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
     } match {
       case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
-      case Failure(exception: OrganisaatioServiceQueryException) => Left(exception)
+      case Failure(exception)                        => Left(exception)
     }
   }
 
@@ -41,12 +48,11 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   }
 
   def getOppilaitoksetForAvoinKorkeakoulutus(): OrganisaatioHierarkia = {
-    val oppilaitosOrganisaatiotyyppi = "organisaatiotyyppi_02"
-    val oppilaitostyypit = oppilaitostyypitForAvoinKorkeakoulutus
-    val filtered = MiscUtils.filterOrganisaatiotWithOrganisaatiotyyppi(
-      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(None, oppilaitostyypit).organisaatiot,
-      oppilaitosOrganisaatiotyyppi
-    )
+    val filtered =
+      organisaatioServiceClient
+        .getOrganisaatioHierarkiaFromCache(None, oppilaitostyypitForAvoinKorkeakoulutus)
+        .organisaatiot
+        .map(_.copy(children = List()))
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 }

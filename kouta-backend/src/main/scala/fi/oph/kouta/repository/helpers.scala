@@ -33,14 +33,14 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   def createKoulutustyypitInParams(x: Seq[Koulutustyyppi]): String = if (x.isEmpty) "''" else x.map(tyyppi => s"'${tyyppi.name}'").mkString(",")
 
-  def tilaConditions(tilaFilter: TilaFilter, columnDesc: String = "tila"): String = {
+  def tilaConditions(tilaFilter: TilaFilter, columnDesc: String = "tila", glueWord: String = "and"): String = {
     if (tilaFilter.isDefined()) {
       tilaFilter.included().size match {
-        case 1 => s"and $columnDesc = '${tilaFilter.included().head}'"
-        case 3 => s"and $columnDesc != '${tilaFilter.excluded().head}'"
+        case 1 => s"$glueWord $columnDesc = '${tilaFilter.included().head}'"
+        case 3 => s"$glueWord $columnDesc != '${tilaFilter.excluded().head}'"
         case _ => {
           val tilat = tilaFilter.included().map(tila => s"'$tila'").mkString(",")
-          s"and $columnDesc in (${tilat})"
+          s"$glueWord $columnDesc in (${tilat})"
         }
       }
     }

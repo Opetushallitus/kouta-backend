@@ -73,6 +73,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     organisaatioService.getOrganisaatiot(parsedBody.extract[Seq[OrganisaatioOid]]) match {
       case Left(e: OrganisaatioServiceQueryException) => ActionResult(status = e.status, body = e.message, headers = Map())
       case Right(organisaatiot) => Ok(organisaatiot)
+      case Left(e) => throw e
     }
   }
 
@@ -153,9 +154,9 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
   registerPath("/organisaatio/oppilaitokset-for-avoin-korkeakoulutus",
     """    get:
-      |      summary: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
+      |      summary: Listaa avoimen korkeakoulutuksen oppilaitokset (ei osia)
       |      operationId: getHierarkiaForAvoinKorkeakoulutus
-      |      description: Hakee organisaatiohierarkian avoimelle korkeakoulutukselle organisaatiopalvelusta
+      |      description: Listaa avoimen korkeakoulutuksen oppilaitokset organisaatiopalvelusta
       |      tags:
       |        - Organisaatio
       |      responses:

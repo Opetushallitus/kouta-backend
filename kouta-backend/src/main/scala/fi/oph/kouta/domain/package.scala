@@ -970,11 +970,13 @@ package object domain {
     "oppilaitostyyppi_41#1", //Ammattikorkeakoulut
     "oppilaitostyyppi_42#1", //Yliopistot
     "oppilaitostyyppi_43#1", //Sotilaskorkeakoulut
+    "oppilaitostyyppi_45#1", //Lastentarhanopettajaopistot
+    "oppilaitostyyppi_46#1", //Väliaikaiset ammattikorkeakoulut
     "oppilaitostyyppi_62#1", //Liikunnan koulutuskeskukset
     "oppilaitostyyppi_63#1", //Kansanopistot
     "oppilaitostyyppi_64#1", //Kansalaisopistot
     "oppilaitostyyppi_66#1", //Kesäyliopistot
     "oppilaitostyyppi_65#1", //Opintokeskukset
-    "oppilaitostyyppi_99#1", //Muut oppilaitokset
+    "oppilaitostyyppi_99#1", //Muut oppilaitokset,
   )
 }
