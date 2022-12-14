@@ -138,14 +138,14 @@ object Validations {
   }
 
   val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
-    "isAvoinKorkeakoulutusIntegrity",
-    "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
+    id = "cannotChangeIsAvoinKorkeakoulutus",
+    msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
   )
 
   val invalidIsAvoinKorkeakoulutusIntegrity =
     ErrorMessage(
-      "invalidIsAvoinKorkeakoulutusIntegrity",
-      "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
+      id = "invalidIsAvoinKorkeakoulutusIntegrity",
+      msg = "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
     )
 
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
