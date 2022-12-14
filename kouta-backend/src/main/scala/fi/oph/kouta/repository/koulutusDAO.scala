@@ -370,8 +370,7 @@ select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modifi
             -- 3. koulutustyyppeihin täsmäävät koulutukset, jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä)
             -- löytyy annettuja organisaatioita
             or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
-                and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
-                and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
+                and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
         group by k.oid) m on k.oid = m.oid
     #${tilaConditions(tilaFilter, glueWord="where")}
 """.as[KoulutusListItem]
