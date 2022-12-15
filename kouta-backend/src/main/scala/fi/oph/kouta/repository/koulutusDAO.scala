@@ -363,12 +363,12 @@ select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modifi
         where
             -- Listauksissa halutaan näyttää..
             -- 1. koulutukset, jotka omistaa jokin annetuista organisaatioista, mutta OPH:n omistamat vain, jos koulutustyyppi täsmää.
+            -- TODO: Mahdollisesti, jos OPH:n omistama, pitäisi katsoa, että se on lisäksi julkinen ja mätsää oppilaitostyyppeihin
             (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                 and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
             -- 2. koulutustyyppeihin täsmäävät koulutukset, jotka ovat julkisia
             or (k.julkinen = ${true} and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
-            -- 3. koulutustyyppeihin täsmäävät koulutukset, jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä)
-            -- löytyy annettuja organisaatioita
+            -- 3. jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä) löytyy annettuja organisaatioita
             or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
                 and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
         group by k.oid) m on k.oid = m.oid

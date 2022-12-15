@@ -61,7 +61,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
     * @param koulutustyyppi koulutustyyppi, jonka perusteella halutaan rajoittaa tarjoajien sallittuja oppilaitostyyppejä (kts. OrganisaatioService.oppilaitostyypitToKoulutustyypit)
     * @param tarjoajat Uusi tarjoajat-kentän arvo
     * @param oldTarjoajat Entinen tarjoajat-kentän arvo. (tyhjä, jos ollaan luomassa)
-    * @param oppilaitostyypit Oppilaitostyypit, jotka ovat koulutustyypin perusteella valittujen *lisäksi* sallittuja tarjoajille. Käytetään ainoastaan koulutuksen validoinnissa.
+    * @param oppilaitostyypit Oppilaitostyypit, jotka ovat koulutustyypin perusteella valittujen asemesta sallittuja tarjoajille. Käytetään ainoastaan koulutuksen validoinnissa. HUOM! Yliajaa koulutustyyppi-tarkistuksen!
     * @return Mahdolliset validointivirheet listana tai tyhjä lista, jos validi
     */
   def validateTarjoajat(
@@ -70,7 +70,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
       oldTarjoajat: Seq[OrganisaatioOid],
       oppilaitostyypit: Seq[String] = Seq()
   ): IsValid = {
-    val newTarjoajat = if (tarjoajat.toSet != oldTarjoajat.toSet) tarjoajat else List()
+    val newTarjoajat                        = if (tarjoajat.toSet != oldTarjoajat.toSet) tarjoajat else List()
     val validTarjoajat                      = newTarjoajat.filter(_.isValid)
     var organisaatioServiceOk               = true
     var tarjoajatWoRequiredKoulutustyyppi   = Seq[OrganisaatioOid]()
@@ -98,18 +98,19 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
         (oid, path) =>
           validateIfSuccessful(
             assertTrue(oid.isValid, path, validationMsg(oid.s)),
-            or(
+            if (oppilaitostyypit.isEmpty) {
               assertFalse(
                 tarjoajatWoRequiredKoulutustyyppi.contains(oid),
                 path,
                 tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi)
-              ),
+              )
+            } else {
               assertFalse(
                 tarjoajatWoRequiredOppilaitostyypit.contains(oid),
                 path,
                 tarjoajaOidWoRequiredOppilaitostyyppi(oid, oppilaitostyypit)
               )
-            )
+            }
           )
       ),
       error("tarjoajat", organisaatioServiceFailureMsg)
