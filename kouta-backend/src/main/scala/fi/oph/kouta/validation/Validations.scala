@@ -164,7 +164,7 @@ object Validations {
 
   def tarjoajaOidWoRequiredOppilaitostyyppi(oid: OrganisaatioOid, oppilaitostyypit: Seq[String]): ErrorMessage =
     ErrorMessage(
-      msg = s"Tarjoaja $oid ei ole sallittua oppilaitostyyppiä (${oppilaitostyypit.mkString(", ")}",
+      msg = s"Tarjoaja $oid ei ole sallittua oppilaitostyyppiä (${oppilaitostyypit.mkString(", ")})",
       id = "tarjoajaOidWoRequiredOppilaitostyyppi"
     )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
