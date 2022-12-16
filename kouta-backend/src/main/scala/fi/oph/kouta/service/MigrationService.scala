@@ -473,11 +473,12 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
   def parseHakukohdeFromResult(result: JValue): Hakukohde = {
     val tarjoajaOids = (result \ "tarjoajaOids").extract[List[String]]
-    val opetuskieletTemp: Seq[Kieli] = (result \ "hakukohteenNimet").extract[Map[String, Any]].keys.map(toKieli(_)).flatten.toSeq
+    val hakukohteenNimet: Map[Kieli, String]  = toKieliMap((result \ "hakukohteenNimet").extract[Map[String, String]]).filter(k => k._2.nonEmpty)
+    //val opetuskieletTemp: Seq[Kieli] = (result \ "hakukohteenNimet").extract[Map[String, Any]].keys.map(toKieli(_)).flatten.toSeq
+    val opetuskieletTemp = hakukohteenNimet.keySet.toSeq
     val opetuskielet: Seq[Kieli] = if(opetuskieletTemp.nonEmpty) opetuskieletTemp else Seq(Fi)
     val toteutusOid = ToteutusOid((result \ "hakukohdeKoulutusOids").extract[List[String]].head)
     val hakulomakeAtaruId = (result \ "ataruLomakeAvain").extractOpt[String].map(UUID.fromString)
-    val hakukohteenNimet = toKieliMap((result \ "hakukohteenNimet").extract[Map[String, String]]).filter(k => k._2.nonEmpty)
     val nimi: Map[Kieli, String] =
       opetuskielet.map(kieli => (kieli, get(hakukohteenNimet,kieli))).toMap
 
