@@ -38,6 +38,14 @@ trait MigrationHelpers extends Logging {
         None
     }
   }
+
+  def toKieliWithFiAsDefault(kieli: String): Kieli = {
+    kieli match {
+      case "kieli_sv" => Sv
+      case "kieli_en" => En
+      case _ => Fi
+    }
+  }
   def mapKieli(entry: (String,String)): Option[(Kieli, String)] = toKieli(entry._1).map(k => (k, entry._2))
   def mapKieliToDefault(entry: (String,String)): Option[(Kieli, String)] = toKieli(entry._1, true).map(k => (k, entry._2))
   def toLocalDateTime(time : Long): LocalDateTime = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDateTime
@@ -354,7 +362,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     val tunniste = (result \ "hakijalleNaytettavaTunniste").extractOpt[String]
     val externalId = (result \ "tunniste").extractOpt[String]
 
-    val asiasanat = (result \ "oppiaineet").extract[Option[List[Map[String, String]]]].map(list => list.map(m => Keyword(toKieli(m.get("kieliKoodi").get, true).get, m.get("oppiaine").get))).getOrElse(List()).take(20)
+    val asiasanat = (result \ "oppiaineet").extract[Option[List[Map[String, String]]]].map(list => list.map(m => Keyword(toKieliWithFiAsDefault(m("kieliKoodi")), m("oppiaine")))).getOrElse(List()).take(20)
 
     val koulutusmoduuliTyyppi = (result \ "koulutusmoduuliTyyppi").extract[String]
     val koulutustyyppi: Koulutustyyppi = koulutusmoduuliTyyppi match {
