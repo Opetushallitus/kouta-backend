@@ -2,24 +2,27 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.Osoite1
+import fi.oph.kouta.TestOids.{ChildOid, OphOid}
 import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{Fi, NimettyLinkki, Oppilaitos, OppilaitosMetadata, Sv, TietoaOpiskelusta, Yhteystieto}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.service.{OppilaitosServiceValidation, OrganisaatioService}
-import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
+import fi.oph.kouta.domain._
+import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
+import fi.oph.kouta.service.{KoutaValidationException, OppilaitosServiceValidation}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
-import fi.oph.kouta.validation.Validations.{
-  invalidEmail,
-  invalidKielistetty,
-  invalidPostiosoiteKoodiUri,
-  invalidTietoaOpiskelustaOtsikkoKoodiUri,
-  invalidUrl,
-  missingMsg,
-  notNegativeMsg,
-  validationMsg
-}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
+import org.mockito.scalatest.MockitoSugar
+import org.scalatest.flatspec.AnyFlatSpec
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
+import org.scalatest.{Assertion, BeforeAndAfterEach}
 
-class OppilaitosServiceValidationSpec extends BaseServiceValidationSpec[Oppilaitos] {
+import java.net.InetAddress
+import java.util.UUID
+import scala.util.{Failure, Try}
+
+class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   val hakuKoodiClient     = mock[HakuKoodiClient]
 
   val min         = TestData.MinOppilaitos
@@ -30,13 +33,56 @@ class OppilaitosServiceValidationSpec extends BaseServiceValidationSpec[Oppilait
   def minWithYhteystieto(yt: Yhteystieto): Oppilaitos =
     min.copy(metadata = Some(OppilaitosMetadata(hakijapalveluidenYhteystiedot = Some(yt))))
 
-  override val validator = new OppilaitosServiceValidation(hakuKoodiClient)
+  val authenticatedPaakayttaja = Authenticated(
+    UUID.randomUUID().toString,
+    CasSession(
+      ServiceTicket("ST-123"),
+      "1.2.3.1234",
+      Set("APP_KOUTA", "APP_KOUTA_OPHPAAKAYTTAJA", s"APP_KOUTA_OPHPAAKAYTTAJA_${OphOid}").map(Authority(_))
+    ),
+    "testAgent",
+    InetAddress.getByName("127.0.0.1")
+  )
+  val authenticatedNonPaakayttaja = Authenticated(
+    UUID.randomUUID().toString,
+    CasSession(
+      ServiceTicket("ST-123"),
+      "1.2.3.1234",
+      Set("APP_KOUTA", "APP_KOUTA_HAKUKOHDE_READ", s"APP_KOUTA_HAKUKOHDE_READ_${ChildOid}").map(Authority(_))
+    ),
+    "testAgent",
+    InetAddress.getByName("127.0.0.1")
+  )
+
+  val validator = new OppilaitosServiceValidation(hakuKoodiClient)
   override def beforeEach(): Unit = {
     super.beforeEach()
     when(hakuKoodiClient.tietoaOpiskelustaOtsikkoKoodiUriExists("organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
     when(hakuKoodiClient.postiosoitekoodiExists("posti_61100#2")).thenAnswer(itemFound)
   }
+
+  def passesValidation(
+    oppilaitos: Oppilaitos,
+    oldOppilaitos: Option[Oppilaitos] = None,
+    authenticated: Authenticated = authenticatedNonPaakayttaja
+  ): Unit = validator.withValidation(oppilaitos, oldOppilaitos, authenticated)(o => o)
+
+  def failsValidation(
+     oppilaitos: Oppilaitos,
+     path: String,
+     message: ErrorMessage
+  ): Assertion = failsValidation(oppilaitos, Seq(ValidationError(path, message)), authenticatedNonPaakayttaja)
+
+  def failsValidation(
+                       oppilaitos: Oppilaitos,
+                       expected: Seq[ValidationError],
+                       authenticated: Authenticated = authenticatedNonPaakayttaja
+                     ): Assertion =
+    Try(validator.withValidation(oppilaitos, None, authenticated)(o => o)) match {
+      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
+      case _ => fail("Expecting validation failure, but it succeeded")
+    }
 
   "Oppilaitos validation" should "pass a valid oppilaitos" in {
     passesValidation(max)
@@ -57,7 +103,7 @@ class OppilaitosServiceValidationSpec extends BaseServiceValidationSpec[Oppilait
   "Metadata validation" should "succeed when tietoa opiskelusta -data not changed, eventhough unknown otsikkoKoodiUri" in {
     val oppilaitos =
       min.copy(metadata = Some(OppilaitosMetadata(tietoaOpiskelusta = Seq(TietoaOpiskelusta("puppu", Map())))))
-    passesValidation(oppilaitos, oppilaitos)
+    passesValidation(oppilaitos, Some(oppilaitos))
   }
 
   it should "fail if invalid tietoa opiskelusta -data" in {
@@ -131,12 +177,12 @@ class OppilaitosServiceValidationSpec extends BaseServiceValidationSpec[Oppilait
 
   "Yhteystieto validation" should "succeed when postiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
     val oppilaitos = minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite))
-    passesValidation(oppilaitos, oppilaitos)
+    passesValidation(oppilaitos, Some(oppilaitos))
   }
 
   it should "succeed when kayntiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
     val oppilaitos = minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite))
-    passesValidation(oppilaitos, oppilaitos)
+    passesValidation(oppilaitos, Some(oppilaitos))
   }
 
   it should "fail if invalid postiosoite" in {
@@ -180,4 +226,21 @@ class OppilaitosServiceValidationSpec extends BaseServiceValidationSpec[Oppilait
       )
     )
   }
+
+  it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
+    passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
+  }
+
+  it should "fail if non oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))),
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      ErrorMessage(
+        msg = "Vain OPH:n pääkäyttäjä voi muuttaa tiedon järjestääkö oppilaitos urheilijan ammatillista koulutusta",
+        id = "invalidRightsForChangingJarjestaaUrheilijanAmmatillistaKoulutusta"
+      )
+    )
+  }
+
+  val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
 }

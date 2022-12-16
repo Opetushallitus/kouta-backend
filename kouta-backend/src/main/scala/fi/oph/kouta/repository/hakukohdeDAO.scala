@@ -27,6 +27,7 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
   def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
   def getDependencyInformation(hakukohde: Hakukohde): Option[HakukohdeDependencyInformation]
+  def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int]
 }
 
 object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
@@ -127,10 +128,13 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       KoutaDatabase.runBlocking(selectToteutusDependencyInformation(hakukohde))
     val valintaperusteDependencyInfo: Option[HakukohdeValintaperusteDependencyInfo] =
       KoutaDatabase.runBlocking(selectValintaperusteDependencyInformation(hakukohde))
-    (toteutusDependencyInfo, valintaperusteDependencyInfo) match {
-      case (Some(toteutusInfo), Some(valintaperusteInfo)) => Some(HakukohdeDependencyInformation(toteutusInfo, Some(valintaperusteInfo)))
-      case (Some(toteutusInfo), None) => Some(HakukohdeDependencyInformation(toteutusInfo, None))
-      case (None, _) => None
+    val jarjestyspaikkaDependencyInfo: Option[HakukohdeJarjestyspaikkaDependencyInfo] = hakukohde.jarjestyspaikkaOid match {
+      case Some(jarjestyspaikkaOid) => KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid))
+      case None                     => None
+    }
+    toteutusDependencyInfo match {
+      case Some(toteutusInfo) => Some(HakukohdeDependencyInformation(toteutusInfo, valintaperusteDependencyInfo, jarjestyspaikkaDependencyInfo))
+      case None => None
     }
   }
 
@@ -581,6 +585,12 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
           where id = ${hakukohde.valintaperusteId.map(_.toString)}::uuid and tila != 'poistettu'::julkaisutila
     """.as[HakukohdeValintaperusteDependencyInfo].headOption
 
+  def selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Option[HakukohdeJarjestyspaikkaDependencyInfo]] =
+    sql"""select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitokset where oid = ${jarjestyspaikkaOid.toString}
+          union
+          select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitosten_osat where oid = ${jarjestyspaikkaOid.toString}
+       """.as[HakukohdeJarjestyspaikkaDependencyInfo].headOption
+
   def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
     sql"""select
        hk.oid,
@@ -681,5 +691,21 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
 
   def updateHakukohdesToArchivedByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): DBIO[Int] = {
     sqlu"""update hakukohteet set tila = 'arkistoitu' where oid in (#${createOidInParams(hakukohdeOids)}) and tila = 'julkaistu'"""
+  }
+
+  def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(jarjestyspaikkaOid: OrganisaatioOid): DBIO[Int] = {
+    sqlu"""
+    update hakukohteet
+    set metadata = jsonb_set(metadata, '{jarjestaaUrheilijanAmmKoulutusta}', 'false'::jsonb, false)
+    where oid in (
+        select hk.oid
+        from hakukohteet hk
+        join toteutukset t on t.oid = hk.toteutus_oid
+        join koulutukset k on k.oid = t.koulutus_oid
+        where hk.jarjestyspaikka_oid = ${jarjestyspaikkaOid.toString}
+          and hk.metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' = 'true'
+          and hk.tila in ('tallennettu', 'julkaistu')
+          and k.tyyppi = 'amm'
+    );"""
   }
 }

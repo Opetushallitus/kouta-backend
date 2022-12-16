@@ -21,7 +21,13 @@ case class HakukohdeValintaperusteDependencyInfo(
     valintakoeIdt: Seq[UUID]
 )
 
+case class HakukohdeJarjestyspaikkaDependencyInfo(
+    oid: OrganisaatioOid,
+    jarjestaaUrheilijanAmmKoulutusta: Option[Boolean]
+)
+
 case class HakukohdeDependencyInformation(
     toteutus: HakukohdeToteutusDependencyInfo,
-    valintaperuste: Option[HakukohdeValintaperusteDependencyInfo]
+    valintaperuste: Option[HakukohdeValintaperusteDependencyInfo],
+    jarjestyspaikka: Option[HakukohdeJarjestyspaikkaDependencyInfo]
 )

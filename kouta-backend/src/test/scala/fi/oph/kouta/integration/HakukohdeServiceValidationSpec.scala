@@ -110,7 +110,11 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Amm,
         Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
       )
-    )
+    ),
+    Some(HakukohdeJarjestyspaikkaDependencyInfo(
+      oid = OrganisaatioOid("DUMMY"),
+      jarjestaaUrheilijanAmmKoulutusta = Some(true)
+    ))
   )
 
   val lukioDependencies = HakukohdeDependencyInformation(
@@ -130,7 +134,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         Lk,
         Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
       )
-    )
+    ),
+    None
   )
 
   def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
@@ -162,7 +167,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
               toteutusMetadata.tyyppi,
               Seq(valintaperusteenValintakoeId1, valintaperusteenValintakoeId2)
             )
-          )
+          ),
+          None
         )
       )
     )
@@ -297,6 +303,48 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "succeed when new incomplete luonnos" in {
     passesValidation(min)
+  }
+
+  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta when orgganisaatio is allowed" in {
+    passesValidation(
+      initMockSeq(
+        max.copy(
+          metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))
+        )
+      )
+    )
+  }
+
+  it should "succeed when new lk-hakukohde with jarjestaaUrheilijanAmmKoulutusta" in {
+    val lkHakukohde = max.copy(
+      nimi = Map(Fi -> "painotus", Sv -> "painotus sv"),
+      metadata = Some(
+        maxMetadata.copy(
+          hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))),
+          jarjestaaUrheilijanAmmKoulutusta = Some(true)
+        )
+      )
+    )
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    failsValidation(
+      lkHakukohde,
+      Seq(
+        ValidationError(
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          ErrorMessage(
+            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
+            "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+          )
+        ),
+        ValidationError(
+          "metadata.jarjestaaUrheilijanAmmKoulutusta",
+          ErrorMessage(
+            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on false",
+            "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
+          )
+        )
+      )
+    )
   }
 
   it should "succeed when new amm-hakukohde for yhteishaku with correct hakukohdeKoodiUri" in {
