@@ -277,7 +277,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val kuvaus: Map[Kieli, String] = (result \ "kuvausKomoto" \ "SISALTO" \ "tekstis").extractOpt[Map[String,String]].map(toKieliMap).getOrElse(Map())
 
-    val opintojenLaajuusPistetta = (result \ "opintojenLaajuusPistetta").extractOpt[String].map(_.toDouble)
+    val opintojenLaajuusPistetta = Try((result \ "opintojenLaajuusPistetta").extractOpt[String].map(_.toDouble)).getOrElse(None)
     val opintojenLaajuusyksikkoKoodiUri = if(opintojenLaajuusPistetta.isDefined) Some("opintojenlaajuusyksikko_2#1") else None
     val tutkintonimeksOpt = (result \ "tutkintonimikes" \ "uris").extractOpt[Map[String, Int]]
     val tutikintonimikes = tutkintonimeksOpt match {
@@ -355,7 +355,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
     //val koulutusasteUri = (result \ "koulutusaste" \ "uri").extract[String]
     val oid = (result \ "oid").extractOpt[String].map(ToteutusOid)
 
-    val opintojenLaajuusPistetta = (result \ "opintojenLaajuusPistetta").extractOpt[String].map(_.toDouble)
+    val opintojenLaajuusPistetta = Try((result \ "opintojenLaajuusPistetta").extractOpt[String].map(_.toDouble)).getOrElse(None)
     val opintojenLaajuusyksikkoKoodiUri = if (opintojenLaajuusPistetta.isDefined) Some("opintojenlaajuusyksikko_2#1") else None
 
     val opinnonTyyppiKoodiUri = (result \ "opinnonTyyppiUri").extractOpt[String].map(uri => uri + "#1")
