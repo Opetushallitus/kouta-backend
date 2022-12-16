@@ -300,7 +300,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           lisatiedot = lisatiedot,
           koulutusalaKoodiUrit = koulutusalaKoodiUrit,
           isAvoinKorkeakoulutus = Some(true),
-          opintojenLaajuusNumero = opintojenLaajuusPistetta,
+          opintojenLaajuusNumeroMin = opintojenLaajuusPistetta,
+          opintojenLaajuusNumeroMax = opintojenLaajuusPistetta,
           opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
           tunniste = tunniste
         )
