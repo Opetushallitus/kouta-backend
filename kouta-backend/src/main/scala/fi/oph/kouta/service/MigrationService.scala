@@ -208,7 +208,31 @@ trait MigrationHelpers extends Logging {
       suunniteltuKestoKuvaus = suunniteltuKestoKuvaus)
   }
 
+  def toYhteyshenkilot(result: JValue, kielivalinta: Seq[Kieli]): Seq[Yhteyshenkilo] = {
+    val tarjontaYhteyshenkilot: Option[Seq[TarjontaYhteyshenkilo]] = (result \ "yhteyshenkilos").extract[Option[Seq[TarjontaYhteyshenkilo]]]
+    val yhteyshenkilot = tarjontaYhteyshenkilot.map(tyhSeq => tyhSeq.map(tyh => {
+      val nimi: Map[Kieli, String] = tyh.nimi.map(value => kielivalinta.map((_, value)).toMap).getOrElse(Map())
+      val titteli: Map[Kieli, String] = tyh.titteli.map(value => kielivalinta.map((_, value)).toMap).getOrElse(Map())
+      val sahkoposti: Map[Kieli, String] = tyh.sahkoposti.map(value => kielivalinta.map((_, value)).toMap).getOrElse(Map())
+      val puhelin: Map[Kieli, String] = tyh.puhelin.map(value => kielivalinta.map((_, value)).toMap).getOrElse(Map())
+      Yhteyshenkilo(
+        nimi = nimi,
+        titteli = titteli,
+        sahkoposti = sahkoposti,
+        puhelinnumero = puhelin,
+        wwwSivu = Map()
+      )
+    }))
+    yhteyshenkilot.getOrElse(Seq())
+  }
 }
+
+case class TarjontaYhteyshenkilo(
+  nimi: Option[String],
+  titteli: Option[String],
+  sahkoposti: Option[String],
+  puhelin: Option[String],
+)
 
 object MigrationService extends MigrationService(OrganisaatioServiceImpl)
 
@@ -365,6 +389,8 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
 
     val asiasanat = (result \ "oppiaineet").extract[Option[List[Map[String, String]]]].map(list => list.map(m => Keyword(toKieliWithFiAsDefault(m("kieliKoodi")), m("oppiaine")))).getOrElse(List()).take(20)
 
+    val yhteyshenkilot = toYhteyshenkilot(result, opetuskielet)
+
     val koulutusmoduuliTyyppi = (result \ "koulutusmoduuliTyyppi").extract[String]
     val koulutustyyppi: Koulutustyyppi = koulutusmoduuliTyyppi match {
       case "OPINTOKOKONAISUUS" => KkOpintokokonaisuus
@@ -378,7 +404,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = asiasanat,
           ammattinimikkeet = List(),
-          yhteyshenkilot = Seq(),
+          yhteyshenkilot = yhteyshenkilot,
           opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
           hakutermi = Some(Hakeutuminen),
           hakulomaketyyppi = Some(Ataru),
@@ -392,7 +418,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = asiasanat,
           ammattinimikkeet = List(),
-          yhteyshenkilot = Seq(),
+          yhteyshenkilot = yhteyshenkilot,
           opinnonTyyppiKoodiUri = opinnonTyyppiKoodiUri,
           hakutermi = Some(Hakeutuminen),
           hakulomaketyyppi = Some(Ataru),
@@ -404,7 +430,7 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
           opetus = Some(toOpetus(result, koulutustyyppi)),
           asiasanat = asiasanat,
           ammattinimikkeet = List(),
-          yhteyshenkilot = Seq()
+          yhteyshenkilot = yhteyshenkilot
         )
         case _ => throw new RuntimeException(s"Tuntematon koulutustyyppi $koulutustyyppi toteutuksella $oid")
       })
