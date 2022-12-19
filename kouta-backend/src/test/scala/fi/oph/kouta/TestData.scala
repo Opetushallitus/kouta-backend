@@ -1492,6 +1492,7 @@ object TestData {
       s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
     nimi = Map(Fi -> "Organisation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     kotipaikkaUri = Some("kunta_123"),
+    status = "AKTIIVINEN",
     children = List(),
     organisaatiotyypit = List("organisaatiotyyppi_1")
   )
@@ -1501,6 +1502,7 @@ object TestData {
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+    status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaationOsa)
   )
@@ -1510,6 +1512,7 @@ object TestData {
     parentOidPath = s"${ParentOid.toString}/1.2.246.562.10.00000000001",
     oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Parent Organisaatio", Sv -> "Parent Organisation", En -> "Parent Organization"),
+    status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaatio)
   )

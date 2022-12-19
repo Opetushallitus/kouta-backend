@@ -133,7 +133,9 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Tuva,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      AikuistenPerusopetus
+      AikuistenPerusopetus,
+      KkOpintojakso,
+      KkOpintokokonaisuus
     ), //Liikunnan koulutuskeskukset
     "oppilaitostyyppi_63#1" -> Seq(
       Amm,

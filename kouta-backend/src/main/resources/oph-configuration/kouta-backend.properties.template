@@ -69,3 +69,11 @@ valinta-tulos-service.haku.alimmatpisteet=https://{{host_virkailija}}/valinta-tu
 
 legacy-tarjonta-service.hakukohde.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
 legacy-tarjonta-service.haku.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
+
+tarjonta-service.haku.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
+tarjonta-service.hakukohde.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
+tarjonta-service.komo.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komo/$1
+tarjonta-service.komoto.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/komoto/$1
+tarjonta-service.koulutus.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/koulutus/$1
+koodisto-service.codeelement=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2
+

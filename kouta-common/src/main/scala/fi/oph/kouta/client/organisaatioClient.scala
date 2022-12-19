@@ -38,4 +38,6 @@ case class OidAndChildren(oid: OrganisaatioOid,
   def isPassiivinen: Boolean = status.equalsIgnoreCase("PASSIIVINEN")
 
   def isOppilaitos: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_02")
+
+  def isKoulutustoimija: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_01")
 }
