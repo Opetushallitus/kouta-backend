@@ -37,7 +37,8 @@ trait IndexerFixture
         valintaperusteService,
         sorakuvausService,
         oppilaitosService,
-        oppilaitoksenOsaService
+        oppilaitoksenOsaService,
+        pistehistoriaService
       ),
       IndexerPath
     )

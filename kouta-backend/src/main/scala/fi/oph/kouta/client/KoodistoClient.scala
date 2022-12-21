@@ -1,7 +1,8 @@
 package fi.oph.kouta.client
 
-import com.github.blemale.scaffeine.Cache
-import fi.oph.kouta.client.KoodistoUtils.splitToBaseAndVersion
+import com.github.blemale.scaffeine.{Cache, Scaffeine}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, splitToBaseAndVersion}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.{Kieli, Kielistetty}
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
@@ -13,6 +14,8 @@ import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalDateTime, LocalTime, ZonedDateTime}
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
+import scala.concurrent.duration.DurationInt
+
 
 case class KoodiUri(koodiUri: String, versio: Int, nimi: Kielistetty = Map()) {
   def this(koodiUri: String, versio: Int, metadata: List[KoodistoMetadataElement]) = {
@@ -34,7 +37,11 @@ case class KoodistoElement(
     versio: Int = 1,
     koodisto: Option[KoodistoSubElement],
     voimassaLoppuPvm: Option[String]
-)
+) {
+  def belongsToKoodisto(koodistoUri: String): Boolean = {
+    koodisto.exists(k => koodistoUri.equals(k.koodistoUri))
+  }
+}
 
 case class KoodistoMetadataElement(
     nimi: String = "",
@@ -107,6 +114,16 @@ object KoodistoUtils {
     }
 }
 
+object BasicCachedKoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configuration.urlProperties) {
+  val rinnasteinenKoodiUriCache: Cache[(String, String), Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(10.minutes)
+    .build()
+
+  def getRinnasteisetCached(koodiUri: String, koodisto: String) = {
+    rinnasteinenKoodiUriCache.get((koodiUri, koodisto), params => getRinnasteisetKooditInKoodisto(params._1, params._2))
+  }
+}
+
 abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
 
   val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -130,6 +147,29 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
           .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
       }
     }
+
+  def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiUri] = {
+    logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
+    try {
+      get(
+        urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", splitToBaseAndVersion(koodiUri)._1),
+        errorHandler,
+        followRedirects = true
+      ) { response => {
+        parse(response)
+          .extract[List[KoodistoElement]]
+          .filter((koodiUri: KoodistoElement) => koodiUri.belongsToKoodisto(koodisto) &&
+            isKoodiVoimassa(koodisto, koodiUri.koodiUri, dateToCompare = koodiUri.voimassaLoppuPvm))
+          .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
+      }
+      }
+    } catch {
+      case e: KoodistoQueryException if e.status == 404 => List.empty
+      case e: Throwable =>
+        logger.error("Rinnasteisten koodien haku epäonnistui: ", e)
+        throw e
+    }
+  }
 
   private def getAndUpdateFromKoodiUri(koodisto: String): Seq[KoodiUri] = {
     val contentDesc = s"koodiuris from koodisto $koodisto"

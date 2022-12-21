@@ -3,25 +3,50 @@ package fi.oph.kouta.servlet
 import java.net.URLDecoder
 import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{TilaFilter}
+import fi.oph.kouta.domain.TilaFilter
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.service.{HakuService, HakukohdeService, KoulutusService, ModificationService, OppilaitoksenOsaService, OppilaitosService, SorakuvausService, ToteutusService, ValintaperusteService}
+import fi.oph.kouta.service.{
+  HakuService,
+  HakukohdeService,
+  KoulutusService,
+  ModificationService,
+  OppilaitoksenOsaService,
+  OppilaitosService,
+  PistehistoriaService,
+  SorakuvausService,
+  ToteutusService,
+  ValintaperusteService
+}
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
-import org.scalatra.{NotFound, Ok}
+import org.scalatra.{BadRequest, InternalServerError, NotFound, Ok}
 
-class IndexerServlet(koulutusService: KoulutusService,
-                     toteutusService: ToteutusService,
-                     hakuService: HakuService,
-                     hakukohdeService: HakukohdeService,
-                     valintaperusteService: ValintaperusteService,
-                     sorakuvausService: SorakuvausService,
-                     oppilaitosService: OppilaitosService,
-                     oppilaitoksenOsaService: OppilaitoksenOsaService) extends KoutaServlet {
+class IndexerServlet(
+    koulutusService: KoulutusService,
+    toteutusService: ToteutusService,
+    hakuService: HakuService,
+    hakukohdeService: HakukohdeService,
+    valintaperusteService: ValintaperusteService,
+    sorakuvausService: SorakuvausService,
+    oppilaitosService: OppilaitosService,
+    oppilaitoksenOsaService: OppilaitoksenOsaService,
+    pistehistoriaService: PistehistoriaService
+) extends KoutaServlet {
 
-  def this() = this(KoulutusService, ToteutusService, HakuService, HakukohdeService, ValintaperusteService, SorakuvausService, OppilaitosService, OppilaitoksenOsaService)
+  def this() = this(
+    KoulutusService,
+    ToteutusService,
+    HakuService,
+    HakukohdeService,
+    ValintaperusteService,
+    SorakuvausService,
+    OppilaitosService,
+    OppilaitoksenOsaService,
+    PistehistoriaService
+  )
 
-  registerPath("/indexer/modifiedSince/{since}",
+  registerPath(
+    "/indexer/modifiedSince/{since}",
     s"""    get:
        |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
        |      operationId: indexerModifiedSince
@@ -43,7 +68,8 @@ class IndexerServlet(koulutusService: KoulutusService,
        |            application/json:
        |              schema:
        |                $$ref: '#/components/schemas/ListEverything'
-       |""".stripMargin)
+       |""".stripMargin
+  )
   get("/modifiedSince/:since") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -51,7 +77,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(ModificationService.getModifiedSince(parseHttpDate(URLDecoder.decode(params("since"), "UTF-8"))))
   }
 
-  registerPath("/indexer/tarjoaja/{organisaatioOid}/koulutukset",
+  registerPath(
+    "/indexer/tarjoaja/{organisaatioOid}/koulutukset",
     """    get:
       |      summary: Hakee julkaistut koulutukset, joissa organisaatio tai sen aliorganisaatio on tarjoajana
       |      operationId: indexerJulkaistutKoulutukset
@@ -76,7 +103,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/KoulutusListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/tarjoaja/:organisaatioOid/koulutukset") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -84,7 +112,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
   }
 
-  registerPath("/indexer/koulutus/{oid}/toteutukset",
+  registerPath(
+    "/indexer/koulutus/{oid}/toteutukset",
     """    get:
       |      summary: Hae koulutuksen toteutukset
       |      operationId: indexerKoulutusToteutukset
@@ -122,18 +151,24 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/Toteutus'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/koulutus/:oid/toteutukset") {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val vainJulkaistut = params.getOrElse("vainJulkaistut", "false").toBoolean
+    val vainJulkaistut     = params.getOrElse("vainJulkaistut", "false").toBoolean
     val vainOlemassaolevat = params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(koulutusService.toteutukset(KoulutusOid(params("oid")),
-      TilaFilter.vainJulkaistutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)))
+    Ok(
+      koulutusService.toteutukset(
+        KoulutusOid(params("oid")),
+        TilaFilter.vainJulkaistutOrVainOlemassaolevat(vainJulkaistut, vainOlemassaolevat)
+      )
+    )
   }
 
-  registerPath("/indexer/koulutus/{oid}/toteutukset/list",
+  registerPath(
+    "/indexer/koulutus/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutuksen toteutukset
       |      operationId: indexerListKoulutusToteutukset
@@ -164,17 +199,20 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/ToteutusListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/koulutus/:oid/toteutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate()
 
     val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(
+      koulutusService.listToteutukset(KoulutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut))
+    )
   }
 
-  registerPath("/indexer/koulutus/{oid}/hakutiedot",
+  registerPath(
+    "/indexer/koulutus/{oid}/hakutiedot",
     """    get:
       |      summary: Hae koulutukseen liittyvät hakutiedot
       |      operationId: indexerKoulutusHakutiedot
@@ -198,7 +236,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/Hakutieto'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/koulutus/:oid/hakutiedot") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -206,7 +245,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(koulutusService.hakutiedot(KoulutusOid(params("oid"))))
   }
 
-  registerPath("/indexer/toteutus/{oid}/haut/list",
+  registerPath(
+    "/indexer/toteutus/{oid}/haut/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt haut
       |      operationId: indexerListToteutusHaut
@@ -237,17 +277,18 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/HakuListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/toteutus/:oid/haut/list") {
 
     implicit val authenticated: Authenticated = authenticate()
 
     val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(toteutusService.listHaut(ToteutusOid(params("oid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(toteutusService.listHaut(ToteutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath("/indexer/toteutus/{oid}/hakukohteet/list",
+  registerPath(
+    "/indexer/toteutus/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
       |      operationId: listToteutusHakukohteet
@@ -278,16 +319,19 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/toteutus/:oid/hakukohteet/list") {
     implicit val authenticated: Authenticated = authenticate()
 
     val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(toteutusService.listHakukohteet(ToteutusOid(params("oid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(
+      toteutusService.listHakukohteet(ToteutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut))
+    )
   }
 
-  registerPath("/indexer/haku/{oid}/hakukohteet/list",
+  registerPath(
+    "/indexer/haku/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun
       |      operationId: indexerListHakuHakukohteet
@@ -318,16 +362,17 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/haku/:oid/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
-    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(hakuService.listHakukohteet(HakuOid(params("oid")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    val myosPoistetut                         = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
+    Ok(hakuService.listHakukohteet(HakuOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
   }
 
-  registerPath("/indexer/haku/{oid}/koulutukset/list",
+  registerPath(
+    "/indexer/haku/{oid}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt koulutukset
       |      operationId: indexerListHakuKoulutukset
@@ -351,7 +396,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/KoulutusListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/haku/:oid/koulutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -359,7 +405,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(hakuService.listKoulutukset(HakuOid(params("oid"))))
   }
 
-  registerPath("/indexer/haku/{oid}/toteutukset/list",
+  registerPath(
+    "/indexer/haku/{oid}/toteutukset/list",
     """    get:
       |      summary: Listaa kaikki hakuun liitetyt toteutukset
       |      operationId: indexerListHakuToteutukset
@@ -383,7 +430,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/ToteutusListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/haku/:oid/toteutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -391,7 +439,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(hakuService.listToteutukset(HakuOid(params("oid"))))
   }
 
-  registerPath("/indexer/valintaperuste/{id}/hakukohteet/list",
+  registerPath(
+    "/indexer/valintaperuste/{id}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, joihin valintaperustekuvaus on liitetty
       |      operationId: indexerListValintaperusteHakukohteet
@@ -422,17 +471,23 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/valintaperuste/:id/hakukohteet/list") {
 
     implicit val authenticated: Authenticated = authenticate()
 
     val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(valintaperusteService.listHakukohteet(UUID.fromString(params("id")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(
+      valintaperusteService.listHakukohteet(
+        UUID.fromString(params("id")),
+        TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)
+      )
+    )
   }
 
-  registerPath("/indexer/sorakuvaus/{id}/koulutukset/list",
+  registerPath(
+    "/indexer/sorakuvaus/{id}/koulutukset/list",
     """    get:
       |      summary: Listaa kaikki koulutukset, joihin SORA-kuvaus on liitetty
       |      operationId: indexerListSorakuvausKoulutukset
@@ -463,17 +518,23 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  type: string
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/sorakuvaus/:id/koulutukset/list") {
 
     implicit val authenticated: Authenticated = authenticate()
 
     val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(sorakuvausService.listKoulutusOids(UUID.fromString(params("id")),
-      TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)))
+    Ok(
+      sorakuvausService.listKoulutusOids(
+        UUID.fromString(params("id")),
+        TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut)
+      )
+    )
   }
 
-  registerPath("/indexer/oppilaitos/{oid}/osat/list",
+  registerPath(
+    "/indexer/oppilaitos/{oid}/osat/list",
     """    get:
       |      summary: Listaa kaikki oppilaitoksen osien kuvailutiedot
       |      operationId: indexerListOppilaitosOsat
@@ -497,7 +558,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/OppilaitoksenOsaListItem'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/oppilaitos/:oid/osat/list") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -505,7 +567,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath("/indexer/oppilaitos/{oid}/osat",
+  registerPath(
+    "/indexer/oppilaitos/{oid}/osat",
     """    get:
       |      summary: Hakee oppilaitoksen kaikkien osien kuvailutiedot
       |      operationId: indexerGetOppilaitosOsat
@@ -529,7 +592,8 @@ class IndexerServlet(koulutusService: KoulutusService,
       |                type: array
       |                items:
       |                  $ref: '#/components/schemas/OppilaitoksenOsa'
-      |""".stripMargin)
+      |""".stripMargin
+  )
   get("/oppilaitos/:oid/osat") {
 
     implicit val authenticated: Authenticated = authenticate()
@@ -537,7 +601,8 @@ class IndexerServlet(koulutusService: KoulutusService,
     Ok(oppilaitosService.getOppilaitoksenOsat(OrganisaatioOid(params("oid"))))
   }
 
-  registerPath("/indexer/list-hakukohde-oids-by-jarjestyspaikat",
+  registerPath(
+    "/indexer/list-hakukohde-oids-by-jarjestyspaikat",
     """    post:
       |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
       |      operationId: indexerListHakukohdeOidsByJarjestyspaikat
@@ -557,15 +622,21 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/list-hakukohde-oids-by-jarjestyspaikat") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(hakukohdeService.getOidsByJarjestyspaikat(parsedBody.extract[Seq[OrganisaatioOid]],
-      TilaFilter.onlyOlemassaolevat()))
+    Ok(
+      hakukohdeService.getOidsByJarjestyspaikat(
+        parsedBody.extract[Seq[OrganisaatioOid]],
+        TilaFilter.onlyOlemassaolevat()
+      )
+    )
   }
 
-  registerPath("/indexer/list-toteutus-oids-by-tarjoajat",
+  registerPath(
+    "/indexer/list-toteutus-oids-by-tarjoajat",
     """    post:
       |      summary: Hakee tarjoajaa (oppilaitos tai toimipiste) vastaavat toteutukset
       |      operationId: indexerListToteutusOidsByTarjoajat
@@ -585,15 +656,16 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/list-toteutus-oids-by-tarjoajat") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]],
-      TilaFilter.onlyOlemassaolevat()))
+    Ok(ToteutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]], TilaFilter.onlyOlemassaolevat()))
   }
 
-  registerPath("/indexer/toteutukset",
+  registerPath(
+    "/indexer/toteutukset",
     """    post:
       |      summary: Hakee toteutukset, joiden oidit annettu requestBodyssä
       |      operationId: indexerToteutukset
@@ -613,14 +685,16 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/toteutukset") {
 
     implicit val authenticated: Authenticated = authenticate()
     Ok(ToteutusService.getToteutukset(parsedBody.extract[List[ToteutusOid]]))
   }
 
-  registerPath("/indexer/list-opintokokonaisuudet",
+  registerPath(
+    "/indexer/list-opintokokonaisuudet",
     """    post:
       |      summary: Hakee niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty
       |      operationId: indexerListOpintokokonaisuudet
@@ -640,10 +714,110 @@ class IndexerServlet(koulutusService: KoulutusService,
       |      responses:
       |        '200':
       |          description: Ok
-      |""".stripMargin)
+      |""".stripMargin
+  )
   post("/list-opintokokonaisuudet") {
 
     implicit val authenticated: Authenticated = authenticate()
     Ok(ToteutusService.listOpintokokonaisuudet(parsedBody.extract[List[ToteutusOid]]))
+  }
+
+  registerPath(
+    "/indexer/pistehistoria",
+    """    get:
+      |      summary: Palauttaa tarjoajan ja hakukohdekoodin tai lukiolinjakoodin yhdistelmään liittyvät pistetiedot
+      |      operationId: indexerListPistetiedot
+      |      description: Listaa pistetiedot. Tarjoaja JA joko hakukohdekoodi TAI lukiolinjakoodi annettava.
+      |      tags:
+      |        - Indexer
+      |      parameters:
+      |        - in: query
+      |          name: tarjoaja
+      |          schema:
+      |            type: String
+      |          example: 1.2.246.562.10.00101010101
+      |          description: Tarjoajaorganisaation oid
+      |        - in: query
+      |          name: hakukohdekoodi
+      |          schema:
+      |            type: String
+      |          example: hakukohteet_000
+      |          description: hakukohdekoodi
+      |        - in: query
+      |          name: lukiolinjakoodi
+      |          schema:
+      |            type: String
+      |          description: lukiolinjakoodi
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/Pistetieto'
+      |""".stripMargin
+  )
+  get("/pistehistoria") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val tarjoaja   = params.get("tarjoaja").map(OrganisaatioOid)
+    val hk         = params.get("hakukohdekoodi").map(koodi => koodi.split("#").head)
+    val lukiolinja = if (hk.isDefined) None else params.get("lukiolinjakoodi").map(koodi => koodi.split("#").head)
+
+    (tarjoaja, hk, lukiolinja) match {
+      case (None, _, _)           => BadRequest("error" -> "Pakollinen parametri puuttui: tarjoaja")
+      case (_, None, None)        => BadRequest("error" -> "Pakollinen parametri puuttui: hakukohdekoodi TAI lukiolinjakoodi")
+      case (Some(t), Some(h), _)  => Ok(pistehistoriaService.getPistehistoria(t, h))
+      case (Some(t), _, Some(ll)) => Ok(pistehistoriaService.getPistehistoriaForLukiolinja(t, ll))
+    }
+  }
+
+  registerPath(
+    "/indexer/pistehistoria/sync",
+    """    get:
+      |      summary: Hakee haun hakukohteiden alimmat pisteet ja tallentaa ne kantaan
+      |      operationId: indexerSyncHaunPistetiedot
+      |      description: Hakee haun hakukohteiden alimmat pisteet ja tallentaa ne kantaan
+      |      tags:
+      |        - Indexer
+      |      parameters:
+      |        - in: query
+      |          name: hakuOid
+      |          schema:
+      |            type: String
+      |          example: 1.2.246.562.29.54537554997
+      |          description: Yksittäisen haun oid tai "defaults" viiden edellisen toisen asteen yhteishaun synkronoimiseksi (2022)
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
+  )
+  get("/pistehistoria/sync") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    try {
+      val defaults = params.get("hakuOid").exists(_.equals("defaults"))
+
+      if (defaults) {
+        val result = pistehistoriaService.syncDefaults()
+        logger.info("Oletushaut synkattu: " + result)
+        Ok(result)
+      } else {
+        val hakuOid: Option[HakuOid] = params.get("hakuOid").map(HakuOid).filter(_.isValid)
+        hakuOid match {
+          case None => BadRequest("error" -> "Pakollinen parametri puuttuu: hakuOid")
+          case Some(oid) =>
+            Ok(pistehistoriaService.syncPistehistoriaForHaku(oid))
+        }
+      }
+    } catch {
+      case t: Throwable =>
+        logger.error(s"Jokin meni pieleen pistehistorian synkkauksessa: $t")
+        InternalServerError("error" -> t.getMessage)
+    }
   }
 }
