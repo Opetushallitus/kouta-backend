@@ -150,7 +150,7 @@ class PistehistoriaService extends Logging {
             tarjoaja = OrganisaatioOid(tarjoaja),
             hakukohdekoodi = hakukohde.hakukohteenNimiUri.map(_.split("#").head).getOrElse("SOS"),
             pt.alinHyvaksyttyPistemaara,
-            vuosi = haku.hakukausiVuosi.getOrElse("9999"), //todo, fallback to sijoitteluajoId?
+            vuosi = haku.hakukausiVuosi.get,
             valintatapajonoOid = pt.valintatapajonoOid,
             hakuOid = hakuOid,
             hakukohdeOid = HakukohdeOid(pt.hakukohdeOid)

@@ -21,7 +21,6 @@ class LegacyTarjontaClient extends HttpClient with CallerId with Logging with Ko
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   def getHakukohde(oid: String) = {
-    //logger.info(s"Getting hakukohde for oid $oid")
     val url = urlProperties.url(
       s"legacy-tarjonta-service.hakukohde.oid", oid)
     get(url, followRedirects = true) {
@@ -32,7 +31,6 @@ class LegacyTarjontaClient extends HttpClient with CallerId with Logging with Ko
   }
 
   def getHaku(oid: String) = {
-    logger.info(s"Getting haku for oid $oid")
     val url = urlProperties.url(
       s"legacy-tarjonta-service.haku.oid", oid)
     get(url, followRedirects = true) {
