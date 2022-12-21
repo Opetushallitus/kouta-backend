@@ -7,8 +7,10 @@ import fi.oph.kouta.client.{
   ValintaTulosServiceClient
 }
 import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, PistehistoriaDAO}
+import fi.oph.kouta.security.Role
+import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.utils.slf4j.Logging
 
 import scala.collection.parallel.ForkJoinTaskSupport
@@ -167,7 +169,7 @@ class PistehistoriaService extends Logging {
   //2020: 1.2.246.562.29.54537554997
   //2019: 1.2.246.562.29.676633696010
   //2018: 1.2.246.562.29.557 39081531
-  def syncDefaults(): String = {
+  def syncDefaults()(implicit authenticated: Authenticated): String = {
     val hakuOids = Seq(
       HakuOid("1.2.246.562.29.55739081531"),
       HakuOid("1.2.246.562.29.676633696010"),
@@ -181,7 +183,11 @@ class PistehistoriaService extends Logging {
     }).mkString("\n")
   }
 
-  def syncPistehistoriaForHaku(hakuOid: HakuOid): String = {
+  def syncPistehistoriaForHaku(hakuOid: HakuOid)(implicit authenticated: Authenticated): String = {
+    if (!authenticated.session.roleMap.exists(r => r._1.equals(Role.Indexer) && r._2.contains(RootOrganisaatioOid))) {
+      logger.error(s"Käyttäjällä ${authenticated.session.personOid} ei ole rekisterinpitäjän oikeuksia, joten ei voida synkata pistehistoriaa haulle $hakuOid.")
+      throw OrganizationAuthorizationFailedException(Seq(RootOrganisaatioOid), Seq.empty)
+    }
     try {
       val result = hakuOid.toString match {
         case oid if oid.length != 35 => syncPistehistoriaForLegacyHaku(hakuOid)
