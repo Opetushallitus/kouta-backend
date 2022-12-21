@@ -359,8 +359,7 @@ class KoulutusService(
 
           val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
           val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-          val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: Nil).flatten
       }
     }
   }
