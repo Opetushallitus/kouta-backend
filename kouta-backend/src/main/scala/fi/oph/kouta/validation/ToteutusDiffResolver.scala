@@ -1,18 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{
-  AmmatillinenOsaamisala,
-  AmmatillinenToteutusMetadata,
-  Kielivalikoima,
-  KoulutuksenAlkamiskausi,
-  Lisatieto,
-  LukioToteutusMetadata,
-  LukiodiplomiTieto,
-  LukiolinjaTieto,
-  Opetus,
-  Toteutus,
-  ToteutusMetadata
-}
+import fi.oph.kouta.domain.{AmmatillinenOsaamisala, AmmatillinenToteutusMetadata, Kielivalikoima, KoulutuksenAlkamiskausi, Lisatieto, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Opetus, TaiteidenPerusopetusToteutusMetadata, Toteutus, ToteutusMetadata}
 
 case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus]) {
   private def oldMetadata(): Option[ToteutusMetadata] = oldToteutus.flatMap(_.metadata)
@@ -113,46 +101,58 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
 
   def isAvoinKkChanged(): Boolean = oldToteutus match {
     case Some(old: Toteutus) => toteutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
-    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+    case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+  }
+
+  def newOpintojenLaajuusyksikkoKoodiUri(): Option[String] = {
+    val koodiUri = opintojenLaajuusyksikkoKoodiUri(toteutus.metadata)
+    if (koodiUri != opintojenLaajuusyksikkoKoodiUri(oldMetadata())) koodiUri else None
+  }
+
+  def newTaiteenalaKoodiUri(): Option[String] = {
+    val koodiUri = taiteenalaKoodiUri(toteutus.metadata)
+    if (koodiUri != taiteenalaKoodiUri(oldMetadata())) koodiUri else None
   }
 
   private def ammatillisetOsaamisalat(metadata: Option[ToteutusMetadata]): Seq[AmmatillinenOsaamisala] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: AmmatillinenToteutusMetadata => m.osaamisalat
-        case _                               => Seq()
-      }
+    metadata match {
+      case Some(m: AmmatillinenToteutusMetadata) => m.osaamisalat
+      case _                                     => Seq()
+    }
 
   private def kielivalikoima(metadata: Option[ToteutusMetadata]): Option[Kielivalikoima] =
-    if (!metadata.isDefined) None
-    else
-      metadata.get match {
-        case m: LukioToteutusMetadata => m.kielivalikoima
-        case _                        => None
-      }
+    metadata match {
+      case Some(m: LukioToteutusMetadata) => m.kielivalikoima
+      case _                              => None
+    }
 
   private def lukioPainotukset(metadata: Option[ToteutusMetadata]): Seq[LukiolinjaTieto] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: LukioToteutusMetadata => m.painotukset
-        case _                        => Seq()
-      }
+    metadata match {
+      case Some(m: LukioToteutusMetadata) => m.painotukset
+      case _                              => Seq()
+    }
 
   private def lukioErityisetKoulutustehtavat(metadata: Option[ToteutusMetadata]): Seq[LukiolinjaTieto] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: LukioToteutusMetadata => m.erityisetKoulutustehtavat
-        case _                        => Seq()
-      }
+    metadata match {
+      case Some(m: LukioToteutusMetadata) => m.erityisetKoulutustehtavat
+      case _                              => Seq()
+    }
 
   private def lukioDiplomit(metadata: Option[ToteutusMetadata]): Seq[LukiodiplomiTieto] =
-    if (!metadata.isDefined) Seq()
-    else
-      metadata.get match {
-        case m: LukioToteutusMetadata => m.diplomit
-        case _                        => Seq()
-      }
+    metadata match {
+      case Some(m: LukioToteutusMetadata) => m.diplomit
+      case _                              => Seq()
+    }
+
+  private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[ToteutusMetadata]): Option[String] =
+    metadata match {
+      case Some(m: TaiteidenPerusopetusToteutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
+      case _                                             => None
+    }
+
+  private def taiteenalaKoodiUri(metadata: Option[ToteutusMetadata]): Option[String] =
+    metadata match {
+      case Some(m: TaiteidenPerusopetusToteutusMetadata) => m.taiteenalaKoodiUri
+      case _                                             => None
+    }
 }

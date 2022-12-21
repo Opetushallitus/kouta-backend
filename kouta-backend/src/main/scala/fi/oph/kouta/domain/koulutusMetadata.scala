@@ -469,9 +469,46 @@ package object koulutusMetadata {
       |              example: 20
       |""".stripMargin
 
-  val models = List(KoulutusMetadataModel, AmmatillinenKoulutusMetadataModel, KorkeakouluMetadataModel, AmmattikorkeaKoulutusMetadataModel, AmmOpeErityisopeJaOpoKoulutusMetadataModel, OpePedagOpinnotKoulutusMetadataModel,
-    YliopistoKoulutusMetadataModel, KkOpintojaksoKoulutusMetadataModel, AmmatillinenTutkinnonOsaKoulutusMetadataModel, AmmatillinenOsaamisalaKoulutusMetadataModel, AmmatillinenMuuKoulutusMetadataModel, LukioKoulutusMetadataModel,
-    TuvaKoulutusMetadataModel, TelmaKoulutusMetadataModel, VapaaSivistystyoKoulutusMetadataModel, AikuistenPerusopetusKoulutusMetadataModel, ErikoislaakariKoulutusMetadataModel, KkOpintokokonaisuusKoulutusMetadataModel, ErikoistumiskoulutusMetadataModel)
+  val TaiteidenPerusopetusKoulutusMetadataModel: String =
+    """    TaiteidenPerusopetusKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: taiteiden-perusopetus
+      |              enum:
+      |                - taiteiden-perusopetus
+      |            linkkiEPerusteisiin:
+      |              type: string
+      |              description: Linkki koulutuksen eperusteisiin
+      |              example: https://eperusteet.opintopolku.fi/#/fi/kooste/taiteenperusopetus
+      |""".stripMargin
+
+  val models = List(
+    KoulutusMetadataModel,
+    AmmatillinenKoulutusMetadataModel,
+    KorkeakouluMetadataModel,
+    AmmattikorkeaKoulutusMetadataModel,
+    AmmOpeErityisopeJaOpoKoulutusMetadataModel,
+    OpePedagOpinnotKoulutusMetadataModel,
+    YliopistoKoulutusMetadataModel,
+    KkOpintojaksoKoulutusMetadataModel,
+    AmmatillinenTutkinnonOsaKoulutusMetadataModel,
+    AmmatillinenOsaamisalaKoulutusMetadataModel,
+    AmmatillinenMuuKoulutusMetadataModel,
+    LukioKoulutusMetadataModel,
+    TuvaKoulutusMetadataModel,
+    TelmaKoulutusMetadataModel,
+    VapaaSivistystyoKoulutusMetadataModel,
+    AikuistenPerusopetusKoulutusMetadataModel,
+    ErikoislaakariKoulutusMetadataModel,
+    KkOpintokokonaisuusKoulutusMetadataModel,
+    ErikoistumiskoulutusMetadataModel,
+    TaiteidenPerusopetusKoulutusMetadataModel
+  )
 }
 
 sealed trait KoulutusMetadata {
@@ -606,51 +643,64 @@ trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata {
   val opintojenLaajuusNumero: Option[Double]
 }
 
-case class VapaaSivistystyoOpistovuosiKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
-                                                       lisatiedot: Seq[Lisatieto] = Seq(),
-                                                       kuvaus: Kielistetty = Map(),
-                                                       linkkiEPerusteisiin: Kielistetty = Map(),
-                                                       koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusNumero: Option[Double] = None,
-                                                       opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None
-                                                      ) extends VapaaSivistystyoKoulutusMetadata
+case class VapaaSivistystyoOpistovuosiKoulutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    kuvaus: Kielistetty = Map(),
+    linkkiEPerusteisiin: Kielistetty = Map(),
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusNumero: Option[Double] = None,
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends VapaaSivistystyoKoulutusMetadata
 
-case class VapaaSivistystyoMuuKoulutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
-                                                       lisatiedot: Seq[Lisatieto] = Seq(),
-                                                       kuvaus: Kielistetty = Map(),
-                                                       linkkiEPerusteisiin: Kielistetty = Map(),
-                                                       koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                                       opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                                       opintojenLaajuusNumero: Option[Double] = None,
-                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None
-                                                      ) extends VapaaSivistystyoKoulutusMetadata
+case class VapaaSivistystyoMuuKoulutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    kuvaus: Kielistetty = Map(),
+    linkkiEPerusteisiin: Kielistetty = Map(),
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumero: Option[Double] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends VapaaSivistystyoKoulutusMetadata
 
-case class AikuistenPerusopetusKoulutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
-                                                kuvaus: Kielistetty = Map(),
-                                                lisatiedot: Seq[Lisatieto] = Seq(),
-                                                linkkiEPerusteisiin: Kielistetty = Map(),
-                                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                                opintojenLaajuusNumero: Option[Double] = None,
-                                                isMuokkaajaOphVirkailija: Option[Boolean] = None
-                                               ) extends KoulutusMetadata
+case class AikuistenPerusopetusKoulutusMetadata(
+    tyyppi: Koulutustyyppi = AikuistenPerusopetus,
+    kuvaus: Kielistetty = Map(),
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    linkkiEPerusteisiin: Kielistetty = Map(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumero: Option[Double] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends KoulutusMetadata
 
 // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
-case class ErikoislaakariKoulutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
-                                          kuvaus: Kielistetty = Map(),
-                                          lisatiedot: Seq[Lisatieto] = Seq(),
-                                          tutkintonimikeKoodiUrit: Seq[String] = Seq(),
-                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                          isMuokkaajaOphVirkailija: Option[Boolean] = None
-                                         ) extends KoulutusMetadata
+case class ErikoislaakariKoulutusMetadata(
+    tyyppi: Koulutustyyppi = Erikoislaakari,
+    kuvaus: Kielistetty = Map(),
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends KoulutusMetadata
 
-case class ErikoistumiskoulutusMetadata(tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
-                                        kuvaus: Kielistetty = Map(),
-                                        lisatiedot: Seq[Lisatieto] = Seq(),
-                                        erikoistumiskoulutusKoodiUri: Option[String] = None,
-                                        koulutusalaKoodiUrit: Seq[String] = Seq(),
-                                        opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                        opintojenLaajuusNumeroMin: Option[Double] = None,
-                                        opintojenLaajuusNumeroMax: Option[Double] = None,
-                                        isMuokkaajaOphVirkailija: Option[Boolean] = None
-                                       ) extends KoulutusMetadata
+case class ErikoistumiskoulutusMetadata(
+    tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
+    kuvaus: Kielistetty = Map(),
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    erikoistumiskoulutusKoodiUri: Option[String] = None,
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumeroMin: Option[Double] = None,
+    opintojenLaajuusNumeroMax: Option[Double] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends KoulutusMetadata
+
+case class TaiteidenPerusopetusKoulutusMetadata(
+    tyyppi: Koulutustyyppi = TaiteidenPerusopetus,
+    kuvaus: Kielistetty = Map(),
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    linkkiEPerusteisiin: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends KoulutusMetadata

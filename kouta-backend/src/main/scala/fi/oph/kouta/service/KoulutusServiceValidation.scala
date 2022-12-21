@@ -212,6 +212,16 @@ class KoulutusServiceValidation(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
+      case TaiteidenPerusopetus =>
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertOneAndOnlyCertainValueInSeq(
+            koulutus.koulutuksetKoodiUri,
+            "koulutus_999907",
+            "koulutuksetKoodiUri"
+          ),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case _ =>
         and(
           validateSorakuvaus(koulutus),
@@ -246,10 +256,11 @@ class KoulutusServiceValidation(
         KkOpintojakso,
         KkOpintokokonaisuus,
         Erikoislaakari,
-        Erikoistumiskoulutus
+        Erikoistumiskoulutus,
+        TaiteidenPerusopetus
       )
     val koulutustyypitWithoutLisatiedot: Set[Koulutustyyppi] =
-      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus)
+      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, TaiteidenPerusopetus)
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
@@ -414,6 +425,20 @@ class KoulutusServiceValidation(
           validateIfJulkaistu(
             validationContext.tila,
             assertNotOptional(m.erikoistumiskoulutusKoodiUri, "metadata.erikoistumiskoulutusKoodiUri")
+          )
+        )
+      case m: TaiteidenPerusopetusKoulutusMetadata =>
+        and(
+          validateIfNonEmpty(m.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
+          validateIfJulkaistu(
+            validationContext.tila,
+            and(
+              validateOptionalKielistetty(
+                validationContext.kielivalinta,
+                m.linkkiEPerusteisiin,
+                "metadata.linkkiEPerusteisiin"
+              )
+            )
           )
         )
       case _ => NoErrors

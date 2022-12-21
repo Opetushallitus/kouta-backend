@@ -1,31 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{
-  AikuistenPerusopetusKoulutus,
-  AmkKoulutus,
-  AmmMuuKoulutus,
-  AmmOpettajaKoulutus,
-  AmmOsaamisalaKoulutus,
-  AmmTutkinnonOsaKoulutus,
-  ErikoislaakariKoulutus,
-  ErikoistumisKoulutuksenMetatieto,
-  ErikoistumisKoulutus,
-  KkOpintojaksoKoulutus,
-  KkOpintokokonaisuusKoulutuksenMetatieto,
-  KkOpintokokonaisuusKoulutus,
-  LukioKoulutus,
-  LukiokoulutuksenMetatieto,
-  TelmaKoulutuksenMetatieto,
-  TelmaKoulutus,
-  TuvaKoulutuksenMetatieto,
-  TuvaKoulutus,
-  VapaaSivistystyoOpistovuosiKoulutuksenMetatieto,
-  VapaaSivistystyoOpistovuosiKoulutus,
-  YoKoulutus,
-  YoOpettajaKoulutus,
-  defaultKuvaus
-}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -580,6 +556,12 @@ class KoulutusSpec
     val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
     val oid          = put(aiPeKoulutus)
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+  }
+
+  it should "set koulutuksetKoodiUri of taiteiden perusopetus koulutus automatically if not given" in {
+    val tpoKoulutus = TaiteidenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
+    val oid          = put(tpoKoulutus)
+    get(oid, tpoKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_999907#1")))
   }
 
   it should "create, get and update kk-opintojakso -koulutus" in {
