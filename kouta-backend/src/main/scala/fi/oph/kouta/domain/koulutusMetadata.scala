@@ -1,5 +1,6 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.validation.{IsValid, NoErrors, ValidatableSubEntity}
 import fi.oph.kouta.validation.Validations.{assertNotOptional, _}
 
@@ -131,6 +132,16 @@ package object koulutusMetadata {
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val KkOpintokokonaisuusKoulutusMetadataModel: String =
@@ -154,7 +165,7 @@ package object koulutusMetadata {
       |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
-      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              description: "Opintojen laajuusyksikko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
       |              example: opintojenlaajuusyksikko_6#1
       |            opintojenLaajuusNumeroMin:
       |              type: integer
@@ -164,6 +175,16 @@ package object koulutusMetadata {
       |              type: integer
       |              description: Opintojen laajuuden tai keston enimmäismäärä numeroarvona
       |              example: 20
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val AmmatillinenKoulutusMetadataModel: String =
@@ -475,7 +496,10 @@ case class KkOpintojaksoKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
                                          opintojenLaajuusNumero: Option[Double] = None,
                                          opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
+                                         isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                         isAvoinKorkeakoulutus: Option[Boolean] = None,
+                                         tunniste: Option[String] = None,
+                                         opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -484,7 +508,10 @@ case class KkOpintokokonaisuusKoulutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                opintojenLaajuusNumeroMin: Option[Double] = None,
                                                opintojenLaajuusNumeroMax: Option[Double] = None,
                                                opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                               isMuokkaajaOphVirkailija: Option[Boolean] = None) extends KoulutusMetadata
+                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                               isAvoinKorkeakoulutus: Option[Boolean] = None,
+                                               tunniste: Option[String] = None,
+                                               opinnonTyyppiKoodiUri: Option[String] = None) extends KoulutusMetadata
 
 case class LukioKoulutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),

@@ -57,17 +57,39 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
   def koulutusKoodiClient: KoulutusKoodiClient
   def sorakuvausDAO: SorakuvausDAO
 
-  def validateTarjoajat(koulutustyyppi: Koulutustyyppi, tarjoajat: List[OrganisaatioOid], oldTarjojat: List[OrganisaatioOid]): IsValid = {
-    val newTarjoajat = if (tarjoajat.toSet != oldTarjojat.toSet) tarjoajat else List()
-    val validTarjoajat = newTarjoajat.filter(_.isValid)
-    var tarjoajatWoRequiredKoulutustyyppi = Seq[OrganisaatioOid]()
-    var organisaatioServiceOk = true
-    Try[Seq[OrganisaatioOid]] {
-      validTarjoajat.filterNot(organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(_)._2.contains(koulutustyyppi))
+  /** Validoi koulutuksen tai toteutuksen tarjoajat-kentän.
+    * @param koulutustyyppi koulutustyyppi, jonka perusteella halutaan rajoittaa tarjoajien sallittuja oppilaitostyyppejä (kts. OrganisaatioService.oppilaitostyypitToKoulutustyypit)
+    * @param tarjoajat Uusi tarjoajat-kentän arvo
+    * @param oldTarjoajat Entinen tarjoajat-kentän arvo. (tyhjä, jos ollaan luomassa)
+    * @param oppilaitostyypit Oppilaitostyypit, jotka ovat koulutustyypin perusteella valittujen asemesta sallittuja tarjoajille. Käytetään ainoastaan koulutuksen validoinnissa. HUOM! Yliajaa koulutustyyppi-tarkistuksen!
+    * @return Mahdolliset validointivirheet listana tai tyhjä lista, jos validi
+    */
+  def validateTarjoajat(
+      koulutustyyppi: Koulutustyyppi,
+      tarjoajat: Seq[OrganisaatioOid],
+      oldTarjoajat: Seq[OrganisaatioOid],
+      oppilaitostyypit: Seq[String] = Seq()
+  ): IsValid = {
+    val newTarjoajat                        = if (tarjoajat.toSet != oldTarjoajat.toSet) tarjoajat else List()
+    val validTarjoajat                      = newTarjoajat.filter(_.isValid)
+    var organisaatioServiceOk               = true
+    var tarjoajatWoRequiredKoulutustyyppi   = Seq[OrganisaatioOid]()
+    var tarjoajatWoRequiredOppilaitostyypit = Seq[OrganisaatioOid]()
+
+    Try[(Seq[OrganisaatioOid], Seq[OrganisaatioOid])] {
+      (
+        organisaatioService.withoutOppilaitostyypit(validTarjoajat, oppilaitostyypit),
+        validTarjoajat.filterNot(
+          organisaatioService.getAllChildOidsAndKoulutustyypitFlat(_)._2.contains(koulutustyyppi)
+        )
+      )
     } match {
-      case Success(tarjoajaOidsWoRequiredKoulutustyyppi) => tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
+      case Success((tarjoajaOidsWoRequiredOppilaitostyyppi, tarjoajaOidsWoRequiredKoulutustyyppi)) =>
+        tarjoajatWoRequiredOppilaitostyypit = tarjoajaOidsWoRequiredOppilaitostyyppi
+        tarjoajatWoRequiredKoulutustyyppi = tarjoajaOidsWoRequiredKoulutustyyppi
       case Failure(_) => organisaatioServiceOk = false
     }
+
     validateIfTrueOrElse(
       organisaatioServiceOk,
       validateIfNonEmpty[OrganisaatioOid](
@@ -76,7 +98,19 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
         (oid, path) =>
           validateIfSuccessful(
             assertTrue(oid.isValid, path, validationMsg(oid.s)),
-            assertFalse(tarjoajatWoRequiredKoulutustyyppi.contains(oid), path, tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi))
+            if (oppilaitostyypit.isEmpty) {
+              assertFalse(
+                tarjoajatWoRequiredKoulutustyyppi.contains(oid),
+                path,
+                tarjoajaOidWoRequiredKoulutustyyppi(oid, koulutustyyppi)
+              )
+            } else {
+              assertFalse(
+                tarjoajatWoRequiredOppilaitostyypit.contains(oid),
+                path,
+                tarjoajaOidWoRequiredOppilaitostyyppi(oid, oppilaitostyypit)
+              )
+            }
           )
       ),
       error("tarjoajat", organisaatioServiceFailureMsg)

@@ -5,7 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, itemNotFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 import java.time.temporal.ChronoUnit
@@ -61,6 +61,7 @@ object Validations {
     msg = s"Koulutusalakoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutusAlaKoodiuri"
   )
+
   def invalidOpintojenLaajuusyksikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
@@ -73,6 +74,11 @@ object Validations {
       id = "invalidKoulutusOpintojenLaajuusyksikkoIntegrity",
       meta = Some(Map("toteutukset" -> toteutukset))
     )
+
+  def invalidOpinnonTyyppiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua opinnontyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidOpinnonTyyppiKoodiuri"
+  )
 
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
       laajuusMin: Double,
@@ -131,6 +137,17 @@ object Validations {
     )
   }
 
+  val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
+    id = "cannotChangeIsAvoinKorkeakoulutus",
+    msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
+  )
+
+  val invalidIsAvoinKorkeakoulutusIntegrity =
+    ErrorMessage(
+      id = "invalidIsAvoinKorkeakoulutusIntegrity",
+      msg = "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
+    )
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"
@@ -143,6 +160,12 @@ object Validations {
     ErrorMessage(
       msg = s"Tarjoaja-organisaatiolla $oid ei ole oikeuksia koulutustyyppiin $koulutustyyppi",
       id = "tarjoajaOidWoRequiredKoulutustyyppi"
+    )
+
+  def tarjoajaOidWoRequiredOppilaitostyyppi(oid: OrganisaatioOid, oppilaitostyypit: Seq[String]): ErrorMessage =
+    ErrorMessage(
+      msg = s"Tarjoaja $oid ei ole sallittua oppilaitostyyppiä (${oppilaitostyypit.mkString(", ")})",
+      id = "tarjoajaOidWoRequiredOppilaitostyyppi"
     )
   def invalidEPerusteId(ePerusteId: Long): ErrorMessage = ErrorMessage(
     msg = s"EPerustetta id:llä $ePerusteId ei löydy, tai EPeruste ei ole voimassa",
@@ -506,7 +529,8 @@ object Validations {
       path: String,
       externalSourceDesc: String
   ): IsValid = {
-    val nameNotAllowedLngs = nimi.keySet.filter(lng => !nimiFromExternalSource.contains(lng) && nimi(lng) != null && nimi(lng).nonEmpty)
+    val nameNotAllowedLngs =
+      nimi.keySet.filter(lng => !nimiFromExternalSource.contains(lng) && nimi(lng) != null && nimi(lng).nonEmpty)
     val nameNotMatchingLngs =
       nimi.keySet.filter(lng => nimiFromExternalSource.contains(lng) && nimi(lng) != nimiFromExternalSource(lng))
     nameNotAllowedLngs

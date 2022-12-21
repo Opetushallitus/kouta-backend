@@ -15,8 +15,7 @@ trait OrganisaatioFixture extends OrganisaatioServiceMock with BeforeAndAfterAll
   var organisaatioService: OrganisaatioService = _
 
   case class OrganisaatioServiceImpl(organisaatioUrl: String) extends OrganisaatioService {
-    case class CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl: String)
-        extends CachedOrganisaatioHierarkiaClient {
+    case class CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl: String) extends CachedOrganisaatioHierarkiaClient {
       val callerId = "kouta-common"
     }
     val cachedOrganisaatioHierarkiaClient = new CachedOrganisaatioHierarkiaClientImpl(organisaatioUrl)
@@ -25,7 +24,7 @@ trait OrganisaatioFixture extends OrganisaatioServiceMock with BeforeAndAfterAll
   override def beforeAll(): Unit = {
     super.beforeAll()
     organisaatioService = OrganisaatioServiceImpl(
-      s"${mocker.getMockBaseUrl(withProtocol = true)}/organisaatio-service/rest/organisaatio/v4/$RootOrganisaatioOid/jalkelaiset"
+      s"${mocker.getMockBaseUrl(withProtocol = true)}/organisaatio-service/api/$RootOrganisaatioOid/jalkelaiset"
     )
     mockOrganisaatioResponse()
   }

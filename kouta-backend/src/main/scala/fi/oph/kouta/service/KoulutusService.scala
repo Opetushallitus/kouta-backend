@@ -1,15 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KoodistoUtils.{asStringOption, asStringSeq}
-import fi.oph.kouta.client.{
-  EPerusteKoodiClient,
-  KayttooikeusClient,
-  KoodiUri,
-  KoulutusKoodiClient,
-  KoutaSearchClient,
-  OppijanumerorekisteriClient
-}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -367,8 +359,7 @@ class KoulutusService(
 
           val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
           val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-          val rulesForRemovedTarjoajat = authorizedForTarjoajaOids(oldTarjoajat diff newTarjoajat)
-          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: rulesForRemovedTarjoajat :: Nil).flatten
+          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: Nil).flatten
       }
     }
   }
@@ -492,7 +483,9 @@ class KoulutusService(
     val newTarjoajatForKoulutus      = (koulutus.tarjoajat.toSet diff tarjoajatSafeToDelete) ++ tarjoajatAddedToKoulutus
     val tarjoajatRemovedFromKoulutus = koulutus.tarjoajat.toSet diff newTarjoajatForKoulutus
 
-    if (tarjoajatAddedToKoulutus.isEmpty && tarjoajatRemovedFromKoulutus.isEmpty) {
+    val isAvoinKorkeakoulutus = koulutus.isAvoinKorkeakoulutus()
+
+    if (isAvoinKorkeakoulutus || (tarjoajatAddedToKoulutus.isEmpty && tarjoajatRemovedFromKoulutus.isEmpty)) {
       DBIO.successful((koulutus, None))
     } else {
       val newKoulutus: Koulutus = koulutus.copy(tarjoajat = newTarjoajatForKoulutus.toList)

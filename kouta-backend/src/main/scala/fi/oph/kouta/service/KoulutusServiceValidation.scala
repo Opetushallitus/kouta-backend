@@ -22,7 +22,7 @@ object KoulutusServiceValidation
 class KoulutusServiceValidation(
     val koulutusKoodiClient: KoulutusKoodiClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
-    val organisaatioService: OrganisaatioService,
+    val organisaatioService: OrganisaatioServiceImpl,
     toteutusDAO: ToteutusDAO,
     val sorakuvausDAO: SorakuvausDAO
 ) extends KoulutusToteutusValidatingService[Koulutus] {
@@ -66,6 +66,9 @@ class KoulutusServiceValidation(
   private def validateCommonParameters(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val tila   = koulutus.tila
     val tyyppi = koulutus.koulutustyyppi
+
+    val isAvoinKorkeakoulutus = koulutus.isAvoinKorkeakoulutus()
+
     and(
       koulutus.validate(),
       validateIfTrueOrElse(
@@ -80,7 +83,12 @@ class KoulutusServiceValidation(
         ),
         assertNotDefined(koulutus.oid, "oid")
       ),
-      validateTarjoajat(tyyppi, koulutus.tarjoajat, oldKoulutus.map(_.tarjoajat).getOrElse(List())),
+      validateTarjoajat(
+        tyyppi,
+        koulutus.tarjoajat,
+        oldKoulutus.map(_.tarjoajat).getOrElse(List()),
+        if (isAvoinKorkeakoulutus) oppilaitostyypitForAvoinKorkeakoulutus else Seq()
+      ),
       validateIfJulkaistu(
         tila,
         and(
@@ -364,6 +372,8 @@ class KoulutusServiceValidation(
       case m: KkOpintojaksoKoulutusMetadata =>
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
+          assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
+          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintojenLaajuusyksikkoAndNumero(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -375,6 +385,8 @@ class KoulutusServiceValidation(
       case m: KkOpintokokonaisuusKoulutusMetadata =>
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
+          assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
+          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintojenLaajuusyksikko(
             m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
@@ -401,6 +413,18 @@ class KoulutusServiceValidation(
       case _ => NoErrors
     }
   }
+
+  private def validateIsAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) =
+    validateIfTrue(
+      koulutusDiffResolver.isAvoinKkChanged(), {
+        val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
+        assertTrue(
+          toteutukset.isEmpty,
+          "metadata.isAvoinKorkeakoulutus",
+          cannotChangeIsAvoinKorkeakoulutus
+        )
+      }
+    )
 
   private def assertOpettajankoulutusMetadata(
       opintojenLaajuusYksikkoKoodiUri: Option[String],
@@ -791,7 +815,7 @@ class KoulutusServiceValidation(
             ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(ePerusteId) match {
               case Right(koodiUritForEperuste) =>
                 validateIfSuccessful(
-                  // ePeruste oletetaan tuntemattomaksi, ellei sille löydy yhtään koulutusKoodiUria
+                  // ePeruste oletetaan tuntemattomaksi, jos sille ei löydy yhtään koulutusKoodiUria
                   assertTrue(koodiUritForEperuste.nonEmpty, path, invalidEPerusteId(ePerusteId)),
                   validateIfNonEmpty[String](
                     koulutusKoodiUrit,
@@ -821,6 +845,20 @@ class KoulutusServiceValidation(
           path,
           validationContext,
           invalidKoulutusAlaKoodiuri(koodiUri)
+        )
+    )
+  }
+
+  private def assertOpinnonTyyppiKoodiUri(koodiUri: Option[String], validationContext: ValidationContext): IsValid = {
+    validateIfDefined[String](
+      koodiUri,
+      uri =>
+        assertKoodistoQueryResult(
+          uri,
+          koulutusKoodiClient.opinnonTyyppiKoodiUriExists,
+          "metadata.opinnonTyyppiKoodiUri",
+          validationContext,
+          invalidOpinnonTyyppiKoodiuri(uri)
         )
     )
   }

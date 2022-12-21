@@ -2,41 +2,151 @@ package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.OrganisaatioHierarkia
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia}
+import fi.oph.kouta.servlet.SearchParams.commaSepStringValToSeq
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
+import org.scalatra.Params
 
+import java.net.{URLDecoder, URLEncoder}
 import scala.concurrent.duration._
+import scala.util.{Failure, Success, Try}
 
+case class OrganisaatioServiceQueryException(url: String, status: Int, message: String)
+    extends RuntimeException(message)
+
+case class OrganisaatioHierarkiaQueryParams(
+    oids: Seq[OrganisaatioOid] = Seq(),
+    oid: Option[OrganisaatioOid] = None,
+    searchStr: Option[String] = None,
+    aktiiviset: String = "true",
+    suunnitellut: String = "true",
+    lakkautetut: String = "false",
+    skipParents: String = "true",
+    oppilaitostyypit: Seq[String] = Seq()
+)
 
 object OrganisaatioServiceClient extends OrganisaatioServiceClient
 
 class OrganisaatioServiceClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
-  implicit val organisaatioHierarkiaCache: Cache[List[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
-    .expireAfterWrite(45.minutes)
-    .build()
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
-  private def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
-    val oidsAsQueryParams = oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
+  implicit val organisaatioHierarkiaWithOidsCache: Cache[Seq[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
+  implicit val organisaatioHierarkiaCache: Cache[OrganisaatioHierarkiaQueryParams, OrganisaatioHierarkia] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
+  implicit val organisaatioCache: Cache[OrganisaatioOid, Organisaatio] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
+  implicit val organisaatiotCache: Cache[Seq[OrganisaatioOid], Seq[Organisaatio]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
+
+  def getOrganisaatioHierarkia(queryParams: OrganisaatioHierarkiaQueryParams): OrganisaatioHierarkia = {
+    val oidsAsQueryParams = queryParams.oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
+    val oppilaitostyypitAsQueryParams = queryParams.oppilaitostyypit
+      .map(URLEncoder.encode(_, "UTF-8"))
+      .mkString("&oppilaitostyyppi=", "&oppilaitostyyppi=", "")
+
+    val params = Seq(
+      "aktiiviset"   -> queryParams.aktiiviset,
+      "suunnitellut" -> queryParams.suunnitellut,
+      "lakkautetut"  -> queryParams.lakkautetut,
+      "skipParents"  -> queryParams.skipParents,
+      "searchStr"    -> queryParams.searchStr,
+      "oid"          -> queryParams.oid
+    ).collect {
+      case (key, Some(s: String))            => (key, s)
+      case (key, Some(oid: OrganisaatioOid)) => (key, oid.toString)
+      case (key, s: String)                  => (key, s)
+      case (key, list: List[_])              => (key, list.toString())
+    }.filter(_._2.nonEmpty)
+
+    val queryParamsStr = toQueryParams(params: _*)
     val url = urlProperties.url(
-      s"organisaatio-service.organisaatio.hierarkia.with.oids",
-      toQueryParams(
-        "aktiiviset" -> "true",
-        "suunnitellut" -> "true",
-        "lakkautetut" -> "false",
-        "skipParents" -> "true")) + oidsAsQueryParams
-    get(url, followRedirects = true) {
-      response => {
+      s"organisaatio-service.organisaatio.hierarkia",
+      queryParamsStr
+    ) + oidsAsQueryParams + oppilaitostyypitAsQueryParams
+
+    get(url, followRedirects = true) { response =>
+      {
         parse(response).extract[OrganisaatioHierarkia]
       }
     }
   }
 
-  def getOrganisaatioHierarkiaWithOidsFromCache(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
-    organisaatioHierarkiaCache.get(oids, oids => getOrganisaatioHierarkiaWithOids(oids))
+  def getOrganisaatioHierarkiaWithOidsFromCache(oids: Seq[OrganisaatioOid]): OrganisaatioHierarkia = {
+    organisaatioHierarkiaWithOidsCache.get(
+      oids,
+      oids => {
+        getOrganisaatioHierarkia(OrganisaatioHierarkiaQueryParams(oids))
+      }
+    )
+  }
+
+  def getOrganisaatioHierarkiaFromCache(
+      params: Option[Params],
+      oppilaitostyypit: List[String] = List()
+  ): OrganisaatioHierarkia = {
+    val queryParams = params match {
+      case Some(params) =>
+        OrganisaatioHierarkiaQueryParams(
+          searchStr = params.get("searchStr"),
+          oids = commaSepStringValToSeq(params.get("oidRestrictionList")).map(OrganisaatioOid(_)).toList,
+          oid = params.get("oid").map(OrganisaatioOid(_)),
+          aktiiviset = params.get("aktiiviset").getOrElse("true"),
+          suunnitellut = params.get("suunnitellut").getOrElse("true"),
+          lakkautetut = params.get("lakkautetut").getOrElse("false"),
+          skipParents = params.get("skipParents").getOrElse("true"),
+          oppilaitostyypit = oppilaitostyypit
+        )
+      case None =>
+        OrganisaatioHierarkiaQueryParams(
+          oppilaitostyypit = oppilaitostyypit
+        )
+    }
+
+    Try[OrganisaatioHierarkia] {
+      organisaatioHierarkiaCache.get(
+        queryParams,
+        queryParams => {
+          getOrganisaatioHierarkia(queryParams)
+        }
+      )
+    } match {
+      case Success(organisaatioHierarkia: OrganisaatioHierarkia) => organisaatioHierarkia
+      case Failure(exp: OrganisaatioServiceQueryException) if exp.status == 404 =>
+        OrganisaatioHierarkia(organisaatiot = List())
+    }
+  }
+
+  def getOrganisaatio(oid: OrganisaatioOid): Organisaatio = {
+    val url = urlProperties.url(s"organisaatio-service.organisaatio.with.oid", oid)
+    get(url, followRedirects = true) { response =>
+      {
+        parse(response).extract[Organisaatio]
+      }
+    }
+  }
+
+  def getOrganisaatioWithOidFromCache(oid: OrganisaatioOid): Organisaatio = {
+    organisaatioCache.get(oid, oid => getOrganisaatio(oid))
+  }
+
+  def getOrganisaatiot(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
+    val url = urlProperties.url(s"organisaatio-service.organisaatiot.with.oids")
+    post(url, oids, followRedirects = true) { response =>
+      {
+        parse(response).extract[Seq[Organisaatio]]
+      }
+    }
+  }
+
+  def getOrganisaatiotWithOidsFromCache(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
+    organisaatiotCache.get(oids, oids => getOrganisaatiot(oids))
   }
 }
-

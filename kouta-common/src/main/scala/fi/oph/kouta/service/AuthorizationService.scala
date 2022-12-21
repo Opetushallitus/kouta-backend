@@ -102,9 +102,9 @@ trait AuthorizationService extends Logging {
 
       val requestedOrganizations =
         if( authorizationRules.allowAccessToParentOrganizations ) {
-          organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid)
+          organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(oid)
         } else {
-          organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid)
+          organisaatioService.getAllChildOidsAndKoulutustyypitFlat(oid)
         }
 
       requestedOrganizations match {
@@ -123,10 +123,10 @@ trait AuthorizationService extends Logging {
     }
 
   protected def lazyFlatChildrenAndParents(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => organisaatioService.getAllChildAndParentOidsWithOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(oid))
 
   protected def lazyFlatChildren(orgs: Set[OrganisaatioOid]): OrganisaatioOidsAndOppilaitostyypitFlatView =
-    orgs.view.map(oid => organisaatioService.getAllChildOidsAndOppilaitostyypitFlat(oid))
+    orgs.view.map(oid => organisaatioService.getAllChildOidsAndKoulutustyypitFlat(oid))
 
   def hasRootAccess(roles: Seq[Role])(implicit authenticated: Authenticated): Boolean =
     roles.exists(role => authenticated.session.roleMap.get(role).exists(_.contains(RootOrganisaatioOid)))

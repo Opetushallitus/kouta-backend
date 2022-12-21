@@ -1,12 +1,12 @@
 package fi.oph.kouta.indexing
 
-import com.amazonaws.regions.RegionUtils
-import com.amazonaws.services.sqs.AmazonSQSClient
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.regions.{Region, RegionUtils, Regions}
+import com.amazonaws.services.sqs.{AmazonSQS, AmazonSQSClientBuilder}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.indexing.indexing._
 import fi.vm.sade.utils.slf4j.Logging
-import io.atlassian.aws.AmazonClientConnectionDef
-import io.atlassian.aws.sqs.SQSClient
 
 import scala.util.{Failure, Success, Try}
 
@@ -28,11 +28,21 @@ object SqsService extends Logging {
 
   private val config = KoutaConfigurationFactory.configuration.indexingConfiguration
 
-  private val sqsClient: AmazonSQSClient = SQSClient.create(
-    config = Some( AmazonClientConnectionDef.default.copy(
-      maxErrorRetry = Some(5),
-      endpointUrl = config.endpoint,
-      region = config.region.map(RegionUtils.getRegion))))
+  private val sqsClient: AmazonSQS = {
+    val clientBuilder = AmazonSQSClientBuilder.standard().withClientConfiguration(new ClientConfiguration().withMaxErrorRetry(5))
+    val endpoint = config.endpoint
+    val region = config.region.getOrElse(Regions.EU_WEST_1.getName())
+
+    endpoint match {
+      case Some(endpoint) => clientBuilder.setEndpointConfiguration(
+        new EndpointConfiguration(
+          endpoint,
+          region))
+      case None => clientBuilder.setRegion(region)
+    }
+
+    clientBuilder.build()
+  }
 
   private val queues = {
     logger.info(s"""Got priority queue name '${config.priorityQueue}' from oph configuration""")

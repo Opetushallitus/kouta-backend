@@ -317,22 +317,14 @@ class KoulutusSpec
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
   }
 
-  it should "allow access if user had rights to all tarjoaja organizations being removed from own koulutus" in {
+  it should "allow access when removing tarjoaja organization from own koulutus, even though user doesn't have rights to the tarjoaja organization" in {
     var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid)
-    val oid         = put(theKoulutus, ophSession)
+    val oid             = put(theKoulutus, ophSession)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
     val lastModified    = get(oid, theKoulutus)
-    val updatedKoulutus = theKoulutus.copy(tarjoajat = theKoulutus.tarjoajat diff Seq(HkiYoOid))
+    val updatedKoulutus = theKoulutus.copy(tarjoajat = List(YoOid))
 
-    update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
-  }
-
-  it should "deny access if the user doesn't have rights to a tarjoaja organization being removed for AmmKoulutus" in {
-    val oid             = put(koulutus, ophSession)
-    val lastModified    = get(oid, koulutus(oid))
-    val updatedKoulutus = koulutus(oid).copy(tarjoajat = koulutus.tarjoajat diff Seq(EvilCousin))
-
-    update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(YoOid))
   }
 
   it should "allow access if user had rights to all tarjoaja organizations being added to own koulutus" in {

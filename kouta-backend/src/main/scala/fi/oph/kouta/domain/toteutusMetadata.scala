@@ -254,6 +254,16 @@ package object toteutusMetadata {
       |              example: kk-opintojakso
       |              enum:
       |                - kk-opintojakso
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val KkOpintokokonaisuusToteutusMetadataModel: String =
@@ -276,6 +286,16 @@ package object toteutusMetadata {
       |              type: integer
       |              description: Opintojen laajuus tai kesto numeroarvona
       |              example: 10
+      |            isAvoinKorkeakoulutus:
+      |              type: boolean
+      |              description: Onko koulutus avointa korkeakoulutusta?
+      |            tunniste:
+      |              type: string
+      |              description: Hakijalle näkyvä tunniste
+      |            opinnonTyyppiKoodiUri:
+      |              type: string
+      |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
+      |              example: opinnontyyppi_1#1
       |""".stripMargin
 
   val ErikoislaakariToteutusMetadataModel: String =
@@ -749,7 +769,10 @@ case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          hakuaika: Option[Ajanjakso] = None,
                                          aloituspaikat: Option[Int] = None,
                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                         hasJotpaRahoitus: Option[Boolean] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                         hasJotpaRahoitus: Option[Boolean] = None,
+                                         isAvoinKorkeakoulutus: Option[Boolean] = None,
+                                         tunniste: Option[String] = None,
+                                         opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
                                                kuvaus: Kielistetty = Map(),
@@ -768,7 +791,10 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                aloituspaikat: Option[Int] = None,
                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                                hasJotpaRahoitus: Option[Boolean] = None,
-                                               liitetytOpintojaksot: Seq[ToteutusOid] = Seq()) extends TutkintoonJohtamatonToteutusMetadata
+                                               liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
+                                               isAvoinKorkeakoulutus: Option[Boolean] = None,
+                                               tunniste: Option[String] = None,
+                                               opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),

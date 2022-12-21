@@ -41,9 +41,19 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     if (koodiUri != opintojenLaajuusyksikkoKoodiUri(oldMetadata())) koodiUri else None
   }
 
+  def newOpinnonTyyppiKoodiUri(): Option[String] = {
+    val koodiUri = opinnonTyyppiKoodiUri(koulutus.metadata)
+    if (koodiUri != opinnonTyyppiKoodiUri(oldMetadata())) koodiUri else None
+  }
+
   def newTutkintonimikeKoodiUrit(): Seq[String] = {
     val koodiUrit = tutkintonimikeKoodiUrit(koulutus.metadata)
     if (koodiUrit.toSet != tutkintonimikeKoodiUrit(oldMetadata()).toSet) koodiUrit else Seq()
+  }
+
+  def isAvoinKkChanged(): Boolean = oldKoulutus match {
+    case Some(old: Koulutus) => koulutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
   private def tutkinnonosat(metadata: Option[KoulutusMetadata]): Seq[TutkinnonOsa] =
@@ -79,6 +89,13 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
       case Some(m: KkOpintojaksoKoulutusMetadata)        => m.opintojenLaajuusyksikkoKoodiUri
       case Some(m: KkOpintokokonaisuusKoulutusMetadata)  => m.opintojenLaajuusyksikkoKoodiUri
       case _                                             => None
+    }
+
+  private def opinnonTyyppiKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
+    metadata match {
+      case Some(m: KkOpintojaksoKoulutusMetadata)       => m.opinnonTyyppiKoodiUri
+      case Some(m: KkOpintokokonaisuusKoulutusMetadata) => m.opinnonTyyppiKoodiUri
+      case _                                            => None
     }
 
   private def tutkintonimikeKoodiUrit(metadata: Option[KoulutusMetadata]): Seq[String] =

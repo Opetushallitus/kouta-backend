@@ -33,12 +33,13 @@ class ToteutusServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO,
     toteutusDAO: ToteutusDAO
-) extends KoulutusToteutusValidatingService[Toteutus] with RoleEntityAuthorizationService[Toteutus] {
+) extends KoulutusToteutusValidatingService[Toteutus]
+    with RoleEntityAuthorizationService[Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
   def withValidation[R](toteutus: Toteutus, oldToteutus: Option[Toteutus], authenticated: Authenticated)(
-    f: Toteutus => R
+      f: Toteutus => R
   ): R = {
     var errors = super.validate(toteutus, oldToteutus)
     if (errors.isEmpty) {
@@ -51,13 +52,13 @@ class ToteutusServiceValidation(
 
     errors match {
       case NoErrors => f(toteutus)
-      case errors => throw KoutaValidationException(errors)
+      case errors   => throw KoutaValidationException(errors)
     }
   }
 
   override def validateEntity(toteutus: Toteutus, oldToteutus: Option[Toteutus]): IsValid = {
     val koulutusOidValid = assertValid(toteutus.koulutusOid, "koulutusOid")
-    val koulutus = if (koulutusOidValid.isEmpty) koulutusDAO.get(toteutus.koulutusOid) else None
+    val koulutus         = if (koulutusOidValid.isEmpty) koulutusDAO.get(toteutus.koulutusOid) else None
     val commonErrors = and(
       toteutus.validate(),
       validateIfTrueOrElse(
@@ -79,7 +80,7 @@ class ToteutusServiceValidation(
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
           Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, KkOpintojakso)
-        val koulutusTyyppi = metadata.tyyppi
+        val koulutusTyyppi    = metadata.tyyppi
         val koulutusKoodiUrit = koulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq())
         and(
           validateIfTrueOrElse(
@@ -96,7 +97,8 @@ class ToteutusServiceValidation(
             validateIfFalse(metadata.allowSorakuvaus, assertNotDefined(toteutus.sorakuvausId, "sorakuvausId")),
             validateSorakuvausIntegrity(toteutus.sorakuvausId, toteutus.tila, metadata.tyyppi, "metadata.tyyppi")
           ),
-          validateTarjoajat(koulutusTyyppi, toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List())),
+          validateTarjoajat(koulutusTyyppi, toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List()),
+            if (toteutus.isAvoinKorkeakoulutus()) oppilaitostyypitForAvoinKorkeakoulutus else Seq()),
           validateIfJulkaistu(vCtx.tila, assertNotEmpty(toteutus.tarjoajat, "tarjoajat")),
           validateIfDefined[Opetus](
             metadata.opetus,
@@ -146,13 +148,15 @@ class ToteutusServiceValidation(
                   and(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintojaksolla ei ole ammattinimikkeitä
-                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case m: KkOpintokokonaisuusToteutusMetadata =>
                   and(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintokokonaisuudella ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
@@ -168,6 +172,18 @@ class ToteutusServiceValidation(
       case _ => if (toteutus.tila == Julkaistu) error("metadata", missingMsg) else NoErrors
     }
     Seq(commonErrors, koulutustyyppiSpecificErrors).flatten.distinct
+  }
+
+  private def validateIsAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
+    validateIfTrue(
+      koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
+        assertTrue(
+          toteutus.isAvoinKorkeakoulutus() == koulutus.get.isAvoinKorkeakoulutus(),
+          "metadata.isAvoinKorkeakoulutus",
+          invalidIsAvoinKorkeakoulutusIntegrity
+        )
+      }
+    )
   }
 
   private def validateOpetusKoodiUriListItem(
@@ -368,8 +384,12 @@ class ToteutusServiceValidation(
       )
     )
 
-  def validateOpintojaksotIntegrity(tila: Julkaisutila, metadata: KkOpintokokonaisuusToteutusMetadata, authenticated: Authenticated): IsValid = {
-    var errors: List[ValidationError] = List()
+  def validateOpintojaksotIntegrity(
+      tila: Julkaisutila,
+      metadata: KkOpintokokonaisuusToteutusMetadata,
+      authenticated: Authenticated
+  ): IsValid = {
+    var errors: List[ValidationError]                    = List()
     var errorMap: Map[String, List[Option[ToteutusOid]]] = Map()
 
     val addErrorOid = (errorKey: String, toteutusOid: Option[ToteutusOid]) => {
@@ -377,13 +397,12 @@ class ToteutusServiceValidation(
     }
 
     val liitetytOpintojaksot = metadata.liitetytOpintojaksot
-    val toteutukset = toteutusDAO.get(liitetytOpintojaksot.toList)
+    val toteutukset          = toteutusDAO.get(liitetytOpintojaksot.toList)
 
     toteutukset.foreach(toteutus => {
       authorizeGet(toteutus)(authenticated)
       val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
-      val liitettavanToteutuksenTila = toteutus.tila
-
+      val liitettavanToteutuksenTila   = toteutus.tila
 
       if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
         addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
