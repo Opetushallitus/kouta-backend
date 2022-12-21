@@ -422,6 +422,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     passesValidation(AmmKoulutus)
   }
 
+  it should "Succeed when new valid TaiteidenPerusopetus koulutus" in {
+    passesValidation(TaiteidenPerusopetusKoulutus)
+  }
+
   it should "succeed when tarjoajat not changed in modify operation, even though unknown tarjoajat" in {
     val koulutus =
       yo.copy(oid = Some(KoulutusOid("1.2.246.562.13.125")), tarjoajat = List(GrandChildOid, UnknownOid, LonelyOid))
@@ -1600,6 +1604,29 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   val yoWithOid = yo.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
+  it should "fail if invalid TaiteidenPerusopetus -koulutus" in {
+    failsValidation(
+      TaiteidenPerusopetusKoulutus.copy(
+        koulutuksetKoodiUri = Seq("koulutus_201101#12"),
+        metadata = Some(
+          TaiteidenPerusopetusKoulutusMetadata(
+            kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+            linkkiEPerusteisiin = Map(Fi -> "puppua suomeksi"),
+            isMuokkaajaOphVirkailija = Some(false)
+          )
+        )
+      ),
+      Seq(
+        ValidationError(
+          "koulutuksetKoodiUri",
+          illegalValueForFixedValueSeqMsg("koulutus_999907#<versionumero>, esim. koulutus_999907#1")
+        ),
+        ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppua suomeksi")),
+        ValidationError("metadata.linkkiEPerusteisiin", kielistettyWoSvenskaError)
+      )
+    )
+  }
+
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(yoWithOid, yo.copy(tila = Tallennettu))
   }
