@@ -546,15 +546,15 @@ class KoulutusSpec
 
   it should "create, get and update aikuisten perusopetus -koulutus" in {
     val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(tila = Tallennettu)
-    val oid          = put(aiPeKoulutus)
+    val oid          = put(aiPeKoulutus, ophSession)
     val lastModified = get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid))))
-    update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified, true, ophSession)
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
   it should "set koulutuksetKoodiUri of aikuisten perusopetus koulutus automatically if not given" in {
     val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
-    val oid          = put(aiPeKoulutus)
+    val oid          = put(aiPeKoulutus, ophSession)
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
   }
 

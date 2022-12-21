@@ -607,11 +607,11 @@ object TestData {
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
         opintojenLaajuusNumero = Some(10),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(true)
       )
     ),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
-    muokkaaja = TestUserOid,
+    muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
     teemakuva = Some("http://kuva.fi/lkkuva"),
