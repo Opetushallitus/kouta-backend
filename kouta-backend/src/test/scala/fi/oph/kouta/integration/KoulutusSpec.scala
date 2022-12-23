@@ -8,6 +8,8 @@ import fi.oph.kouta.TestData.{
   AmmOsaamisalaKoulutus,
   AmmTutkinnonOsaKoulutus,
   ErikoislaakariKoulutus,
+  KkOpintokokonaisuusKoulutuksenMetatieto,
+  KkOpintokokonaisuusKoulutus,
   LukioKoulutus,
   LukiokoulutuksenMetatieto,
   YoKoulutus
@@ -198,6 +200,17 @@ class KoulutusSpec
     put(KoulutusPath, YoKoulutus.copy(organisaatioOid = YoOid, tarjoajat = List(HkiYoOid)), crudSessions(YoOid), 403)
   }
 
+  it should "allow access for adding any tarjoaja of correct oppilaitos-tyyppi for avoin korkeakoulutus" in {
+    put(
+      KkOpintokokonaisuusKoulutus.copy(
+        metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))),
+        organisaatioOid = YoOid,
+        tarjoajat = List(HkiYoOid, LutYoOid, KuopionKansalaisopistoOid)
+      ),
+      crudSessions(YoOid)
+    )
+  }
+
   it should "deny access if the user only has rights to a descendant of the koulutus organization" in {
     put(KoulutusPath, koulutus, crudSessions(EvilChildOid), 403)
   }
@@ -319,7 +332,7 @@ class KoulutusSpec
 
   it should "allow access when removing tarjoaja organization from own koulutus, even though user doesn't have rights to the tarjoaja organization" in {
     var theKoulutus = yoKoulutus.copy(organisaatioOid = YoOid)
-    val oid             = put(theKoulutus, ophSession)
+    val oid         = put(theKoulutus, ophSession)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
     val lastModified    = get(oid, theKoulutus)
     val updatedKoulutus = theKoulutus.copy(tarjoajat = List(YoOid))
@@ -343,6 +356,19 @@ class KoulutusSpec
     val updatedKoulutus = koulutus(oid).copy(tarjoajat = EvilChildOid :: koulutus.tarjoajat)
 
     update(updatedKoulutus, lastModified, crudSessions(ChildOid), 403)
+  }
+
+  it should "allow access for adding any tarjoaja of correct oppilaitos-tyyppi for avoin korkeakoulutus" in {
+    var theKoulutus = KkOpintokokonaisuusKoulutus.copy(
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))),
+      organisaatioOid = YoOid,
+      tarjoajat = List(YoOid)
+    )
+    val oid = put(theKoulutus)
+    theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
+    val lastModified    = get(oid, theKoulutus)
+    val updatedKoulutus = theKoulutus.copy(tarjoajat = HkiYoOid :: LutYoOid :: KuopionKansalaisopistoOid :: theKoulutus.tarjoajat)
+    update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(YoOid))
   }
 
   it should "allow organisaatioOid change if user had rights to new organisaatio" in {
