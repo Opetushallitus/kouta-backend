@@ -311,7 +311,7 @@ class KoulutusService(
           overridingAuthorizationRule = Some(AuthorizationRuleByOrganizationAndKoulutustyyppi)
         )
       )
-      val rulesForTarjoajat = authorizedForTarjoajaOids(koulutus.tarjoajat.toSet)
+      val rulesForTarjoajat = if (koulutus.isAvoinKorkeakoulutus()) None else authorizedForTarjoajaOids(koulutus.tarjoajat.toSet)
       (rulesForCreatingKoulutus :: rulesForTarjoajat :: Nil).flatten
     }
 
@@ -350,16 +350,20 @@ class KoulutusService(
     if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldKoulutus.tila, newKoulutus.tila)) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
     } else {
-      oldKoulutus.koulutustyyppi match {
-        case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
-          List(AuthorizationRules(Seq(Role.Paakayttaja)))
-        case _ =>
-          val newTarjoajat = newKoulutus.tarjoajat.toSet
-          val oldTarjoajat = oldKoulutus.tarjoajat.toSet
 
-          val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
-          val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
-          (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: Nil).flatten
+        oldKoulutus.koulutustyyppi match {
+          case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
+            List(AuthorizationRules(Seq(Role.Paakayttaja)))
+          case _ =>
+            val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))
+            if (newKoulutus.isAvoinKorkeakoulutus()) {
+              rulesForUpdatingKoulutus.toList
+            } else {
+              val newTarjoajat = newKoulutus.tarjoajat.toSet
+              val oldTarjoajat = oldKoulutus.tarjoajat.toSet
+              val rulesForAddedTarjoajat   = authorizedForTarjoajaOids(newTarjoajat diff oldTarjoajat)
+              (rulesForUpdatingKoulutus :: rulesForAddedTarjoajat :: Nil).flatten
+            }
       }
     }
   }

@@ -1,17 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{
-  CachedOrganisaatioHierarkiaClient,
-  CallerId,
-  OrganisaatioServiceClient,
-  OrganisaatioServiceQueryException
-}
+import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient, OrganisaatioServiceQueryException}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
 import fi.oph.kouta.util.MiscUtils
 import fi.vm.sade.properties.OphProperties
-import org.scalatra.Params
+import org.scalatra.{MultiParams, Params}
 
 import scala.util.{Failure, Success, Try}
 
@@ -43,14 +38,14 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     }
   }
 
-  def getOrganisaatioHierarkia(params: Params) = {
-    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params))
+  def getOrganisaatioHierarkia(params: Params, multiParams: MultiParams) = {
+    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params), Some(multiParams))
   }
 
   def getOppilaitoksetForAvoinKorkeakoulutus(): OrganisaatioHierarkia = {
     val filtered =
       organisaatioServiceClient
-        .getOrganisaatioHierarkiaFromCache(None, oppilaitostyypitForAvoinKorkeakoulutus)
+        .getOrganisaatioHierarkiaFromCache(None, None, oppilaitostyypitForAvoinKorkeakoulutus)
         .organisaatiot
         .map(_.copy(children = List()))
     OrganisaatioHierarkia(organisaatiot = filtered)

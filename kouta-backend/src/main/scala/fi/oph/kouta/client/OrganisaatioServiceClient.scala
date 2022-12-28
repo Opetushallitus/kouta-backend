@@ -8,7 +8,7 @@ import fi.oph.kouta.servlet.SearchParams.commaSepStringValToSeq
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
-import org.scalatra.Params
+import org.scalatra.{MultiParams, Params}
 
 import java.net.{URLDecoder, URLEncoder}
 import scala.concurrent.duration._
@@ -90,13 +90,15 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatioHierarkiaFromCache(
       params: Option[Params],
+      multiParams: Option[MultiParams],
       oppilaitostyypit: List[String] = List()
   ): OrganisaatioHierarkia = {
+    val oids = multiParams.flatMap(_.get("oidRestrictionList")).getOrElse(Seq()).map(OrganisaatioOid(_))
     val queryParams = params match {
       case Some(params) =>
         OrganisaatioHierarkiaQueryParams(
           searchStr = params.get("searchStr"),
-          oids = commaSepStringValToSeq(params.get("oidRestrictionList")).map(OrganisaatioOid(_)).toList,
+          oids = oids,
           oid = params.get("oid").map(OrganisaatioOid(_)),
           aktiiviset = params.get("aktiiviset").getOrElse("true"),
           suunnitellut = params.get("suunnitellut").getOrElse("true"),
@@ -106,6 +108,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
         )
       case None =>
         OrganisaatioHierarkiaQueryParams(
+          oids = oids,
           oppilaitostyypit = oppilaitostyypit
         )
     }

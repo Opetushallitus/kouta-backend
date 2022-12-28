@@ -149,7 +149,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
   get("/hierarkia") {
 
     implicit val authenticated: Authenticated = authenticate()
-    Ok(organisaatioService.getOrganisaatioHierarkia(params))
+    Ok(organisaatioService.getOrganisaatioHierarkia(params, multiParams))
   }
 
   registerPath("/organisaatio/oppilaitokset-for-avoin-korkeakoulutus",
