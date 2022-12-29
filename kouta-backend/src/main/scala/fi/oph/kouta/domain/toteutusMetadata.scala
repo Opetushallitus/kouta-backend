@@ -516,14 +516,19 @@ package object toteutusMetadata {
       |              example: taiteiden-perusopetus
       |              enum:
       |                - taiteiden-perusopetus
-      |            taiteenalaKoodiUri:
-      |              type: String
-      |              description: "Taiteenala. Viittaa [koodistoon](https://virkailija.opintopolku.fi/koodisto-app/koodisto/view/taiteenperusopetustaiteenala/1)"
-      |              example: taiteenperusopetustaiteenala_kuvataide#1
+      |            taiteenalaKoodiUrit:
+      |              type: array
+      |              description: Lista taiteenaloja. Viittaa [koodistoon](https://virkailija.opintopolku.fi/koodisto-app/koodisto/view/taiteenperusopetustaiteenala/1)
+      |              items:
+      |                type: string
+      |              example:
+      |                - taiteenperusopetustaiteenala_kuvataide#1
+      |                - taiteenperusopetustaiteenala_arkkitehtuuri#1
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
-      |              example: opintojenlaajuusyksikko_2#1
+      |              example:
+      |                - opintojenlaajuusyksikko_2#1
       |            opintojenLaajuusNumeroMin:
       |              type: integer
       |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
@@ -996,7 +1001,7 @@ case class TaiteidenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = Taiteid
                                                 opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
                                                 opintojenLaajuusNumeroMin: Option[Double] = None,
                                                 opintojenLaajuusNumeroMax: Option[Double] = None,
-                                                taiteenalaKoodiUri: Option[String] = None,
+                                                taiteenalaKoodiUrit: Seq[String] = Seq(),
                                                 opetus: Option[Opetus] = None,
                                                 asiasanat: List[Keyword] = List(),
                                                 ammattinimikkeet: List[Keyword] = List(),

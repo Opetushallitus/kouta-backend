@@ -1319,7 +1319,7 @@ object TestData {
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumeroMin = Some(10),
       opintojenLaajuusNumeroMax = Some(16),
-      taiteenalaKoodiUri = Some("taiteenperusopetustaiteenala_kuvataide"),
+      taiteenalaKoodiUrit = Seq("taiteenperusopetustaiteenala_kuvataide"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       yhteyshenkilot = Seq(Yhteystieto1),

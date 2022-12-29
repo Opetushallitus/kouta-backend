@@ -1504,10 +1504,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if invalid taiteenalaKooriUri" in {
+  it should "fail if invalid taiteenalaKooriUrit" in {
     failsValidation(
-      tpoToteutus.copy(metadata = Some(TaiteidenPerusopetusToteutusMetatieto.copy(taiteenalaKoodiUri = Some("puppu")))),
-      "metadata.taiteenalaKoodiUri",
+      tpoToteutus.copy(metadata = Some(TaiteidenPerusopetusToteutusMetatieto.copy(taiteenalaKoodiUrit = Seq("puppu")))),
+      "metadata.taiteenalaKoodiUrit[0]",
       invalidTaiteenPerusopetusTaiteenalaKoodiuri("puppu")
     )
   }
