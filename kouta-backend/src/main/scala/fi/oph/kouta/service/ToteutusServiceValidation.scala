@@ -691,15 +691,16 @@ class ToteutusServiceValidation(
         m.opintojenLaajuusNumeroMax,
         s"metadata.opintojenLaajuusNumeroMin"
       ),
-      validateIfDefined[String](
-        toteutusDiffResolver.newTaiteenalaKoodiUri(),
-        uri =>
+      validateIfNonEmpty[String](
+        toteutusDiffResolver.newTaiteenalaKoodiUrit(),
+        "metadata.taiteenalaKoodiUrit",
+        (koodiUri, path) =>
           assertKoodistoQueryResult(
-            uri,
+            koodiUri,
             koulutusKoodiClient.taiteenalaKoodiUriExists,
-            "metadata.taiteenalaKoodiUri",
+            path,
             vCtx,
-            invalidTaiteenPerusopetusTaiteenalaKoodiuri(uri)
+            invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri)
           )
       ),
       validateTutkintoonJohtamatonMetadata(vCtx, m)

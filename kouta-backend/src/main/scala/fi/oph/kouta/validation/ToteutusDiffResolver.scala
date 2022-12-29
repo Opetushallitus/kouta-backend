@@ -109,9 +109,9 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
     if (koodiUri != opintojenLaajuusyksikkoKoodiUri(oldMetadata())) koodiUri else None
   }
 
-  def newTaiteenalaKoodiUri(): Option[String] = {
-    val koodiUri = taiteenalaKoodiUri(toteutus.metadata)
-    if (koodiUri != taiteenalaKoodiUri(oldMetadata())) koodiUri else None
+  def newTaiteenalaKoodiUrit(): Seq[String] = {
+    val koodiUri = taiteenalaKoodiUrit(toteutus.metadata)
+    if (koodiUri != taiteenalaKoodiUrit(oldMetadata())) koodiUri else Seq()
   }
 
   private def ammatillisetOsaamisalat(metadata: Option[ToteutusMetadata]): Seq[AmmatillinenOsaamisala] =
@@ -150,9 +150,9 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
       case _                                             => None
     }
 
-  private def taiteenalaKoodiUri(metadata: Option[ToteutusMetadata]): Option[String] =
+  private def taiteenalaKoodiUrit(metadata: Option[ToteutusMetadata]): Seq[String] =
     metadata match {
-      case Some(m: TaiteidenPerusopetusToteutusMetadata) => m.taiteenalaKoodiUri
-      case _                                             => None
+      case Some(m: TaiteidenPerusopetusToteutusMetadata) => m.taiteenalaKoodiUrit
+      case _                                             => Seq()
     }
 }
