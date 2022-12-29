@@ -1192,8 +1192,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       kkOpintojaksoWithParams(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_66#1"),
-        opintojenLaajuusNumeroMin = Some(-1),
-        opintojenLaajuusNumeroMax = Some(-5),
+        opintojenLaajuusNumeroMin = Some(-1.0),
+        opintojenLaajuusNumeroMax = Some(-5.0),
         koulutusalaKoodiUrit = Seq("puppu")
       ).copy(oid = None),
       Seq(
@@ -1207,7 +1207,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ),
         ValidationError(
           "metadata.opinnonTyyppiKoodiUri",
-          invalidOpinnonTyyppiKoodiuri("opinnontyyppi_100#1")
+          invalidOpinnonTyyppiKoodiuri("opinnontyyppi_1#1")
         ),
         ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
         ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
