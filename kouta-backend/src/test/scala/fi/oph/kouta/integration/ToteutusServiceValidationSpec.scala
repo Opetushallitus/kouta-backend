@@ -1533,8 +1533,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   "Julkaisu" should "fail when changing state to julkaistu and invalid koulutuksen alkamiskausi" in {
     val yearAgo   = LocalDateTime.now().minusYears(1)
-    val startDate = yearAgo.minusDays(3)
-    val endDate   = yearAgo.minusDays(1)
+    val startDate = yearAgo.minusDays(1)
+    val endDate   = yearAgo.plusDays(1)
     failsStageChangeValidation(
       ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
         .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
@@ -1552,8 +1552,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "fail when new julkaistu toteutus with invalid koulutuksen alkamiskausi" in {
     val yearAgo   = LocalDateTime.now().minusYears(1)
-    val startDate = yearAgo.minusDays(3)
-    val endDate   = yearAgo.minusDays(1)
+    val startDate = yearAgo.minusDays(1)
+    val endDate   = yearAgo.plusDays(1)
     failsValidation(
       ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)),
       Seq(
