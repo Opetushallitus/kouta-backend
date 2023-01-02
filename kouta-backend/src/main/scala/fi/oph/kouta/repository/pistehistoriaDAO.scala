@@ -32,8 +32,8 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
     val koodiWithoutVersion = hakukohdekoodi.split("#").head
     val hakukohdekoodiInParam = koodiWithoutVersion match {
       case koodi if koodi.startsWith("hakukohteetperusopetuksenjalkeinenyhteishaku") =>
-        "'"+hakukohdekoodi+"','"+ koodi.replace("hakukohteetperusopetuksenjalkeinenyhteishaku", "hakukohteet")+"'"
-      case _ => "'"+hakukohdekoodi+"'"
+        "'"+koodi+"','"+ koodi.replace("hakukohteetperusopetuksenjalkeinenyhteishaku", "hakukohteet")+"'"
+      case koodi => "'"+koodi+"'"
     }
 
     sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid from pistehistoria
