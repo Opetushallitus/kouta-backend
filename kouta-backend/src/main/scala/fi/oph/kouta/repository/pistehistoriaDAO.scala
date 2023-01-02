@@ -47,7 +47,7 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
         sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid)
               values (
                       ${pistetieto.tarjoaja},
-                      ${pistetieto.hakukohdekoodi},
+                      ${pistetieto.hakukohdekoodi.split('#').head},
                       ${pistetieto.vuosi},
                       ${pistetieto.pisteet},
                       ${pistetieto.valintatapajonoOid},
