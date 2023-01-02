@@ -994,4 +994,8 @@ package object domain {
     "oppilaitostyyppi_65#1", //Opintokeskukset
     "oppilaitostyyppi_99#1", //Muut oppilaitokset,
   )
+
+  val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"
+  val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6"
+  val opintojenLaajuusViikko       = "opintojenlaajuusyksikko_8"
 }

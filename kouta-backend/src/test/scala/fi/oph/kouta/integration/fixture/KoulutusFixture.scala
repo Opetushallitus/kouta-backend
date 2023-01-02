@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
 import fi.oph.kouta.service.{KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
@@ -26,8 +27,9 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
     val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
+    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
     val koulutusServiceValidation =
-      new KoulutusServiceValidation(koodistoClient, ePerusteKoodiClient, organisaatioService, ToteutusDAO, SorakuvausDAO)
+      new KoulutusServiceValidation(koodistoClient, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
 
     new KoulutusService(
       SqsInTransactionServiceIgnoringIndexing,
