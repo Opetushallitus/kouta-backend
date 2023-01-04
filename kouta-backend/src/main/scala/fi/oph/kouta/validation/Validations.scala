@@ -66,6 +66,10 @@ object Validations {
     msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
+  def invalidErikoistumiskoulutusKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua erikoistumiskoulutus-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidErikoistumiskoulutusKoodiuri"
+  )
 
   def invalidKoulutusOpintojenLaajuusyksikkoIntegrity(koodiUri: String, toteutukset: Seq[ToteutusOid]): ErrorMessage =
     ErrorMessage(
@@ -384,6 +388,10 @@ object Validations {
     msg = s"Ei saa sisältää arvoa, vastaavaa kielistettyä arvoa ei ole asetettu $nameSourceDesc",
     id = "nameNotAllowedForFixedlyNamedEntity"
   )
+  def illegalOpintojenLaajuusNumero(expectedValue: Double): ErrorMessage = ErrorMessage(
+    msg = s"Opintojen laajuuden numeroarvon täytyy olla täsmälleen $expectedValue. Arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    id = "illegalOpintojenLaajuusNumero"
+  )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
     ErrorMessage(msg = s"$entityDesc ei voi poistaa koska siihen on liitetty $relatedEntity", id = "integrityViolation")
 
@@ -495,8 +503,7 @@ object Validations {
   def assertOneAndOnlyCertainValueInSeq(
       value: Seq[String],
       expectedValuePrefix: String,
-      path: String,
-      expectedValueDescription: Option[String] = None
+      path: String
   ): IsValid =
     if (value.size == 1 && value.head.startsWith(expectedValuePrefix)) {
       NoErrors
