@@ -43,7 +43,7 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
       .execute(req)
       .flatMap {
         case failure: RequestFailure =>
-          logger.debug(s"Elasticsearch request failure: {}", failure.error)
+          logger.error(s"Elasticsearch request failure: {}", failure.error)
           Future.failed(ElasticSearchException(failure.error))
         case response: RequestSuccess[SearchResponse] =>
           logger.debug(s"Elasticsearch status: {}", response.status)
