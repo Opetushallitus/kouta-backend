@@ -162,6 +162,11 @@ class ToteutusService(
                 withMData(t, kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case erikoistumisKoulutusMetadata: ErikoistumiskoulutusToteutusMetadata =>
                 withMData(t, erikoistumisKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case taiteidenPerusopetusToteutusMetadata: TaiteidenPerusopetusToteutusMetadata =>
+                withMData(
+                  t,
+                  taiteidenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
+                )
             }
           case lukioMetadata: LukioToteutusMetadata =>
             withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
