@@ -78,10 +78,8 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
     sql"""select greatest(
             max(lower(vp.system_time)),
             max(lower(vk.system_time)),
-            max(upper(vph.system_time)),
             max(upper(vkh.system_time)))
           from valintaperusteet vp
-          left join valintaperusteet_history vph on vp.id = vph.id
           left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
           left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
           where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head

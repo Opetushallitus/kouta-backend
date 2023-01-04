@@ -184,12 +184,10 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
             max(lower(hh.system_time)),
             max(lower(hv.system_time)),
             max(lower(hl.system_time)),
-            max(upper(hah.system_time)),
             max(upper(hhh.system_time)),
             max(upper(hvh.system_time)),
             max(upper(hlh.system_time)))
           from hakukohteet ha
-          left join hakukohteet_history hah on ha.oid = hah.oid
           left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
           left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
           left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
@@ -504,12 +502,10 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              max(lower(hh.system_time)),
              max(lower(hv.system_time)),
              max(lower(hl.system_time)),
-             max(upper(hah.system_time)),
              max(upper(hhh.system_time)),
              max(upper(hvh.system_time)),
              max(upper(hlh.system_time))) modified
            from hakukohteet ha
-           left join hakukohteet_history hah on ha.oid = hah.oid
            left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
            left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
            left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid

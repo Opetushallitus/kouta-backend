@@ -168,11 +168,9 @@ trait ToteutusModificationSQL extends SQLHelpers {
     sql"""select greatest(
             max(lower(t.system_time)),
             max(lower(ta.system_time)),
-            max(upper(th.system_time)),
             max(upper(tah.system_time)))
           from toteutukset t
           left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-          left join toteutukset_history th on t.oid = th.oid
           left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
           where t.oid = $oid""".as[Option[Instant]].head
   }
@@ -214,11 +212,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                   greatest(
                           max(lower(t.system_time)),
                           max(lower(ta.system_time)),
-                          max(upper(th.system_time)),
                           max(upper(tah.system_time))) modified
            from toteutukset t
                     left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-                    left join toteutukset_history th on t.oid = th.oid
                     left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 
@@ -302,7 +298,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               teemakuva = ${toteutus.teemakuva},
               sorakuvaus_id = ${toteutus.sorakuvausId.map(_.toString)}::uuid
             where oid = ${toteutus.oid}
-            and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
+            and (koulutus_oid is distinct from ${toteutus.koulutusOid}
             or external_id is distinct from ${toteutus.externalId}
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
@@ -337,11 +333,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            select t.oid oid, greatest(
              max(lower(t.system_time)),
              max(lower(ta.system_time)),
-             max(upper(th.system_time)),
              max(upper(tah.system_time))) modified
            from toteutukset t
            left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-           left join toteutukset_history th on t.oid = th.oid
            left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
            group by t.oid) m on t.oid = m.oid"""
 

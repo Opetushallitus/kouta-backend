@@ -84,10 +84,8 @@ trait HakuModificationSQL extends SQLHelpers {
     sql"""select greatest(
             max(lower(ha.system_time)),
             max(lower(hh.system_time)),
-            max(upper(hah.system_time)),
             max(upper(hhh.system_time)))
           from haut ha
-          left join haut_history hah on ha.oid = hah.oid
           left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
           left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
           where ha.oid = $oid""".as[Option[Instant]].head
@@ -232,10 +230,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
            select ha.oid oid, greatest(
              max(lower(ha.system_time)),
              max(lower(hh.system_time)),
-             max(upper(hah.system_time)),
              max(upper(hhh.system_time))) modified
            from haut ha
-           left join haut_history hah on ha.oid = hah.oid
            left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
            left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
            group by ha.oid
