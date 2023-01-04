@@ -139,11 +139,9 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
     sql"""select greatest(
             max(lower(k.system_time)),
             max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
             max(upper(tah.system_time)))
           from koulutukset k
           left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-          left join koulutukset_history kh on k.oid = kh.oid
           left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
           where k.oid = $oid""".as[Option[Instant]].head
   }
@@ -250,11 +248,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             select k.oid oid, greatest(
               max(lower(k.system_time)),
               max(lower(ta.system_time)),
-              max(upper(kh.system_time)),
               max(upper(tah.system_time))) modified
             from koulutukset k
             left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
             left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
             group by k.oid) m on k.oid = m.oid
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
@@ -326,11 +322,9 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
            select k.oid oid, greatest(
              max(lower(k.system_time)),
              max(lower(ta.system_time)),
-             max(upper(kh.system_time)),
              max(upper(tah.system_time))) modified
            from koulutukset k
            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-           left join koulutukset_history kh on k.oid = kh.oid
            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
            group by k.oid) m on k.oid = m.oid"""
 
@@ -354,11 +348,9 @@ select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modifi
         select k.oid oid, greatest(
             max(lower(k.system_time)),
             max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
             max(upper(tah.system_time))) modified
         from koulutukset k
             left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
             left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
         where
             -- Listauksissa halutaan näyttää..

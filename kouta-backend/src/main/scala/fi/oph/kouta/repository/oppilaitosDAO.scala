@@ -68,10 +68,8 @@ sealed trait OppilaitosModificationSQL extends SQLHelpers {
 
   def selectLastModified(oid: OrganisaatioOid): DBIO[Option[Instant]] = {
     sql"""select greatest(
-            max(lower(o.system_time)),
-            max(upper(oh.system_time)))
+            max(lower(o.system_time)))
           from oppilaitokset o
-          left join oppilaitokset_history oh on o.oid = oh.oid
           where o.oid = $oid""".as[Option[Instant]].head
   }
 
