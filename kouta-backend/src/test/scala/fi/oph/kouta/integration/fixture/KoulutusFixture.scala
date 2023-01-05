@@ -140,14 +140,19 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
       DBIO.seq(
         sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER koulutukset_history""",
         sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
+        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER set_koulutus_last_modified_on_change""",
         sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER koulutusten_tarjoajat_history""",
         sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
+        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER set_koulutus_last_modified_on_tarjoajat_change""",
         sqlu"""update koulutukset set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where oid = '#$oid'""",
+        sqlu"""update koulutukset set last_modified = (now() - interval '#$duration') where oid = '#$oid'""",
         sqlu"""update koulutusten_tarjoajat set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where koulutus_oid = '#$oid'""",
         sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER koulutukset_history""",
+        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_koulutus_last_modified_on_change""",
         sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
         sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update"""
+        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
+        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_koulutus_last_modified_on_tarjoajat_change"""
       )
     )
   }
