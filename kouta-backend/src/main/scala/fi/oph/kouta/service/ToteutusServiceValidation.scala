@@ -157,7 +157,7 @@ class ToteutusServiceValidation(
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
                     validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
-                case m: TaiteidenPerusopetusToteutusMetadata =>
+                case m: TaiteenPerusopetusToteutusMetadata =>
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
@@ -356,7 +356,7 @@ class ToteutusServiceValidation(
       m: TutkintoonJohtamatonToteutusMetadata
   ) = {
     //TODO Lisää tähän kaikki koulutustyypit joille ei aseteta aloituspaikka-tietoa
-    val koulutustyypitWoAloituspaikat: Set[Koulutustyyppi] = Set(TaiteidenPerusopetus)
+    val koulutustyypitWoAloituspaikat: Set[Koulutustyyppi] = Set(TaiteenPerusopetus)
     and(
       validateIfNonEmpty(m.hakulomakeLinkki, "metadata.hakulomakeLinkki", assertValidUrl _),
       validateIfDefined[Ajanjakso](m.hakuaika, _.validate(vCtx, "metadata.hakuaika")),
@@ -662,9 +662,9 @@ class ToteutusServiceValidation(
   }
 
   private def validateTaiteenPerusopetusMetadata(
-      m: TaiteidenPerusopetusToteutusMetadata,
-      vCtx: ValidationContext,
-      toteutusDiffResolver: ToteutusDiffResolver
+                                                  m: TaiteenPerusopetusToteutusMetadata,
+                                                  vCtx: ValidationContext,
+                                                  toteutusDiffResolver: ToteutusDiffResolver
   ): IsValid =
     and(
       validateIfDefined[String](

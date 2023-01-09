@@ -623,15 +623,15 @@ object TestData {
     )
   )
 
-  val TaiteidenPerusopetusKoulutus: Koulutus = Koulutus(
+  val TaiteenPerusopetusKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
-    koulutustyyppi = TaiteidenPerusopetus,
+    koulutustyyppi = TaiteenPerusopetus,
     koulutuksetKoodiUri = Seq("koulutus_999907#1"),
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(
-      TaiteidenPerusopetusKoulutusMetadata(
+      TaiteenPerusopetusKoulutusMetadata(
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
         isMuokkaajaOphVirkailija = Some(false)
@@ -1312,9 +1312,9 @@ object TestData {
   val AikuistenPerusopetusToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(AikuistenPerusopetusToteutusMetatieto))
 
-  val TaiteidenPerusopetusToteutusMetatieto: TaiteidenPerusopetusToteutusMetadata =
-    TaiteidenPerusopetusToteutusMetadata(
-      tyyppi = TaiteidenPerusopetus,
+  val TaiteenPerusopetusToteutusMetatieto: TaiteenPerusopetusToteutusMetadata =
+    TaiteenPerusopetusToteutusMetadata(
+      tyyppi = TaiteenPerusopetus,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumeroMin = Some(10),
@@ -1332,8 +1332,8 @@ object TestData {
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false))
 
-  val TaiteidenPerusopetusToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(TaiteidenPerusopetusToteutusMetatieto))
+  val TaiteenPerusopetusToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(TaiteenPerusopetusToteutusMetatieto))
 
   val MinToteutus: Toteutus = Toteutus(
     muokkaaja = TestUserOid,

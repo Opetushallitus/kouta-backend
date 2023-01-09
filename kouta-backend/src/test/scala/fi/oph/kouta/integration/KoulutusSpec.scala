@@ -558,8 +558,8 @@ class KoulutusSpec
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
   }
 
-  it should "set koulutuksetKoodiUri of taiteiden perusopetus koulutus automatically if not given" in {
-    val tpoKoulutus = TaiteidenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
+  it should "set koulutuksetKoodiUri of taiteen perusopetus koulutus automatically if not given" in {
+    val tpoKoulutus = TaiteenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
     val oid          = put(tpoKoulutus)
     get(oid, tpoKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_999907#1")))
   }
