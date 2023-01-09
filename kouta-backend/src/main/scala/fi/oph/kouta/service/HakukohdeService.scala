@@ -1,18 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
-import fi.oph.kouta.client.{
-  HakuKoodiClient,
-  KayttooikeusClient,
-  KoutaSearchClient,
-  LokalisointiClient,
-  OppijanumerorekisteriClient
-}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
-import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
@@ -48,6 +40,11 @@ case class HakukohdeCopyResultObject(
     oid: HakukohdeOid,
     status: String,
     created: CopyOids
+)
+
+case class HakukohdeTilaChangeResultObject(
+    oid: HakukohdeOid,
+    status: String
 )
 
 class HakukohdeService(
@@ -287,6 +284,53 @@ class HakukohdeService(
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
+
+  def changeTila(hakukohdeOids: Seq[HakukohdeOid], tila: String, unModifiedSince: Instant)(implicit
+      authenticated: Authenticated
+  ): List[HakukohdeTilaChangeResultObject] = {
+    val hakukohteet: Seq[Hakukohde] = hakukohdeOids.map(oid => {
+      HakukohdeDAO.get(oid, TilaFilter.all())
+    }).collect {
+      case Some(result) => result._1
+    }
+
+    val updatedHakukohdeOids = scala.collection.mutable.Set[HakukohdeOid]()
+
+    val tilaChangeResults = hakukohteet.toList.map(hakukohde => {
+      try {
+        val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila))
+        update(hakukohdeWithNewTila, unModifiedSince) match {
+          case true =>
+            updatedHakukohdeOids += hakukohdeWithNewTila.oid.get
+            HakukohdeTilaChangeResultObject(
+            oid = hakukohdeWithNewTila.oid.get,
+            status = "success"
+          )
+          case false => HakukohdeTilaChangeResultObject(
+            oid = hakukohdeWithNewTila.oid.get,
+            status = "error"
+          )
+        }
+      } catch {
+        case error: Throwable =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+          )
+      }
+    })
+
+    val notFound =
+      for {
+        hkOid <- hakukohdeOids.filterNot(hakukohdeOid => updatedHakukohdeOids.contains(hakukohdeOid))
+      } yield HakukohdeTilaChangeResultObject(
+        oid = hkOid,
+        status = "error"
+      )
+
+    tilaChangeResults ++ notFound
+  }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {
