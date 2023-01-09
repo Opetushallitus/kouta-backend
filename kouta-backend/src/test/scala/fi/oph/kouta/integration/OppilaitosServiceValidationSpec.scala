@@ -242,5 +242,13 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  it should "not fail if non oph pääkäyttäjä has not changes järjestää uheilijan ammatillista koulutusta" in {
+    passesValidation(
+      max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(false)))),
+      Some(max)
+    )
+  }
+
+
   val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
 }
