@@ -506,6 +506,16 @@ package object domain {
       |          type: string
       |""".stripMargin
 
+  val TilaChangeResultModel: String =
+    """    TilaChangeResult:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |        status:
+      |          type: string
+      |""".stripMargin
+
   val models = List(
     KoulutustyyppiModel,
     KieliModel,
@@ -532,7 +542,8 @@ package object domain {
     AloituspaikatModel,
     HakutermiModel,
     CopyResultModel,
-    PistetietoModel
+    PistetietoModel,
+    TilaChangeResultModel
   )
 
   type Kielistetty = Map[Kieli, String]
