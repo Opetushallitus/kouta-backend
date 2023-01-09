@@ -1,1 +1,0 @@
-alter type koulutustyyppi add value if not exists 'taiteiden-perusopetus';

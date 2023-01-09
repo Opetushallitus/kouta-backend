@@ -60,8 +60,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val ammOsaamisalaToteutus       = AmmOsaamisalaToteutus.copy(koulutusOid = ammOsaamisalaKoulutus.oid.get)
   val vstOpistovuosiKoulutus      = VapaaSivistystyoOpistovuosiKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.139")))
   val vstOpistovuosiToteutus      = VapaaSivistystyoOpistovuosiToteutus.copy(koulutusOid = vstOpistovuosiKoulutus.oid.get)
-  val tpoKoulutus                 = TaiteidenPerusopetusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.140")))
-  val tpoToteutus                 = TaiteidenPerusopetusToteutus.copy(koulutusOid = tpoKoulutus.oid.get)
+  val tpoKoulutus                 = TaiteenPerusopetusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.140")))
+  val tpoToteutus                 = TaiteenPerusopetusToteutus.copy(koulutusOid = tpoKoulutus.oid.get)
 
   val sorakuvausId  = UUID.randomUUID()
   val sorakuvausId2 = UUID.randomUUID()
@@ -216,7 +216,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // yleiset
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmmOid)).thenAnswer(
       Seq(AmmOid),
-      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, TaiteidenPerusopetus)
+      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, TaiteenPerusopetus)
     )
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid))
@@ -362,7 +362,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(kkOpintojaksoToteutus)
   }
 
-  it should "succeed when new valid TaiteidenPerusopetus toteutus" in {
+  it should "succeed when new valid TaiteenPerusopetus toteutus" in {
     passesValidation(tpoToteutus)
   }
 
@@ -981,7 +981,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail if aloituspaikat given for koulutustyyppi not using aloituspaikat" in {
-    failValidationWhenAloituspaikatGiven(TaiteidenPerusopetusToteutusMetatieto.copy(aloituspaikat = Some(10)))
+    failValidationWhenAloituspaikatGiven(TaiteenPerusopetusToteutusMetatieto.copy(aloituspaikat = Some(10)))
   }
 
   "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {
@@ -1484,11 +1484,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "TaiteidenPerusopetusToteutus validation" should "fail if invalid opintojenLaajuus" in {
+  "TaiteenPerusopetusToteutus validation" should "fail if invalid opintojenLaajuus" in {
     failsValidation(
       tpoToteutus.copy(metadata =
         Some(
-          TaiteidenPerusopetusToteutusMetatieto.copy(
+          TaiteenPerusopetusToteutusMetatieto.copy(
             opintojenLaajuusyksikkoKoodiUri = Some("puppu"),
             opintojenLaajuusNumeroMin = Some(-1.0),
             opintojenLaajuusNumeroMax = Some(-5.0)
@@ -1506,7 +1506,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "fail if invalid taiteenalaKooriUrit" in {
     failsValidation(
-      tpoToteutus.copy(metadata = Some(TaiteidenPerusopetusToteutusMetatieto.copy(taiteenalaKoodiUrit = Seq("puppu")))),
+      tpoToteutus.copy(metadata = Some(TaiteenPerusopetusToteutusMetatieto.copy(taiteenalaKoodiUrit = Seq("puppu")))),
       "metadata.taiteenalaKoodiUrit[0]",
       invalidTaiteenPerusopetusTaiteenalaKoodiuri("puppu")
     )

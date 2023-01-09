@@ -212,7 +212,7 @@ class KoulutusServiceValidation(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
-      case TaiteidenPerusopetus =>
+      case TaiteenPerusopetus =>
         and(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertOneAndOnlyCertainValueInSeq(
@@ -257,10 +257,10 @@ class KoulutusServiceValidation(
         KkOpintokokonaisuus,
         Erikoislaakari,
         Erikoistumiskoulutus,
-        TaiteidenPerusopetus
+        TaiteenPerusopetus
       )
     val koulutustyypitWithoutLisatiedot: Set[Koulutustyyppi] =
-      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, TaiteidenPerusopetus)
+      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, TaiteenPerusopetus)
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
@@ -427,7 +427,7 @@ class KoulutusServiceValidation(
             assertNotOptional(m.erikoistumiskoulutusKoodiUri, "metadata.erikoistumiskoulutusKoodiUri")
           )
         )
-      case m: TaiteidenPerusopetusKoulutusMetadata =>
+      case m: TaiteenPerusopetusKoulutusMetadata =>
         and(
           validateIfNonEmpty(m.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
           validateIfJulkaistu(

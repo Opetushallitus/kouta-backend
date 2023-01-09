@@ -422,8 +422,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     passesValidation(AmmKoulutus)
   }
 
-  it should "Succeed when new valid TaiteidenPerusopetus koulutus" in {
-    passesValidation(TaiteidenPerusopetusKoulutus)
+  it should "Succeed when new valid TaiteenPerusopetus koulutus" in {
+    passesValidation(TaiteenPerusopetusKoulutus)
   }
 
   it should "succeed when tarjoajat not changed in modify operation, even though unknown tarjoajat" in {
@@ -1604,12 +1604,12 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   val yoWithOid = yo.copy(oid = Some(KoulutusOid("1.2.246.562.13.00000000000000000123")))
-  it should "fail if invalid TaiteidenPerusopetus -koulutus" in {
+  it should "fail if invalid TaiteenPerusopetus -koulutus" in {
     failsValidation(
-      TaiteidenPerusopetusKoulutus.copy(
+      TaiteenPerusopetusKoulutus.copy(
         koulutuksetKoodiUri = Seq("koulutus_201101#12"),
         metadata = Some(
-          TaiteidenPerusopetusKoulutusMetadata(
+          TaiteenPerusopetusKoulutusMetadata(
             kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
             linkkiEPerusteisiin = Map(Fi -> "puppua suomeksi"),
             isMuokkaajaOphVirkailija = Some(false)

@@ -469,8 +469,8 @@ package object koulutusMetadata {
       |              example: 20
       |""".stripMargin
 
-  val TaiteidenPerusopetusKoulutusMetadataModel: String =
-    """    TaiteidenPerusopetusKoulutusMetadata:
+  val TaiteenPerusopetusKoulutusMetadataModel: String =
+    """    TaiteenPerusopetusKoulutusMetadata:
       |      allOf:
       |        - $ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
@@ -478,9 +478,9 @@ package object koulutusMetadata {
       |            tyyppi:
       |              type: string
       |              description: Koulutuksen metatiedon tyyppi
-      |              example: taiteiden-perusopetus
+      |              example: taiteen-perusopetus
       |              enum:
-      |                - taiteiden-perusopetus
+      |                - taiteen-perusopetus
       |            linkkiEPerusteisiin:
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
@@ -507,7 +507,7 @@ package object koulutusMetadata {
     ErikoislaakariKoulutusMetadataModel,
     KkOpintokokonaisuusKoulutusMetadataModel,
     ErikoistumiskoulutusMetadataModel,
-    TaiteidenPerusopetusKoulutusMetadataModel
+    TaiteenPerusopetusKoulutusMetadataModel
   )
 }
 
@@ -697,8 +697,8 @@ case class ErikoistumiskoulutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadata
 
-case class TaiteidenPerusopetusKoulutusMetadata(
-    tyyppi: Koulutustyyppi = TaiteidenPerusopetus,
+case class TaiteenPerusopetusKoulutusMetadata(
+    tyyppi: Koulutustyyppi = TaiteenPerusopetus,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
