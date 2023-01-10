@@ -40,6 +40,8 @@ abstract class KoutaConfigFactory[TConfig <: KoutaBaseConfig](moduleName: String
   val TEST_TEMPLATE_FILE_PATH: String = "src/test/resources/test-vars.yml"
   val DEV_TEMPLATE_FILE_PATH: String  = "src/test/resources/dev-vars.yml"
 
+  def isTesting = profile == CONFIG_PROFILE_TEMPLATE && DEFAULT_TEMPLATE_FILE_PATH == TEST_TEMPLATE_FILE_PATH
+
   def DEFAULT_TEMPLATE_FILE_PATH: String = Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE)) match {
     case Some(templateFilePath) => templateFilePath
     case _                      => TEST_TEMPLATE_FILE_PATH

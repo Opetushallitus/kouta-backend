@@ -6,6 +6,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
+import org.postgresql.jdbc.AutoSave
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -27,12 +28,20 @@ object KoutaDatabase extends Logging {
     config.setPassword(settings.password)
     val maxPoolSize = settings.maxConnections.getOrElse(10)
     config.setMaximumPoolSize(maxPoolSize)
+    if (
+      KoutaConfigurationFactory.isTesting
+    ) {
+      // Prevent db error "cached plan must not change result type" in migration tests
+      config.addDataSourceProperty("autosave", AutoSave.CONSERVATIVE)
+    }
     settings.minConnections.foreach(config.setMinimumIdle)
     settings.registerMbeans.foreach(config.setRegisterMbeans)
     //settings.initializationFailTimeout.foreach(hikariConfig.setI)
     //hikariConfig.setLeakDetectionThreshold(settings.leakDetectionThresholdMillis.getOrElse(settings.getMaxLifetime))
     config
   }
+
+  private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password)
 
   logger.warn(settings.username)
 
@@ -49,7 +58,12 @@ object KoutaDatabase extends Logging {
     )
   }
 
-  def runBlockingTransactionally[R](operations: DBIO[R], timeout: Duration = Duration(20, TimeUnit.SECONDS), isolation: TransactionIsolation = Serializable, retries: Int = 2): Try[R] = {
+  def runBlockingTransactionally[R](
+      operations: DBIO[R],
+      timeout: Duration = Duration(20, TimeUnit.SECONDS),
+      isolation: TransactionIsolation = Serializable,
+      retries: Int = 2
+  ): Try[R] = {
     val SERIALIZATION_VIOLATION = "40001"
     try {
       Success[R](runBlocking(operations.transactionally.withTransactionIsolation(isolation), timeout))
@@ -69,9 +83,11 @@ object KoutaDatabase extends Logging {
 
   private def initDb(config: HikariConfig) = {
     val executor = AsyncExecutor("kouta", config.getMaximumPoolSize, 1000)
-    logger.info(s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
-      s"${ToStringBuilder.reflectionToString(config).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
-      s" and executor ${ToStringBuilder.reflectionToString(executor)}")
+    logger.info(
+      s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
+        s"${ToStringBuilder.reflectionToString(config).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
+        s" and executor ${ToStringBuilder.reflectionToString(executor)}"
+    )
     Database.forDataSource(new HikariDataSource(config), maxConnections = Some(config.getMaximumPoolSize), executor)
   }
 
@@ -79,8 +95,7 @@ object KoutaDatabase extends Logging {
     new HikariDataSource(hikariConfig)
   }
 
-  private def migrate() = {
-    val flyway = Flyway.configure.dataSource(settings.url, settings.username, settings.password).load
-    flyway.migrate
-  }
+  def migrate(target: String = "latest") = flywayConfig.target(target).load.migrate
+
+  def clean() = flywayConfig.load.clean
 }

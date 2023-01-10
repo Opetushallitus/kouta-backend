@@ -24,12 +24,18 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
   val KoulutusPath = "/koulutus"
 
   def koulutusService: KoulutusService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
-    val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
+    val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
+    val koodistoClient               = new KoulutusKoodiClient(urlProperties.get)
+    val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
     val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
     val koulutusServiceValidation =
-      new KoulutusServiceValidation(koodistoClient, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
+      new KoulutusServiceValidation(
+        koodistoClient,
+        organisaatioService,
+        ToteutusDAO,
+        SorakuvausDAO,
+        ammKoulutusServiceValidation
+      )
 
     new KoulutusService(
       SqsInTransactionServiceIgnoringIndexing,
@@ -134,6 +140,8 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
 
   import slick.dbio.DBIO
   import slick.jdbc.PostgresProfile.api._
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import java.time.Instant
 
   def setModifiedToPast(oid: String, duration: String): Try[Unit] = {
     db.runBlockingTransactionally(
@@ -156,4 +164,15 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
       )
     )
   }
+
+  private def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
+    for {
+      oid <- KoulutusDAO.insertKoulutus(koulutus)
+      _   <- KoulutusDAO.insertKoulutuksenTarjoajat(koulutus.withOid(oid))
+    } yield koulutus.withOid(oid)
+
+  def insertKoulutus(k: Koulutus) = db.runBlockingTransactionally(for {
+    k <- getPutActions(k)
+    n <- sql"""select now()::timestamptz""".as[Instant].head
+  } yield (k, n))
 }
