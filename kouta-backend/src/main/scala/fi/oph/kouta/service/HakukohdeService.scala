@@ -301,19 +301,22 @@ class HakukohdeService(
         val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila))
         update(hakukohdeWithNewTila, unModifiedSince) match {
           case true =>
-            updatedHakukohdeOids += hakukohdeWithNewTila.oid.get
+            updatedHakukohdeOids += hakukohde.oid.get
             HakukohdeTilaChangeResultObject(
-            oid = hakukohdeWithNewTila.oid.get,
+            oid = hakukohde.oid.get,
             status = "success"
           )
-          case false => HakukohdeTilaChangeResultObject(
-            oid = hakukohdeWithNewTila.oid.get,
+          case false =>
+            updatedHakukohdeOids += hakukohde.oid.get
+            HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
             status = "error"
           )
         }
       } catch {
         case error: Throwable =>
           logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
           HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
             status = "error",
