@@ -447,6 +447,23 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
+  it should "set last_modified right for old koulutus using database migration" in {
+
+    import fi.oph.kouta.util.TimeUtils.instantToModified
+
+    db.clean()
+    db.migrate("105")
+    addTestSessions()
+    addDefaultSession()
+
+    val (oldKoulutus, transactionNow) = insertKoulutus(koulutus).get
+    val oid = oldKoulutus.oid.get.toString
+
+    db.migrate()
+
+    get(oid, koulutus(oid).copy(modified = Some(instantToModified(transactionNow))))
+  }
+
   it should "store and update unfinished koulutus" in {
     val unfinishedKoulutus = Koulutus(
       koulutustyyppi = Amm,
