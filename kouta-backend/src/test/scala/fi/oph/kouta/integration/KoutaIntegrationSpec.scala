@@ -331,6 +331,15 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     }
   }
 
+  def post[E <: scala.AnyRef, R](path: String, entity: E, lastModified: String, sessionId: UUID, expectedStatus: Int, result: String => R): R = {
+    post(path, bytes(entity), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(sessionId))) {
+      withClue(body) {
+        status should equal(expectedStatus)
+      }
+      result(body)
+    }
+  }
+
   def put[E <: scala.AnyRef, R](path: String, entity: E, result: String => R): R =
     put(path, entity, defaultSessionId, result)
 
