@@ -279,8 +279,8 @@ class KoulutusService(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija)
               )
             )
-          case tpoMetdata: TaiteenPerusopetusKoulutusMetadata =>
-            Some(tpoMetdata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case tpoMetadata: TaiteenPerusopetusKoulutusMetadata =>
+            Some(tpoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }

@@ -1,6 +1,19 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{AmmatillinenOsaamisala, AmmatillinenToteutusMetadata, Kielivalikoima, KoulutuksenAlkamiskausi, Lisatieto, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Opetus, TaiteenPerusopetusToteutusMetadata, Toteutus, ToteutusMetadata}
+import fi.oph.kouta.domain.{
+  AmmatillinenOsaamisala,
+  AmmatillinenToteutusMetadata,
+  Kielivalikoima,
+  KoulutuksenAlkamiskausi,
+  Lisatieto,
+  LukioToteutusMetadata,
+  LukiodiplomiTieto,
+  LukiolinjaTieto,
+  Opetus,
+  TaiteenPerusopetusToteutusMetadata,
+  Toteutus,
+  ToteutusMetadata
+}
 
 case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus]) {
   private def oldMetadata(): Option[ToteutusMetadata] = oldToteutus.flatMap(_.metadata)
@@ -101,7 +114,7 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
 
   def isAvoinKkChanged(): Boolean = oldToteutus match {
     case Some(old: Toteutus) => toteutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
-    case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
   def newOpintojenLaajuusyksikkoKoodiUri(): Option[String] = {
@@ -147,12 +160,12 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
   private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[ToteutusMetadata]): Option[String] =
     metadata match {
       case Some(m: TaiteenPerusopetusToteutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
-      case _                                             => None
+      case _                                           => None
     }
 
   private def taiteenalaKoodiUrit(metadata: Option[ToteutusMetadata]): Seq[String] =
     metadata match {
       case Some(m: TaiteenPerusopetusToteutusMetadata) => m.taiteenalaKoodiUrit
-      case _                                             => Seq()
+      case _                                           => Seq()
     }
 }
