@@ -279,6 +279,8 @@ class KoulutusService(
                 isMuokkaajaOphVirkailija = Some(isOphVirkailija)
               )
             )
+          case tpoMetdata: TaiteenPerusopetusKoulutusMetadata =>
+            Some(tpoMetdata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => None
     }
@@ -340,6 +342,10 @@ class KoulutusService(
       case AikuistenPerusopetus =>
         koulutus.copy(koulutuksetKoodiUri =
           getKoodiUriVersionAsStrSeqIfEmpty(koulutus.koulutuksetKoodiUri, "koulutus_201101")
+        )
+      case TaiteenPerusopetus =>
+        koulutus.copy(koulutuksetKoodiUri =
+          getKoodiUriVersionAsStrSeqIfEmpty(koulutus.koulutuksetKoodiUri, "koulutus_999907")
         )
       case _ => koulutus
     }

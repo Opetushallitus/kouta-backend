@@ -1,31 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{
-  AikuistenPerusopetusKoulutus,
-  AmkKoulutus,
-  AmmMuuKoulutus,
-  AmmOpettajaKoulutus,
-  AmmOsaamisalaKoulutus,
-  AmmTutkinnonOsaKoulutus,
-  ErikoislaakariKoulutus,
-  ErikoistumisKoulutuksenMetatieto,
-  ErikoistumisKoulutus,
-  KkOpintojaksoKoulutus,
-  KkOpintokokonaisuusKoulutuksenMetatieto,
-  KkOpintokokonaisuusKoulutus,
-  LukioKoulutus,
-  LukiokoulutuksenMetatieto,
-  TelmaKoulutuksenMetatieto,
-  TelmaKoulutus,
-  TuvaKoulutuksenMetatieto,
-  TuvaKoulutus,
-  VapaaSivistystyoOpistovuosiKoulutuksenMetatieto,
-  VapaaSivistystyoOpistovuosiKoulutus,
-  YoKoulutus,
-  YoOpettajaKoulutus,
-  defaultKuvaus
-}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -570,16 +546,22 @@ class KoulutusSpec
 
   it should "create, get and update aikuisten perusopetus -koulutus" in {
     val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(tila = Tallennettu)
-    val oid          = put(aiPeKoulutus)
+    val oid          = put(aiPeKoulutus, ophSession)
     val lastModified = get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid))))
-    update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
+    update(aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified, true, ophSession)
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
   it should "set koulutuksetKoodiUri of aikuisten perusopetus koulutus automatically if not given" in {
     val aiPeKoulutus = AikuistenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
-    val oid          = put(aiPeKoulutus)
+    val oid          = put(aiPeKoulutus, ophSession)
     get(oid, aiPeKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+  }
+
+  it should "set koulutuksetKoodiUri of taiteen perusopetus koulutus automatically if not given" in {
+    val tpoKoulutus = TaiteenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
+    val oid          = put(tpoKoulutus)
+    get(oid, tpoKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_999907#1")))
   }
 
   it should "create, get and update kk-opintojakso -koulutus" in {
