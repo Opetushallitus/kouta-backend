@@ -712,7 +712,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     copyResponse.last.created.toteutusOid shouldBe empty
   }
 
-  "Change hakukohteet tila" should "change two julkaistu hakukohde to arkistoitu when muokkaaja is OPH virkailija" in {
+  "Change hakukohteet tila" should "change two julkaistu hakukohteet to arkistoitu when muokkaaja is OPH virkailija" in {
     val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
     val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
 
@@ -746,14 +746,12 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     response.last.oid.toString shouldBe julkaistuHakukohde2Oid
     response.last.status shouldBe "success"
 
-    logger.info(julkaistuHakukohde1.toString)
-    logger.info(arkistoituHakukohde1.toString)
 
     get(julkaistuHakukohde1Oid, arkistoituHakukohde1)
     get(julkaistuHakukohde2Oid, arkistoituHakukohde2)
   }
 
-  it should "fail to change tila of hakukohde when non oph user" in {
+  it should "fail to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja is non oph user" in {
     val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
     val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
 
@@ -763,12 +761,31 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
-    val response = post(hakukohteet, "arkistoitu", lastModified, crudSessions(hakukohde.organisaatioOid), 200)
+    val response = post(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
     response.length shouldBe 2
     response.head.oid.toString shouldBe julkaistuHakukohde1Oid
     response.head.status shouldBe "error"
     response.last.oid.toString shouldBe julkaistuHakukohde2Oid
     response.last.status shouldBe "error"
+  }
+
+  it should "allow to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja has rights to hakukohde" in {
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq(), jarjestyspaikkaOid = Some(ChildOid))
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq(), jarjestyspaikkaOid = Some(ChildOid))
+
+    val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
+    val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
+
+    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val response = post(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
+
+    response.length shouldBe 2
+    response.head.oid.toString shouldBe julkaistuHakukohde1Oid
+    response.head.status shouldBe "success"
+    response.last.oid.toString shouldBe julkaistuHakukohde2Oid
+    response.last.status shouldBe "success"
   }
 }
