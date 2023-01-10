@@ -711,4 +711,64 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     copyResponse.last.created.hakukohdeOid shouldBe empty
     copyResponse.last.created.toteutusOid shouldBe empty
   }
+
+  "Change hakukohteet tila" should "change two julkaistu hakukohde to arkistoitu when muokkaaja is OPH virkailija" in {
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+
+    val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
+    val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
+
+    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val response = post(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
+
+    val metadata1 = julkaistuHakukohde1.metadata.get
+    val metadata2 = julkaistuHakukohde2.metadata.get
+
+    val arkistoituHakukohde1 = julkaistuHakukohde1.copy(
+      oid = Some(HakukohdeOid(julkaistuHakukohde1Oid)),
+      tila = Arkistoitu,
+      muokkaaja = OphUserOid,
+      metadata = Some(metadata1.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
+    val arkistoituHakukohde2 = julkaistuHakukohde2.copy(
+      oid = Some(HakukohdeOid(julkaistuHakukohde2Oid)),
+      tila = Arkistoitu,
+      muokkaaja = OphUserOid,
+      metadata = Some(metadata2.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
+
+    response.length shouldBe 2
+    response.head.oid.toString shouldBe julkaistuHakukohde1Oid
+    response.head.status shouldBe "success"
+    response.last.oid.toString shouldBe julkaistuHakukohde2Oid
+    response.last.status shouldBe "success"
+
+    logger.info(julkaistuHakukohde1.toString)
+    logger.info(arkistoituHakukohde1.toString)
+
+    get(julkaistuHakukohde1Oid, arkistoituHakukohde1)
+    get(julkaistuHakukohde2Oid, arkistoituHakukohde2)
+  }
+
+  it should "fail to change tila of hakukohde when non oph user" in {
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+
+    val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
+    val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
+
+    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val response = post(hakukohteet, "arkistoitu", lastModified, crudSessions(hakukohde.organisaatioOid), 200)
+
+    response.length shouldBe 2
+    response.head.oid.toString shouldBe julkaistuHakukohde1Oid
+    response.head.status shouldBe "error"
+    response.last.oid.toString shouldBe julkaistuHakukohde2Oid
+    response.last.status shouldBe "error"
+  }
 }

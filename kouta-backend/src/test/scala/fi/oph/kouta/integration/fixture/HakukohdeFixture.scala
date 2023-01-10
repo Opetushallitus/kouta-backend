@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
-import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing}
+import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient}
@@ -11,7 +11,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
+import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, HakukohdeTilaChangeResultObject, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
@@ -22,6 +22,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
 
   val HakukohdePath     = "/hakukohde"
   val HakukohdeCopyPath = s"/hakukohde/copy/"
+  val HakukohdeChangeTilaPath = s"/hakukohde/tila/"
 
   def hakukohdeService: HakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
@@ -244,6 +245,9 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   def put(hakukohde: Hakukohde, sessionId: UUID): String = put(HakukohdePath, hakukohde, sessionId, oid)
   def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] =
     put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, listResponse[HakukohdeCopyResultObject])
+
+  def post(hakukohteet: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[HakukohdeTilaChangeResultObject] =
+    post(s"$HakukohdeChangeTilaPath$tila", hakukohteet, lastModified, sessionId, expectedStatus, listResponse[HakukohdeTilaChangeResultObject])
 
   def get(oid: String, expected: Hakukohde): String =
     get(HakukohdePath, oid, expected.copy(modified = Some(readHakukohdeModified(oid))))
