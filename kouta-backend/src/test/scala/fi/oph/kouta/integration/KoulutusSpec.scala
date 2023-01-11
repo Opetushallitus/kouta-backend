@@ -354,8 +354,9 @@ class KoulutusSpec
     )
     val oid = put(theKoulutus)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
-    val lastModified    = get(oid, theKoulutus)
-    val updatedKoulutus = theKoulutus.copy(tarjoajat = HkiYoOid :: LutYoOid :: KuopionKansalaisopistoOid :: theKoulutus.tarjoajat)
+    val lastModified = get(oid, theKoulutus)
+    val updatedKoulutus =
+      theKoulutus.copy(tarjoajat = HkiYoOid :: LutYoOid :: KuopionKansalaisopistoOid :: theKoulutus.tarjoajat)
     update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(YoOid))
   }
 
@@ -447,7 +448,7 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutus using database migration" in {
+  it should "set last_modified right for old koulutukset using database migration" in {
 
     import fi.oph.kouta.util.TimeUtils.instantToModified
 
@@ -456,12 +457,26 @@ class KoulutusSpec
     addTestSessions()
     addDefaultSession()
 
-    val (oldKoulutus, transactionNow) = insertKoulutus(koulutus).get
-    val oid = oldKoulutus.oid.get.toString
+    val (koulutus1, koulutus1Now) = insertKoulutus(koulutus)
+    val oid1                      = koulutus1.oid.get.toString
+
+    val (koulutus2, _)        = insertKoulutus(koulutus)
+    val oid2                  = koulutus2.oid.get.toString
+    val koulutus2NewTarjoajat = koulutus2.tarjoajat ++ Seq(YoOid)
+    val koulutus2tarjoajatNow = updateTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
+
+    val (koulutus3, _) = insertKoulutus(koulutus)
+    val oid3           = koulutus3.oid.get.toString
+    val koulutus3tarjoajatNow = updateTarjoajat(koulutus3.copy(tarjoajat = List()))
 
     db.migrate()
 
-    get(oid, koulutus(oid).copy(modified = Some(instantToModified(transactionNow))))
+    get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Now))))
+    get(
+      oid2,
+      koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatNow)))
+    )
+    get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatNow))))
   }
 
   it should "store and update unfinished koulutus" in {

@@ -72,7 +72,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       m <- selectLastModified(koulutus.oid.get)
     } yield koulutus.withModified(m.get)
 
-  private def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
+  def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
