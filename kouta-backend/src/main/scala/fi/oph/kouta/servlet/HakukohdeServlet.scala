@@ -176,6 +176,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
       |      tags:
       |        - Hakukohde
       |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
       |        - in: path
       |          name: tila
       |          required: true
