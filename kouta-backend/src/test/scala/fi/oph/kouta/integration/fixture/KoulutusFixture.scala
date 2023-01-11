@@ -171,8 +171,14 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
       _   <- KoulutusDAO.insertKoulutuksenTarjoajat(koulutus.withOid(oid))
     } yield koulutus.withOid(oid)
 
+
   def insertKoulutus(k: Koulutus) = db.runBlockingTransactionally(for {
     k <- getPutActions(k)
     n <- sql"""select now()::timestamptz""".as[Instant].head
-  } yield (k, n))
+  } yield (k, n)).get
+
+  def updateTarjoajat(k: Koulutus) = db.runBlockingTransactionally(for {
+    t <- KoulutusDAO.updateKoulutuksenTarjoajat(k)
+    n <- sql"""select now()::timestamptz""".as[Instant].head
+  } yield n).get
 }
