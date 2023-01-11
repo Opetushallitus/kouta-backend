@@ -175,7 +175,7 @@ class ToteutusServiceValidation(
 
   private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
     println(koulutus.get.oid.get)
-    val tarjoajat = KoulutusDAO.listTarjoajaOids(koulutus.get.oid.get).toList
+    val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get).toList
     println("tarjoajat")
     println(tarjoajat)
     /*val tarjoajat = koulutus.get.tarjoajat
