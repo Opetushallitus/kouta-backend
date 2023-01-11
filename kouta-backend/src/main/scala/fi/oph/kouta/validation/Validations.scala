@@ -152,6 +152,12 @@ object Validations {
       msg = "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
     )
 
+  def invalidJarjestajaForAvoinKorkeakoulutus(invalidJarjestajat: List[OrganisaatioOid]) =
+    ErrorMessage(
+      id = "invalidJarjestajaForAvoinKorkeakoulutus",
+      msg = s"Toteutukselle ei voi lisätä järjestäjiksi seuraavia organisaatioita, joita ei ole lisätty koulutuksen järjestäjiksi: ${invalidJarjestajat.mkString(", ")}."
+    )
+
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Lukiototeutukselle valittua $kieliField-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     "invalidKieliKoodiUri"

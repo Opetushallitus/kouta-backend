@@ -148,14 +148,14 @@ class ToteutusServiceValidation(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintojaksolla ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
-                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
+                    validateAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case m: KkOpintokokonaisuusToteutusMetadata =>
                   and(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintokokonaisuudella ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
-                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
+                    validateAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
@@ -173,7 +173,19 @@ class ToteutusServiceValidation(
     Seq(commonErrors, koulutustyyppiSpecificErrors).flatten.distinct
   }
 
-  private def validateIsAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
+  private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
+    println(koulutus.get.oid.get)
+    val tarjoajat = KoulutusDAO.listTarjoajaOids(koulutus.get.oid.get).toList
+    println("tarjoajat")
+    println(tarjoajat)
+    /*val tarjoajat = koulutus.get.tarjoajat
+
+    val jarjestajat = toteutus.tarjoajat
+    println(jarjestajat)
+
+    val invalidJarjestajat = jarjestajat.filter(j => !tarjoajat.contains(j))
+    println("invalidJarjestajat")
+    println(invalidJarjestajat)*/
     validateIfTrue(
       koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
         assertTrue(

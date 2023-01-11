@@ -997,13 +997,35 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
     )
     when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
-      .thenReturn(
+      .thenAnswer(
         Some(
-          KkOpintojaksoKoulutus.copy(metadata =
-            Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          KkOpintojaksoKoulutus.copy(oid = Some(opintojaksoToteutusWithOid.koulutusOid),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
           )
         )
       )
+    when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq(AmkOid))
+
+    failsValidation(
+      kkOpintojaksoToteutus,
+      "metadata.isAvoinKorkeakoulutus",
+      invalidIsAvoinKorkeakoulutusIntegrity
+    )
+  }
+
+  it should "fail validation if avoin kk -toteutus has different jarjestaja than what is allowed in koulutus" in {
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(
+      metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+    )
+    when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
+      .thenReturn(
+        Some(
+          KkOpintojaksoKoulutus.copy(
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          )
+        )
+      )
+    when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq(AmkOid))
 
     failsValidation(
       kkOpintojaksoToteutus,
