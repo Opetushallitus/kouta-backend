@@ -12,6 +12,7 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
 import org.json4s.jackson.Serialization.read
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
@@ -432,7 +433,7 @@ class KoulutusSpec
 
       val koulutus = read[Koulutus](body)
       koulutus.modified.isDefined should be(true)
-      val modifiedInstant = koulutus.modified.get.value.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+      val modifiedInstant = modifiedToInstant(koulutus.modified.get)
 
       Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
       Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
@@ -449,7 +450,6 @@ class KoulutusSpec
   }
 
   it should "set last_modified right for old koulutukset using database migration 106" in {
-    import fi.oph.kouta.util.TimeUtils.instantToModified
 
     db.clean()
     db.migrate("105")

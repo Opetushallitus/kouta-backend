@@ -11,6 +11,7 @@ object TimeUtils {
 
   def instantToModified(instant: Instant): Modified = Modified(instantToLocalDateTime(instant))
 
+ def modifiedToInstant(modified: Modified) = localDateTimeToInstant(modified.value)
   def localDateTimeToInstant(localDateTime: LocalDateTime): Instant = localDateTime.atZone(ZoneId.of("Europe/Helsinki")).toInstant
 
   def timeStampToLocalDateTime(timestamp: Timestamp): LocalDateTime = instantToLocalDateTime(timestamp.toInstant)
