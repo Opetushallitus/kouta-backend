@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import fi.oph.kouta.domain.{Julkaisutila, Kieli}
+import fi.oph.kouta.domain.Julkaisutila
 
 package object validation {
   type IsValid = Seq[ValidationError]
@@ -29,6 +29,12 @@ package object validation {
   case class ErrorMessage(msg: String, id: String, meta: Option[Map[String, AnyRef]] = None)
 
   case class ValidationError(path: String, msg: String, errorType: String, meta: Option[Map[String, AnyRef]] = None) {
+    def getPath: String = path
+
+    def getMsg: String = msg
+
+    def getErrorType: String = errorType
+
     override def toString: String = {
       meta match {
         case Some(metaInfo) =>

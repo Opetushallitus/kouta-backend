@@ -514,6 +514,18 @@ package object domain {
       |          type: string
       |        status:
       |          type: string
+      |        errorPaths:
+      |          type: array
+      |          items:
+      |            type: string
+      |        errorMessages:
+      |          type: array
+      |          items:
+      |            type: string
+      |        errorTypes:
+      |          type: array
+      |          items:
+      |            type: string
       |""".stripMargin
 
   val models = List(
