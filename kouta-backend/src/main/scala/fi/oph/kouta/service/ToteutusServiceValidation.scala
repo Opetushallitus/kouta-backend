@@ -174,26 +174,38 @@ class ToteutusServiceValidation(
   }
 
   private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
-    println(koulutus.get.oid.get)
-    val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get).toList
-    println("tarjoajat")
-    println(tarjoajat)
-    /*val tarjoajat = koulutus.get.tarjoajat
-
+    val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get)
     val jarjestajat = toteutus.tarjoajat
-    println(jarjestajat)
+    val invalidJarjestajat = if (tarjoajat.isEmpty) {
+      jarjestajat
+    } else {
+      val tarjoajaParentAndChildOids = tarjoajat.map(tarjoaja => {
+        val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+        tarjoaja -> oids
+      }).toMap
 
-    val invalidJarjestajat = jarjestajat.filter(j => !tarjoajat.contains(j))
-    println("invalidJarjestajat")
-    println(invalidJarjestajat)*/
-    validateIfTrue(
-      koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
-        assertTrue(
-          toteutus.isAvoinKorkeakoulutus() == koulutus.get.isAvoinKorkeakoulutus(),
-          "metadata.isAvoinKorkeakoulutus",
-          invalidIsAvoinKorkeakoulutusIntegrity
-        )
-      }
+      jarjestajat.filter(jarjestaja =>
+        tarjoajaParentAndChildOids.get(jarjestaja) match {
+          case Some(oids) => !oids.contains(jarjestaja)
+          case None => true
+        })
+    }
+
+    and(
+      validateIfTrue(
+        koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
+          assertTrue(
+            toteutus.isAvoinKorkeakoulutus() == koulutus.get.isAvoinKorkeakoulutus(),
+            "metadata.isAvoinKorkeakoulutus",
+            invalidIsAvoinKorkeakoulutusIntegrity
+          )
+        }
+      ),
+      assertTrue(
+        invalidJarjestajat.isEmpty,
+        "tarjoajat",
+        invalidJarjestajaForAvoinKorkeakoulutus(invalidJarjestajat)
+      )
     )
   }
 
