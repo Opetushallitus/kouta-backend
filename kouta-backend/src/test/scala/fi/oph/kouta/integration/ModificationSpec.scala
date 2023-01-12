@@ -34,7 +34,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   def createTestData(n: Int = 10): Unit = {
     timestampBeforeAllModifications = renderHttpDate(now())
-    Thread.sleep(1000)
+    Thread.sleep(1500)
     koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu), ophSession))
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = List.fill(n)(put(haku))
@@ -43,7 +43,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
       put(withValintaperusteenValintakokeet(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)))
     }
-    Thread.sleep(1000)
+    Thread.sleep(1500)
     timestampAfterInserts = renderHttpDate(now())
   }
 
@@ -65,7 +65,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
     updateInHakukohteenValintakokeetTable(11)
     updateInValintaperusteetTable(12)
     updateInSorakuvauksetTable(13)
-    Thread.sleep(1000)
+    Thread.sleep(1500)
     timestampAfterAllModifications = renderHttpDate(now())
   }
 
