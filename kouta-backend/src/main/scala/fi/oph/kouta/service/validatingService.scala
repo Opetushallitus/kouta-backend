@@ -5,7 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, Validatable, ValidationContext}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidationContext}
 
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
@@ -255,4 +255,7 @@ trait ValidatingSubService[E] {
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {
   override def getMessage: String = "[" + errorMessages.mkString(",") + "]"
+  def getPaths: List[String] = errorMessages.map(msg => msg.getPath).toList
+  def getMsgs: List[String] = errorMessages.map(msg => msg.getMsg).toList
+  def getErrorTypes: List[String] = errorMessages.map(msg => msg.getErrorType).toList
 }

@@ -44,7 +44,10 @@ case class HakukohdeCopyResultObject(
 
 case class HakukohdeTilaChangeResultObject(
     oid: HakukohdeOid,
-    status: String
+    status: String,
+    errorPaths: List[String] = List(),
+    errorMessages: List[String] = List(),
+    errorTypes: List[String] = List()
 )
 
 class HakukohdeService(
@@ -310,17 +313,34 @@ class HakukohdeService(
             updatedHakukohdeOids += hakukohde.oid.get
             HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
-            status = "error"
+            status = "error",
+              errorPaths = List("hakukohde"),
+              errorMessages = List("Hakukohteen tilaa ei voitu päivittää"),
+              errorTypes = List("possible transaction error")
           )
         }
       } catch {
-        case error: Throwable =>
+        case error: KoutaValidationException =>
           logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
           updatedHakukohdeOids += hakukohde.oid.get
           HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
             status = "error",
+            errorPaths = error.getPaths,
+            errorMessages =  error.getMsgs,
+            errorTypes = error.getErrorTypes
           )
+        case error: OrganizationAuthorizationFailedException =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+            errorPaths = List("hakukohde"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("authorization")
+          )
+
       }
     })
 
@@ -329,7 +349,10 @@ class HakukohdeService(
         hkOid <- hakukohdeOids.filterNot(hakukohdeOid => updatedHakukohdeOids.contains(hakukohdeOid))
       } yield HakukohdeTilaChangeResultObject(
         oid = hkOid,
-        status = "error"
+        status = "error",
+        errorPaths = List("hakukohde"),
+        errorMessages = List("Hakukohdetta ei löytynyt"),
+        errorTypes = List("not found")
       )
 
     tilaChangeResults ++ notFound
