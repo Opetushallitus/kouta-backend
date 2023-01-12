@@ -4,7 +4,7 @@ import java.time.Instant
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -40,11 +40,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       for {
         k <- selectKoulutus(oid, tilaFilter).as[Koulutus].headOption
         t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-        l <- selectLastModified(oid)
-      } yield (k, t, l)
+      } yield (k, t)
     ).get match {
-      case (Some(k), t, Some(l)) =>
-        Some((k.copy(modified = Some(instantToModified(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case (Some(k), t) =>
+        Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), modifiedToInstant(k.modified.get)))
       case _ => None
     }
   }
@@ -140,7 +139,11 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
   }
 
   def selectModifiedSince(since: Instant): DBIO[Seq[KoulutusOid]] = {
-    sql"""select oid from koulutukset where $since < last_modified""".as[KoulutusOid]
+    sql"""select oid from koulutukset where $since < last_modified
+          union
+          select oid from koulutukset_history where $since <@ system_time
+          union
+          select koulutus_oid from koulutusten_tarjoajat_history where $since <@ system_time""".as[KoulutusOid]
   }
 }
 
