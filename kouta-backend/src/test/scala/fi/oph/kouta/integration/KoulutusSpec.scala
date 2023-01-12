@@ -475,6 +475,11 @@ class KoulutusSpec
       koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatTimestamp)))
     )
     get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatNow))))
+
+    db.clean()
+    db.migrate()
+    addTestSessions()
+    addDefaultSession()
   }
 
   it should "add right amount of rows to history tables" in {
