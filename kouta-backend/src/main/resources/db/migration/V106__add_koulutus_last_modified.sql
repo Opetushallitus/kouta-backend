@@ -82,7 +82,7 @@ create trigger set_koulutus_last_modified_on_change
 execute procedure set_koulutus_last_modified();
 
 -- Päivitetään koulutuksen last_modified kun sen tarjoajat päivittyy, mutta vain jos last_modified muuttuisi.
--- Näin vältetään turhat muutokset koulutus-tauluun, kun useampi tarjoaja muuttuu samalla
+-- Näin vältetään turhat muutokset koulutukset-tauluun, kun useampi tarjoaja muuttuu samalla
 create or replace function set_koulutus_last_modified_from_tarjoajat() returns trigger as
 $$
 begin

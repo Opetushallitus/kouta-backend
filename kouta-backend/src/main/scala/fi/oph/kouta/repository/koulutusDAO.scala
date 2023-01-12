@@ -265,7 +265,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               teemakuva = ${koulutus.teemakuva},
               eperuste_id = ${koulutus.ePerusteId}
             where oid = ${koulutus.oid}
-            and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
+            and (johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
             or external_id is distinct from ${koulutus.externalId}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}

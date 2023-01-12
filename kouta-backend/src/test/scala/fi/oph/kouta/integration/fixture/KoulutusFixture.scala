@@ -178,7 +178,7 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
     } yield (k, n))
     .get
 
-  def updateTarjoajat(k: Koulutus) = db
+  def updateKoulutusTarjoajat(k: Koulutus) = db
     .runBlockingTransactionally(for {
       t <- KoulutusDAO.updateKoulutuksenTarjoajat(k)
       n <- sql"""select now()::timestamptz""".as[Instant].head
@@ -193,7 +193,7 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
     )
     .get
 
-  def getTarjoajatHistorySize(k: Koulutus): Int = db
+  def getKoulutusTarjoajatHistorySize(k: Koulutus): Int = db
     .runBlockingTransactionally(
       sql"""select count(*) from koulutusten_tarjoajat_history where koulutus_oid = ${k.oid.get}"""
         .as[Int]
