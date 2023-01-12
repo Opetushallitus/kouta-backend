@@ -448,8 +448,7 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset using database migration" in {
-
+  it should "set last_modified right for old koulutukset using database migration 106" in {
     import fi.oph.kouta.util.TimeUtils.instantToModified
 
     db.clean()
@@ -457,26 +456,46 @@ class KoulutusSpec
     addTestSessions()
     addDefaultSession()
 
-    val (koulutus1, koulutus1Now) = insertKoulutus(koulutus)
-    val oid1                      = koulutus1.oid.get.toString
+    val (koulutus1, koulutus1Timestamp) = insertKoulutus(koulutus)
+    val oid1                            = koulutus1.oid.get.toString
 
-    val (koulutus2, _)        = insertKoulutus(koulutus)
-    val oid2                  = koulutus2.oid.get.toString
-    val koulutus2NewTarjoajat = koulutus2.tarjoajat ++ Seq(YoOid)
-    val koulutus2tarjoajatNow = updateTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
+    val (koulutus2, _)              = insertKoulutus(koulutus)
+    val oid2                        = koulutus2.oid.get.toString
+    val koulutus2NewTarjoajat       = koulutus2.tarjoajat ++ Seq(YoOid)
+    val koulutus2tarjoajatTimestamp = updateTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
 
-    val (koulutus3, _) = insertKoulutus(koulutus)
-    val oid3           = koulutus3.oid.get.toString
+    val (koulutus3, _)        = insertKoulutus(koulutus)
+    val oid3                  = koulutus3.oid.get.toString
     val koulutus3tarjoajatNow = updateTarjoajat(koulutus3.copy(tarjoajat = List()))
 
-    db.migrate()
+    db.migrate("106")
 
-    get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Now))))
+    get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Timestamp))))
     get(
       oid2,
-      koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatNow)))
+      koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatTimestamp)))
     )
     get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatNow))))
+  }
+
+  it should "add right amount of rows to history tables" in {
+    val oid          = put(koulutus, ophSession)
+    val lastModified = get(oid, koulutus.copy(oid = Some(KoulutusOid(oid))))
+
+    val koulutus1  = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu, tarjoajat = List())
+    update(koulutus1, lastModified, expectUpdate = true, ophSession)
+
+    assert(getKoulutusHistorySize(koulutus1) == 1)
+    // Poistetaan kolme tarjoajaa, koulutus-oidille kolme riviä tarjoajat-historiaan. Kaikilla kolmella rivillä sama aikaleima.
+    assert(getTarjoajatHistorySize(koulutus1) == 3)
+
+    val lastModified2 = get(oid, koulutus1)
+    val koulutus2 = koulutus1.copy(tila = Julkaistu, tarjoajat = koulutus.tarjoajat)
+    update(koulutus2, lastModified2, expectUpdate = true, ophSession)
+
+    assert(getKoulutusHistorySize(koulutus2) == 2)
+    // Tarjoajien lisääminen ei lisää rivejä historiaan
+    assert(getTarjoajatHistorySize(koulutus2) == 3)
   }
 
   it should "store and update unfinished koulutus" in {

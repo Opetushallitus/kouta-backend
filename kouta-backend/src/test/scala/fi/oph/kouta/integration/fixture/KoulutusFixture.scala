@@ -171,14 +171,33 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
       _   <- KoulutusDAO.insertKoulutuksenTarjoajat(koulutus.withOid(oid))
     } yield koulutus.withOid(oid)
 
+  def insertKoulutus(k: Koulutus) = db
+    .runBlockingTransactionally(for {
+      k <- getPutActions(k)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield (k, n))
+    .get
 
-  def insertKoulutus(k: Koulutus) = db.runBlockingTransactionally(for {
-    k <- getPutActions(k)
-    n <- sql"""select now()::timestamptz""".as[Instant].head
-  } yield (k, n)).get
+  def updateTarjoajat(k: Koulutus) = db
+    .runBlockingTransactionally(for {
+      t <- KoulutusDAO.updateKoulutuksenTarjoajat(k)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield n)
+    .get
 
-  def updateTarjoajat(k: Koulutus) = db.runBlockingTransactionally(for {
-    t <- KoulutusDAO.updateKoulutuksenTarjoajat(k)
-    n <- sql"""select now()::timestamptz""".as[Instant].head
-  } yield n).get
+  def getKoulutusHistorySize(k: Koulutus): Int = db
+    .runBlockingTransactionally(
+      sql"""select count(*) from koulutukset_history where oid = ${k.oid.get}"""
+        .as[Int]
+        .head
+    )
+    .get
+
+  def getTarjoajatHistorySize(k: Koulutus): Int = db
+    .runBlockingTransactionally(
+      sql"""select count(*) from koulutusten_tarjoajat_history where koulutus_oid = ${k.oid.get}"""
+        .as[Int]
+        .head
+    )
+    .get
 }
