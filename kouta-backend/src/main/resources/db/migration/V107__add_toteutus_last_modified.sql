@@ -76,7 +76,7 @@ create trigger set_toteutus_last_modified_on_change
 execute procedure set_toteutus_last_modified();
 
 -- Päivitetään toteutuksen last_modified kun sen tarjoajat muuttuu, mutta vain jos last_modified muuttuisi.
--- Näin vältetään turhat muutokset toteutuksen-tauluun, kun useampi tarjoaja muuttuu samalla
+-- Näin vältetään turhat muutokset toteutukset-tauluun, kun useampi tarjoaja muuttuu samalla
 create or replace function set_toteutus_last_modified_from_tarjoajat() returns trigger as
 $$
 begin
