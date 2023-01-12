@@ -103,7 +103,7 @@ from hakukohde_mod
 where ha.oid = hakukohde_mod.oid
   and ha.last_modified is null;
 
--- Asetetaan koulutuksen last_modified nykyhetkeen ennen kuin hakukohde itse päivittyy
+-- Asetetaan hakukohteen last_modified nykyhetkeen ennen kuin hakukohde itse päivittyy
 create or replace function set_hakukohde_last_modified() returns trigger as
 $$
 begin
