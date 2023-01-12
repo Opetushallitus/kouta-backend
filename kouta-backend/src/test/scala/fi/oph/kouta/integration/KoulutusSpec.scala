@@ -449,8 +449,7 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset using database migration 106" in {
-
+  it should "set last_modified right for old koulutukset after database migration 106" in {
     db.clean()
     db.migrate("105")
     addTestSessions()
@@ -462,11 +461,11 @@ class KoulutusSpec
     val (koulutus2, _)              = insertKoulutus(koulutus)
     val oid2                        = koulutus2.oid.get.toString
     val koulutus2NewTarjoajat       = koulutus2.tarjoajat ++ Seq(YoOid)
-    val koulutus2tarjoajatTimestamp = updateTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
+    val koulutus2tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
 
     val (koulutus3, _)        = insertKoulutus(koulutus)
     val oid3                  = koulutus3.oid.get.toString
-    val koulutus3tarjoajatNow = updateTarjoajat(koulutus3.copy(tarjoajat = List()))
+    val koulutus3tarjoajatNow = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
 
     db.migrate("106")
 
@@ -487,7 +486,7 @@ class KoulutusSpec
 
     assert(getKoulutusHistorySize(koulutus1) == 1)
     // Poistetaan kolme tarjoajaa, koulutus-oidille kolme riviä tarjoajat-historiaan. Kaikilla kolmella rivillä sama aikaleima.
-    assert(getTarjoajatHistorySize(koulutus1) == 3)
+    assert(getKoulutusTarjoajatHistorySize(koulutus1) == 3)
 
     val lastModified2 = get(oid, koulutus1)
     val koulutus2 = koulutus1.copy(tila = Julkaistu, tarjoajat = koulutus.tarjoajat)
@@ -495,7 +494,7 @@ class KoulutusSpec
 
     assert(getKoulutusHistorySize(koulutus2) == 2)
     // Tarjoajien lisääminen ei lisää rivejä historiaan
-    assert(getTarjoajatHistorySize(koulutus2) == 3)
+    assert(getKoulutusTarjoajatHistorySize(koulutus2) == 3)
   }
 
   it should "store and update unfinished koulutus" in {
