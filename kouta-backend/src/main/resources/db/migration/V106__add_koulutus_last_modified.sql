@@ -46,7 +46,7 @@ begin
             old.julkinen,
             old.teemakuva,
             old.eperuste_id,
-            now());
+            old.last_modified);
     return null;
 end;
 $$;
@@ -58,20 +58,19 @@ with koulutus_mod as (select k.oid                                 as oid,
                                       max(upper(tah.system_time))) as modified
                       from koulutukset k
                                left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-                               left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid group by k.oid)
+                               left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
+                      group by k.oid)
 update koulutukset k
 set last_modified = koulutus_mod.modified
 from koulutus_mod
 where k.oid = koulutus_mod.oid
   and k.last_modified is null;
 
--- Asetetaan koulutuksen last_modified kun koulutus itse muuttuu
+-- Asetetaan koulutuksen last_modified ennen kuin koulutus itse päivittyy
 create or replace function set_koulutus_last_modified() returns trigger as
 $$
 begin
-    if tg_op = 'INSERT' or old.last_modified <> now() then
-        new.last_modified := now()::timestamptz;
-    end if;
+    new.last_modified := now()::timestamptz;
     return new;
 end;
 $$ language plpgsql;
@@ -82,28 +81,21 @@ create trigger set_koulutus_last_modified_on_change
     for each row
 execute procedure set_koulutus_last_modified();
 
--- Asetetaan koulutuksen last_modified kun sen tarjoajat muuttuu
+-- Päivitetään koulutuksen last_modified kun sen tarjoajat päivittyy, mutta vain jos last_modified muuttuisi.
+-- Näin vältetään turhat muutokset koulutus-tauluun, kun useampi tarjoaja muuttuu samalla
 create or replace function set_koulutus_last_modified_from_tarjoajat() returns trigger as
 $$
 begin
-    if tg_op = 'DELETE' then
-        update koulutukset
-        set last_modified = now()::timestamptz
-        where oid = old.koulutus_oid
-          and last_modified <> now()::timestamptz;
-        return old;
-    else
-        update koulutukset
-        set last_modified = now()::timestamptz
-        where oid = new.koulutus_oid
-          and last_modified <> now()::timestamptz;
-        return new;
-    end if;
+    update koulutukset
+    set last_modified = now()::timestamptz
+    where oid = old.koulutus_oid
+      and last_modified <> now()::timestamptz;
+    return null;
 end;
 $$ language plpgsql;
 
 create trigger set_koulutus_last_modified_on_tarjoajat_change
-    before insert or update or delete
+    after insert or update or delete
     on koulutusten_tarjoajat
     for each row
 execute procedure set_koulutus_last_modified_from_tarjoajat();
