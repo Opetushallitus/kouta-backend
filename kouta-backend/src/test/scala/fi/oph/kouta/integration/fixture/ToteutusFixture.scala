@@ -7,7 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
@@ -15,8 +15,9 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
 import java.util.UUID
+import scala.util.Try
 
-trait ToteutusFixture extends KoulutusFixture with AccessControlSpec with DefaultMocks {
+trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with AccessControlSpec with DefaultMocks {
   this: KoutaIntegrationSpec =>
 
   val ToteutusPath = "/toteutus"
@@ -94,4 +95,49 @@ trait ToteutusFixture extends KoulutusFixture with AccessControlSpec with Defaul
   def readToteutusModified(oid: String): Modified = readToteutusModified(ToteutusOid(oid))
   def readToteutusModified(oid: ToteutusOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
+}
+
+trait ToteutusDbFixture extends KoulutusExtractors with SQLHelpers {
+  this: KoutaIntegrationSpec =>
+
+  import slick.dbio.DBIO
+  import slick.jdbc.PostgresProfile.api._
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import java.time.Instant
+
+  private def getPutActions(toteutus: Toteutus): DBIO[Toteutus] =
+    for {
+      oid <- ToteutusDAO.insertToteutus(toteutus)
+      _   <- ToteutusDAO.insertToteutuksenTarjoajat(toteutus.withOid(oid))
+    } yield toteutus.withOid(oid)
+
+  def insertToteutus(t: Toteutus) = db
+    .runBlockingTransactionally(for {
+      t <- getPutActions(t)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield (t, n))
+    .get
+
+  def updateToteutuksenTarjoajat(t: Toteutus) = db
+    .runBlockingTransactionally(for {
+      t <- ToteutusDAO.updateToteutuksenTarjoajat(t)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield n)
+    .get
+
+  def getToteutusHistorySize(t: Toteutus): Int = db
+    .runBlockingTransactionally(
+      sql"""select count(*) from toteutukset_history where oid = ${t.oid.get}"""
+        .as[Int]
+        .head
+    )
+    .get
+
+  def getToteutusTarjoajatHistorySize(t: Toteutus): Int = db
+    .runBlockingTransactionally(
+      sql"""select count(*) from toteutusten_tarjoajat_history where toteutus_oid = ${t.oid.get}"""
+        .as[Int]
+        .head
+    )
+    .get
 }
