@@ -763,11 +763,24 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
     val response = post(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
+    logger.info("head")
+    logger.info(response.head.toString)
+    logger.info("tail")
+    logger.info(response.tail.toString)
+
     response.length shouldBe 2
+
     response.head.oid.toString shouldBe julkaistuHakukohde1Oid
     response.head.status shouldBe "error"
+    response.head.errorPaths shouldBe List("hakukohde")
+    response.head.errorMessages should not be empty
+    response.head.errorTypes shouldBe List("authorization")
+
     response.last.oid.toString shouldBe julkaistuHakukohde2Oid
     response.last.status shouldBe "error"
+    response.last.errorPaths shouldBe List("hakukohde")
+    response.last.errorMessages should not be empty
+    response.head.errorTypes shouldBe List("authorization")
   }
 
   it should "allow to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja has rights to hakukohde" in {
