@@ -14,7 +14,7 @@ trait ModificationDAO {
 }
 
 object ModificationDAO extends ModificationDAO {
-
+  
   def listModifiedSince(modifiedSince: Instant): ListEverything = KoutaDatabase.runBlockingTransactionally( for {
     k <- KoulutusDAO.selectModifiedSince(modifiedSince)
     t <- ToteutusDAO.selectModifiedSince(modifiedSince)
@@ -28,14 +28,11 @@ object ModificationDAO extends ModificationDAO {
 }
 
 trait EntityModificationDAO[T] {
-
-  def getLastModified(id: T): Option[Instant] =
-    KoutaDatabase.runBlocking(selectLastModified(id))
-
   def listModifiedSince(since: Instant): Seq[T] =
     KoutaDatabase.runBlocking(selectModifiedSince(since))
 
   def selectLastModified(id: T): DBIO[Option[Instant]]
+
   def selectModifiedSince(since: Instant): DBIO[Seq[T]]
 
   def checkNotModified(id: T, notModifiedSince: Instant): DBIO[Instant] =

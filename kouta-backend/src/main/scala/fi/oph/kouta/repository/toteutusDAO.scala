@@ -94,9 +94,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }.get
   }
 
-  override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
-    KoutaDatabase.runBlocking(selectModifiedSince(since))
-
   private def listWithTarjoajat(selectListItems : () => DBIO[Seq[ToteutusListItem]]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlockingTransactionally(
       for {
