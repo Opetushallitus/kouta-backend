@@ -179,16 +179,11 @@ class ToteutusServiceValidation(
     val invalidJarjestajat = if (tarjoajat.isEmpty) {
       jarjestajat
     } else {
-      val tarjoajaParentAndChildOids = tarjoajat.map(tarjoaja => {
-        val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
-        tarjoaja -> oids
-      }).toMap
+      val allTarjoajaParentAndChildOids = tarjoajat.flatMap(tarjoaja => {
+        organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+      })
 
-      jarjestajat.filter(jarjestaja =>
-        tarjoajaParentAndChildOids.get(jarjestaja) match {
-          case Some(oids) => !oids.contains(jarjestaja)
-          case None => true
-        })
+      jarjestajat.filter(jarjestaja => !allTarjoajaParentAndChildOids.contains(jarjestaja))
     }
 
     and(
