@@ -7,14 +7,15 @@ import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
 import fi.oph.kouta.domain.Modified
 
 object TimeUtils {
-  def instantToLocalDateTime(instant: Instant): LocalDateTime = LocalDateTime.ofInstant(instant, ZoneId.of("Europe/Helsinki"))
+  private val fiTimezoneId = ZoneId.of("Europe/Helsinki")
+
+  def instantToLocalDateTime(instant: Instant): LocalDateTime = LocalDateTime.ofInstant(instant, fiTimezoneId)
+
+  def localDateTimeToInstant(localDateTime: LocalDateTime): Instant = localDateTime.atZone(fiTimezoneId).toInstant
 
   def instantToModified(instant: Instant): Modified = Modified(instantToLocalDateTime(instant))
 
- def modifiedToInstant(modified: Modified) = localDateTimeToInstant(modified.value)
-  def localDateTimeToInstant(localDateTime: LocalDateTime): Instant = localDateTime.atZone(ZoneId.of("Europe/Helsinki")).toInstant
-
-  def timeStampToLocalDateTime(timestamp: Timestamp): LocalDateTime = instantToLocalDateTime(timestamp.toInstant)
+  def modifiedToInstant(modified: Modified) = localDateTimeToInstant(modified.value)
 
   def timeStampToModified(timestamp: Timestamp): Modified = instantToModified(timestamp.toInstant)
 

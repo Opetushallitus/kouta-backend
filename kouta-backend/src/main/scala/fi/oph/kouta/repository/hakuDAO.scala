@@ -1,14 +1,14 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, TilaFilter, YhteishakuFilter}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {

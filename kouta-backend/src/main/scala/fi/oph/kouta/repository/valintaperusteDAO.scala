@@ -1,14 +1,14 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
-import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Arkistoitu, Koulutustyyppi, TilaFilter, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
