@@ -143,26 +143,37 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
   import scala.concurrent.ExecutionContext.Implicits.global
   import java.time.Instant
 
-  def setModifiedToPast(oid: String, duration: String): Try[Unit] = {
-    db.runBlockingTransactionally(
-      DBIO.seq(
-        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER koulutukset_history""",
-        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
-        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER set_koulutus_last_modified_on_change""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER set_koulutus_last_modified_on_tarjoajat_change""",
-        sqlu"""update koulutukset set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where oid = '#$oid'""",
-        sqlu"""update koulutukset set last_modified = (now() - interval '#$duration') where oid = '#$oid'""",
-        sqlu"""update koulutusten_tarjoajat set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where koulutus_oid = '#$oid'""",
-        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER koulutukset_history""",
-        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_koulutus_last_modified_on_change""",
-        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_koulutus_last_modified_on_tarjoajat_change"""
+  def setEntityModifiedToPast(
+      oid: String,
+      duration: String,
+      entityTable: String,
+      relatedTables: Seq[String],
+      selfKey: String,
+      foreignKey: String
+  ) = {
+    db.runBlockingTransactionally(DBIO.seq(sqlu"""ALTER TABLE #$entityTable DISABLE TRIGGER #${entityTable}_history;
+          ALTER TABLE #$entityTable DISABLE TRIGGER set_temporal_columns_on_#${entityTable}_on_update;
+          ALTER TABLE #$entityTable DISABLE TRIGGER set_#${entityTable}_last_modified_on_change;
+          #${relatedTables
+      .map(t => s"""ALTER TABLE ${t} DISABLE TRIGGER ${t}_history;
+              ALTER TABLE ${t} DISABLE TRIGGER set_temporal_columns_on_${t}_on_update;
+              ALTER TABLE ${t} DISABLE TRIGGER set_${entityTable}_last_modified_on_${t}_change;""")
+      .mkString}
+          UPDATE #${entityTable} SET system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) WHERE #$selfKey = '#$oid';
+          UPDATE #${entityTable} SET last_modified = (now() - interval '#$duration') WHERE #$selfKey = '#$oid';
+          #${relatedTables
+      .map(t =>
+        s"""UPDATE $t SET system_time = tstzrange(now() - interval '$duration', NULL::timestamp with time zone, '[)'::text) where $foreignKey = '$oid';"""
       )
-    )
+      .mkString}
+          ALTER TABLE #$entityTable ENABLE TRIGGER #${entityTable}_history;
+          ALTER TABLE #$entityTable ENABLE TRIGGER set_#${entityTable}_last_modified_on_change;
+          ALTER TABLE #$entityTable ENABLE TRIGGER set_temporal_columns_on_#${entityTable}_on_update;
+          #${relatedTables
+      .map(t => s"""ALTER TABLE ${t} ENABLE TRIGGER ${t}_history;
+            ALTER TABLE ${t} ENABLE TRIGGER set_temporal_columns_on_${t}_on_update;
+            ALTER TABLE ${t} ENABLE TRIGGER set_${entityTable}_last_modified_on_${t}_change;""")
+      .mkString}"""))
   }
 
   private def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
@@ -185,19 +196,15 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
     } yield n)
     .get
 
-  def getKoulutusHistorySize(k: Koulutus): Int = db
-    .runBlockingTransactionally(
-      sql"""select count(*) from koulutukset_history where oid = ${k.oid.get}"""
-        .as[Int]
-        .head
-    )
-    .get
+  def getTableHistorySize(tableName: String, where: String = ""): Int = db.runBlocking(
+    sql"""select count(*) from ${tableName} ${where};"""
+      .as[Int]
+      .head
+  )
 
-  def getKoulutusTarjoajatHistorySize(k: Koulutus): Int = db
-    .runBlockingTransactionally(
-      sql"""select count(*) from koulutusten_tarjoajat_history where koulutus_oid = ${k.oid.get}"""
-        .as[Int]
-        .head
-    )
-    .get
+  def getKoulutusHistorySize(k: Koulutus): Int =
+    getTableHistorySize("koulutukset", s"where oid = ${k.oid.get.toString}")
+
+  def getKoulutusTarjoajatHistorySize(k: Koulutus): Int =
+    getTableHistorySize("koultusten_tarjoajat", s"where koulutus_oid = ${k.oid.get.toString}")
 }
