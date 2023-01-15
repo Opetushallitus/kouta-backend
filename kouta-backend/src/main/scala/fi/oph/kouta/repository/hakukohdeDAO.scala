@@ -175,7 +175,7 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExtractors {
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
