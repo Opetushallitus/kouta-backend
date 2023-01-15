@@ -61,23 +61,15 @@ where t.oid = toteutus_mod.oid
   and t.last_modified is null;
 
 -- Asetetaan koulutuksen last_modified nykyhetkeen ennen kuin toteutus itse päivittyy
-create or replace function set_toteutus_last_modified() returns trigger as
-$$
-begin
-    new.last_modified := now()::timestamptz;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_toteutus_last_modified_on_change
+create trigger set_toteutukset_last_modified_on_change
     before insert or update
     on toteutukset
     for each row
-execute procedure set_toteutus_last_modified();
+execute procedure set_last_modified();
 
 -- Päivitetään toteutuksen last_modified kun sen tarjoajat muuttuu, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset toteutukset-tauluun, kun useampi tarjoaja muuttuu samalla
-create or replace function set_toteutus_last_modified_from_tarjoajat() returns trigger as
+create or replace function set_toteutukset_last_modified_from_related() returns trigger as
 $$
 begin
     update toteutukset
@@ -88,8 +80,8 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_toteutus_last_modified_on_tarjoajat_change
+create trigger set_toteutukset_last_modified_on_toteutusten_tarjoajat_change
     after insert or update or delete
     on toteutusten_tarjoajat
     for each row
-execute procedure set_toteutus_last_modified_from_tarjoajat();
+execute procedure set_toteutukset_last_modified_from_related();

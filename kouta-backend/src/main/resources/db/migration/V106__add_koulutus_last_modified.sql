@@ -67,7 +67,7 @@ where k.oid = koulutus_mod.oid
   and k.last_modified is null;
 
 -- Asetetaan koulutuksen last_modified ennen kuin koulutus itse päivittyy
-create or replace function set_koulutus_last_modified() returns trigger as
+create or replace function set_last_modified() returns trigger as
 $$
 begin
     new.last_modified := now()::timestamptz;
@@ -75,15 +75,15 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_koulutus_last_modified_on_change
+create trigger set_koulutukset_last_modified_on_change
     before insert or update
     on koulutukset
     for each row
-execute procedure set_koulutus_last_modified();
+execute procedure set_last_modified();
 
 -- Päivitetään koulutuksen last_modified kun sen tarjoajat päivittyy, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset koulutukset-tauluun, kun useampi tarjoaja muuttuu samalla
-create or replace function set_koulutus_last_modified_from_tarjoajat() returns trigger as
+create or replace function set_koulutukset_last_modified_from_related() returns trigger as
 $$
 begin
     update koulutukset
@@ -94,8 +94,8 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_koulutus_last_modified_on_tarjoajat_change
+create trigger set_koulutukset_last_modified_on_koulutusten_tarjoajat_change
     after insert or update or delete
     on koulutusten_tarjoajat
     for each row
-execute procedure set_koulutus_last_modified_from_tarjoajat();
+execute procedure set_koulutukset_last_modified_from_related();

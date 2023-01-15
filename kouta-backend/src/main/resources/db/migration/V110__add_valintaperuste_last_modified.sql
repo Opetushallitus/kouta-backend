@@ -68,23 +68,15 @@ where vp.id = valintaperuste_mod.id
   and vp.last_modified is null;
 
 -- Asetetaan valintaperusteen last_modified nykyhetkeen ennen kuin valintaperuste itse päivittyy
-create or replace function set_valintaperuste_last_modified() returns trigger as
-$$
-begin
-    new.last_modified := now()::timestamptz;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_valintaperuste_last_modified_on_change
+create trigger set_valintaperusteet_last_modified_on_change
     before insert or update
     on valintaperusteet
     for each row
-execute procedure set_valintaperuste_last_modified();
+execute procedure set_last_modified();
 
 -- Päivitetään valintaperusteen last_modified kun sen valintakokeet muuttuu, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset valintaperusteet-tauluun, kun useampi valintakoe muuttuu samalla
-create or replace function set_valintaperuste_last_modified_from_related() returns trigger as
+create or replace function set_valintaperusteet_last_modified_from_related() returns trigger as
 $$
 begin
     update valintaperusteet
@@ -95,8 +87,8 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_valintaperuste_last_modified_on_valintakokeet_change
+create trigger set_valintaperusteet_last_modified_on_valintaperusteiden_valintakokeet_change
     after insert or update or delete
     on valintaperusteiden_valintakokeet
     for each row
-execute procedure set_valintaperuste_last_modified_from_related();
+execute procedure set_valintaperusteet_last_modified_from_related();

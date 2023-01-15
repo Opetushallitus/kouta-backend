@@ -104,23 +104,15 @@ where ha.oid = hakukohde_mod.oid
   and ha.last_modified is null;
 
 -- Asetetaan hakukohteen last_modified nykyhetkeen ennen kuin hakukohde itse päivittyy
-create or replace function set_hakukohde_last_modified() returns trigger as
-$$
-begin
-    new.last_modified := now()::timestamptz;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_hakukohde_last_modified_on_change
+create trigger set_hakukohteet_last_modified_on_change
     before insert or update
     on hakukohteet
     for each row
-execute procedure set_hakukohde_last_modified();
+execute procedure set_last_modified();
 
 -- Päivitetään hakukohteen last_modified kun sen hakuajat, valintakokeet tai liitteet muuttuu, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset hakukohteet-tauluun, kun useampi hakuaika, valintakoe tai liite muuttuu samalla
-create or replace function set_hakukohde_last_modified_from_related() returns trigger as
+create or replace function set_hakukohteet_last_modified_from_related() returns trigger as
 $$
 begin
     update hakukohteet
@@ -131,20 +123,20 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_hakukohde_last_modified_on_hakuajat_change
+create trigger set_hakukohteet_last_modified_on_hakukohteiden_hakuajat_change
     after insert or update or delete
     on hakukohteiden_hakuajat
     for each row
-execute procedure set_hakukohde_last_modified_from_related();
+execute procedure set_hakukohteet_last_modified_from_related();
 
-create trigger set_hakukohde_last_modified_on_valintakokeet_change
+create trigger set_hakukohteet_last_modified_on_hakukohteiden_valintakokeet_change
     after insert or update or delete
     on hakukohteiden_valintakokeet
     for each row
-execute procedure set_hakukohde_last_modified_from_related();
+execute procedure set_hakukohteet_last_modified_from_related();
 
-create trigger set_hakukohde_last_modified_on_hakuajat_change
+create trigger set_hakukohteet_last_modified_on_hakukohteiden_liitteet_change
     after insert or update or delete
     on hakukohteiden_liitteet
     for each row
-execute procedure set_hakukohde_last_modified_from_related();
+execute procedure set_hakukohteet_last_modified_from_related();
