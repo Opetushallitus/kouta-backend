@@ -2,12 +2,12 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakuKoodiClient,  KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, ToteutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
@@ -97,7 +97,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
     TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
 }
 
-trait ToteutusDbFixture extends KoulutusExtractors with SQLHelpers {
+trait ToteutusDbFixture extends ToteutusExtractors with SQLHelpers {
   this: KoutaIntegrationSpec =>
 
   import slick.dbio.DBIO
