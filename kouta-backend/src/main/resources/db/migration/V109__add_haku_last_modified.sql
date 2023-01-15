@@ -76,23 +76,15 @@ where h.oid = haku_mod.oid
   and h.last_modified is null;
 
 -- Asetetaan haun last_modified nykyhetkeen ennen kuin haku itse päivittyy
-create or replace function set_haku_last_modified() returns trigger as
-$$
-begin
-    new.last_modified := now()::timestamptz;
-    return new;
-end;
-$$ language plpgsql;
-
-create trigger set_haku_last_modified_on_change
+create trigger set_haut_last_modified_on_change
     before insert or update
     on haut
     for each row
-execute procedure set_haku_last_modified();
+execute procedure set_last_modified();
 
 -- Päivitetään haun last_modified kun sen hakuajat muuttuu, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset haut-tauluun, kun useampi hakuaika muuttuu samalla
-create or replace function set_haku_last_modified_from_related() returns trigger as
+create or replace function set_haut_last_modified_from_related() returns trigger as
 $$
 begin
     update haut
@@ -103,8 +95,8 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_haku_last_modified_on_hakuajat_change
+create trigger set_haut_last_modified_on_hakujen_hakuajat_change
     after insert or update or delete
     on hakujen_hakuajat
     for each row
-execute procedure set_haku_last_modified_from_related();
+execute procedure set_haut_last_modified_from_related();
