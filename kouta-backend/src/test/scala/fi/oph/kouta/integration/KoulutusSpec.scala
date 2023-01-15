@@ -420,7 +420,14 @@ class KoulutusSpec
   it should "update the modified time of the koulutus even when just tarjoajat is updated" in {
     val oid = put(koulutus, ophSession)
 
-    setModifiedToPast(oid, "10 minutes") should be(Success(()))
+    setEntityModifiedToPast(
+      oid,
+      "10 minutes",
+      "koulutukset",
+      List("koulutusten_tarjoajat"),
+      "oid",
+      "koulutus_oid"
+    ) should be(Success())
     val lastModified        = get(oid, koulutus(oid))
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
@@ -486,7 +493,7 @@ class KoulutusSpec
     val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus.copy(oid = Some(KoulutusOid(oid))))
 
-    val koulutus1  = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu, tarjoajat = List())
+    val koulutus1 = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu, tarjoajat = List())
     update(koulutus1, lastModified, expectUpdate = true, ophSession)
 
     assert(getKoulutusHistorySize(koulutus1) == 1)
@@ -494,7 +501,7 @@ class KoulutusSpec
     assert(getKoulutusTarjoajatHistorySize(koulutus1) == 3)
 
     val lastModified2 = get(oid, koulutus1)
-    val koulutus2 = koulutus1.copy(tila = Julkaistu, tarjoajat = koulutus.tarjoajat)
+    val koulutus2     = koulutus1.copy(tila = Julkaistu, tarjoajat = koulutus.tarjoajat)
     update(koulutus2, lastModified2, expectUpdate = true, ophSession)
 
     assert(getKoulutusHistorySize(koulutus2) == 2)
