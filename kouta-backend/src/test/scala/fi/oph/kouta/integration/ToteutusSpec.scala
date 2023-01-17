@@ -499,6 +499,8 @@ class ToteutusSpec extends KoutaIntegrationSpec
   }
 
   it should "add right amount of rows to history tables" in {
+    resetTableHistory("toteutukset")
+    resetTableHistory("toteutusten_tarjoajat")
     val baseToteutus = toteutus(koulutusOid).copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true))))
 
     val oid          = put(baseToteutus, ophSession)
