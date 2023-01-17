@@ -93,13 +93,12 @@ trait DatabaseFixture {
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 
-  def getTableHistorySize(tableName: String, idKey: String, id: String): Int = db.runBlocking{
-      val x = sql"""select count(*) from #${tableName}_history #${if(idKey.nonEmpty) s"where $idKey = '$id'"};"""
-      println(x.toString)
-      x.as[Int].head
-    }
+  // Slick lisää jostain syystä tähän SQL-kyselyyn loppuun sulut, jos ei laita "where true"
+  def getTableHistorySize(tableName: String, idKey: String = "", id: String = ""): Int = db.runBlocking(
+    sql"""select count(*) from #${tableName}_history where #${if (id.nonEmpty) s"$idKey = '$id'" else "true"};""".as[Int].head
+  )
 
   def resetTableHistory(tableName: String) = {
-    db.runBlockingTransactionally(sqlu"""delete from #${tableName}_history""")
+    db.runBlocking(sqlu"""delete from #${tableName}_history where true""")
   }
 }
