@@ -289,6 +289,20 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     get(oid, uusiHaku) should not equal lastModified
   }
 
+  it should "add right amount of rows to history tables" in {
+    resetTableHistory("haut")
+    resetTableHistory("hakujen_hakuajat")
+
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    val uusiHaku = thisHaku.copy(hakuajat = List())
+    update(uusiHaku, lastModified, expectUpdate = true)
+
+    assert(getTableHistorySize("haut") == 1)
+    assert(getTableHistorySize("hakujen_hakuajat") == 1)
+  }
+
   it should "store and update unfinished haku" in {
     val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"), kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"), hakutapaKoodiUri = Some("hakutapa_03#1"))
     val oid = put(unfinishedHaku)
