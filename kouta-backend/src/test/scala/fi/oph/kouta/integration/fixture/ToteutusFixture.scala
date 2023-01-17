@@ -120,24 +120,13 @@ trait ToteutusDbFixture extends ToteutusExtractors with SQLHelpers {
 
   def updateToteutuksenTarjoajat(t: Toteutus) = db
     .runBlockingTransactionally(for {
-      t <- ToteutusDAO.updateToteutuksenTarjoajat(t)
+      _ <- ToteutusDAO.updateToteutuksenTarjoajat(t)
       n <- sql"""select now()::timestamptz""".as[Instant].head
     } yield n)
     .get
 
-  def getToteutusHistorySize(t: Toteutus): Int = db
-    .runBlockingTransactionally(
-      sql"""select count(*) from toteutukset_history where oid = ${t.oid.get}"""
-        .as[Int]
-        .head
-    )
-    .get
+  def getToteutusHistorySize(t: Toteutus): Int = getTableHistorySize("toteutukset", "oid", t.oid.get.toString)
 
-  def getToteutusTarjoajatHistorySize(t: Toteutus): Int = db
-    .runBlockingTransactionally(
-      sql"""select count(*) from toteutusten_tarjoajat_history where toteutus_oid = ${t.oid.get}"""
-        .as[Int]
-        .head
-    )
-    .get
+  def getToteutusTarjoajatHistorySize(t: Toteutus): Int =
+    getTableHistorySize("toteutusten_tarjoajat", "toteutus_oid", t.oid.get.toString)
 }

@@ -8,7 +8,7 @@ import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.{AmkKoulutusKoodit, AmmatillisetKoulutusKoodit, YoKoulutusKoodit}
-import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
+import fi.oph.kouta.integration.fixture.{DatabaseFixture, Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks._
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
@@ -38,7 +38,7 @@ trait KoutaIntegrationSpec
     with SpecWithMocks
     with UrlProperties
     with HttpSpec
-    with DatabaseSpec
+    with DatabaseFixture
     with DefaultTestImplicits
     with DefaultMocks
     with MockitoSugar {
@@ -545,62 +545,5 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     get(s"$path/list", params, headers) {
       status should equal(expectedStatus)
     }
-  }
-}
-
-sealed trait DatabaseSpec {
-
-  import fi.oph.kouta.repository.KoutaDatabase
-  import slick.jdbc.PostgresProfile.api._
-
-  System.setProperty("kouta-backend.useSecureCookies", "false")
-  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
-  TestSetups.setupPostgres()
-  lazy val db: KoutaDatabase.type = KoutaDatabase
-
-  def truncateDatabase(): Int = {
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
-    db.runBlocking(sqlu"""delete from hakukohteet""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
-    db.runBlocking(sqlu"""delete from haut""")
-    db.runBlocking(sqlu"""delete from valintaperusteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from valintaperusteet""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from toteutukset""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from koulutukset""")
-
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakukohteet_history""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakujen_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from haut_history""")
-    db.runBlocking(sqlu"""delete from valintaperusteet_history""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from toteutukset_history""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from koulutukset_history""")
-
-    db.runBlocking(sqlu"""delete from sorakuvaukset""")
-    db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
-
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat""")
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat_history""")
-    db.runBlocking(sqlu"""delete from oppilaitokset""")
-    db.runBlocking(sqlu"""delete from oppilaitokset_history""")
-
-    db.runBlocking(sqlu"""delete from authorities""")
-    db.runBlocking(sqlu"""delete from sessions""")
-
-    deleteAsiasanat()
-  }
-
-  def deleteAsiasanat(): Int = {
-    db.runBlocking(sqlu"""delete from asiasanat""")
-    db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 }
