@@ -43,7 +43,7 @@
 
         <!-- Database related properties -->
         <flyway.version>8.5.12</flyway.version>
-        <slick.version>3.2.3</slick.version>
+        <slick.version>3.4.1</slick.version>
         <jdbc.version>42.2.5</jdbc.version>
 
         <!-- Test properties -->

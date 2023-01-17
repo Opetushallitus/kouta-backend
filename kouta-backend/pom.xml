@@ -200,7 +200,7 @@
         <dependency>
             <groupId>org.gnieh</groupId>
             <artifactId>diffson-circe_2.12</artifactId>
-            <version>4.0.0</version>
+            <version>4.3.0</version>
         </dependency>
 
         <!-- Cas related dependencies -->
