@@ -7,6 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
+import fi.oph.kouta.util.KoulutusServiceValidationUtil
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
@@ -421,19 +422,24 @@ class KoulutusServiceValidation(
   }
 
   private def validateAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) = {
-    val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
-    val removedTarjoajat = koulutusDiffResolver.getRemovedTarjoajat()
-    val toteutustenTarjoajat = toteutukset.flatMap(_.tarjoajat)
+    val toteutukset = k.oid match {
+      case Some(oid) =>
+        toteutusDAO.getByKoulutusOid(oid, TilaFilter.onlyOlemassaolevat())
+      case _ => List()
+    }
 
-    val removedTarjoajatParentAndChildOids = removedTarjoajat.map(tarjoaja => {
-      val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
-      tarjoaja -> oids
-    }).toMap
-
-    val cannotBeRemoved = removedTarjoajatParentAndChildOids.filter(tarjoajaAndOids => {
-      tarjoajaAndOids._2.exists(oid =>
-        toteutustenTarjoajat.contains(oid))
-    }).toList.map(_._1)
+    val cannotBeRemovedTarjoajat =
+      if (toteutukset.isEmpty) {
+        List()
+      } else {
+        val removedTarjoajat = koulutusDiffResolver.getRemovedTarjoajat()
+        val toteutustenTarjoajat = toteutukset.flatMap(_.tarjoajat)
+        val removedTarjoajatParentAndChildOids = removedTarjoajat.map(tarjoaja => {
+          val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+          tarjoaja -> oids
+        }).toMap
+        KoulutusServiceValidationUtil.getUnremovableTarjoajat(removedTarjoajatParentAndChildOids, toteutustenTarjoajat)
+      }
 
     and(
       validateIfTrue(
@@ -445,9 +451,9 @@ class KoulutusServiceValidation(
         )
       ),
       assertTrue(
-        cannotBeRemoved.isEmpty,
+        cannotBeRemovedTarjoajat.isEmpty,
         "tarjoajat",
-        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(cannotBeRemoved)
+        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(cannotBeRemovedTarjoajat)
       )
     )
   }
