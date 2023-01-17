@@ -364,7 +364,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
-          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
+          validateAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintopisteKoodiUriAndValues(
             m.opintojenLaajuusyksikkoKoodiUri,
             m.opintojenLaajuusNumeroMin,
@@ -375,7 +375,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
-          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
+          validateAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintopisteKoodiUriAndValues(
             m.opintojenLaajuusyksikkoKoodiUri,
             m.opintojenLaajuusNumeroMin,
@@ -420,17 +420,37 @@ class KoulutusServiceValidation(
     }
   }
 
-  private def validateIsAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) =
-    validateIfTrue(
-      koulutusDiffResolver.isAvoinKkChanged(), {
-        val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
+  private def validateAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) = {
+    val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
+    val removedTarjoajat = koulutusDiffResolver.getRemovedTarjoajat()
+    val toteutustenTarjoajat = toteutukset.flatMap(_.tarjoajat)
+
+    val removedTarjoajatParentAndChildOids = removedTarjoajat.map(tarjoaja => {
+      val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+      tarjoaja -> oids
+    }).toMap
+
+    val cannotBeRemoved = removedTarjoajatParentAndChildOids.filter(tarjoajaAndOids => {
+      tarjoajaAndOids._2.exists(oid =>
+        toteutustenTarjoajat.contains(oid))
+    }).toList.map(_._1)
+
+    and(
+      validateIfTrue(
+        koulutusDiffResolver.isAvoinKkChanged(),
         assertTrue(
           toteutukset.isEmpty,
           "metadata.isAvoinKorkeakoulutus",
           cannotChangeIsAvoinKorkeakoulutus
         )
-      }
+      ),
+      assertTrue(
+        cannotBeRemoved.isEmpty,
+        "tarjoajat",
+        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(cannotBeRemoved)
+      )
     )
+  }
 
   private def assertOpettajankoulutusMetadata(
       m: KorkeakoulutusKoulutusMetadata

@@ -1,6 +1,7 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus]) {
   private def oldMetadata(): Option[KoulutusMetadata] = oldKoulutus.flatMap(_.metadata)
@@ -70,6 +71,9 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     case Some(old: Koulutus) => koulutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
     case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
+
+  def getRemovedTarjoajat(): List[OrganisaatioOid] =
+    oldKoulutus.map(_.tarjoajat).getOrElse(List()).diff(koulutus.tarjoajat)
 
   def newErikoistumiskoulutusKoodiUri(): Option[String] = {
     val koodiUri = erikoitumiskoulutusKoodiUri(koulutus.metadata)
