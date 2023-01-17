@@ -1034,7 +1034,9 @@ case class ErikoistumiskoulutusToteutusMetadata(tyyppi: Koulutustyyppi = Erikois
                                                 hakuaika: Option[Ajanjakso] = None,
                                                 aloituspaikat: Option[Int] = None,
                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                hasJotpaRahoitus: Option[Boolean] = None
+                                                hasJotpaRahoitus: Option[Boolean] = None,
+                                                isTaydennyskoulutus: Boolean = false,
+                                                isTyovoimakoulutus: Boolean = false
                                                ) extends TutkintoonJohtamatonToteutusMetadata
 
 case class TaiteenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = TaiteenPerusopetus,
