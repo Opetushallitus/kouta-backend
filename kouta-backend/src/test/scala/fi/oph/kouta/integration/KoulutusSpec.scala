@@ -427,10 +427,12 @@ class KoulutusSpec
       List("koulutusten_tarjoajat"),
       "oid",
       "koulutus_oid"
-    ) should be(Success())
+    ) should equal(Success(()))
     val lastModified        = get(oid, koulutus(oid))
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
-    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
+
+    // Tarkistetaan, että lastModifiedin ja nykyhetken välillä on ainakin 9 minuuttia?
+    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(9)) should equal(1)
 
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, EvilChildOid, AmmOid))
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
@@ -442,8 +444,8 @@ class KoulutusSpec
       koulutus.modified.isDefined should be(true)
       val modifiedInstant = modifiedToInstant(koulutus.modified.get)
 
-      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
-      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(9)) should equal(1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(11)) should equal(-1)
     }
   }
 
@@ -472,7 +474,7 @@ class KoulutusSpec
 
     val (koulutus3, _)        = insertKoulutus(koulutus)
     val oid3                  = koulutus3.oid.get.toString
-    val koulutus3tarjoajatNow = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
+    val koulutus3tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
 
     db.migrate("106")
 
@@ -481,7 +483,7 @@ class KoulutusSpec
       oid2,
       koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatTimestamp)))
     )
-    get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatNow))))
+    get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatTimestamp))))
 
     db.clean()
     db.migrate()
@@ -490,6 +492,8 @@ class KoulutusSpec
   }
 
   it should "add right amount of rows to history tables" in {
+    resetTableHistory("koulutukset")
+    resetTableHistory("koulutusten_tarjoajat")
     val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus.copy(oid = Some(KoulutusOid(oid))))
 

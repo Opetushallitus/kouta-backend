@@ -98,4 +98,8 @@ trait DatabaseFixture {
       println(x.toString)
       x.as[Int].head
     }
+
+  def resetTableHistory(tableName: String) = {
+    db.runBlockingTransactionally(sqlu"""delete from #${tableName}_history""")
+  }
 }
