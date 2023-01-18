@@ -81,6 +81,20 @@ Yksittäisen testisuiten tai testin voi ajaa ottamalla right-click halutun testi
 
 Testit käynnistävät PostgreSQL:n docker-kontissa satunnaiseen vapaaseen porttiin.
 
+#### Debuggaus
+
+Logitukseen käytetään Log4j-kirjastoa, jolle testeissä käytetään asetustiedostoa `kouta-backend/src/test/resources/log4j.properties`.
+Debug-logituksen saa päälle vaihtamalla Log4j-rootLoggerille tason DEBUG:
+
+```diff
+- log4j.rootLogger=INFO, Console
++ log4j.rootLogger=DEBUG, Console
+```
+
+Jos haluat lisäksi tarkastella Slick-kirjaston muodostamia SQL-kyselyitä, voit myös lisätä samaan tiedostoon rivin:
+
+- `logger.slick.session=DEBUG`
+
 #### Testit ja Windows + docker
 
 Jotkin testit (IndexerSpec) voivat epäonnistua windowsilla, koska getDockerExeLocation olettaa `docker.exe` löytyvän kovakoodatusti tietystä polusta:
