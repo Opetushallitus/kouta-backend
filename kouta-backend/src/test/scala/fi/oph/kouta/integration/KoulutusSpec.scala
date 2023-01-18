@@ -456,9 +456,9 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset after database migration 106" in {
+  it should "set last_modified right for old koulutukset after database migration" in {
     db.clean()
-    db.migrate("105")
+    db.migrate("106")
     addTestSessions()
     addDefaultSession()
 
@@ -474,7 +474,7 @@ class KoulutusSpec
     val oid3                  = koulutus3.oid.get.toString
     val koulutus3tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
 
-    db.migrate("106")
+    db.migrate("107")
 
     get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Timestamp))))
     get(
