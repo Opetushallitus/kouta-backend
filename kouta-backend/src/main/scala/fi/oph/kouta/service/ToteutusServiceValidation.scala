@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -174,8 +174,17 @@ class ToteutusServiceValidation(
   }
 
   private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
-    val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get)
-    val jarjestajat = toteutus.tarjoajat
+    val isToteutusAvoinKorkeakoulutus = toteutus.isAvoinKorkeakoulutus()
+    val tarjoajatAndjarjestajat = if (isToteutusAvoinKorkeakoulutus) {
+      val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get)
+      val jarjestajat = toteutus.tarjoajat
+      (tarjoajat, jarjestajat)
+    } else {
+      (Seq(), List())
+    }
+
+    val tarjoajat = tarjoajatAndjarjestajat._1
+    val jarjestajat = tarjoajatAndjarjestajat._2
     val invalidJarjestajat = if (tarjoajat.isEmpty) {
       jarjestajat
     } else {
@@ -190,7 +199,7 @@ class ToteutusServiceValidation(
       validateIfTrue(
         koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
           assertTrue(
-            toteutus.isAvoinKorkeakoulutus() == koulutus.get.isAvoinKorkeakoulutus(),
+            isToteutusAvoinKorkeakoulutus == koulutus.get.isAvoinKorkeakoulutus(),
             "metadata.isAvoinKorkeakoulutus",
             invalidIsAvoinKorkeakoulutusIntegrity
           )

@@ -1170,7 +1170,8 @@ object TestData {
   val JulkaistuKkOpintokokonaisuusToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto),
-      tarjoajat = List(YoOid, HkiYoOid)
+      tarjoajat = List(YoOid, HkiYoOid),
+      koulutuksetKoodiUri = Seq(),
     )
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)), tarjoajat = List(AmkOid))
