@@ -144,7 +144,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  organisaatio_oid,
                  muokkaaja,
                  kielivalinta,
-                 last_modified as modified
+                 last_modified
           from valintaperusteet
           where id = ${id.toString}::uuid #${tilaConditions(tilaFilter)}"""
 
@@ -223,7 +223,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   val selectValintaperusteListSql =
-    """select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, v.last_modified as modified from valintaperusteet v"""
+    """select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, v.last_modified from valintaperusteet v"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql

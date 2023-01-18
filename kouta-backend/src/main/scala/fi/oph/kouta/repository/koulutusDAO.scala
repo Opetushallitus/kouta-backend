@@ -208,7 +208,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  kielivalinta,
                  teemakuva,
                  eperuste_id,
-                 last_modified as modified
+                 last_modified
           from koulutukset
           where oid = $oid
             #${tilaConditions(tilaFilter)}
@@ -232,7 +232,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.kielivalinta,
                           k.teemakuva,
                           k.eperuste_id,
-                          k.last_modified as modified
+                          k.last_modified
           from koulutukset k
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
           where k.tila = 'julkaistu'::julkaisutila
@@ -297,7 +297,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   val selectKoulutusListSql =
-    s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, k.last_modified as modified from koulutukset k"""
+    s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, k.last_modified from koulutukset k"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
     sql"""#$selectKoulutusListSql

@@ -330,7 +330,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              muokkaaja,
              organisaatio_oid,
              kielivalinta,
-             last_modified as modified from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
+             last_modified from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
@@ -471,7 +471,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   val selectHakukohdeListSql =
-    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified as modified, t.metadata
+    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified, t.metadata
          from hakukohteet ha
          inner join toteutukset t on t.oid = ha.toteutus_oid"""
 
