@@ -24,10 +24,10 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   }
 
   protected def createLastModifiedHeader(instant: Instant): String = {
-    //- system_time range in database is of form ["2017-02-28 13:40:02.442277+02",)
+    //- Last modification time is read from last_modified or system_time and is of form "2017-02-28 13:40:02.442277+02"
     //- RFC-1123 date-time format used in headers has no millis
-    //- if x-Last-Modified/x-If-Unmodified-Since header is set to 2017-02-28 13:40:02, it will never be inside system_time range
-    //-> this is why we wan't to set it to 2017-02-28 13:40:03 instead
+    //- if x-Last-Modified/x-If-Unmodified-Since header is set to 2017-02-28 13:40:02, it will not be after last modification time
+    //-> this is why we want to set it to 2017-02-28 13:40:03 instead
     renderHttpDate(instant.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusSeconds(1))
   }
 
