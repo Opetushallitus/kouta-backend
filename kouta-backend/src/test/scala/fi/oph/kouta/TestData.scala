@@ -607,6 +607,33 @@ object TestData {
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
         opintojenLaajuusNumero = Some(10),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
+        isMuokkaajaOphVirkailija = Some(true)
+      )
+    ),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/lkkuva"),
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
+  val TaiteenPerusopetusKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = TaiteenPerusopetus,
+    koulutuksetKoodiUri = Seq("koulutus_999907#1"),
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(
+      TaiteenPerusopetusKoulutusMetadata(
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
         isMuokkaajaOphVirkailija = Some(false)
       )
     ),
@@ -1284,6 +1311,29 @@ object TestData {
 
   val AikuistenPerusopetusToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(AikuistenPerusopetusToteutusMetatieto))
+
+  val TaiteenPerusopetusToteutusMetatieto: TaiteenPerusopetusToteutusMetadata =
+    TaiteenPerusopetusToteutusMetadata(
+      tyyppi = TaiteenPerusopetus,
+      kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+      opintojenLaajuusNumeroMin = Some(10),
+      opintojenLaajuusNumeroMax = Some(16),
+      taiteenalaKoodiUrit = Seq("taiteenperusopetustaiteenala_kuvataide"),
+      opetus = Some(ToteutuksenOpetus),
+      asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+      yhteyshenkilot = Seq(Yhteystieto1),
+      hakutermi = Some(Hakeutuminen),
+      hakulomaketyyppi = Some(MuuHakulomake),
+      hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+      lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+      lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+      isMuokkaajaOphVirkailija = Some(false),
+      hasJotpaRahoitus = Some(false))
+
+  val TaiteenPerusopetusToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(TaiteenPerusopetusToteutusMetatieto))
 
   val MinToteutus: Toteutus = Toteutus(
     muokkaaja = TestUserOid,

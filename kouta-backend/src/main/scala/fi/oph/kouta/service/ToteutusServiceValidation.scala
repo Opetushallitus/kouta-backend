@@ -157,6 +157,8 @@ class ToteutusServiceValidation(
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
                     validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
+                case m: TaiteenPerusopetusToteutusMetadata =>
+                  validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
                     vCtx,
@@ -352,11 +354,17 @@ class ToteutusServiceValidation(
   private def validateTutkintoonJohtamatonMetadata(
       vCtx: ValidationContext,
       m: TutkintoonJohtamatonToteutusMetadata
-  ) =
+  ) = {
+    //TODO Lisää tähän kaikki koulutustyypit joille ei aseteta aloituspaikka-tietoa
+    val koulutustyypitWoAloituspaikat: Set[Koulutustyyppi] = Set(TaiteenPerusopetus)
     and(
       validateIfNonEmpty(m.hakulomakeLinkki, "metadata.hakulomakeLinkki", assertValidUrl _),
       validateIfDefined[Ajanjakso](m.hakuaika, _.validate(vCtx, "metadata.hakuaika")),
-      validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+      validateIfTrueOrElse(
+        koulutustyypitWoAloituspaikat.contains(m.tyyppi),
+        assertNotDefined(m.aloituspaikat, "metadata.aloituspaikat"),
+        validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+      ),
       validateIfJulkaistu(
         vCtx.tila,
         and(
@@ -382,6 +390,7 @@ class ToteutusServiceValidation(
         )
       )
     )
+  }
 
   def validateOpintojaksotIntegrity(
       tila: Julkaisutila,
@@ -651,6 +660,52 @@ class ToteutusServiceValidation(
       )
     )
   }
+
+  private def validateTaiteenPerusopetusMetadata(
+                                                  m: TaiteenPerusopetusToteutusMetadata,
+                                                  vCtx: ValidationContext,
+                                                  toteutusDiffResolver: ToteutusDiffResolver
+  ): IsValid =
+    and(
+      validateIfDefined[String](
+        toteutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+        uri =>
+          assertKoodistoQueryResult(
+            uri,
+            koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+            "metadata.opintojenLaajuusyksikkoKoodiUri",
+            vCtx,
+            invalidOpintojenLaajuusyksikkoKoodiuri(uri)
+          )
+      ),
+      validateIfDefined[Double](
+        m.opintojenLaajuusNumeroMin,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMin")
+      ),
+      validateIfDefined[Double](
+        m.opintojenLaajuusNumeroMax,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
+      ),
+      validateMinMax(
+        m.opintojenLaajuusNumeroMin,
+        m.opintojenLaajuusNumeroMax,
+        s"metadata.opintojenLaajuusNumeroMin"
+      ),
+      validateIfNonEmpty[String](
+        toteutusDiffResolver.newTaiteenalaKoodiUrit(),
+        "metadata.taiteenalaKoodiUrit",
+        (koodiUri, path) =>
+          assertKoodistoQueryResult(
+            koodiUri,
+            koulutusKoodiClient.taiteenalaKoodiUriExists,
+            path,
+            vCtx,
+            invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri)
+          )
+      ),
+      validateTutkintoonJohtamatonMetadata(vCtx, m)
+    )
+
   override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid =
     toteutus.metadata
       .flatMap(_.opetus)
