@@ -430,8 +430,6 @@ class KoulutusSpec
     ) should equal(Success(()))
     val lastModified        = get(oid, koulutus(oid))
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
-
-    // Tarkistetaan, että lastModifiedin ja nykyhetken välillä on ainakin 9 minuuttia?
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(9)) should equal(1)
 
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, EvilChildOid, AmmOid))
