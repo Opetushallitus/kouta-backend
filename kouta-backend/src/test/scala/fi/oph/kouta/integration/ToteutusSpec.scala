@@ -522,7 +522,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, uusiToteutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset after database migration 106" in {
+  it should "set last_modified right for old koulutukset after database migration 107" in {
     db.clean()
     db.migrate("106")
     addDefaultSession()
@@ -569,7 +569,6 @@ class ToteutusSpec extends KoutaIntegrationSpec
     update(toteutus1, lastModified, expectUpdate = true, ophSession)
 
     assert(getToteutusHistorySize(toteutus1) == 1)
-    // Poistetaan kolme tarjoajaa, toteutus-oidille kolme riviä tarjoajat-historiaan. Kaikilla kolmella rivillä sama aikaleima.
     assert(getToteutusTarjoajatHistorySize(toteutus1) == 2)
 
     val lastModified2 = get(oid, toteutus1)
