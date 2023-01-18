@@ -80,7 +80,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_toteutukset_last_modified_on_toteutusten_tarjoajat_change
+create trigger set_last_modified_on_toteutusten_tarjoajat_change
     after insert or update or delete
     on toteutusten_tarjoajat
     for each row

@@ -123,19 +123,19 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_hakukohteet_last_modified_on_hakukohteiden_hakuajat_change
+create trigger set_last_modified_on_hakukohteiden_hakuajat_change
     after insert or update or delete
     on hakukohteiden_hakuajat
     for each row
 execute procedure set_hakukohteet_last_modified_from_related();
 
-create trigger set_hakukohteet_last_modified_on_hakukohteiden_valintakokeet_change
+create trigger set_last_modified_on_hakukohteiden_valintakokeet_change
     after insert or update or delete
     on hakukohteiden_valintakokeet
     for each row
 execute procedure set_hakukohteet_last_modified_from_related();
 
-create trigger set_hakukohteet_last_modified_on_hakukohteiden_liitteet_change
+create trigger set_last_modified_on_hakukohteiden_liitteet_change
     after insert or update or delete
     on hakukohteiden_liitteet
     for each row

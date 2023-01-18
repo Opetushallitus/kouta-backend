@@ -49,12 +49,12 @@ $$;
 
 
 -- Asetetaan vanhoille valintaperusteille last_modified system_time-sarakkeiden perusteella
-with valintaperuste_mod as (select vp.id                                id,
+with valintaperuste_mod as (select vp.id                                as id,
                                    greatest(
                                            max(lower(vp.system_time)),
                                            max(lower(vk.system_time)),
                                            max(upper(vph.system_time)),
-                                           max(upper(vkh.system_time))) modified
+                                           max(upper(vkh.system_time))) as modified
                             from valintaperusteet vp
                                      left join valintaperusteet_history vph on vp.id = vph.id
                                      left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
@@ -87,7 +87,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_valintaperusteet_last_modified_on_valintaperusteiden_valintakokeet_change
+create trigger set_last_modified_on_valintaperusteiden_valintakokeet_change
     after insert or update or delete
     on valintaperusteiden_valintakokeet
     for each row

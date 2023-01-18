@@ -94,7 +94,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_koulutukset_last_modified_on_koulutusten_tarjoajat_change
+create trigger set_last_modified_on_koulutusten_tarjoajat_change
     after insert or update or delete
     on koulutusten_tarjoajat
     for each row
