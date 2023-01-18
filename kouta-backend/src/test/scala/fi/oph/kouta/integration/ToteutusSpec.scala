@@ -463,9 +463,9 @@ class ToteutusSpec extends KoutaIntegrationSpec
     get(oid, uusiToteutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset after database migration 107" in {
+  it should "set last_modified right for old koulutukset after database migration" in {
     db.clean()
-    db.migrate("106")
+    db.migrate("107")
     addDefaultSession()
     addTestSessions()
     koulutusOid = put(koulutus, ophSession)
@@ -482,7 +482,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val oid3                  = toteutus3.oid.get.toString
     val toteutus3tarjoajatNow = updateToteutuksenTarjoajat(toteutus3.copy(tarjoajat = List()))
 
-    db.migrate("107")
+    db.migrate("108")
 
     get(oid1, toteutus1.copy(modified = Some(instantToModified(toteutus1Timestamp))))
     get(
