@@ -96,8 +96,12 @@ class ToteutusServiceValidation(
             validateIfFalse(metadata.allowSorakuvaus, assertNotDefined(toteutus.sorakuvausId, "sorakuvausId")),
             validateSorakuvausIntegrity(toteutus.sorakuvausId, toteutus.tila, metadata.tyyppi, "metadata.tyyppi")
           ),
-          validateTarjoajat(koulutusTyyppi, toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List()),
-            if (toteutus.isAvoinKorkeakoulutus()) oppilaitostyypitForAvoinKorkeakoulutus else Seq()),
+          validateTarjoajat(
+            koulutusTyyppi,
+            toteutus.tarjoajat,
+            oldToteutus.map(_.tarjoajat).getOrElse(List()),
+            if (toteutus.isAvoinKorkeakoulutus()) oppilaitostyypitForAvoinKorkeakoulutus else Seq()
+          ),
           validateIfJulkaistu(vCtx.tila, assertNotEmpty(toteutus.tarjoajat, "tarjoajat")),
           validateIfDefined[Opetus](
             metadata.opetus,
@@ -134,13 +138,25 @@ class ToteutusServiceValidation(
                 )
               )
             case m: AmmOpeErityisopeJaOpoToteutusMetadata =>
-              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+              and(
+                validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+                validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
+              )
             case m: OpePedagOpinnotToteutusMetadata =>
-              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+              and(
+                validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+                validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
+              )
             case m: TuvaToteutusMetadata =>
-              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+              and(
+                validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+                validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
+              )
             case m: TelmaToteutusMetadata =>
-              validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+              and(
+                validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+                validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
+              )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
                 case m: KkOpintojaksoToteutusMetadata =>
@@ -364,6 +380,11 @@ class ToteutusServiceValidation(
         koulutustyypitWoAloituspaikat.contains(m.tyyppi),
         assertNotDefined(m.aloituspaikat, "metadata.aloituspaikat"),
         validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
+      ),
+      validateIfTrueOrElse(
+        koulutustyypitWoAloituspaikat.contains(m.tyyppi),
+        assertEmptyKielistetty(m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus"),
+        validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
       ),
       validateIfJulkaistu(
         vCtx.tila,
@@ -662,9 +683,9 @@ class ToteutusServiceValidation(
   }
 
   private def validateTaiteenPerusopetusMetadata(
-                                                  m: TaiteenPerusopetusToteutusMetadata,
-                                                  vCtx: ValidationContext,
-                                                  toteutusDiffResolver: ToteutusDiffResolver
+      m: TaiteenPerusopetusToteutusMetadata,
+      vCtx: ValidationContext,
+      toteutusDiffResolver: ToteutusDiffResolver
   ): IsValid =
     and(
       validateIfDefined[String](
