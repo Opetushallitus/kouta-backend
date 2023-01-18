@@ -446,6 +446,7 @@ class KoulutusServiceValidation(
     }
   }
 
+
   private def validateAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) = {
     val toteutukset = k.oid match {
       case Some(oid) =>
