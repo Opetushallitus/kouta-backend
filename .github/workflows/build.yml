@@ -90,7 +90,7 @@ jobs:
   deploy_to_artifactory:
     runs-on: ubuntu-latest
     needs: test_and_build
-    if: github.ref == 'refs/heads/OPHJOD-72-taiteen-perusopetus'
+    if: github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
