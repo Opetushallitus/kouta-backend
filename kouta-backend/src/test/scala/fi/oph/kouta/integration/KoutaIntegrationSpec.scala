@@ -166,6 +166,7 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 1)
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso2_091", 1)
     mockLatestKoodiUriResponse("koulutus_201101", 12)
+    mockLatestKoodiUriResponse("koulutus_999907", 1)
     mockLatestKoodiUriResponse("opintojenlaajuusyksikko_2", 1)
     mockLatestKoodiUriResponse("opintojenlaajuusyksikko_6", 1)
     mockLatestKoodiUriResponse("opintojenlaajuusyksikko_8", 1)
