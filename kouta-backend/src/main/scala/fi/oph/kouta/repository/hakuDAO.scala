@@ -214,7 +214,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   val selectHakuListSql =
-    """select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified as modified from haut ha"""
+    """select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified from haut ha"""
 
   def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yf: YhteishakuFilter): DBIO[Vector[HakuListItem]] = {
     def includeYhteishaut = (yf.removeKk, yf.removeToinenaste) match {
