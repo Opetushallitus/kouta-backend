@@ -43,6 +43,7 @@ package object koulutus {
       |            'vapaa-sivistystyo-opistovuosi',
       |            'vapaa-sivistystyo-muu',
       |            'aikuisten-perusopetus',
+      |            'taiteen-perusopetus',
       |            'muu'"
       |          $ref: '#/components/schemas/Koulutustyyppi'
       |          example: amm
@@ -112,6 +113,8 @@ package object koulutus {
       |            - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
       |            - $ref: '#/components/schemas/AikuistenPerusopetusKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoislaakariKoulutusMetadata'
+      |            - $ref: '#/components/schemas/ErikoistumiskoulutusMetadata'
+      |            - $ref: '#/components/schemas/TaiteenPerusopetusKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:

@@ -7,6 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
+import fi.oph.kouta.util.KoulutusServiceValidationUtil
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
@@ -212,6 +213,16 @@ class KoulutusServiceValidation(
           assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
+      case TaiteenPerusopetus =>
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertOneAndOnlyCertainValueInSeq(
+            koulutus.koulutuksetKoodiUri,
+            "koulutus_999907",
+            "koulutuksetKoodiUri"
+          ),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case _ =>
         and(
           validateSorakuvaus(koulutus),
@@ -246,10 +257,11 @@ class KoulutusServiceValidation(
         KkOpintojakso,
         KkOpintokokonaisuus,
         Erikoislaakari,
-        Erikoistumiskoulutus
+        Erikoistumiskoulutus,
+        TaiteenPerusopetus
       )
     val koulutustyypitWithoutLisatiedot: Set[Koulutustyyppi] =
-      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus)
+      Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, AikuistenPerusopetus, TaiteenPerusopetus)
 
     and(
       assertTrue(metadata.tyyppi == tyyppi, s"metadata.tyyppi", InvalidMetadataTyyppi),
@@ -364,7 +376,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
-          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
+          validateAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintopisteKoodiUriAndValues(
             m.opintojenLaajuusyksikkoKoodiUri,
             m.opintojenLaajuusNumeroMin,
@@ -375,7 +387,7 @@ class KoulutusServiceValidation(
         and(
           assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
           assertOpinnonTyyppiKoodiUri(koulutusDiffResolver.newOpinnonTyyppiKoodiUri(), validationContext),
-          validateIsAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
+          validateAvoinKorkeakoulutusIntegrity(koulutus, koulutusDiffResolver),
           validateOpintopisteKoodiUriAndValues(
             m.opintojenLaajuusyksikkoKoodiUri,
             m.opintojenLaajuusNumeroMin,
@@ -416,21 +428,60 @@ class KoulutusServiceValidation(
             assertNotOptional(m.erikoistumiskoulutusKoodiUri, "metadata.erikoistumiskoulutusKoodiUri")
           )
         )
+      case m: TaiteenPerusopetusKoulutusMetadata =>
+        and(
+          validateIfNonEmpty(m.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
+          validateIfJulkaistu(
+            validationContext.tila,
+            and(
+              validateOptionalKielistetty(
+                validationContext.kielivalinta,
+                m.linkkiEPerusteisiin,
+                "metadata.linkkiEPerusteisiin"
+              )
+            )
+          )
+        )
       case _ => NoErrors
     }
   }
 
-  private def validateIsAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) =
-    validateIfTrue(
-      koulutusDiffResolver.isAvoinKkChanged(), {
-        val toteutukset = toteutusDAO.getByKoulutusOid(k.oid.get, TilaFilter.onlyOlemassaolevat())
+  private def validateAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) = {
+    val toteutukset = k.oid match {
+      case Some(oid) =>
+        toteutusDAO.getByKoulutusOid(oid, TilaFilter.onlyOlemassaolevat())
+      case _ => List()
+    }
+
+    val cannotBeRemovedTarjoajat =
+      if (toteutukset.isEmpty) {
+        List()
+      } else {
+        val removedTarjoajat = koulutusDiffResolver.getRemovedTarjoajat()
+        val toteutustenTarjoajat = toteutukset.flatMap(_.tarjoajat)
+        val removedTarjoajatParentAndChildOids = removedTarjoajat.map(tarjoaja => {
+          val oids = organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+          tarjoaja -> oids
+        }).toMap
+        KoulutusServiceValidationUtil.getUnremovableTarjoajat(removedTarjoajatParentAndChildOids, toteutustenTarjoajat)
+      }
+
+    and(
+      validateIfTrue(
+        koulutusDiffResolver.isAvoinKkChanged(),
         assertTrue(
           toteutukset.isEmpty,
           "metadata.isAvoinKorkeakoulutus",
           cannotChangeIsAvoinKorkeakoulutus
         )
-      }
+      ),
+      assertTrue(
+        cannotBeRemovedTarjoajat.isEmpty,
+        "tarjoajat",
+        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(cannotBeRemovedTarjoajat)
+      )
     )
+  }
 
   private def assertOpettajankoulutusMetadata(
       m: KorkeakoulutusKoulutusMetadata

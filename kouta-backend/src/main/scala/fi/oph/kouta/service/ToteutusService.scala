@@ -162,6 +162,11 @@ class ToteutusService(
                 withMData(t, kkOpintokokonaisuusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case erikoistumisKoulutusMetadata: ErikoistumiskoulutusToteutusMetadata =>
                 withMData(t, erikoistumisKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case taiteenPerusopetusToteutusMetadata: TaiteenPerusopetusToteutusMetadata =>
+                withMData(
+                  t,
+                  taiteenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
+                )
             }
           case lukioMetadata: LukioToteutusMetadata =>
             withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -215,7 +220,7 @@ class ToteutusService(
     ) { t =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
       val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
         doPut(
           t,
           koulutusService.getUpdateTarjoajatActions(
@@ -254,7 +259,7 @@ class ToteutusService(
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
       val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(

@@ -63,7 +63,7 @@ object Validations {
   )
 
   def invalidOpintojenLaajuusyksikkoKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg = s"Koulutukselle valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Valittua opintojenlaajuusyksikko-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidOpintojenLaajuusyksikkoKoodiuri"
   )
   def invalidErikoistumiskoulutusKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
@@ -144,6 +144,11 @@ object Validations {
   val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
     id = "cannotChangeIsAvoinKorkeakoulutus",
     msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
+  )
+
+  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]) = ErrorMessage(
+    id = "cannotRemoveTarjoajaFromAvoinKorkeakoulutus",
+    msg = s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat.mkString(", ")}."
   )
 
   val invalidIsAvoinKorkeakoulutusIntegrity =
@@ -293,6 +298,10 @@ object Validations {
   def invalidTietoaOpiskelustaOtsikkoKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Tietoa opiskelusta -otsikon koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidTietoaOpiskelustaOtsikkoKoodiUri"
+  )
+  def invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Taiteen perusopetuksen taiteenala-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidTaiteenPerusopetusTaiteenalaKoodiuri"
   )
   def invalidJarjestyspaikkaOid(oid: OrganisaatioOid, toteutusOid: ToteutusOid): ErrorMessage = ErrorMessage(
     msg =

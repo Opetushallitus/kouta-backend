@@ -218,6 +218,57 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
+  it should "fail to store julkaistu opintokokonaisuus if attached opintojakso is not julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid = put(julkaistuOpintojaksoKoulutus)
+    val tallennettuKkOpintojaksoToteutus = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid), tila = Tallennettu)
+    val opintojaksoToteutusOid = put(tallennettuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val julkaistuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid), metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))))
+    put(ToteutusPath, bytes(julkaistuKkOpintokokonaisuusToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(
+        s"""[{"path":"metadata.liitetytOpintojaksot.julkaisutila",
+        |"msg":"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+        |"errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu",
+        |"meta":{"toteutukset":["${opintojaksoToteutusOid}"]}}]""".stripMargin.replaceAll("\n", "")
+      )
+    }
+  }
+
+  it should "fail to update opintokokonaisuus tila to julkaistu if attached opintojakso is not julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid = put(julkaistuOpintojaksoKoulutus)
+    val tallennettuKkOpintojaksoToteutus = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid), tila = Tallennettu)
+    val opintojaksoToteutusOid = put(tallennettuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val tallennettuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      tila = Tallennettu,
+      koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid),
+      metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))))
+    val tallennettuKkOpintokokonaisuusToteutusOid = put(tallennettuKkOpintokokonaisuusToteutus)
+    print(tallennettuKkOpintokokonaisuusToteutusOid)
+    val lastModified = get(tallennettuKkOpintokokonaisuusToteutusOid, tallennettuKkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(tallennettuKkOpintokokonaisuusToteutusOid))))
+    post(
+      ToteutusPath,
+      bytes(tallennettuKkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(tallennettuKkOpintokokonaisuusToteutusOid)), koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid), tila = Julkaistu)),
+      headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(
+        s"""[{"path":"metadata.liitetytOpintojaksot.julkaisutila",
+          |"msg":"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
+          |"errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu",
+          |"meta":{"toteutukset":["${opintojaksoToteutusOid}"]}}]""".stripMargin.replaceAll("\n", "")
+      )
+    }
+  }
+
   "Update toteutus" should "update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
