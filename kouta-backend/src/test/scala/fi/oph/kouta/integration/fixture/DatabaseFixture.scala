@@ -29,7 +29,7 @@ trait DatabaseFixture {
           #${relatedTables
       .map(t => s"""ALTER TABLE ${t} DISABLE TRIGGER ${t}_history;
               ALTER TABLE ${t} DISABLE TRIGGER set_temporal_columns_on_${t}_on_update;
-              ALTER TABLE ${t} DISABLE TRIGGER set_${entityTable}_last_modified_on_${t}_change;""")
+              ALTER TABLE ${t} DISABLE TRIGGER set_last_modified_on_${t}_change;""")
       .mkString}
           UPDATE #${entityTable} SET system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) WHERE #$selfKey = '#$oid';
           UPDATE #${entityTable} SET last_modified = (now() - interval '#$duration') WHERE #$selfKey = '#$oid';
@@ -44,7 +44,7 @@ trait DatabaseFixture {
           #${relatedTables
       .map(t => s"""ALTER TABLE ${t} ENABLE TRIGGER ${t}_history;
             ALTER TABLE ${t} ENABLE TRIGGER set_temporal_columns_on_${t}_on_update;
-            ALTER TABLE ${t} ENABLE TRIGGER set_${entityTable}_last_modified_on_${t}_change;""")
+            ALTER TABLE ${t} ENABLE TRIGGER set_last_modified_on_${t}_change;""")
       .mkString}"""))
   }
   def truncateDatabase(): Int = {

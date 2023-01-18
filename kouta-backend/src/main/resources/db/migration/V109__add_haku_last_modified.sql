@@ -60,15 +60,15 @@ end;
 $$ language plpgsql;
 
 -- Asetetaan vanhoille hauille last_modified system_time-sarakkeiden perusteella
-with haku_mod as (select ha.oid                               oid,
-                                   greatest(
-                                           max(lower(ha.system_time)),
-                                           max(lower(hh.system_time)),
-                                           max(upper(hhh.system_time))) modified
-                            from haut ha
-                                     left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
-                                     left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
-                            group by ha.oid)
+with haku_mod as (select h.oid                                as oid,
+                         greatest(
+                                 max(lower(h.system_time)),
+                                 max(lower(hh.system_time)),
+                                 max(upper(hhh.system_time))) as modified
+                  from haut h
+                           left join hakujen_hakuajat hh on h.oid = hh.haku_oid
+                           left join hakujen_hakuajat_history hhh on h.oid = hhh.haku_oid
+                  group by h.oid)
 update haut h
 set last_modified = haku_mod.modified
 from haku_mod
@@ -95,7 +95,7 @@ begin
 end;
 $$ language plpgsql;
 
-create trigger set_haut_last_modified_on_hakujen_hakuajat_change
+create trigger set_last_modified_on_hakujen_hakuajat_change
     after insert or update or delete
     on hakujen_hakuajat
     for each row
