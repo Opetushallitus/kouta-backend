@@ -712,7 +712,8 @@ package object toteutusMetadata {
     AikuistenPerusopetusToteutusMetadataModel,
     ErikoislaakariToteutusMetadataModel,
     KkOpintokokonaisuusToteutusMetadataModel,
-    ErikoistumiskoulutusToteutusMetadataModel
+    ErikoistumiskoulutusToteutusMetadataModel,
+    TaiteenPerusopetusToteutusMetadataModel
   )
 }
 
