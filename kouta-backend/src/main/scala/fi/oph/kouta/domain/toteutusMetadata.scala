@@ -548,6 +548,33 @@ package object toteutusMetadata {
       |              example: 20
       |""".stripMargin
 
+  val MuuToteutusMetadataModel: String =
+    """    MuuToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/ToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: muu
+      |              enum:
+      |                - muu
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: "Opintojen laajuusyksikko. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example:
+      |                - opintojenlaajuusyksikko_2#1
+      |            opintojenLaajuusNumeroMin:
+      |              type: integer
+      |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
+      |              example: 10
+      |            opintojenLaajuusNumeroMax:
+      |              type: integer
+      |              description: Opintojen laajuuden enimmäismäärä numeroarvona
+      |              example: 20
+      |""".stripMargin
+
   val LukiolinjaTietoModel: String =
     """    LukiolinjaTieto:
       |      type: object
@@ -685,7 +712,7 @@ package object toteutusMetadata {
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, OpePedagOpinnotToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
     LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel,
-    ErikoistumiskoulutusToteutusMetadataModel, TaiteenPerusopetusToteutusMetadataModel)
+    ErikoistumiskoulutusToteutusMetadataModel, TaiteenPerusopetusToteutusMetadataModel, MuuToteutusMetadataModel)
 }
 
 sealed trait ToteutusMetadata {
@@ -693,7 +720,7 @@ sealed trait ToteutusMetadata {
   val kuvaus: Kielistetty
   val opetus: Option[Opetus]
   val asiasanat: List[Keyword]
-  val ammattinimikkeet: List[Keyword]
+  val ammattinimikkeet: List[Keyword] // TODO: Kaikilla toteutuksilla ei pitäisi olla ammattinimikkeitä!
   val yhteyshenkilot: Seq[Yhteyshenkilo]
   val isMuokkaajaOphVirkailija: Option[Boolean]
   val hasJotpaRahoitus: Option[Boolean]
@@ -1060,3 +1087,26 @@ case class TaiteenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = TaiteenPe
                                               hasJotpaRahoitus: Option[Boolean] = None,
                                               isTaydennyskoulutus: Boolean = false,
                                               isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+
+case class MuuToteutusMetadata(tyyppi: Koulutustyyppi = Muu,
+                                       kuvaus: Kielistetty = Map(),
+                                       opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                       opintojenLaajuusNumeroMin: Option[Double] = None,
+                                       opintojenLaajuusNumeroMax: Option[Double] = None,
+                                       opetus: Option[Opetus] = None,
+                                       asiasanat: List[Keyword] = List(),
+                                       ammattinimikkeet: List[Keyword] = List(),
+                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                       hakutermi: Option[Hakutermi] = None,
+                                       hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                       hakulomakeLinkki: Kielistetty = Map(),
+                                       lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                       lisatietoaValintaperusteista: Kielistetty = Map(),
+                                       hakuaika: Option[Ajanjakso] = None,
+                                       isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                       hasJotpaRahoitus: Option[Boolean] = None,
+                                       isTaydennyskoulutus: Boolean = false,
+                                       isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata {
+
+  override def allowSorakuvaus: Boolean = false
+}

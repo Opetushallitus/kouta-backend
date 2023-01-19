@@ -78,6 +78,7 @@ package object toteutus {
       |            - $ref: '#/components/schemas/ErikoislaakariToteutusMetadata'
       |            - $ref: '#/components/schemas/ErikoistumiskoulutusToteutusMetadata'
       |            - $ref: '#/components/schemas/TaiteenPerusopetusToteutusMetadata'
+      |            - $ref: '#/components/schemas/MuuToteutusMetadata'
       |          example:
       |            tyyppi: amm
       |            kuvaus:

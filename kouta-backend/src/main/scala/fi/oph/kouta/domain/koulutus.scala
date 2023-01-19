@@ -115,6 +115,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/ErikoislaakariKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoistumiskoulutusMetadata'
       |            - $ref: '#/components/schemas/TaiteenPerusopetusKoulutusMetadata'
+      |            - $ref: '#/components/schemas/MuuKoulutusMetadata'
       |          example:
       |            koulutustyyppi: amm
       |            koulutusalaKoodiUrit:
