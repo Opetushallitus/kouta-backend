@@ -328,8 +328,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi
                        and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmMuu.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi)
-                     or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi )
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi
+                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${Muu.toString}::koulutustyyppi)
+                     or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi)
                     #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
