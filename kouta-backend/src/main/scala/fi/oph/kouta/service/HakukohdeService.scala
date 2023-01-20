@@ -1,18 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
-import fi.oph.kouta.client.{
-  HakuKoodiClient,
-  KayttooikeusClient,
-  KoutaSearchClient,
-  LokalisointiClient,
-  OppijanumerorekisteriClient
-}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
-import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
@@ -48,6 +40,14 @@ case class HakukohdeCopyResultObject(
     oid: HakukohdeOid,
     status: String,
     created: CopyOids
+)
+
+case class HakukohdeTilaChangeResultObject(
+    oid: HakukohdeOid,
+    status: String,
+    errorPaths: List[String] = List(),
+    errorMessages: List[String] = List(),
+    errorTypes: List[String] = List()
 )
 
 class HakukohdeService(
@@ -287,6 +287,76 @@ class HakukohdeService(
     withRootAccess(indexerRoles) {
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
+
+  def changeTila(hakukohdeOids: Seq[HakukohdeOid], tila: String, unModifiedSince: Instant)(implicit
+      authenticated: Authenticated
+  ): List[HakukohdeTilaChangeResultObject] = {
+    val hakukohteet: Seq[Hakukohde] = hakukohdeOids.map(oid => {
+      HakukohdeDAO.get(oid, TilaFilter.all())
+    }).collect {
+      case Some(result) => result._1
+    }
+
+    val updatedHakukohdeOids = scala.collection.mutable.Set[HakukohdeOid]()
+
+    val tilaChangeResults = hakukohteet.toList.map(hakukohde => {
+      try {
+        val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila))
+        update(hakukohdeWithNewTila, unModifiedSince) match {
+          case true =>
+            updatedHakukohdeOids += hakukohde.oid.get
+            HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "success"
+          )
+          case false =>
+            updatedHakukohdeOids += hakukohde.oid.get
+            HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+              errorPaths = List("hakukohde"),
+              errorMessages = List("Hakukohteen tilaa ei voitu päivittää"),
+              errorTypes = List("possible transaction error")
+          )
+        }
+      } catch {
+        case error: KoutaValidationException =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+            errorPaths = error.getPaths,
+            errorMessages =  error.getMsgs,
+            errorTypes = error.getErrorTypes
+          )
+        case error: OrganizationAuthorizationFailedException =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+            errorPaths = List("hakukohde"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("authorization")
+          )
+
+      }
+    })
+
+    val notFound =
+      for {
+        hkOid <- hakukohdeOids.filterNot(hakukohdeOid => updatedHakukohdeOids.contains(hakukohdeOid))
+      } yield HakukohdeTilaChangeResultObject(
+        oid = hkOid,
+        status = "error",
+        errorPaths = List("hakukohde"),
+        errorMessages = List("Hakukohdetta ei löytynyt"),
+        errorTypes = List("not found")
+      )
+
+    tilaChangeResults ++ notFound
+  }
 
   private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
     KoutaDatabase.runBlockingTransactionally {

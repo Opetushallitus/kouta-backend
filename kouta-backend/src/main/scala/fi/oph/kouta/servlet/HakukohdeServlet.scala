@@ -1,8 +1,8 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
+import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 
@@ -164,6 +164,56 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
       case updated => Ok("updated" -> updated)
+    }
+  }
+
+  registerPath("/hakukohde/tila/{tila}",
+    """    post:
+      |      summary: Muuttaa usean hakukohteen tilat
+      |      operationId: Muuttaa hakukohteiden tilat
+      |      description: Muuttaa annettavien hakukohdeoidien tilat. Tila annetaan parametrina.
+      |        Rajapinta palauttaa muutettujen hakukohteiden yksilöivät oidit.
+      |      tags:
+      |        - Hakukohde
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
+      |        - in: path
+      |          name: tila
+      |          required: true
+      |          schema:
+      |            type: string
+      |          description: Hakukohteen julkaisutila, joka päivitetään hakukohteille
+      |          example: tallennettu
+      |      requestBody:
+      |        description: Lista muutettavien hakukohteiden oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.20.00000000000000011083", "1.2.246.562.20.00000000000000011084"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/TilaChangeResult'
+      |""".stripMargin)
+
+  post("/tila/:tila") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val hakukohdeStateChangeResults = hakukohdeService.changeTila(parsedBody.extract[List[HakukohdeOid]], params("tila"), getIfUnmodifiedSince)
+    if (hakukohdeStateChangeResults.isEmpty) {
+      NotFound("error" -> "No hakukohde state was changed")
+    } else {
+      Ok(hakukohdeStateChangeResults)
     }
   }
 }
