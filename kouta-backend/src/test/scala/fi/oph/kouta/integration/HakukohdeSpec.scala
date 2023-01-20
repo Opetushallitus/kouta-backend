@@ -705,7 +705,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
-    val response = post(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
+    val response = changeTila(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
 
     val metadata1 = julkaistuHakukohde1.metadata.get
     val metadata2 = julkaistuHakukohde2.metadata.get
@@ -734,24 +734,25 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     get(julkaistuHakukohde2Oid, arkistoituHakukohde2)
   }
 
-  it should "fail to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja is non oph user" in {
+  it should "fail to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja is non oph user and contains random hakukohdeOid" in {
     val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
     val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
 
     val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
     val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
+    val randomOid = randomHakukohdeOid.toString
 
-    val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
+    val hakukohteet = List(julkaistuHakukohde1Oid, randomOid, julkaistuHakukohde2Oid)
 
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
-    val response = post(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
+    val response = changeTila(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
     logger.info("head")
     logger.info(response.head.toString)
     logger.info("tail")
     logger.info(response.tail.toString)
 
-    response.length shouldBe 2
+    response.length shouldBe 3
 
     response.head.oid.toString shouldBe julkaistuHakukohde1Oid
     response.head.status shouldBe "error"
@@ -759,11 +760,17 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     response.head.errorMessages should not be empty
     response.head.errorTypes shouldBe List("authorization")
 
-    response.last.oid.toString shouldBe julkaistuHakukohde2Oid
+    response(1).oid.toString shouldBe julkaistuHakukohde2Oid
+    response(1).status shouldBe "error"
+    response(1).errorPaths shouldBe List("hakukohde")
+    response(1).errorMessages should not be empty
+    response(1).errorTypes shouldBe List("authorization")
+
+    response.last.oid.toString shouldBe randomOid
     response.last.status shouldBe "error"
     response.last.errorPaths shouldBe List("hakukohde")
     response.last.errorMessages should not be empty
-    response.head.errorTypes shouldBe List("authorization")
+    response.last.errorTypes shouldBe List("not found")
   }
 
   it should "allow to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja has rights to hakukohde" in {
@@ -776,7 +783,7 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
-    val response = post(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
+    val response = changeTila(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2
     response.head.oid.toString shouldBe julkaistuHakukohde1Oid

@@ -250,7 +250,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] =
     put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, listResponse[HakukohdeCopyResultObject])
 
-  def post(hakukohteet: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[HakukohdeTilaChangeResultObject] =
+  def changeTila(hakukohteet: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[HakukohdeTilaChangeResultObject] =
     post(s"$HakukohdeChangeTilaPath$tila", hakukohteet, lastModified, sessionId, expectedStatus, listResponse[HakukohdeTilaChangeResultObject])
 
   def get(oid: String, expected: Hakukohde): String =
