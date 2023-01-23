@@ -447,13 +447,9 @@ class KoulutusServiceValidation(
   }
 
   private def validateAvoinKorkeakoulutusIntegrity(k: Koulutus, koulutusDiffResolver: KoulutusDiffResolver) = {
-    val toteutukset = k.oid match {
-      case Some(oid) =>
-        toteutusDAO.getByKoulutusOid(oid, TilaFilter.onlyOlemassaolevat())
-      case _ => List()
-    }
+    val toteutukset = k.oid.map(toteutusDAO.getByKoulutusOid(_, TilaFilter.onlyOlemassaolevat())).getOrElse(List())
 
-    val cannotBeRemovedTarjoajat =
+    val unremovableTarjoajat =
       if (toteutukset.isEmpty) {
         List()
       } else {
@@ -476,9 +472,9 @@ class KoulutusServiceValidation(
         )
       ),
       assertTrue(
-        cannotBeRemovedTarjoajat.isEmpty,
+        unremovableTarjoajat.isEmpty,
         "tarjoajat",
-        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(cannotBeRemovedTarjoajat)
+        cannotRemoveTarjoajaFromAvoinKorkeakoulutus(unremovableTarjoajat)
       )
     )
   }

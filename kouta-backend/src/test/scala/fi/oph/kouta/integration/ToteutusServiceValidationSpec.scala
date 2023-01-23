@@ -1087,7 +1087,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
     )
     when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
-      .thenAnswer(
+      .thenReturn(
         Some(
           KkOpintojaksoKoulutus.copy(
             oid = Some(opintojaksoToteutusWithOid.koulutusOid),
@@ -1097,7 +1097,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         )
       )
     when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq(YoOid))
-    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenReturn((Seq(YoOid), Seq(Yo)))
 
     failsValidation(
       opintojaksoToteutusWithOid,

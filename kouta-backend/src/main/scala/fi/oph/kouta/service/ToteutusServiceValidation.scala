@@ -193,16 +193,12 @@ class ToteutusServiceValidation(
 
   private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
     val isToteutusAvoinKorkeakoulutus = toteutus.isAvoinKorkeakoulutus()
-    val tarjoajatAndjarjestajat = if (isToteutusAvoinKorkeakoulutus) {
-      val tarjoajat = koulutusDAO.listTarjoajaOids(koulutus.get.oid.get)
-      val jarjestajat = toteutus.tarjoajat
-      (tarjoajat, jarjestajat)
+    val (tarjoajat, jarjestajat) = if (isToteutusAvoinKorkeakoulutus) {
+      (koulutusDAO.listTarjoajaOids(koulutus.get.oid.get), toteutus.tarjoajat)
     } else {
       (Seq(), List())
     }
 
-    val tarjoajat = tarjoajatAndjarjestajat._1
-    val jarjestajat = tarjoajatAndjarjestajat._2
     val invalidJarjestajat = if (tarjoajat.isEmpty) {
       jarjestajat
     } else {

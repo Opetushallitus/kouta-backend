@@ -7,6 +7,6 @@ object KoulutusServiceValidationUtil {
     removedTarjoajat.filter(tarjoajaAndOids => {
       tarjoajaAndOids._2.exists(oid =>
         toteutustenTarjoajat.contains(oid))
-    }).toList.map(_._1)
+    }).keys.toList
   }
 }
