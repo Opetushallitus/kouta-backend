@@ -764,11 +764,6 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
-    logger.info("head")
-    logger.info(response.head.toString)
-    logger.info("tail")
-    logger.info(response.tail.toString)
-
     response.length shouldBe 3
 
     response.head.oid.toString shouldBe julkaistuHakukohde1Oid
