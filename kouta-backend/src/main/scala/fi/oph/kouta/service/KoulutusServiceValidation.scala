@@ -302,7 +302,6 @@ class KoulutusServiceValidation(
         assertOpettajankoulutusMetadata(m)
       case m: OpePedagOpinnotKoulutusMetadata =>
         assertOpettajankoulutusMetadata(m)
-
       case m: LukioKoulutusMetadata =>
         and(
           assertOneAndOnlyCertainValueInSeq(
@@ -442,6 +441,12 @@ class KoulutusServiceValidation(
             )
           )
         )
+      case m: MuuKoulutusMetadata =>
+        and(
+          validateLaajuusMinMax(m.opintojenLaajuusNumeroMin, m.opintojenLaajuusNumeroMax),
+          assertOpintojenLaajuusyksikkoKoodiUri(m.opintojenLaajuusyksikkoKoodiUri, validationContext),
+          validateOpintojenLaajuusIntegrity(koulutus),
+        )
       case _ => NoErrors
     }
   }
@@ -501,6 +506,50 @@ class KoulutusServiceValidation(
       )
     )
 
+  private def maybeAddToteutusLaajuusyksikkoError(oid: Option[ToteutusOid], koulutusLaajuusYksikkoKoodiUri: Option[String], toteutusLaajuusyksikkoKoodiUri: Option[String], addErrorOid: (String, Option[ToteutusOid]) => Any) = {
+    (koulutusLaajuusYksikkoKoodiUri, toteutusLaajuusyksikkoKoodiUri) match {
+      case (Some(koulutusLaajuusYksikkoKoodiUri), Some(toteutusLaajuusYksikkoKoodiUri)) => {
+        if (
+          withoutKoodiVersion(koulutusLaajuusYksikkoKoodiUri) != withoutKoodiVersion(
+            toteutusLaajuusYksikkoKoodiUri
+          )
+        ) {
+          addErrorOid("metadata.opintojenLaajuusyksikkoKoodiUri", oid)
+        }
+      }
+      case _ =>
+    }
+  }
+
+  private def maybeAddToteutusLaajuusIntegrityErrors(t: Toteutus, koulutusLaajuusMin: Double, koulutusLaajuusMax: Double, koulutusLaajuusYksikkoKoodiUri: Option[String], addErrorOid: (String, Option[ToteutusOid]) => Any) = {
+    t.metadata match {
+      case Some(toteutusMetadata: LaajuusSingle) => {
+        toteutusMetadata.opintojenLaajuusNumero.foreach(toteutusLaajuusNumero => {
+          if (toteutusLaajuusNumero < koulutusLaajuusMin) {
+            addErrorOid("metadata.opintojenLaajuusNumeroMin", t.oid)
+          }
+          if (toteutusLaajuusNumero > koulutusLaajuusMax) {
+            addErrorOid("metadata.opintojenLaajuusNumeroMax", t.oid)
+          }
+        })
+        maybeAddToteutusLaajuusyksikkoError(t.oid, koulutusLaajuusYksikkoKoodiUri, toteutusMetadata.opintojenLaajuusyksikkoKoodiUri, addErrorOid)
+      }
+      case Some(toteutusMetadata: LaajuusMinMax) => {
+
+        val toteutusLaajuusMin: Double = toteutusMetadata.opintojenLaajuusNumeroMin.getOrElse(0)
+        val toteutusLaajuusMax: Double = toteutusMetadata.opintojenLaajuusNumeroMax.getOrElse(Double.PositiveInfinity)
+        if (toteutusLaajuusMin < koulutusLaajuusMin) {
+          addErrorOid("metadata.opintojenLaajuusNumeroMin", t.oid)
+        }
+        if (toteutusLaajuusMax > koulutusLaajuusMax) {
+          addErrorOid("metadata.opintojenLaajuusNumeroMax", t.oid)
+        }
+        maybeAddToteutusLaajuusyksikkoError(t.oid, koulutusLaajuusYksikkoKoodiUri, toteutusMetadata.opintojenLaajuusyksikkoKoodiUri, addErrorOid)
+      }
+      case _ =>
+    }
+  }
+
   private def validateOpintojenLaajuusIntegrity(
       k: Koulutus
   ): IsValid = {
@@ -512,7 +561,7 @@ class KoulutusServiceValidation(
     }
 
     (k.oid, k.metadata) match {
-      case (Some(koulutusOid), Some(km: KkOpintokokonaisuusKoulutusMetadata)) => {
+      case (Some(koulutusOid), Some(km: LaajuusMinMax)) => {
         val toteutukset = toteutusDAO.getByKoulutusOid(koulutusOid, TilaFilter.onlyJulkaistut())
 
         val laajuusMin: Double = km.opintojenLaajuusNumeroMin.getOrElse(0)
@@ -521,32 +570,7 @@ class KoulutusServiceValidation(
         if (k.tila == Julkaistu) {
           toteutukset
             .foreach(t => {
-              t.metadata match {
-                case Some(toteutusMetadata: KkOpintokokonaisuusToteutusMetadata) => {
-                  toteutusMetadata.opintojenLaajuusNumero.foreach(toteutusLaajuusNumero => {
-                    if (toteutusLaajuusNumero < laajuusMin) {
-                      addErrorOid("metadata.opintojenLaajuusNumeroMin", t.oid)
-                    }
-                    if (toteutusLaajuusNumero > laajuusMax) {
-                      addErrorOid("metadata.opintojenLaajuusNumeroMax", t.oid)
-                    }
-
-                    (km.opintojenLaajuusyksikkoKoodiUri, toteutusMetadata.opintojenLaajuusyksikkoKoodiUri) match {
-                      case (Some(koulutusLaajuusYksikkoKoodiUri), Some(toteutusLaajuusYksikkoKoodiUri)) => {
-                        if (
-                          withoutKoodiVersion(koulutusLaajuusYksikkoKoodiUri) != withoutKoodiVersion(
-                            toteutusLaajuusYksikkoKoodiUri
-                          )
-                        ) {
-                          addErrorOid("metadata.opintojenLaajuusyksikkoKoodiUri", t.oid)
-                        }
-                      }
-                      case _ =>
-                    }
-                  })
-                }
-                case _ =>
-              }
+                  maybeAddToteutusLaajuusIntegrityErrors(t, laajuusMin, laajuusMax, km.opintojenLaajuusyksikkoKoodiUri, addErrorOid)
             })
         }
         errors = errorMap.toList.map(value => {
@@ -712,45 +736,18 @@ class KoulutusServiceValidation(
       opintojenLaajuusyksikkoKoodiUri: Option[String],
       laajuusNumeroMin: Option[Double],
       laajuusNumeroMax: Option[Double]
-  ): IsValid =
+  ): IsValid = {
     and(
-      validateIfDefined[Double](
-        laajuusNumeroMin,
-        laajuusMin =>
-          and(
-            assertCertainValue(
+      validateLaajuusMinMax(laajuusNumeroMin, laajuusNumeroMax),
+      validateIfDefined[String](
               opintojenLaajuusyksikkoKoodiUri,
+        yksikko => assertCertainValue(
+          Some(yksikko),
               opintojenLaajuusOpintopiste,
               "metadata.opintojenLaajuusyksikkoKoodiUri"
-            ),
-            assertNotNegative(laajuusMin, "metadata.opintojenLaajuusNumeroMin")
-          )
-      ),
-      validateIfDefined[Double](
-        laajuusNumeroMax,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
-      ),
-      validateMinMax(laajuusNumeroMin, laajuusNumeroMax, s"metadata.opintojenLaajuusNumeroMin")
+        ))
     )
-
-  private def validateOpintojenLaajuusyksikko(
-      koodiUri: Option[String],
-      newKoodiUri: Option[String],
-      mandatoryIfJulkaistu: Boolean,
-      validationContext: ValidationContext
-  ): IsValid =
-    and(
-      assertOpintojenLaajuusyksikkoKoodiUri(newKoodiUri, validationContext),
-      validateIfTrue(
-        mandatoryIfJulkaistu,
-        validateIfJulkaistu(
-          validationContext.tila,
-          and(
-            assertNotOptional(koodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri")
-          )
-        )
-      )
-    )
+  }
 
   override def validateInternalDependenciesWhenDeletingEntity(koulutus: Koulutus): IsValid = {
     assertTrue(

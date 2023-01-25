@@ -275,6 +275,37 @@ object TestData {
     tunniste = Some("XZY-123")
   )
 
+  val MuuKoulutuksenMetatieto = MuuKoulutusMetadata(
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+    opintojenLaajuusNumeroMin = Some(5),
+    opintojenLaajuusNumeroMax = Some(15),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    isMuokkaajaOphVirkailija = Some(false)
+  )
+
+  val MuuKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = false,
+    koulutustyyppi = Muu,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(
+      MuuKoulutuksenMetatieto
+    ),
+    tarjoajat = List(YoOid, HkiYoOid),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
   val KkOpintojaksoKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
@@ -1153,6 +1184,24 @@ object TestData {
       hasJotpaRahoitus = Some(false)
     )
 
+  val MuuToteutuksenMetatieto: MuuToteutusMetadata = MuuToteutusMetadata(
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opintojenLaajuusNumeroMin = Some(10),
+    opintojenLaajuusNumeroMax = Some(20),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    isMuokkaajaOphVirkailija = Some(false),
+    hasJotpaRahoitus = Some(false)
+  )
+
   val ErikoistumiskoulutusToteutuksenMetatieto: ErikoistumiskoulutusToteutusMetadata = ErikoistumiskoulutusToteutusMetadata(
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
     opetus = Some(ToteutuksenOpetus),
@@ -1187,6 +1236,10 @@ object TestData {
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
+  )
+
+  val JulkaistuMuuToteutus = JulkaistuAmmToteutus.copy(
+    metadata = Some(MuuToteutuksenMetatieto)
   )
 
   val JulkaistuYoToteutus: Toteutus =
