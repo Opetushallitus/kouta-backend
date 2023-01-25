@@ -355,7 +355,7 @@ class KoulutusServiceValidation(
           validateIfNonEmpty(m.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
           validateOpintojenLaajuusyksikkoAndNumero(
             m.opintojenLaajuusyksikkoKoodiUri,
-            koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+            koulutusDiffResolver.hasLaajuusyksikkoChanged(),
             m.opintojenLaajuusNumero,
             true,
             validationContext
@@ -696,7 +696,7 @@ class KoulutusServiceValidation(
       validateVapaaSivistystyoKoulutus(validationContext, koulutusDiffResolver, metadata),
       validateOpintojenLaajuusyksikkoAndNumero(
         metadata.opintojenLaajuusyksikkoKoodiUri,
-        koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+        koulutusDiffResolver.hasLaajuusyksikkoChanged(),
         metadata.opintojenLaajuusNumero,
         true,
         validationContext
