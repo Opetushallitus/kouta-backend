@@ -94,8 +94,7 @@ class NameHelperSpec extends UnitSpec {
     "lukiolinjaterityinenkoulutustehtava_1" -> Map(
       Fi -> "lukio erityinen koulutustehtävä 1 fi",
       Sv -> "lukio erityinen koulutustehtävä 1 sv"
-    ),
-    "opintojenlaajuus_40#1" -> Map(Fi -> "40", Sv -> "40")
+    )
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
