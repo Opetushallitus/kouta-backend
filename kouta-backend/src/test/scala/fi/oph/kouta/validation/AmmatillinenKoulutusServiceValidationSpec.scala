@@ -99,9 +99,9 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
     when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(66))).thenAnswer(Left(ePerusteFailure))
 
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
   }
 
   "Ammatillinen koulutus validation" should "succeed when new valid Amm koulutus" in {

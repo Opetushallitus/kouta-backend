@@ -238,18 +238,18 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       .thenAnswer((Some(Julkaistu), Some(Yo), Some(Seq("koulutus_000001#1"))))
 
     // yleiset metadatat
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_01"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60#1")).thenAnswer(itemFound)
@@ -1348,7 +1348,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "fail if julkaistu 'muu' koulutus has at least one julkaistu toteutus whose opintojenlaajuusMin is not in the range specified in koulutus" in {
-    val muuKoulutus1    = muuKoulutusWithParams(opintojenLaajuusNumeroMin = Some(10), opintojenLaajuusNumeroMax = Some(20)).copy(tila = Julkaistu)
+    val muuKoulutus1   = muuKoulutusWithParams(opintojenLaajuusNumeroMin = Some(10), opintojenLaajuusNumeroMax = Some(20)).copy(tila = Julkaistu)
     val muuToteutusOid = randomToteutusOid
 
     when(toteutusDao.getByKoulutusOid(muuKoulutus1.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(

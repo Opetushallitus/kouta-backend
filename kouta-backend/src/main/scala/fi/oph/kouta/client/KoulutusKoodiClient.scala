@@ -3,6 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList}
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.KoodistoNimi
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.validation.ExternalQueryResults._
 import fi.vm.sade.properties.OphProperties
@@ -100,20 +101,11 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     }
   }
 
-  def koulutusKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("koulutus", koodiUri)
-
   def lisatiedotOtsikkoKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("koulutuksenlisatiedot", koodiUri)
 
-  def koulutusalaKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("kansallinenkoulutusluokitus2016koulutusalataso2", koodiUri)
-
   def opintojenLaajuusKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("opintojenlaajuus", koodiUri)
-
-  def opintojenLaajuusyksikkoKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("opintojenlaajuusyksikko", koodiUri)
 
   def tutkintoNimikeKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("tutkintonimikekk", koodiUri)
@@ -147,6 +139,9 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
 
   def taiteenalaKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("taiteenperusopetustaiteenala", koodiUri)
+
+  def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto(koodisto.toString, koodiUri)
 
   private def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult = {
     getAndUpdateFromKoodiUriCache(koodisto, commonKoodiUriCache) match {

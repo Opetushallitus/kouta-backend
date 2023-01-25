@@ -1,17 +1,12 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.TestSetups
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, Kielistetty, LukioKoulutusKoodit, Sv, YoKoulutusKoodit}
-import fi.oph.kouta.mocks.KoodistoServiceMock
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutusalaKoodisto, LukioKoulutusKoodit, OpintojenLaajuusyksikkoKoodisto, Sv, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
-import org.scalatra.test.scalatest.ScalatraFlatSpec
 
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import scala.util.{Failure, Success, Try}
 
 class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
   KoutaConfigurationFactory.setupWithDefaultTemplateFile()
@@ -173,17 +168,17 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("kansallinenkoulutusluokitus2016koulutusalataso2_080", 2, Some(dayInPast))
       )
     )
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_010") should equal(itemFound)
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#1") should equal(
+    koodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_010") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_020#1") should equal(
       itemFound
     )
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080") should equal(
+    koodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080") should equal(
       itemNotFound
     )
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#3") should equal(
+    koodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto,"kansallinenkoulutusluokitus2016koulutusalataso2_020#3") should equal(
       itemNotFound
     )
-    koodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_050") should equal(
+    koodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_050") should equal(
       itemNotFound
     )
   }
@@ -204,10 +199,10 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
       "opintojenlaajuusyksikko",
       Seq(("opintojenlaajuusyksikko_6", 1, None), ("opintojenlaajuusyksikko_10", 2, Some(dayInPast)))
     )
-    koodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6") should equal(itemFound)
-    koodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_10") should equal(itemNotFound)
-    koodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#2") should equal(itemNotFound)
-    koodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_20") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_10") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#2") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_20") should equal(itemNotFound)
   }
 
   "Finding opetusKieliKoodiUri" should "return true when koodiUri exists" in {
