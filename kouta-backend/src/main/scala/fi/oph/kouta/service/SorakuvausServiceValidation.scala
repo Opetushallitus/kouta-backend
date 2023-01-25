@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoulutusKoodiClient
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausMetadata, TilaFilter}
+import fi.oph.kouta.domain.{KoulutusKoodisto, KoulutusalaKoodisto, Sorakuvaus, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations.{
@@ -72,7 +72,7 @@ class SorakuvausServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.koulutusKoodiUriExists,
+            koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusKoodisto, _),
             path,
             vCtx,
             invalidKoulutuskoodiuri(koodiUri)
@@ -83,7 +83,7 @@ class SorakuvausServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.koulutusalaKoodiUriExists,
+            koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
             "metadata.koulutusalaKoodiUri",
             vCtx,
             invalidKoulutusAlaKoodiuri(koodiUri)

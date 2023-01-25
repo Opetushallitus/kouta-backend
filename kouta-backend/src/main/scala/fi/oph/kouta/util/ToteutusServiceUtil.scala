@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.client.{KoodiUri, KoodistoUtils}
+import fi.oph.kouta.client.KoodistoUtils
 
 object ToteutusServiceUtil {
   def isValidOpintojenlaajuus(

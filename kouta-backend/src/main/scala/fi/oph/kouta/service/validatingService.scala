@@ -201,7 +201,7 @@ trait KoulutusKoodiValidator {
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koulutusKoodiClient.koulutusalaKoodiUriExists,
+          koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
           path,
           validationContext,
           invalidKoulutusAlaKoodiuri(koodiUri)
@@ -217,7 +217,7 @@ trait KoulutusKoodiValidator {
       uri =>
         assertKoodistoQueryResult(
           uri,
-          koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+          koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           validationContext,
           invalidOpintojenLaajuusyksikkoKoodiuri(uri)
@@ -255,8 +255,8 @@ trait KoulutusKoodiValidator {
         mandatoryIfJulkaistu,
         validateIfJulkaistu(
           validationContext.tila,
-            assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
-          )
+          assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
+        )
       )
     )
 

@@ -696,7 +696,7 @@ class ToteutusServiceValidation(
         uri =>
           assertKoodistoQueryResult(
             uri,
-            koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
+            koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
             "metadata.opintojenLaajuusyksikkoKoodiUri",
             vCtx,
             invalidOpintojenLaajuusyksikkoKoodiuri(uri)
