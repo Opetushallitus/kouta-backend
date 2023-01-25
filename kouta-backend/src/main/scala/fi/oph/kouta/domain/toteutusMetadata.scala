@@ -901,7 +901,7 @@ case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpinto
                                                liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
                                                isAvoinKorkeakoulutus: Option[Boolean] = None,
                                                tunniste: Option[String] = None,
-                                               opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata
+                                               opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata with LaajuusSingle
 
 case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
                                  kuvaus: Kielistetty = Map(),
@@ -1086,7 +1086,7 @@ case class TaiteenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = TaiteenPe
                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                               hasJotpaRahoitus: Option[Boolean] = None,
                                               isTaydennyskoulutus: Boolean = false,
-                                              isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+                                              isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata with LaajuusMinMax
 
 case class MuuToteutusMetadata(tyyppi: Koulutustyyppi = Muu,
                                        kuvaus: Kielistetty = Map(),
@@ -1106,7 +1106,7 @@ case class MuuToteutusMetadata(tyyppi: Koulutustyyppi = Muu,
                                        isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                        hasJotpaRahoitus: Option[Boolean] = None,
                                        isTaydennyskoulutus: Boolean = false,
-                                       isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata {
+                                       isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata with LaajuusMinMax {
 
   override def allowSorakuvaus: Boolean = false
 }

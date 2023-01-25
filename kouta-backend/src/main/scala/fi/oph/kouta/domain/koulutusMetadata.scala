@@ -545,6 +545,17 @@ package object koulutusMetadata {
   )
 }
 
+trait LaajuusMinMax {
+  val opintojenLaajuusyksikkoKoodiUri: Option[String]
+  val opintojenLaajuusNumeroMin: Option[Double]
+  val opintojenLaajuusNumeroMax: Option[Double]
+}
+
+trait LaajuusSingle {
+  val opintojenLaajuusyksikkoKoodiUri: Option[String]
+  val opintojenLaajuusNumero: Option[Double]
+}
+
 sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
@@ -552,11 +563,9 @@ sealed trait KoulutusMetadata {
   val isMuokkaajaOphVirkailija: Option[Boolean]
 }
 
-trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata {
+trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata with LaajuusSingle {
   val tutkintonimikeKoodiUrit: Seq[String]
   val koulutusalaKoodiUrit: Seq[String]
-  val opintojenLaajuusyksikkoKoodiUri: Option[String]
-  val opintojenLaajuusNumero: Option[Double]
 }
 
 case class AmmatillinenKoulutusMetadata(
@@ -648,7 +657,7 @@ case class KkOpintojaksoKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusMinMax
 
 case class KkOpintokokonaisuusKoulutusMetadata(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
@@ -662,7 +671,7 @@ case class KkOpintokokonaisuusKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusMinMax
 
 case class LukioKoulutusMetadata(
     tyyppi: Koulutustyyppi = Lk,
@@ -672,7 +681,7 @@ case class LukioKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusSingle
 
 case class TuvaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Tuva,
@@ -682,7 +691,7 @@ case class TuvaKoulutusMetadata(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusSingle
 
 case class TelmaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Telma,
@@ -692,14 +701,12 @@ case class TelmaKoulutusMetadata(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusSingle
 
-trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata {
+trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata with LaajuusSingle {
   val kuvaus: Kielistetty
   val linkkiEPerusteisiin: Kielistetty
   val koulutusalaKoodiUrit: Seq[String]
-  val opintojenLaajuusyksikkoKoodiUri: Option[String]
-  val opintojenLaajuusNumero: Option[Double]
 }
 
 case class VapaaSivistystyoOpistovuosiKoulutusMetadata(
@@ -732,7 +739,7 @@ case class AikuistenPerusopetusKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusSingle
 
 // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
 case class ErikoislaakariKoulutusMetadata(
@@ -754,7 +761,7 @@ case class ErikoistumiskoulutusMetadata(
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusMinMax
 
 case class TaiteenPerusopetusKoulutusMetadata(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
@@ -773,4 +780,4 @@ case class MuuKoulutusMetadata(
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusMinMax

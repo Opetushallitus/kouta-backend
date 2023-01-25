@@ -5,7 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, Validatable, ValidationContext}
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidationContext}
 
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
@@ -222,6 +222,20 @@ trait KoulutusKoodiValidator {
           invalidOpintojenLaajuusyksikkoKoodiuri(uri)
         )
     )
+
+  def validateLaajuusMinMax(laajuusNumeroMin: Option[Double], laajuusNumeroMax: Option[Double]): IsValid = {
+    and(
+      validateIfDefined[Double](
+        laajuusNumeroMin,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMin")
+      ),
+      validateIfDefined[Double](
+        laajuusNumeroMax,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
+      ),
+      validateMinMax(laajuusNumeroMin, laajuusNumeroMax, s"metadata.opintojenLaajuusNumeroMin")
+    )
+  }
 
   def validateOpintojenLaajuusyksikkoAndNumero(
       laajuusyksikkoKoodiUri: Option[String],

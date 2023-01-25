@@ -190,6 +190,7 @@ class ToteutusService(
             )
           case erikoislaakariToteutusMetadata: ErikoislaakariToteutusMetadata =>
             withMData(t, erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+          case muuToteutusMetadata: MuuToteutusMetadata => withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => t.copy(metadata = None)
     }

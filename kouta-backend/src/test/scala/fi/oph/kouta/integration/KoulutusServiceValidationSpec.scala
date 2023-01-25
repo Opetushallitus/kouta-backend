@@ -123,9 +123,28 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       tarjoajat = tarjoajat
     )
 
+  private def muuKoulutusWithParams(
+      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1"),
+      opintojenLaajuusNumeroMin: Option[Double] = Some(12),
+      opintojenLaajuusNumeroMax: Option[Double] = Some(20),
+      tarjoajat: List[OrganisaatioOid] = List()
+  ): Koulutus =
+    MuuKoulutus.copy(
+      metadata = Some(
+        MuuKoulutusMetadata(
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
+          opintojenLaajuusNumeroMin = opintojenLaajuusNumeroMin,
+          opintojenLaajuusNumeroMax = opintojenLaajuusNumeroMax,
+        )
+      ),
+      oid = Some(KoulutusOid("1.2.246.562.13.139")),
+      tila = Tallennettu,
+      tarjoajat = tarjoajat
+    )
+
   private def kkOpintokokonaisuusWithParams(
       koulutusalaKoodiUrit: Seq[String] = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
-      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_6#1"),
+      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1"),
       opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1"),
       isAvoinKorkeakoulutus: Option[Boolean] = Some(false)
   ): Koulutus =
@@ -1308,6 +1327,56 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.opintojenLaajuusNumeroMax",
           invalidKoulutusOpintojenLaajuusNumeroIntegrity(5, 15, Seq(opintokokonaisuusToteutusOid))
+        )
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for luonnos 'muu' koulutus" in {
+    failsValidation(
+      muuKoulutusWithParams(
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+        opintojenLaajuusNumeroMin = Some(-1.0),
+        opintojenLaajuusNumeroMax = Some(-5.0),
+      ).copy(oid = None),
+      Seq(
+        ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMin", minmaxMsg(-1.0, -5.0))
+      )
+    )
+  }
+
+  it should "fail if julkaistu 'muu' koulutus has at least one julkaistu toteutus whose opintojenlaajuusMin is not in the range specified in koulutus" in {
+    val muuKoulutus1    = muuKoulutusWithParams(opintojenLaajuusNumeroMin = Some(10), opintojenLaajuusNumeroMax = Some(20)).copy(tila = Julkaistu)
+    val muuToteutusOid = randomToteutusOid
+
+    when(toteutusDao.getByKoulutusOid(muuKoulutus1.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(
+      Seq(
+        JulkaistuMuuToteutus.copy(
+          oid = Some(muuToteutusOid),
+          koulutusOid = muuKoulutus1.oid.get,
+          metadata = Some(
+            MuuToteutuksenMetatieto.copy(
+              opintojenLaajuusNumeroMin = Some(9),
+              opintojenLaajuusNumeroMax = Some(21)
+            )
+          )
+        )
+      )
+    )
+
+    failsModifyValidation(
+      muuKoulutus1,
+      muuKoulutus1,
+      Seq(
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMin",
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(10, 20, Seq(muuToteutusOid))
+        ),
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMax",
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(10, 20, Seq(muuToteutusOid))
         )
       )
     )
