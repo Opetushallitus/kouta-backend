@@ -9,6 +9,7 @@ import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidationContex
 
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
+import scalaz.syntax.std.boolean._
 
 trait ValidatingService[E <: Validatable] {
   def validateEntity(e: E, oldE: Option[E]): IsValid
@@ -239,13 +240,13 @@ trait KoulutusKoodiValidator {
 
   def validateOpintojenLaajuusyksikkoAndNumero(
       laajuusyksikkoKoodiUri: Option[String],
-      newLaajuusyksikkoKoodiUri: Option[String],
+      hasLaajuusyksikkoChanged: Boolean,
       laajuusNumero: Option[Double],
       mandatoryIfJulkaistu: Boolean,
-      validationContext: ValidationContext
+      validationContext: ValidationContext,
   ): IsValid =
     and(
-      assertOpintojenLaajuusyksikkoKoodiUri(newLaajuusyksikkoKoodiUri, validationContext),
+      validateOpintojenLaajuusyksikko(laajuusyksikkoKoodiUri, validationContext, hasLaajuusyksikkoChanged),
       validateIfDefined[Double](
         laajuusNumero,
         assertNotNegative(_, "metadata.opintojenLaajuusNumero")
@@ -254,10 +255,22 @@ trait KoulutusKoodiValidator {
         mandatoryIfJulkaistu,
         validateIfJulkaistu(
           validationContext.tila,
-          and(
-            assertNotOptional(laajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri"),
             assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
           )
+      )
+    )
+
+  def validateOpintojenLaajuusyksikko(
+      koodiUri: Option[String],
+      validationContext: ValidationContext,
+      hasChanged: Boolean,
+  ): IsValid =
+    and(
+      assertOpintojenLaajuusyksikkoKoodiUri(hasChanged.option(koodiUri).flatten, validationContext),
+      validateIfJulkaistu(
+        validationContext.tila,
+        and(
+          assertNotOptional(koodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri")
         )
       )
     )

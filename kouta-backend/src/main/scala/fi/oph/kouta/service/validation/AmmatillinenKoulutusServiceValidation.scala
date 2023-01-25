@@ -103,7 +103,7 @@ class AmmatillinenKoulutusServiceValidation(
               assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx),
               validateOpintojenLaajuusyksikkoAndNumero(
                 m.opintojenLaajuusyksikkoKoodiUri,
-                koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+                koulutusDiffResolver.hasLaajuusyksikkoChanged(),
                 m.opintojenLaajuusNumero,
                 true,
                 vCtx
