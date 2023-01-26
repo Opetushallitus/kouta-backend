@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioErityinenKoulutustehtavaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioDiplomiKoodisto, LukioErityinenKoulutustehtavaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
 import java.time.LocalDate
@@ -289,10 +289,10 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("moduulikoodistolops2021_vka6", 2, Some(dayInPast))
       )
     )
-    koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_vka4") should equal(itemFound)
-    koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_vka5#2") should equal(itemFound)
-    koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_vka6") should equal(itemNotFound)
-    koodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_uo6") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_vka4") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_vka5#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_vka6") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_uo6") should equal(itemNotFound)
   }
 
   "When cache data is expired or removed" should "data fetched to cache again" in {

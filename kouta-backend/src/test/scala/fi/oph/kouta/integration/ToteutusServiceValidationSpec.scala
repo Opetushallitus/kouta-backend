@@ -291,8 +291,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(
       koulutusKoodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_1#1")
     ).thenAnswer(itemFound)
-    when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
     when(
       koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
