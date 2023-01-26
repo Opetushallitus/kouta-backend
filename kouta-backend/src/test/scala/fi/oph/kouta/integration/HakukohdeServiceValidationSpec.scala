@@ -2,7 +2,6 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
@@ -1155,7 +1154,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       hk,
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteeterammatillinenerityisopetus_66#1", hakukohdeKoodistoAmmErityisopetus)
+      invalidHakukohdeKooriuri("hakukohteeterammatillinenerityisopetus_66#1", HakukohdeAmmErityisopetusKoodisto.toString)
     )
   }
 
@@ -1169,7 +1168,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       ),
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", hakukohdeKoodistoPoJalkYhteishaku)
+      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", HakukohdePoJalkYhteishakuKoodisto.toString)
     )
   }
 

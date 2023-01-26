@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
@@ -606,7 +605,7 @@ class HakukohdeServiceValidation(
               case m: AmmatillinenToteutusMetadata if isYhteishakuHakutapa(hakutapaKoodiUri) =>
                 val erityisOpetus = m.ammatillinenPerustutkintoErityisopetuksena.contains(true)
                 val koodisto =
-                  if (erityisOpetus) hakukohdeKoodistoAmmErityisopetus else hakukohdeKoodistoPoJalkYhteishaku
+                  if (erityisOpetus) HakukohdeAmmErityisopetusKoodisto else HakukohdePoJalkYhteishakuKoodisto
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertEmptyKielistetty(hk.nimi, "nimi"),
@@ -624,7 +623,7 @@ class HakukohdeServiceValidation(
                           ),
                           "hakukohdeKoodiUri",
                           vCtx,
-                          invalidHakukohdeKooriuri(koodiUri, koodisto)
+                          invalidHakukohdeKooriuri(koodiUri, koodisto.toString)
                         )
                     )
                   )
