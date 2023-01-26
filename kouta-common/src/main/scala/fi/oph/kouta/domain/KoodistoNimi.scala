@@ -23,7 +23,7 @@ object KoodistoNimi extends Enum[KoodistoNimi] {
     HakukohdeAmmErityisopetusKoodisto,
     HakukohdePoJalkYhteishakuKoodisto,
     PohjakoulutusvaatimusKoodisto,
-    LiitetyyppiKoodisto,
+    LiiteTyyppiKoodisto,
     ValintakoeTyyppiKoodisto,
     KausiKoodisto,
     OppiaineKoodisto,
@@ -62,7 +62,7 @@ case object HakukohdePoJalkYhteishakuKoodisto extends KoodistoNimi {
 }
 
 case object PohjakoulutusvaatimusKoodisto extends KoodistoNimi { val name = "pohjakoulutusvaatimuskouta" }
-case object LiitetyyppiKoodisto           extends KoodistoNimi { val name = "liitetyypitamm"             }
+case object LiiteTyyppiKoodisto           extends KoodistoNimi { val name = "liitetyypitamm"             }
 case object ValintakoeTyyppiKoodisto extends KoodistoNimi { val name = "valintakokeentyyppi" }
 case object KausiKoodisto extends KoodistoNimi { val name = "kausi" }
 case object OppiaineKoodisto extends KoodistoNimi { val name = "painotettavatoppiaineetlukiossa" }
