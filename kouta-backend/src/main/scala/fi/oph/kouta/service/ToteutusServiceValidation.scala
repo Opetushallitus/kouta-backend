@@ -259,7 +259,7 @@ class ToteutusServiceValidation(
           "metadata.opetus.koulutuksenAlkamiskausi",
           toteutusDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.kausiKoodiUriExists
+          hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
       validateIfDefined[Apuraha](opetus.apuraha, apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha)),

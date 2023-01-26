@@ -14,9 +14,6 @@ package object HakukoodiConstants {
 
 class HakuKoodiClient(urlProperties: OphProperties) extends CachedKoodistoClient(urlProperties) {
 
-  def kausiKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("kausi", koodiUri)
-
   def oppiaineKoodiUriExists(koodiUri: String): ExternalQueryResult = {
     if (PainotetutArvoSanatLukioKaikki.koodiUrit contains koodiUri) {
       itemFound

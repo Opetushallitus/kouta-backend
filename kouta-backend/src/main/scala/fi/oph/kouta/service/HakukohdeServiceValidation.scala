@@ -298,7 +298,7 @@ class HakukohdeServiceValidation(
           "metadata.koulutuksenAlkamiskausi",
           hakukohdeDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.kausiKoodiUriExists
+          hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
       validateIfJulkaistu(
