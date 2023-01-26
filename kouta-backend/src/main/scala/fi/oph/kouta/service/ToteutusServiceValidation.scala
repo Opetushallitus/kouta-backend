@@ -236,7 +236,7 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newOpetuskieliKoodiUrit(),
         "opetuskieliKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusKieliKoodiUriExists,
+        koulutusKoodiClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, _),
         invalidOpetusKieliKoodiUri
       ),
       validateOpetusKoodiUriListItem(
