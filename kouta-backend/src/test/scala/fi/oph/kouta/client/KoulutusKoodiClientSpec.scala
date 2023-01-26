@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioErityinenKoulutustehtavaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
 import java.time.LocalDate
@@ -266,16 +266,16 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("lukiolinjaterityinenkoulutustehtava_0119", 2, Some(dayInPast))
       )
     )
-    koodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_0109") should equal(
+    koodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_0109") should equal(
       itemFound
     )
-    koodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_0111#2") should equal(
+    koodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_0111#2") should equal(
       itemFound
     )
-    koodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_0119") should equal(
+    koodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_0119") should equal(
       itemNotFound
     )
-    koodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_0126") should equal(
+    koodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_0126") should equal(
       itemNotFound
     )
   }

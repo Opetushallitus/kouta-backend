@@ -289,7 +289,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // lukio
     when(koulutusKoodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1")).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_1#1")
+      koulutusKoodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_1#1")
     ).thenAnswer(itemFound)
     when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.lukioDiplomiKoodiUriExists("moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)

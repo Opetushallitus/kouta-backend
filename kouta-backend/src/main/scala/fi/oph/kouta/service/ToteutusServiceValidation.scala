@@ -565,7 +565,7 @@ class ToteutusServiceValidation(
         lkMetadata.erityisetKoulutustehtavat,
         toteutusDiffResolver.newLukioErityisetKoulutustehtavat(),
         "erityisetKoulutustehtavat",
-        koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists,
+        koulutusKoodiClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, _),
         vCtx
       ),
       validateIfNonEmptySeq[LukiodiplomiTieto](
