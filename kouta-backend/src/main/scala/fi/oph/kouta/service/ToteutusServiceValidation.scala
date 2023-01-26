@@ -492,7 +492,7 @@ class ToteutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          hakuKoodiClient.kieliKoodiUriExists,
+          hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
           path,
           validationContext,
           invalidKieliKoodiUri(relativePath, koodiUri)

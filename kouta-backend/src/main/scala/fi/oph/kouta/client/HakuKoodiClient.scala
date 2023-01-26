@@ -13,9 +13,6 @@ package object HakukoodiConstants {
 
 class HakuKoodiClient(urlProperties: OphProperties) extends CachedKoodistoClient(urlProperties) {
 
-  def kieliKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("kieli", koodiUri)
-
   def postiosoitekoodiExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("posti", koodiUri)
 

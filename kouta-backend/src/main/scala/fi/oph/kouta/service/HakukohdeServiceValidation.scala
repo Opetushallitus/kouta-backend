@@ -398,7 +398,7 @@ class HakukohdeServiceValidation(
                     kieliKoodiUri =>
                       assertKoodistoQueryResult(
                         kieliKoodiUri,
-                        hakuKoodiClient.kieliKoodiUriExists,
+                        hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
                         s"$path.kieli",
                         vCtx,
                         invalidOppiaineKieliKoodiuri(kieliKoodiUri)
