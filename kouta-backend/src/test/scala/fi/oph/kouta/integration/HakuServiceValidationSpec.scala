@@ -32,10 +32,10 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_01#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_02#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_04#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_01#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_02#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_04#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_17#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
