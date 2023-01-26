@@ -250,7 +250,7 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newOpetustapaKoodiUrit(),
         "opetustapaKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusTapaKoodiUriExists,
+        koulutusKoodiClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, _),
         invalidOpetusTapaKoodiUri
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
