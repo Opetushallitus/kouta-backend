@@ -147,7 +147,7 @@ class HakukohdeServiceValidation(
             newValintakoe,
             vCtx,
             existingValintakoeIds,
-            hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+            hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
             hakuKoodiClient.postiosoitekoodiExists
           )
       ),

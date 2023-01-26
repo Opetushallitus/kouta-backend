@@ -246,7 +246,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Some(e),
       ValidationContext(tila, kielet, crudOperation),
       allowedIds,
-      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+      hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
       hakuKoodiClient.postiosoitekoodiExists
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
@@ -265,7 +265,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       oldE,
       ValidationContext(tila, kielet, crudOperation),
       allowedIds,
-      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+      hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
       hakuKoodiClient.postiosoitekoodiExists
     ) match {
       case NoErrors => succeed

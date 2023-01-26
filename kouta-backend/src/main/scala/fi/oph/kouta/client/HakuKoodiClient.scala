@@ -1,6 +1,5 @@
 package fi.oph.kouta.client
 
-import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.PainotetutArvoSanatLukioKaikki
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound}
@@ -14,9 +13,6 @@ package object HakukoodiConstants {
 }
 
 class HakuKoodiClient(urlProperties: OphProperties) extends CachedKoodistoClient(urlProperties) {
-
-  def valintakoeTyyppiKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("valintakokeentyyppi", koodiUri)
 
   def kausiKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("kausi", koodiUri)

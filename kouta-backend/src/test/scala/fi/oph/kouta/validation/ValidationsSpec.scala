@@ -1,7 +1,7 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, LukioKoulutusKoodit, Sv, Tallennettu}
+import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient, HakuKoodiClient}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, LukioKoulutusKoodit, Sv, Tallennettu, ValintakoeTyyppiKoodisto}
 import fi.oph.kouta.validation.CrudOperations.create
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 import fi.oph.kouta.validation.Validations._
@@ -166,31 +166,31 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   ): IsValid =
     assertKoodistoQueryResult(
       "valintakokeentyyppi_1#1",
-      hakuKoodiClient.valintakoeTyyppiKoodiUriExists,
+      hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
       "path",
       validationContext,
       invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")
     )
 
   "Koodisto validation" should "succeed when valid koodiUri" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     doAssertKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koodiUri" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
     doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")))
   }
 
   it should "fail when koodiUri query failed" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(queryFailed)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
     validationContext.isKoodistoServiceOk() should equal(false)
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
     doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
