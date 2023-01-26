@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{Fi, Kielistetty, Sv}
+import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty, Sv}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate
@@ -39,16 +39,16 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("hakukohteeterammatillinenerityisopetus_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(itemNotFound)
-    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(itemNotFound)
-    koodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_01") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_02#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_XX") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_YY") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenerillishaku_01") should equal(itemNotFound)
 
-    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_01") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_02#2") should equal(itemFound)
-    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_XX") should equal(itemNotFound)
-    koodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_YY") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_01") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_02#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_XX") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_YY") should equal(itemNotFound)
   }
 
   "Finding pohjakoulutusVaatimusKoodiUri" should "return true when koodiUri exists" in {
