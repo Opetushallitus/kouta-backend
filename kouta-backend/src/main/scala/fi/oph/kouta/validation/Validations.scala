@@ -588,7 +588,7 @@ object Validations {
   def assertKoulutuskoodiQueryResult(
       koulutusKoodiUri: String,
       koulutusKoodiFilter: KoulutusKoodiFilter,
-      cachedKoodistoClient: CachedKoodistoClient,
+      koodistoClient: CachedKoodistoClient,
       path: String,
       validationContext: ValidationContext,
       errorMessage: ErrorMessage,
@@ -597,12 +597,12 @@ object Validations {
     val queryResult =
       if (validationContext.isKoodistoServiceOk()) {
         if (koulutusKoodiFilter.filterType() == koulutusTyyppi) {
-          cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+          koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
             koulutusKoodiFilter.koulutusTyypit,
             koulutusKoodiUri
           )
         } else
-          cachedKoodistoClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
+          koodistoClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
       } else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(

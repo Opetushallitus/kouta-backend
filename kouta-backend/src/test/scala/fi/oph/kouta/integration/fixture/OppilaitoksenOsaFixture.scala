@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.HakuKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Modified, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -26,9 +26,9 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
 
   def oppilaitoksenOsaService: OppilaitoksenOsaService = {
     val organisaatioService               = new OrganisaatioServiceImpl(urlProperties.get)
-    val hakuKoodiClient                   = new HakuKoodiClient(urlProperties.get)
-    val oppilaitosServiceValidation       = new OppilaitosServiceValidation(hakuKoodiClient)
-    val oppilaitoksenOsaServiceValidation = new OppilaitoksenOsaServiceValidation(hakuKoodiClient, OppilaitosDAO)
+    val koodistoClient                   = new CachedKoodistoClient(urlProperties.get)
+    val oppilaitosServiceValidation       = new OppilaitosServiceValidation(koodistoClient)
+    val oppilaitoksenOsaServiceValidation = new OppilaitoksenOsaServiceValidation(koodistoClient, OppilaitosDAO)
     new OppilaitoksenOsaService(
       SqsInTransactionServiceIgnoringIndexing,
       MockS3ImageService,

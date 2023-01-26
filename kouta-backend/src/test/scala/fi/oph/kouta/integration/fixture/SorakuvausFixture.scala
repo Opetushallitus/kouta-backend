@@ -20,9 +20,9 @@ trait SorakuvausFixture extends AccessControlSpec {
 
   def sorakuvausService: SorakuvausService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val cachedKoodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
     val sorakuvausServiceValidation =
-      new SorakuvausServiceValidation(cachedKoodistoClient, KoulutusDAO)
+      new SorakuvausServiceValidation(koodistoClient, KoulutusDAO)
     new SorakuvausService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

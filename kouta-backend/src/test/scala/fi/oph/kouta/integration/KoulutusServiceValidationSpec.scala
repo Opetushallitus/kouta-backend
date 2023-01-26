@@ -18,7 +18,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
-  val cachedKoodistoClient          = mock[CachedKoodistoClient]
+  val koodistoClient          = mock[CachedKoodistoClient]
   var organisaatioService          = mock[OrganisaatioService]
   val toteutusDao                  = mock[ToteutusDAO]
   val sorakuvausDao                = mock[SorakuvausDAO]
@@ -182,7 +182,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   override val validator =
     new KoulutusServiceValidation(
-      cachedKoodistoClient,
+      koodistoClient,
       organisaatioService,
       toteutusDao,
       sorakuvausDao,
@@ -192,11 +192,11 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit = {
     if (filter.filterType() == koulutusTyyppi)
       when(
-        cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
+        koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
       ).thenAnswer(itemFound)
     else
       when(
-        cachedKoodistoClient.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
+        koodistoClient.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
       ).thenAnswer(itemFound)
   }
 
@@ -221,8 +221,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(UnknownOid)).thenAnswer(Seq(UnknownOid), Seq())
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
 
     // sorakuvaukset
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
@@ -238,20 +238,20 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       .thenAnswer((Some(Julkaistu), Some(Yo), Some(Seq("koulutus_000001#1"))))
 
     // yleiset metadatat
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_01"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_01"))
       .thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
       .thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
       .thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
       .thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, "tutkintonimikekk_110#2")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, "erikoistumiskoulutukset_001#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, "tutkintonimikekk_110#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, "erikoistumiskoulutukset_001#2")).thenAnswer(itemFound)
 
     // korkeakoulu
     acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_371101#1")

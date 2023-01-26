@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{inFuture, inPast}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
@@ -16,8 +16,7 @@ import org.scalatest.{Assertion, BeforeAndAfterEach}
 import java.util.UUID
 
 class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val hakuKoodiClient      = mock[HakuKoodiClient]
-  val cachedKoodistoClient  = mock[CachedKoodistoClient]
+  val koodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
 
   val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
@@ -28,8 +27,8 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
   }
 
   def failsValidation(
@@ -37,7 +36,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate("path", Some(e), ValidationContext(tila, kielet, create), hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)) match {
+    e.validate("path", Some(e), ValidationContext(tila, kielet, create), koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
@@ -59,7 +58,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
-      hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)
@@ -157,7 +156,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
-      cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -168,7 +167,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Julkaistu, kielet, update),
-      cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)
@@ -200,7 +199,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -211,7 +210,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)
@@ -246,8 +245,8 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Some(e),
       ValidationContext(tila, kielet, crudOperation),
       allowedIds,
-      hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -265,8 +264,8 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       oldE,
       ValidationContext(tila, kielet, crudOperation),
       allowedIds,
-      hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors => succeed
       case errors   => fail("Expected no errors, but received: " + errors)
@@ -362,7 +361,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -373,7 +372,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Tallennettu, kielet, create),
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)

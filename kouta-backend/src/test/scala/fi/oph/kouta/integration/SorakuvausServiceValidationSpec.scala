@@ -14,7 +14,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuvaus] {
-  val cachedKoodistoClient = mock[CachedKoodistoClient]
+  val koodistoClient = mock[CachedKoodistoClient]
   val koulutusDao = mock[KoulutusDAO]
 
   val sorakuvausId = UUID.randomUUID()
@@ -25,12 +25,12 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
   val min: Sorakuvaus = MinSorakuvaus
   val maxMetadata = max.metadata.get
 
-  override val validator = new SorakuvausServiceValidation(cachedKoodistoClient, koulutusDao)
+  override val validator = new SorakuvausServiceValidation(koodistoClient, koulutusDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, "koulutus_371101#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, "koulutus_371101#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
       .thenAnswer(itemFound)
 
     when(koulutusDao.listBySorakuvausId(sorakuvausId, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[String]())

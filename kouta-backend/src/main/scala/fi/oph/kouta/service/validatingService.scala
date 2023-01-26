@@ -165,7 +165,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
 }
 
 trait KoulutusKoodiValidator {
-  def cachedKoodistoClient: CachedKoodistoClient
+  def koodistoClient: CachedKoodistoClient
 
   def validateKoulutusKoodiUrit(
       koodiUriFilter: KoulutusKoodiFilter,
@@ -185,7 +185,7 @@ trait KoulutusKoodiValidator {
             assertKoulutuskoodiQueryResult(
               koodiUri,
               koodiUriFilter,
-              cachedKoodistoClient,
+              koodistoClient,
               path,
               vCtx,
               invalidKoulutuskoodiuri(koodiUri)
@@ -201,7 +201,7 @@ trait KoulutusKoodiValidator {
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
+          koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
           path,
           validationContext,
           invalidKoulutusAlaKoodiuri(koodiUri)
@@ -217,7 +217,7 @@ trait KoulutusKoodiValidator {
       uri =>
         assertKoodistoQueryResult(
           uri,
-          cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
+          koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           validationContext,
           invalidOpintojenLaajuusyksikkoKoodiuri(uri)

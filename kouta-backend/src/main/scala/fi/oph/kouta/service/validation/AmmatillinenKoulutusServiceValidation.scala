@@ -11,7 +11,7 @@ object AmmatillinenKoulutusServiceValidation
     extends AmmatillinenKoulutusServiceValidation(CachedKoodistoClient, EPerusteKoodiClient)
 
 class AmmatillinenKoulutusServiceValidation(
-    val cachedKoodistoClient: CachedKoodistoClient,
+    val koodistoClient: CachedKoodistoClient,
     ePerusteKoodiClient: EPerusteKoodiClient
 ) extends KoulutusKoodiValidator with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
@@ -29,7 +29,7 @@ class AmmatillinenKoulutusServiceValidation(
             ),
             validateIfTrue(
               ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-              cachedKoodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+              koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
                 case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
                 case Right(uri) =>
                   assertNimiMatchExternal(
