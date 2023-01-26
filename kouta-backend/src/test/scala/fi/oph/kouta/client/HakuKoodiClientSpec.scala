@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty, Sv}
+import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty, PohjakoulutusvaatimusKoodisto, Sv}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate
@@ -60,10 +60,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("pohjakoulutusvaatimuskouta_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk") should equal(itemFound)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#2") should equal(itemFound)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_XX") should equal(itemNotFound)
-    koodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_YY") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_pk") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_yo#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_XX") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_YY") should equal(itemNotFound)
   }
 
   "Finding liiteTyyppiKoodiUri" should "return true when koodiUri exists" in {
