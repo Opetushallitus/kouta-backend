@@ -115,8 +115,6 @@ object KoodistoUtils {
     }
 }
 
-object BasicCachedKoodistoClient extends CachedKoodistoClient(KoutaConfigurationFactory.configuration.urlProperties)
-
 object CachedKoodistoClient extends CachedKoodistoClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
