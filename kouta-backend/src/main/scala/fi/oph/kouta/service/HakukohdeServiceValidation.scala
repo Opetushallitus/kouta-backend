@@ -148,7 +148,7 @@ class HakukohdeServiceValidation(
             vCtx,
             existingValintakoeIds,
             hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            hakuKoodiClient.postiosoitekoodiExists
+            hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
           )
       ),
       validateIfDefined[HakukohdeMetadata](
@@ -274,7 +274,7 @@ class HakukohdeServiceValidation(
       path,
       osoiteWithNewValues,
       validationContext,
-      hakuKoodiClient.postiosoitekoodiExists
+      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ),
     validateIfDefined[String](osoite.sahkoposti, assertValidEmail(_, s"$path.sahkoposti")),
     validateIfDefined[String](osoite.verkkosivu, assertValidUrl(_, s"$path.verkkosivu"))
@@ -749,7 +749,7 @@ class HakukohdeServiceValidation(
                       path,
                       newTilaisuus,
                       vCtx,
-                      hakuKoodiClient.postiosoitekoodiExists
+                      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
                     )
                 )
               )

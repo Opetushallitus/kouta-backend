@@ -66,7 +66,7 @@ class ValintaperusteServiceValidation(
             vCtx,
             existingValintakoeIds,
             hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            hakuKoodiClient.postiosoitekoodiExists
+            hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
           )
       ),
       validateIfDefined[ValintaperusteMetadata](vp.metadata, validateMetadata(vp.koulutustyyppi, _, vCtx, vpDiffResolver)),

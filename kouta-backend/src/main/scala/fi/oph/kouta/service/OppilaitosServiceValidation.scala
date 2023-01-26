@@ -1,12 +1,12 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, Osoite, TietoaOpiskelusta, Yhteystieto}
+import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidEmail, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(HakuKoodiClient)
@@ -68,7 +68,7 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
         "metadata.hakijapalveluidenYhteystiedot",
         oppilaitosDiffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
-        hakuKoodiClient.postiosoitekoodiExists
+        hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     validateIfDefined[Int](m.opiskelijoita, assertNotNegative(_, "metadata.opiskelijoita")),
@@ -157,7 +157,7 @@ class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppila
         "metadata.hakijapalveluidenYhteystiedot",
         diffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
-        hakuKoodiClient.postiosoitekoodiExists
+        hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     assertTrue(

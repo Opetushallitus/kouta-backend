@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, KausiKoodisto, KieliKoodisto, Kielistetty, LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, Sv, ValintakoeTyyppiKoodisto}
+import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, KausiKoodisto, KieliKoodisto, Kielistetty, LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, PostiosoiteKoodisto, Sv, ValintakoeTyyppiKoodisto}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate
@@ -151,10 +151,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("posti_XXXXX", 2, Some(dayInPast))
       )
     )
-    koodiClient.postiosoitekoodiExists("posti_37150") should equal(itemFound)
-    koodiClient.postiosoitekoodiExists("posti_90810#2") should equal(itemFound)
-    koodiClient.postiosoitekoodiExists("posti_XXXXX") should equal(itemNotFound)
-    koodiClient.postiosoitekoodiExists("posti_YYYYY") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_37150") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_90810#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_XXXXX") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_YYYYY") should equal(itemNotFound)
   }
 
   "Finding hakutapaKoodiUri" should "return true when koodiUri exists" in {
