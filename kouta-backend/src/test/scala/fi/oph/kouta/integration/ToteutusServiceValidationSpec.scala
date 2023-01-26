@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.{HakuKoodiClient, CachedKoodistoClient}
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
@@ -28,9 +28,8 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] {
-  val cachedKoodistoClient = mock[CachedKoodistoClient]
+  val koodistoClient = mock[CachedKoodistoClient]
   val organisaatioService = mock[OrganisaatioService]
-  val hakuKoodiClient     = mock[HakuKoodiClient]
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
@@ -202,9 +201,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   override val validator =
     new ToteutusServiceValidation(
-      cachedKoodistoClient,
+      koodistoClient,
       organisaatioService,
-      hakuKoodiClient,
       koulutusDao,
       hakukohdeDao,
       sorakuvausDao,
@@ -229,12 +227,12 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Seq(OtherOid), Koulutustyyppi.values)
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
     when(organisaatioService.getAllChildOidsFlat(ChildOid)).thenAnswer(Seq(ChildOid, GrandChildOid, GrandGrandChildOid))
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto,"opetusaikakk_1#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto,"opetusaikakk_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
 
     // tietokantakyselyt
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.123"))).thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu)))
@@ -285,38 +283,38 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Seq(MinHakukohdeListItem.copy(toteutusOid = toteutusOid2)))
 
     // ammatillinen
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
     // lukio
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1")).thenAnswer(itemFound)
     when(
-      cachedKoodistoClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_1#1")
+      koodistoClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, "lukiolinjaterityinenkoulutustehtava_1#1")
     ).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1")).thenAnswer(itemFound)
     when(
-      cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         validKoulutuksetKoodiUri
       )
     ).thenAnswer(itemFound)
     when(
-      cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         invalidKoulutuksetKoodiUri
       )
     ).thenAnswer(itemNotFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_EN#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_DE#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FR#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ES#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ET#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_EN#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_DE#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FR#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ES#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ET#1")).thenAnswer(itemFound)
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
     when(organisaatioService.withoutOppilaitostyypit(anySeq[OrganisaatioOid], anySeq[String])).thenReturn(Seq())
 
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
-    when(cachedKoodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide")).thenAnswer(itemFound)
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {

@@ -23,7 +23,7 @@ object KoulutusServiceValidation
     )
 
 class KoulutusServiceValidation(
-    val cachedKoodistoClient: CachedKoodistoClient,
+    val koodistoClient: CachedKoodistoClient,
     val organisaatioService: OrganisaatioService,
     toteutusDAO: ToteutusDAO,
     val sorakuvausDAO: SorakuvausDAO,
@@ -274,7 +274,7 @@ class KoulutusServiceValidation(
           "metadata.lisatiedot",
           (lisatieto, newLisatieto, path) =>
             lisatieto
-              .validate(path, newLisatieto, validationContext, cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
+              .validate(path, newLisatieto, validationContext, koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
         )
       ),
       validateIfJulkaistu(
@@ -410,7 +410,7 @@ class KoulutusServiceValidation(
             uri =>
               assertKoodistoQueryResult(
                 uri,
-                cachedKoodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
+                koodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
                 "metadata.erikoistumiskoulutusKoodiUri",
                 validationContext,
                 invalidErikoistumiskoulutusKoodiuri(uri)
@@ -709,7 +709,7 @@ class KoulutusServiceValidation(
       uri =>
         assertKoodistoQueryResult(
           uri,
-          cachedKoodistoClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
+          koodistoClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
           "metadata.opinnonTyyppiKoodiUri",
           validationContext,
           invalidOpinnonTyyppiKoodiuri(uri)
@@ -724,7 +724,7 @@ class KoulutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          cachedKoodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
+          koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
           path,
           validationContext,
           invalidTutkintoNimikeKoodiuri(koodiUri)

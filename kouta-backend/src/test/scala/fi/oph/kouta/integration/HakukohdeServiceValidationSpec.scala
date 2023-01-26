@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, KoodiUri, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -24,8 +24,7 @@ import java.util.UUID
 import scala.util.{Failure, Success, Try}
 
 class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val hakuKoodiClient      = mock[HakuKoodiClient]
-  val cachedKoodistoClient  = mock[CachedKoodistoClient]
+  val koodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val organisaatioService  = mock[OrganisaatioService]
   val lokalisointiClient   = mock[LokalisointiClient]
@@ -83,8 +82,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   val yhteisHakuHakuOid = HakuOid("1.2.246.562.29.321")
 
   val validator = new HakukohdeServiceValidation(
-    hakuKoodiClient,
-    cachedKoodistoClient,
+    koodistoClient,
     hakemusPalveluClient,
     organisaatioService,
     lokalisointiClient,
@@ -216,33 +214,33 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
       .thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_01#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_01#1"))
       .thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_1#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_2#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_2#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
-    when(hakuKoodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI")).thenAnswer(itemFound)
-    when(hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV")).thenAnswer(itemFound)
+    when(koodistoClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
+    when(koodistoClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV")).thenAnswer(itemFound)
 
     when(lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"))
       .thenAnswer(Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje", En -> "Yleislinja"))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
       .thenAnswer(Right(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
       Right(
         KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
       )
     )
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
@@ -252,13 +250,13 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ZonedDateTime.now().toInstant)))
 
     when(
-      cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetKoulutuskooditAllowedForKaksoistutkinto.koulutusTyypit,
         "koulutus_371101#1"
       )
     ).thenAnswer(itemFound)
     when(
-      cachedKoodistoClient.koulutusKoodiUriExists(
+      koodistoClient.koulutusKoodiUriExists(
         LukioKoulutusKooditAllowedForKaksoistutkinto.koulutusKoodiUrit,
         "koulutus_301101#1"
       )

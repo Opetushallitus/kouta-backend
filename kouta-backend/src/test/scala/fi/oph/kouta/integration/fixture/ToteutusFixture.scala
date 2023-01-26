@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{HakuKoodiClient,  KoodistoKaannosClient, CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, KoodistoKaannosClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
@@ -28,13 +28,12 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   def toteutusService: ToteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
-    val cachedKoodistoClient = new CachedKoodistoClient(urlProperties.get)
-    val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(cachedKoodistoClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val koodistoKaannosClient = new KoodistoKaannosClient(urlProperties.get)
+    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-      koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
+      koodistoKaannosClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
   }
 
   override def beforeAll(): Unit = {

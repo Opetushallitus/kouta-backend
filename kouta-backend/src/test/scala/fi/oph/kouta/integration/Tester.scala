@@ -19,7 +19,7 @@ object Tester {
 
 
     //HakemusPalveluClient.isExistingAtaruId(UUID.fromString("0c3e3cc6-8892-4b82-8663-0c2bc79c02bb"))
-    //val client = new HakuKoodiClient(null)
+    //val client = new CachedKoodistoClient(null)
     //println("oikea vastaus: " + client.hakukohdeKoodiUriExists("hakukohteetperusopetuksenjalkeinenyhteishaku_666"))
     //println("oikea vastaus: " + client.opintojenLaajuusKoodiUriExists(""))
     //println(HakukohdeDAO.get(HakukohdeOid("1.2.246.562.20.00000000000000016744"), TilaFilter.onlyOlemassaolevat()))

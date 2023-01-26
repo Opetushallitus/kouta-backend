@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -22,7 +22,6 @@ import scala.util.{Failure, Success, Try}
 
 object HakukohdeServiceValidation
     extends HakukohdeServiceValidation(
-      HakuKoodiClient,
       CachedKoodistoClient,
       HakemusPalveluClient,
       OrganisaatioServiceImpl,
@@ -32,8 +31,7 @@ object HakukohdeServiceValidation
     )
 
 class HakukohdeServiceValidation(
-    hakuKoodiClient: HakuKoodiClient,
-    cachedKoodistoClient: CachedKoodistoClient,
+    koodistoClient: CachedKoodistoClient,
     hakemusPalveluClient: HakemusPalveluClient,
     organisaatioService: OrganisaatioService,
     lokalisointiClient: LokalisointiClient,
@@ -85,7 +83,7 @@ class HakukohdeServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, _),
+            koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, _),
             path,
             vCtx,
             invalidPohjakoulutusVaatimusKooriuri(koodiUri)
@@ -146,8 +144,8 @@ class HakukohdeServiceValidation(
             newValintakoe,
             vCtx,
             existingValintakoeIds,
-            hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+            koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
+            koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
           )
       ),
       validateIfDefined[HakukohdeMetadata](
@@ -244,7 +242,7 @@ class HakukohdeServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, _),
+            koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, _),
             s"$path.tyyppiKoodiUri",
             vCtx,
             invalidLiitetyyppiKooriuri(koodiUri)
@@ -273,7 +271,7 @@ class HakukohdeServiceValidation(
       path,
       osoiteWithNewValues,
       validationContext,
-      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
     ),
     validateIfDefined[String](osoite.sahkoposti, assertValidEmail(_, s"$path.sahkoposti")),
     validateIfDefined[String](osoite.verkkosivu, assertValidUrl(_, s"$path.verkkosivu"))
@@ -297,7 +295,7 @@ class HakukohdeServiceValidation(
           "metadata.koulutuksenAlkamiskausi",
           hakukohdeDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
+          koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
       validateIfJulkaistu(
@@ -343,7 +341,7 @@ class HakukohdeServiceValidation(
           hakukohdeDiffResolver.newNimi().isDefined,
           validateIfTrueOrElse(
             hkLinja.linja.isDefined,
-            hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
+            koodistoClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
               case Left(_) => error("metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
               case Right(uri) =>
                 assertNimiMatchExternal(
@@ -386,7 +384,7 @@ class HakukohdeServiceValidation(
                     oppiaineKoodiUri =>
                       assertKoodistoQueryResult(
                         oppiaineKoodiUri,
-                        hakuKoodiClient.oppiaineArvoExists,
+                        koodistoClient.oppiaineArvoExists,
                         s"$path.oppiaine",
                         vCtx,
                         invalidOppiaineKoodiuri(oppiaineKoodiUri)
@@ -397,7 +395,7 @@ class HakukohdeServiceValidation(
                     kieliKoodiUri =>
                       assertKoodistoQueryResult(
                         kieliKoodiUri,
-                        hakuKoodiClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
+                        koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
                         s"$path.kieli",
                         vCtx,
                         invalidOppiaineKieliKoodiuri(kieliKoodiUri)
@@ -564,7 +562,7 @@ class HakukohdeServiceValidation(
               koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
                 _,
                 AmmatillisetKoulutuskooditAllowedForKaksoistutkinto,
-                cachedKoodistoClient,
+                koodistoClient,
                 "toinenAsteOnkoKaksoistutkinto",
                 vCtx,
                 toinenAsteOnkoKaksoistutkintoNotAllowed,
@@ -575,7 +573,7 @@ class HakukohdeServiceValidation(
               koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
                 _,
                 LukioKoulutusKooditAllowedForKaksoistutkinto,
-                cachedKoodistoClient,
+                koodistoClient,
                 "toinenAsteOnkoKaksoistutkinto",
                 vCtx,
                 toinenAsteOnkoKaksoistutkintoNotAllowed,
@@ -616,7 +614,7 @@ class HakukohdeServiceValidation(
                       koodiUri =>
                         assertKoodistoQueryResult(
                           koodiUri,
-                          hakuKoodiClient.koodiUriExistsInKoodisto(
+                          koodistoClient.koodiUriExistsInKoodisto(
                             if (erityisOpetus) HakukohdeAmmErityisopetusKoodisto
                             else HakukohdePoJalkYhteishakuKoodisto,
                             _
@@ -748,7 +746,7 @@ class HakukohdeServiceValidation(
                       path,
                       newTilaisuus,
                       vCtx,
-                      hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+                      koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
                     )
                 )
               )
