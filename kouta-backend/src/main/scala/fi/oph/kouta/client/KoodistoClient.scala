@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, splitToBaseAndVersion}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{Kieli, Kielistetty, KoodistoNimi}
+import fi.oph.kouta.domain.{Kieli, Kielistetty, KoodistoNimi, OppiaineKoodisto, oppiaineKielitasoKoodiUriEtuliitteet}
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
@@ -224,6 +224,14 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
       fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusKoodiUrit))
     } else {
       queryFailed
+    }
+  }
+
+  def oppiaineArvoExists(oppiaineArvo: String): ExternalQueryResult = {
+    if (oppiaineKielitasoKoodiUriEtuliitteet contains oppiaineArvo) {
+      itemFound
+    } else {
+      koodiUriExistsInKoodisto(OppiaineKoodisto, oppiaineArvo)
     }
   }
 }

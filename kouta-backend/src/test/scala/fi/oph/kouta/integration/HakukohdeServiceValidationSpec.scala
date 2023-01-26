@@ -229,8 +229,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
+    when(hakuKoodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
+    when(hakuKoodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI")).thenAnswer(itemFound)
     when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV")).thenAnswer(itemFound)
 

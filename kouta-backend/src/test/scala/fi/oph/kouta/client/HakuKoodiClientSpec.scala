@@ -113,10 +113,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("painotettavatoppiaineetlukiossa_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt#2") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_XX") should equal(itemNotFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_YY") should equal(itemNotFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt") should equal(itemFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt#2") should equal(itemFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_XX") should equal(itemNotFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_YY") should equal(itemNotFound)
   }
 
   "Finding custom painotettavat oppiaineKoodiUrit" should "return true when koodiUri exists" in {
@@ -128,10 +128,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("painotettavatoppiaineetlukiossa_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_a1") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3") should equal(itemFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_X1") should equal(itemNotFound)
-    koodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetpäiväkodissa_X1") should equal(itemNotFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_a1") should equal(itemFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3") should equal(itemFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_X1") should equal(itemNotFound)
+    koodiClient.oppiaineArvoExists("painotettavatoppiaineetpäiväkodissa_X1") should equal(itemNotFound)
   }
 
   "Finding kieliKoodiUri" should "return true when koodiUri exists" in {
