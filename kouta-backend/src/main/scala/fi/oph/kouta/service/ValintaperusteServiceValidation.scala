@@ -92,7 +92,7 @@ class ValintaperusteServiceValidation(
       vpDiffResolver.newValintatavat(),
       "metadata.valintatavat",
       (valintatapa, newValintatapa, path) =>
-        valintatapa.validate(path, newValintatapa, vCtx, hakuKoodiClient.valintatapaKoodiUriExists)
+        valintatapa.validate(path, newValintatapa, vCtx, hakuKoodiClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, _))
     ),
     validateIfNonEmpty[Sisalto](m.sisalto, "metadata.sisalto", _.validate(vCtx, _)),
     validateIfJulkaistu(
