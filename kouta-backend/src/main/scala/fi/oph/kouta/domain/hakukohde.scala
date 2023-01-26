@@ -340,8 +340,8 @@ package object hakukohde {
       |      properties:
       |        oppiaine:
       |          type: string
-      |          description: Oppiaineen koodiURI koodistossa
-      |          example: "oppiaineetyleissivistava_b2"
+      |          description: Oppiaineen koodiURI tai kielitason koodiURI-etuliite (esim. "painotettavatoppiaineetlukiossa_b2")
+      |          example: "painotettavatoppiaineetlukiossa_b2"
       |        kieli:
       |          type: string
       |          description: Kielen koodiURI koodistossa
