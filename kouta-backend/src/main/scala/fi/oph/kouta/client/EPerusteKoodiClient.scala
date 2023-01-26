@@ -1,12 +1,11 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, splitToBaseAndVersion}
+import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
-import org.json4s.JsonAST.JObject
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration.DurationInt

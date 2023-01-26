@@ -86,7 +86,7 @@ class HakukohdeServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists,
+            hakuKoodiClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, _),
             path,
             vCtx,
             invalidPohjakoulutusVaatimusKooriuri(koodiUri)
