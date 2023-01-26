@@ -243,7 +243,7 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newOpetusaikaKoodiUrit(),
         "opetusaikaKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusAikaKoodiUriExists,
+        koulutusKoodiClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto, _),
         invalidOpetusAikaKoodiUri
       ),
       validateOpetusKoodiUriListItem(
