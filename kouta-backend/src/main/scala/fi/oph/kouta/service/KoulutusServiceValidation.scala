@@ -709,7 +709,7 @@ class KoulutusServiceValidation(
       uri =>
         assertKoodistoQueryResult(
           uri,
-          koulutusKoodiClient.opinnonTyyppiKoodiUriExists,
+          koulutusKoodiClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
           "metadata.opinnonTyyppiKoodiUri",
           validationContext,
           invalidOpinnonTyyppiKoodiuri(uri)
