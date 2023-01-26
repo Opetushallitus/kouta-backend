@@ -285,7 +285,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Seq(MinHakukohdeListItem.copy(toteutusOid = toteutusOid2)))
 
     // ammatillinen
-    when(koulutusKoodiClient.osaamisalaKoodiUriExists("osaamisala_0001#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
     // lukio
     when(koulutusKoodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_1#1")).thenAnswer(itemFound)
     when(
