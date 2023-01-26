@@ -245,7 +245,7 @@ class HakukohdeServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.liiteTyyppiKoodiUriExists,
+            hakuKoodiClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, _),
             s"$path.tyyppiKoodiUri",
             vCtx,
             invalidLiitetyyppiKooriuri(koodiUri)
