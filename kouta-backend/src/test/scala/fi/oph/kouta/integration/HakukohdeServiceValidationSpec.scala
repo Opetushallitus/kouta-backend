@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
 import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -26,7 +26,7 @@ import scala.util.{Failure, Success, Try}
 
 class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   val hakuKoodiClient      = mock[HakuKoodiClient]
-  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
+  val cachedKoodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val organisaatioService  = mock[OrganisaatioService]
   val lokalisointiClient   = mock[LokalisointiClient]
@@ -85,7 +85,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   val validator = new HakukohdeServiceValidation(
     hakuKoodiClient,
-    koulutusKoodiClient,
+    cachedKoodistoClient,
     hakemusPalveluClient,
     organisaatioService,
     lokalisointiClient,
@@ -253,13 +253,13 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ZonedDateTime.now().toInstant)))
 
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetKoulutuskooditAllowedForKaksoistutkinto.koulutusTyypit,
         "koulutus_371101#1"
       )
     ).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.koulutusKoodiUriExists(
+      cachedKoodistoClient.koulutusKoodiUriExists(
         LukioKoulutusKooditAllowedForKaksoistutkinto.koulutusKoodiUrit,
         "koulutus_301101#1"
       )

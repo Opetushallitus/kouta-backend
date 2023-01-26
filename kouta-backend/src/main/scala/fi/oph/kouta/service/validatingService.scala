@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
@@ -165,7 +165,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
 }
 
 trait KoulutusKoodiValidator {
-  def koulutusKoodiClient: KoulutusKoodiClient
+  def cachedKoodistoClient: CachedKoodistoClient
 
   def validateKoulutusKoodiUrit(
       koodiUriFilter: KoulutusKoodiFilter,
@@ -185,7 +185,7 @@ trait KoulutusKoodiValidator {
             assertKoulutuskoodiQueryResult(
               koodiUri,
               koodiUriFilter,
-              koulutusKoodiClient,
+              cachedKoodistoClient,
               path,
               vCtx,
               invalidKoulutuskoodiuri(koodiUri)
@@ -201,7 +201,7 @@ trait KoulutusKoodiValidator {
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
+          cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
           path,
           validationContext,
           invalidKoulutusAlaKoodiuri(koodiUri)
@@ -217,7 +217,7 @@ trait KoulutusKoodiValidator {
       uri =>
         assertKoodistoQueryResult(
           uri,
-          koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
+          cachedKoodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           validationContext,
           invalidOpintojenLaajuusyksikkoKoodiuri(uri)

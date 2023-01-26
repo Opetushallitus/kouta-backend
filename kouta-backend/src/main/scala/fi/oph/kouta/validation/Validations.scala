@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
@@ -588,7 +588,7 @@ object Validations {
   def assertKoulutuskoodiQueryResult(
       koulutusKoodiUri: String,
       koulutusKoodiFilter: KoulutusKoodiFilter,
-      koulutusKoodiClient: KoulutusKoodiClient,
+      cachedKoodistoClient: CachedKoodistoClient,
       path: String,
       validationContext: ValidationContext,
       errorMessage: ErrorMessage,
@@ -597,12 +597,12 @@ object Validations {
     val queryResult =
       if (validationContext.isKoodistoServiceOk()) {
         if (koulutusKoodiFilter.filterType() == koulutusTyyppi) {
-          koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+          cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
             koulutusKoodiFilter.koulutusTyypit,
             koulutusKoodiUri
           )
         } else
-          koulutusKoodiClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
+          cachedKoodistoClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
       } else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(

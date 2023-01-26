@@ -2,13 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, HakuKoodiClient, KoodistoClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, HakuKoodiClient, KoodistoKaannosClient, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
-import fi.oph.kouta.service.{OrganisaatioServiceImpl, _}
+import fi.oph.kouta.service._
 
 trait IndexingFixture extends KoulutusFixtureWithIndexing with HakuFixtureWithIndexing with ToteutusFixtureWithIndexing
   with ValintaperusteFixtureWithIndexing with HakukohdeFixtureWithIndexing with SorakuvausFixture {
@@ -31,7 +31,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 
   override def koulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
+    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
     val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
     val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
 
@@ -49,9 +49,9 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
-    val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
+    val cachedKoodistoClient = new CachedKoodistoClient(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(cachedKoodistoClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation)
   }
@@ -75,10 +75,10 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient = new KoodistoKaannosClient(urlProperties.get)
-    val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
+    val cachedKoodistoClient = new CachedKoodistoClient(urlProperties.get)
     val hakuKoodiClient = new HakuKoodiClient(urlProperties.get)
-    val hakukohdeServiceValidation = new HakukohdeServiceValidation(hakuKoodiClient, koulutusKoodiClient, mockHakemusPalveluClient, organisaatioService, lokalisointiClient, HakukohdeDAO, HakuDAO)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koulutusKoodiClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val hakukohdeServiceValidation = new HakukohdeServiceValidation(hakuKoodiClient, cachedKoodistoClient, mockHakemusPalveluClient, organisaatioService, lokalisointiClient, HakukohdeDAO, HakuDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(cachedKoodistoClient, organisaatioService, hakuKoodiClient, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, hakuKoodiClient,
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,

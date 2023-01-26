@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient}
 import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, LukioKoulutusKoodit, Sv, Tallennettu}
 import fi.oph.kouta.validation.CrudOperations.create
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
@@ -15,7 +15,7 @@ import java.util.UUID
 
 class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   val hakuKoodiClient      = mock[HakuKoodiClient]
-  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
+  val cachedKoodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val kielet               = Seq(Fi, Sv)
   val ataruId              = UUID.randomUUID()
@@ -202,26 +202,26 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     assertKoulutuskoodiQueryResult(
       "koulutus_371101#1",
       AmmatillisetKoulutusKoodit,
-      koulutusKoodiClient,
+      cachedKoodistoClient,
       "path",
       validationContext,
       invalidKoulutuskoodiuri("koulutus_371101#1")
     )
 
   "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -229,7 +229,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
@@ -242,26 +242,26 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     assertKoulutuskoodiQueryResult(
       "koulutus_301104#1",
       LukioKoulutusKoodit,
-      koulutusKoodiClient,
+      cachedKoodistoClient,
       "path",
       validationContext,
       invalidKoulutuskoodiuri("koulutus_301104#1")
     )
 
   "KoulutusKoodiUri-validation" should "succeed when valid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     doAssertKoulutusKoodiUriQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for filter-list" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutusKoodiUriQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_301104#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -269,7 +269,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koulutusKoodiClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(cachedKoodistoClient.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)

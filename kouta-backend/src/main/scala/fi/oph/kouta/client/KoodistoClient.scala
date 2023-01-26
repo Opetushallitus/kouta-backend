@@ -1,10 +1,11 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, splitToBaseAndVersion}
+import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, splitToBaseAndVersion}
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.{Kieli, Kielistetty}
+import fi.oph.kouta.domain.{Kieli, Kielistetty, KoodistoNimi}
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
@@ -114,13 +115,119 @@ object KoodistoUtils {
     }
 }
 
-object BasicCachedKoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configuration.urlProperties) {
-  val rinnasteinenKoodiUriCache: Cache[(String, String), Seq[KoodiUri]] = Scaffeine()
+object BasicCachedKoodistoClient extends CachedKoodistoClient(KoutaConfigurationFactory.configuration.urlProperties)
+
+object CachedKoodistoClient extends CachedKoodistoClient(KoutaConfigurationFactory.configuration.urlProperties)
+
+class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
+
+  implicit val koodiUriCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(15.minutes)
+    .build()
+
+  implicit val koodiuriVersionCache: Cache[String, KoodiUri] = Scaffeine()
+    .expireAfterWrite(15.minutes)
+    .build()
+
+  implicit val rinnasteinenKoodiUriCache: Cache[(String, String), Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(10.minutes)
     .build()
 
   def getRinnasteisetCached(koodiUri: String, koodisto: String) = {
     rinnasteinenKoodiUriCache.get((koodiUri, koodisto), params => getRinnasteisetKooditInKoodisto(params._1, params._2))
+  }
+
+  def getKoodiUriVersionOrLatestFromCache(koodiUriAsString: String): Either[Throwable, KoodiUri] = {
+    Try[KoodiUri] {
+      koodiuriVersionCache.get(koodiUriAsString, koodiUriAsString => getKoodiUriVersionOrLatest(koodiUriAsString))
+    } match {
+      case Success(koodiUri) => Right(koodiUri)
+      case Failure(exp)      => Left(exp)
+    }
+  }
+
+  def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
+    koodiUriExistsInKoodisto(koodisto.toString, koodiUri)
+
+  protected def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult =
+    getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache) match {
+      case resp if resp.success =>
+        fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, resp.koodiUritInKoodisto))
+      case _ => queryFailed
+    }
+
+  private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
+    val now = ZonedDateTime.now().toLocalDateTime
+    getYlakoodit(
+      tyyppi,
+      koulutus =>
+        koulutus.koodisto.getOrElse(emptyKoodistoSubElement).koodistoUri == "koulutus" &&
+          isKoodiVoimassa(tyyppi, koulutus.koodiUri, now, koulutus.voimassaLoppuPvm)
+    )
+  }
+
+  private def koulutuskoodiUriOfKoulutusTyypit(tyyppi: String): Seq[KoodiUri] = {
+    Try[Seq[KoodiUri]] {
+      getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi)
+    } match {
+      case Success(koulutukset) => koulutukset
+      case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
+        logger.warn(s"Failed to get koulutusKoodiUris for koulutustyyppi $tyyppi from koodisto, retrying once...")
+        Try[Seq[KoodiUri]] {
+          getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi)
+        } match {
+          case Success(koulutukset) => koulutukset
+          case Failure(exp: KoodistoQueryException) =>
+            throw new RuntimeException(
+              s"Failed to get koulutusKoodiUris for koulutustyyppi $tyyppi from koodisto after retry, got response ${exp.status} ${exp.message}"
+            )
+          case Failure(exp: Throwable) =>
+            throw new RuntimeException(
+              s"Failed to get koulutusKoodiUris for koulutustyyppi $tyyppi from koodisto after retry, got response ${exp.getMessage}"
+            )
+        }
+      case Failure(exp: KoodistoQueryException) =>
+        throw new RuntimeException(
+          s"Failed to get koulutusKoodiUris for koulutustyyppi $tyyppi from koodisto, got response ${exp.status} ${exp.message}"
+        )
+      case Failure(exp: Throwable) =>
+        throw new RuntimeException(
+          s"Failed to get koulutusKoodiUris for koulutustyyppi $tyyppi from koodisto, got response ${exp.getMessage}"
+        )
+    }
+  }
+
+  def koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koulutustyypit: Seq[String],
+      koodiUri: String
+  ): ExternalQueryResult = {
+    try {
+      val exits = koulutustyypit.exists(tyyppi => {
+        val koodiUritOfKoulutustyyppi =
+          koodiUriCache.get(tyyppi, tyyppi => koulutuskoodiUriOfKoulutusTyypit(tyyppi))
+        koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koodiUritOfKoulutustyyppi)
+      })
+      if (exits) itemFound
+      else itemNotFound
+    } catch {
+      case _: Throwable => queryFailed
+    }
+  }
+
+  // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
+  // mahdollisesti annettuihin versioihin.
+  def koulutusKoodiUriExists(koodiUriFilter: Seq[String], koodiUri: String): ExternalQueryResult = {
+    val filterSeq = koodiUriFilter.map(koodiUriFromString)
+
+    val queryResponse = getAndUpdateFromKoodiUriCache("koulutus", koodiUriCache)
+    if (queryResponse.success) {
+      val koulutusKoodiUrit = queryResponse.koodiUritInKoodisto.filter(fromCache =>
+        filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri)
+      )
+      fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, koulutusKoodiUrit))
+    } else {
+      queryFailed
+    }
   }
 }
 
@@ -147,6 +254,18 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
           .map(koodiUri => KoodiUri(koodiUri.koodiUri, koodiUri.versio))
       }
     }
+
+  protected def getYlakoodit(koodi: String, filter: KoodistoElement => Boolean = (_: KoodistoElement) => true): List[KoodiUri] = {
+    get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodi), errorHandler, followRedirects = true) {
+      response =>
+        {
+          parse(response)
+            .extract[List[KoodistoElement]]
+            .filter(filter)
+            .map(element => KoodiUri(element.koodiUri, element.versio))
+        }
+    }
+  }
 
   def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiUri] = {
     logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")

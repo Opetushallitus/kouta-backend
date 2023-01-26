@@ -8,17 +8,17 @@ import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, qu
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
+class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
   KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   setUrlProperties(KoutaConfigurationFactory.configuration.urlProperties)
-  var koodiClient: KoulutusKoodiClient = _
+  var koodiClient: CachedKoodistoClient = _
   val defaultNimi: Kielistetty         = Map(Fi -> "nimi", Sv -> "nimi sv")
 
   val dayInPast = LocalDate.now().minusDays(5).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
   override def beforeAll() = {
     super.beforeAll()
-    koodiClient = new KoulutusKoodiClient(urlProperties.get)
+    koodiClient = new CachedKoodistoClient(urlProperties.get)
   }
 
   "Creating KoodiUri object from string" should "work according to validity rules" in {
@@ -325,8 +325,7 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
     koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_120") should equal(itemNotFound)
 
     koodiClient.koodiuriVersionCache.invalidateAll()
-    koodiClient.koulutusKoodiUriCache.invalidateAll()
-    koodiClient.commonKoodiUriCache.invalidateAll()
+    koodiClient.koodiUriCache.invalidateAll()
     clearServiceMocks()
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10)
     mockKoulutustyyppiResponse(

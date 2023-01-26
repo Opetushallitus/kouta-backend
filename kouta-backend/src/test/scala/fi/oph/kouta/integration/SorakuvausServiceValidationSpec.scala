@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Amm, Arkistoitu, Fi, Julkaistu, Julkaisutila, KoulutusKoodisto, KoulutusalaKoodisto, Poistettu, Sorakuvaus, Sv, Tallennettu, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
@@ -14,7 +14,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuvaus] {
-  val koulutusKoodiClient = mock[KoulutusKoodiClient]
+  val cachedKoodistoClient = mock[CachedKoodistoClient]
   val koulutusDao = mock[KoulutusDAO]
 
   val sorakuvausId = UUID.randomUUID()
@@ -25,12 +25,12 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
   val min: Sorakuvaus = MinSorakuvaus
   val maxMetadata = max.metadata.get
 
-  override val validator = new SorakuvausServiceValidation(koulutusKoodiClient, koulutusDao)
+  override val validator = new SorakuvausServiceValidation(cachedKoodistoClient, koulutusDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusKoodisto, "koulutus_371101#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
+    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, "koulutus_371101#1")).thenAnswer(itemFound)
+    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
       .thenAnswer(itemFound)
 
     when(koulutusDao.listBySorakuvausId(sorakuvausId, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[String]())
