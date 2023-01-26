@@ -724,7 +724,7 @@ class KoulutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koulutusKoodiClient.tutkintoNimikeKoodiUriExists,
+          koulutusKoodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
           path,
           validationContext,
           invalidTutkintoNimikeKoodiuri(koodiUri)
