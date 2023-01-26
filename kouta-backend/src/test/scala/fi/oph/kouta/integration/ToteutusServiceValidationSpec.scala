@@ -287,7 +287,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // ammatillinen
     when(koulutusKoodiClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
     // lukio
-    when(koulutusKoodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_1#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1")).thenAnswer(itemFound)
     when(
       koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists("lukiolinjaterityinenkoulutustehtava_1#1")
     ).thenAnswer(itemFound)
