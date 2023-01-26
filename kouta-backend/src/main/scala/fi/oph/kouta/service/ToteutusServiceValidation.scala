@@ -589,7 +589,7 @@ class ToteutusServiceValidation(
               newDiplomi =>
                 assertKoodistoQueryResult(
                   newDiplomi.koodiUri,
-                  koulutusKoodiClient.lukioDiplomiKoodiUriExists,
+                  koulutusKoodiClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, _),
                   s"$path.koodiUri",
                   vCtx,
                   invalidLukioDiplomiKoodiUri(newDiplomi.koodiUri)
