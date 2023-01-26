@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData.{MinHakukohdeListItem, MinYoValintaperuste, Valintakoe1, Valintatapa1, YoValintaperuste, inPast}
 import fi.oph.kouta.client.HakuKoodiClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Ajanjakso, Amm, Arkistoitu, Column, Fi, GenericValintaperusteMetadata, HakukohdeListItem, HakutapaKoodisto, Julkaistu, Julkaisutila, Poistettu, PostiosoiteKoodisto, Row, SisaltoTeksti, Sv, Tallennettu, Taulukko, TilaFilter, ValintakoeTyyppiKoodisto, Valintaperuste, Valintatapa}
+import fi.oph.kouta.domain.{Ajanjakso, Amm, Arkistoitu, Column, Fi, GenericValintaperusteMetadata, HakukohdeListItem, HakutapaKoodisto, HaunKohdejoukkoKoodisto, Julkaistu, Julkaisutila, Poistettu, PostiosoiteKoodisto, Row, SisaltoTeksti, Sv, Tallennettu, Taulukko, TilaFilter, ValintakoeTyyppiKoodisto, Valintaperuste, Valintatapa}
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.service.ValintaperusteServiceValidation
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
@@ -37,7 +37,7 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
   override def beforeEach(): Unit = {
     super.beforeEach()
     when(hakuKoodiClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_15#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_15#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
     when(hakuKoodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.valintatapaKoodiUriExists("valintatapajono_av#1")).thenAnswer(itemFound)
