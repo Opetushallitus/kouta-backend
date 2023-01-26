@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, Yhteystieto}
+import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
@@ -99,7 +99,7 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
         val koodiUri = newValues.otsikkoKoodiUri
         assertKoodistoQueryResult(
           koodiUri,
-          hakuKoodiClient.tietoaOpiskelustaOtsikkoKoodiUriExists,
+          hakuKoodiClient.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, _),
           s"$path.otsikkoKoodiUri",
           vCtx,
           invalidTietoaOpiskelustaOtsikkoKoodiUri(koodiUri)

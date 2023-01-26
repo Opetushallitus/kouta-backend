@@ -57,7 +57,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
   val validator = new OppilaitosServiceValidation(hakuKoodiClient)
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.tietoaOpiskelustaOtsikkoKoodiUriExists("organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, "organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
     when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
   }
