@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -24,7 +24,7 @@ import scala.util.{Failure, Success, Try}
 object HakukohdeServiceValidation
     extends HakukohdeServiceValidation(
       HakuKoodiClient,
-      KoulutusKoodiClient,
+      CachedKoodistoClient,
       HakemusPalveluClient,
       OrganisaatioServiceImpl,
       LokalisointiClient,
@@ -34,7 +34,7 @@ object HakukohdeServiceValidation
 
 class HakukohdeServiceValidation(
     hakuKoodiClient: HakuKoodiClient,
-    koulutusKoodiClient: KoulutusKoodiClient,
+    cachedKoodistoClient: CachedKoodistoClient,
     hakemusPalveluClient: HakemusPalveluClient,
     organisaatioService: OrganisaatioService,
     lokalisointiClient: LokalisointiClient,
@@ -565,7 +565,7 @@ class HakukohdeServiceValidation(
               koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
                 _,
                 AmmatillisetKoulutuskooditAllowedForKaksoistutkinto,
-                koulutusKoodiClient,
+                cachedKoodistoClient,
                 "toinenAsteOnkoKaksoistutkinto",
                 vCtx,
                 toinenAsteOnkoKaksoistutkintoNotAllowed,
@@ -576,7 +576,7 @@ class HakukohdeServiceValidation(
               koulutuksetKoodiUri.flatMap(assertKoulutuskoodiQueryResult(
                 _,
                 LukioKoulutusKooditAllowedForKaksoistutkinto,
-                koulutusKoodiClient,
+                cachedKoodistoClient,
                 "toinenAsteOnkoKaksoistutkinto",
                 vCtx,
                 toinenAsteOnkoKaksoistutkintoNotAllowed,

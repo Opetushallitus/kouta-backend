@@ -1,17 +1,17 @@
 package fi.oph.kouta.service.validation
 
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
+import fi.oph.kouta.client.{EPerusteKoodiClient, CachedKoodistoClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoulutusKoodiValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
 object AmmatillinenKoulutusServiceValidation
-    extends AmmatillinenKoulutusServiceValidation(KoulutusKoodiClient, EPerusteKoodiClient)
+    extends AmmatillinenKoulutusServiceValidation(CachedKoodistoClient, EPerusteKoodiClient)
 
 class AmmatillinenKoulutusServiceValidation(
-    val koulutusKoodiClient: KoulutusKoodiClient,
+    val cachedKoodistoClient: CachedKoodistoClient,
     ePerusteKoodiClient: EPerusteKoodiClient
 ) extends KoulutusKoodiValidator with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
@@ -29,7 +29,7 @@ class AmmatillinenKoulutusServiceValidation(
             ),
             validateIfTrue(
               ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-              koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+              cachedKoodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
                 case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
                 case Right(uri) =>
                   assertNimiMatchExternal(

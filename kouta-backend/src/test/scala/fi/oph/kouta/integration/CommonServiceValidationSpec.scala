@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{inFuture, inPast}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, CachedKoodistoClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
@@ -17,7 +17,7 @@ import java.util.UUID
 
 class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
   val hakuKoodiClient      = mock[HakuKoodiClient]
-  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
+  val cachedKoodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
 
   val vainSuomeksi         = Map(Fi -> "vain suomeksi", Sv -> "")
@@ -28,7 +28,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
   }
 
@@ -157,7 +157,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
-      koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+      cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -168,7 +168,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Julkaistu, kielet, update),
-      koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+      cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)

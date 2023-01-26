@@ -4,7 +4,7 @@ import java.util.UUID
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestSetups}
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{HakuKoodiClient, KoodistoKaannosClient, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakuKoodiClient, KoodistoKaannosClient, CachedKoodistoClient, LokalisointiClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, LukioHakukohteenLinja, Valintakoe1}
@@ -13,7 +13,7 @@ import fi.oph.kouta.client.{
   HakuKoodiClient,
   KoodistoClient,
   KoodistoKaannosClient,
-  KoulutusKoodiClient,
+  CachedKoodistoClient,
   LokalisointiClient
 }
 import fi.oph.kouta.domain._
@@ -47,10 +47,10 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoClient      = new KoodistoKaannosClient(urlProperties.get)
-    val koulutusKoodiClient = new KoulutusKoodiClient(urlProperties.get)
+    val cachedKoodistoClient = new CachedKoodistoClient(urlProperties.get)
     val hakuKoodiClient     = new HakuKoodiClient(urlProperties.get)
     val toteutusServiceValidation = new ToteutusServiceValidation(
-      koulutusKoodiClient,
+      cachedKoodistoClient,
       organisaatioService,
       hakuKoodiClient,
       KoulutusDAO,
@@ -60,7 +60,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     )
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(
       hakuKoodiClient,
-      koulutusKoodiClient,
+      cachedKoodistoClient,
       mockHakemusPalveluClient,
       organisaatioService,
       lokalisointiClient,

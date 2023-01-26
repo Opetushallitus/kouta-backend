@@ -1,18 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
-import fi.oph.kouta.client.{
-  HakuKoodiClient,
-  KayttooikeusClient,
-  KoutaSearchClient,
-  LokalisointiClient,
-  OppijanumerorekisteriClient
-}
+import fi.oph.kouta.client.{HakuKoodiClient, KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
-import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}

@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
+import fi.oph.kouta.client.{EPerusteKoodiClient, CachedKoodistoClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain.Koulutustyyppi.isAmmatillinen
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
@@ -15,7 +15,7 @@ import fi.oph.kouta.validation._
 
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(
-      KoulutusKoodiClient,
+      CachedKoodistoClient,
       OrganisaatioServiceImpl,
       ToteutusDAO,
       SorakuvausDAO,
@@ -23,7 +23,7 @@ object KoulutusServiceValidation
     )
 
 class KoulutusServiceValidation(
-    val koulutusKoodiClient: KoulutusKoodiClient,
+    val cachedKoodistoClient: CachedKoodistoClient,
     val organisaatioService: OrganisaatioService,
     toteutusDAO: ToteutusDAO,
     val sorakuvausDAO: SorakuvausDAO,
@@ -274,7 +274,7 @@ class KoulutusServiceValidation(
           "metadata.lisatiedot",
           (lisatieto, newLisatieto, path) =>
             lisatieto
-              .validate(path, newLisatieto, validationContext, koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
+              .validate(path, newLisatieto, validationContext, cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
         )
       ),
       validateIfJulkaistu(
@@ -410,7 +410,7 @@ class KoulutusServiceValidation(
             uri =>
               assertKoodistoQueryResult(
                 uri,
-                koulutusKoodiClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
+                cachedKoodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
                 "metadata.erikoistumiskoulutusKoodiUri",
                 validationContext,
                 invalidErikoistumiskoulutusKoodiuri(uri)
@@ -709,7 +709,7 @@ class KoulutusServiceValidation(
       uri =>
         assertKoodistoQueryResult(
           uri,
-          koulutusKoodiClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
+          cachedKoodistoClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
           "metadata.opinnonTyyppiKoodiUri",
           validationContext,
           invalidOpinnonTyyppiKoodiuri(uri)
@@ -724,7 +724,7 @@ class KoulutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koulutusKoodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
+          cachedKoodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
           path,
           validationContext,
           invalidTutkintoNimikeKoodiuri(koodiUri)

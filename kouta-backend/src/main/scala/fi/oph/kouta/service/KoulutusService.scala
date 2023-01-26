@@ -30,7 +30,7 @@ object KoulutusService
       OrganisaatioServiceImpl,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      KoulutusKoodiClient,
+      CachedKoodistoClient,
       KoulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient
@@ -42,7 +42,7 @@ object KoulutusService
       organisaatioService: OrganisaatioService,
       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
       kayttooikeusClient: KayttooikeusClient,
-      koodistoClient: KoulutusKoodiClient,
+      koodistoClient: CachedKoodistoClient,
       koulutusServiceValidation: KoulutusServiceValidation
   ): KoulutusService = {
     new KoulutusService(
@@ -67,7 +67,7 @@ class KoulutusService(
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: KoulutusKoodiClient,
+    koodistoClient: CachedKoodistoClient,
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
     ePerusteKoodiClient: EPerusteKoodiClient
