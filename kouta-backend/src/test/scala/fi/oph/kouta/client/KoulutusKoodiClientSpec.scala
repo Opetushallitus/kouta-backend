@@ -183,17 +183,6 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
     )
   }
 
-  "Finding opintojenLaajuusKoodiUri" should "return true when koodiUri exists" in {
-    mockKoodistoResponse(
-      "opintojenlaajuus",
-      Seq(("opintojenlaajuus_40", 1, None), ("opintojenlaajuus_v53", 2, Some(dayInPast)))
-    )
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40") should equal(itemFound)
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_v53") should equal(itemNotFound)
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40#2") should equal(itemNotFound)
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60") should equal(itemNotFound)
-  }
-
   "Finding opintojenLaajuusyksikkoKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse(
       "opintojenlaajuusyksikko",
@@ -357,14 +346,14 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
   }
 
   "When koodisto-query failed" should "return error status" in {
-    mockKoodistoFailure("opintojenlaajuus")
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40") should equal(queryFailed)
+    mockKoodistoFailure("opintojenlaajuusyksikko")
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2") should equal(queryFailed)
     clearServiceMocks()
-    mockKoodistoNotFound("opintojenlaajuus")
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40") should equal(itemNotFound)
+    mockKoodistoNotFound("opintojenlaajuusyksikko")
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2") should equal(itemNotFound)
     clearServiceMocks()
-    mockKoodistoResponse("opintojenlaajuus", Seq(("opintojenlaajuus_40", 1, None)))
-    koodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40") should equal(itemFound)
+    mockKoodistoResponse("opintojenlaajuusyksikko", Seq(("opintojenlaajuusyksikko_2", 1, None)))
+    koodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_2") should equal(itemFound)
   }
 
   "When getting latest version of koodiUri" should "throw error" in {
