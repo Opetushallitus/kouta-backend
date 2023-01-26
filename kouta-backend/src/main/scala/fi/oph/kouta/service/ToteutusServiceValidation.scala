@@ -721,7 +721,7 @@ class ToteutusServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.taiteenalaKoodiUriExists,
+            koulutusKoodiClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, _),
             path,
             vCtx,
             invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri)
