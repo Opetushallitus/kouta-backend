@@ -234,7 +234,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
     when(cachedKoodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
     when(cachedKoodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
 
     // tietokantakyselyt
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.123"))).thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu)))

@@ -37,7 +37,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       tila: Julkaisutila,
       expected: Seq[ValidationError]
   ): Assertion =
-    e.validate("path", Some(e), ValidationContext(tila, kielet, create), hakuKoodiClient.kausiKoodiUriExists) match {
+    e.validate("path", Some(e), ValidationContext(tila, kielet, create), hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
     }
@@ -59,7 +59,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
-      hakuKoodiClient.kausiKoodiUriExists
+      hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)

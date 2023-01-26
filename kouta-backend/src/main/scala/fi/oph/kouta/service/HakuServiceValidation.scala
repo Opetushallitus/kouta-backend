@@ -143,7 +143,7 @@ class HakuServiceValidation(
           "metadata.koulutuksenAlkamiskausi",
           hakuDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.kausiKoodiUriExists
+          hakuKoodiClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       )
     )

@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty, LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, Sv, ValintakoeTyyppiKoodisto}
+import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, KausiKoodisto, Kielistetty, LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, Sv, ValintakoeTyyppiKoodisto}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate
@@ -98,10 +98,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Finding kausiKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse("kausi", Seq(("kausi_s", 1, None), ("kausi_k", 3, None), ("kausi_X", 2, Some(dayInPast))))
-    koodiClient.kausiKoodiUriExists("kausi_s") should equal(itemFound)
-    koodiClient.kausiKoodiUriExists("kausi_k#2") should equal(itemFound)
-    koodiClient.kausiKoodiUriExists("kausi_X") should equal(itemNotFound)
-    koodiClient.kausiKoodiUriExists("kausi_Y") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_s") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_X") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_Y") should equal(itemNotFound)
   }
 
   "Finding oppiaineKoodiUri" should "return true when koodiUri exists" in {
