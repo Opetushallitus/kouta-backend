@@ -19,7 +19,21 @@ object KoodistoNimi extends Enum[KoodistoNimi] {
     LukioDiplomiKoodisto,
     OpinnonTyyppiKoodisto,
     ErikoistumiskoulutusKoodisto,
-    TaiteenalaKoodisto
+    TaiteenalaKoodisto,
+    HakukohdeAmmErityisopetusKoodisto,
+    HakukohdePoJalkYhteishakuKoodisto,
+    PohjakoulutusvaatimusKoodisto,
+    LiitetyyppiKoodisto,
+    ValintakoeTyyppiKoodisto,
+    KausiKoodisto,
+    OppiaineKoodisto,
+    KieliKoodisto,
+    PostiosoiteKoodisto,
+    HakutapaKoodisto,
+    HaunKohdejoukkoKoodisto,
+    HaunKohdejoukonTarkenneKoodisto,
+    ValintatapaKoodisto,
+    TietoaOpiskelustaKoodisto
   )
 }
 
@@ -36,7 +50,26 @@ case object LukioPainotuksetKoodisto        extends KoodistoNimi { val name = "l
 case object LukioErityinenKoulutustehtavaKoodisto extends KoodistoNimi {
   val name = "lukiolinjaterityinenkoulutustehtava"
 }
-case object LukioDiplomiKoodisto            extends KoodistoNimi { val name = "moduulikoodistolops2021"      }
-case object OpinnonTyyppiKoodisto           extends KoodistoNimi { val name = "opinnontyyppi"                }
+case object LukioDiplomiKoodisto         extends KoodistoNimi { val name = "moduulikoodistolops2021"      }
+case object OpinnonTyyppiKoodisto        extends KoodistoNimi { val name = "opinnontyyppi"                }
 case object ErikoistumiskoulutusKoodisto extends KoodistoNimi { val name = "erikoistumiskoulutukset"      }
-case object TaiteenalaKoodisto              extends KoodistoNimi { val name = "taiteenperusopetustaiteenala" }
+case object TaiteenalaKoodisto           extends KoodistoNimi { val name = "taiteenperusopetustaiteenala" }
+case object HakukohdeAmmErityisopetusKoodisto extends KoodistoNimi {
+  val name = "hakukohteeterammatillinenerityisopetus"
+}
+case object HakukohdePoJalkYhteishakuKoodisto extends KoodistoNimi {
+  val name = "hakukohteetperusopetuksenjalkeinenyhteishaku"
+}
+
+case object PohjakoulutusvaatimusKoodisto extends KoodistoNimi { val name = "pohjakoulutusvaatimuskouta" }
+case object LiitetyyppiKoodisto           extends KoodistoNimi { val name = "liitetyypitamm"             }
+case object ValintakoeTyyppiKoodisto extends KoodistoNimi { val name = "valintakokeentyyppi" }
+case object KausiKoodisto extends KoodistoNimi { val name = "kausi" }
+case object OppiaineKoodisto extends KoodistoNimi { val name = "painotettavatoppiaineetlukiossa" }
+case object KieliKoodisto extends KoodistoNimi { val name = "kieli" }
+case object PostiosoiteKoodisto extends KoodistoNimi { val name = "posti" }
+case object HakutapaKoodisto extends KoodistoNimi { val name = "hakutapa" }
+case object HaunKohdejoukkoKoodisto extends KoodistoNimi { val name = "haunkohdejoukko" }
+case object HaunKohdejoukonTarkenneKoodisto extends KoodistoNimi { val name = "haunkohdejoukontarkenne" }
+case object ValintatapaKoodisto extends KoodistoNimi { val name = "valintatapajono" }
+case object TietoaOpiskelustaKoodisto extends KoodistoNimi { val name = "organisaationkuvaustiedot" }

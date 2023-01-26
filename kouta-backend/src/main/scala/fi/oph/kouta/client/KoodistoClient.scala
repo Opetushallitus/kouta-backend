@@ -17,7 +17,6 @@ import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.DurationInt
 
-
 case class KoodiUri(koodiUri: String, versio: Int, nimi: Kielistetty = Map()) {
   def this(koodiUri: String, versio: Int, metadata: List[KoodistoMetadataElement]) = {
     this(

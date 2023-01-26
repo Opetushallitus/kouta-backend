@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.PainotetutArvoSanatLukioKaikki
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound}
 import fi.vm.sade.properties.OphProperties
 
 object HakuKoodiClient extends HakuKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
@@ -14,12 +14,6 @@ package object HakukoodiConstants {
 }
 
 class HakuKoodiClient(urlProperties: OphProperties) extends CachedKoodistoClient(urlProperties) {
-
-  def hakukohdeKoodiUriAmmErityisopetusExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto(hakukohdeKoodistoAmmErityisopetus, koodiUri)
-
-  def hakukohdeKoodiUriPoJalkYhteishakuExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto(hakukohdeKoodistoPoJalkYhteishaku, koodiUri)
 
   def pohjakoulutusVaatimusKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("pohjakoulutusvaatimuskouta", koodiUri)

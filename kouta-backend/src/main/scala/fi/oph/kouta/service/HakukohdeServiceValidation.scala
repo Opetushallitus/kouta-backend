@@ -617,9 +617,11 @@ class HakukohdeServiceValidation(
                       koodiUri =>
                         assertKoodistoQueryResult(
                           koodiUri,
-                          if (erityisOpetus)
-                            hakuKoodiClient.hakukohdeKoodiUriAmmErityisopetusExists
-                          else hakuKoodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists,
+                          hakuKoodiClient.koodiUriExistsInKoodisto(
+                            if (erityisOpetus) HakukohdeAmmErityisopetusKoodisto
+                            else HakukohdePoJalkYhteishakuKoodisto,
+                            _
+                          ),
                           "hakukohdeKoodiUri",
                           vCtx,
                           invalidHakukohdeKooriuri(koodiUri, koodisto)
