@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutusalaKoodisto, LukioKoulutusKoodit, OpintojenLaajuusyksikkoKoodisto, Sv, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioKoulutusKoodit, OpintojenLaajuusyksikkoKoodisto, Sv, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
 import java.time.LocalDate
@@ -152,11 +152,11 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("koulutuksenlisatiedot_04", 2, Some(dayInPast))
       )
     )
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_02") should equal(itemFound)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1") should equal(itemFound)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04") should equal(itemNotFound)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#3") should equal(itemNotFound)
-    koodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_05") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_02") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_04") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#3") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_05") should equal(itemNotFound)
   }
 
   "Finding koulutusalaKoodiUri" should "return true when koodiUri exists" in {

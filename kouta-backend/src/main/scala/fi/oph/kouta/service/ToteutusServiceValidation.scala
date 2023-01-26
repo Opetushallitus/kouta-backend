@@ -268,7 +268,7 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newLisatiedot(),
         s"$path.lisatiedot",
         (lisatieto, newLisatieto, path) =>
-          lisatieto.validate(path, newLisatieto, vCtx, koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists)
+          lisatieto.validate(path, newLisatieto, vCtx, koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
       ),
       validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
       validateIfDefined[Int](opetus.suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),

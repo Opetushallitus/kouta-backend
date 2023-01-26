@@ -233,7 +233,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusKoodiClient.opetusAikaKoodiUriExists("opetusaikakk_1#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_1#1")).thenAnswer(itemFound)
     when(koulutusKoodiClient.opetusTapaKoodiUriExists("opetuspaikkakk_2#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
     when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(itemFound)
 
     // tietokantakyselyt

@@ -274,7 +274,7 @@ class KoulutusServiceValidation(
           "metadata.lisatiedot",
           (lisatieto, newLisatieto, path) =>
             lisatieto
-              .validate(path, newLisatieto, validationContext, koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists)
+              .validate(path, newLisatieto, validationContext, koulutusKoodiClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _))
         )
       ),
       validateIfJulkaistu(
