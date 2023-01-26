@@ -18,7 +18,7 @@ object KoodistoNimi extends Enum[KoodistoNimi] {
     LukioErityinenKoulutustehtavaKoodisto,
     LukioDiplomiKoodisto,
     OpinnonTyyppiKoodisto,
-    ErikoistumiskoulutuksetKoodisto,
+    ErikoistumiskoulutusKoodisto,
     TaiteenalaKoodisto
   )
 }
@@ -38,5 +38,5 @@ case object LukioErityinenKoulutustehtavaKoodisto extends KoodistoNimi {
 }
 case object LukioDiplomiKoodisto            extends KoodistoNimi { val name = "moduulikoodistolops2021"      }
 case object OpinnonTyyppiKoodisto           extends KoodistoNimi { val name = "opinnontyyppi"                }
-case object ErikoistumiskoulutuksetKoodisto extends KoodistoNimi { val name = "erikoistumiskoulutukset"      }
+case object ErikoistumiskoulutusKoodisto extends KoodistoNimi { val name = "erikoistumiskoulutukset"      }
 case object TaiteenalaKoodisto              extends KoodistoNimi { val name = "taiteenperusopetustaiteenala" }

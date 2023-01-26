@@ -410,7 +410,7 @@ class KoulutusServiceValidation(
             uri =>
               assertKoodistoQueryResult(
                 uri,
-                koulutusKoodiClient.erikoistumisKoulutusKoodiUriExists,
+                koulutusKoodiClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
                 "metadata.erikoistumiskoulutusKoodiUri",
                 validationContext,
                 invalidErikoistumiskoulutusKoodiuri(uri)
