@@ -59,8 +59,8 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_61100#2")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(hakuKoodiClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
     when(oppilaitosDao.getTila(ChildOid)).thenAnswer(Some(Julkaistu))
     when(oppilaitosDao.getTila(UnknownOid)).thenAnswer(None)
     when(oppilaitosDao.getTila(EvilCousin)).thenAnswer(Some(Tallennettu))
