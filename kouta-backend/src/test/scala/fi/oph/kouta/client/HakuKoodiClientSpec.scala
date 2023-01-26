@@ -2,8 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty,
-  LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, Sv}
+import fi.oph.kouta.domain.{Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, Kielistetty, LiiteTyyppiKoodisto, PohjakoulutusvaatimusKoodisto, Sv, ValintakoeTyyppiKoodisto}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 
 import java.time.LocalDate
@@ -91,10 +90,10 @@ class HakuKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("valintakokeentyyppi_XX", 2, Some(dayInPast))
       )
     )
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1") should equal(itemFound)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_2#2") should equal(itemFound)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_XX") should equal(itemNotFound)
-    koodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_YY") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_2#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_XX") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_YY") should equal(itemNotFound)
   }
 
   "Finding kausiKoodiUri" should "return true when koodiUri exists" in {
