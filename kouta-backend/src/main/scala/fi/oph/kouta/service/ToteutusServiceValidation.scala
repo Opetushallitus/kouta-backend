@@ -341,7 +341,7 @@ class ToteutusServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.osaamisalaKoodiUriExists,
+            koulutusKoodiClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, _),
             s"$path.koodiUri",
             vCtx,
             invalidOsaamisalaKoodiUri(koodiUri)
