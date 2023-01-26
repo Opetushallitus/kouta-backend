@@ -63,7 +63,7 @@ class HakuServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists,
+            hakuKoodiClient.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, _),
             "kohdejoukonTarkenneKoodiUri",
             vCtx,
             invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
