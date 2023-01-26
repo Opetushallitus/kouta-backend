@@ -316,7 +316,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(organisaatioService.withoutOppilaitostyypit(anySeq[OrganisaatioOid], anySeq[String])).thenReturn(Seq())
 
     when(koulutusKoodiClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.taiteenalaKoodiUriExists("taiteenperusopetustaiteenala_kuvataide")).thenAnswer(itemFound)
+    when(koulutusKoodiClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide")).thenAnswer(itemFound)
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
