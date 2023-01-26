@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioKoulutusKoodit, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, Sv, TutkintonimikeKoodisto, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
 import java.time.LocalDate
@@ -251,10 +251,10 @@ class KoulutusKoodiClientSpec extends SpecWithMocks with KoodistoServiceMock {
         ("lukiopainotukset_817", 2, Some(dayInPast))
       )
     )
-    koodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_503") should equal(itemFound)
-    koodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_543#2") should equal(itemFound)
-    koodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_817") should equal(itemNotFound)
-    koodiClient.lukioPainotusKoodiUriExists("lukiopainotukset_0108") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_503") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_543#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_817") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_0108") should equal(itemNotFound)
   }
 
   "Finding lukioErityinenKoulutustehtavaKoodiUri" should "return true when koodiUri exists" in {

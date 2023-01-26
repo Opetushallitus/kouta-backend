@@ -558,7 +558,7 @@ class ToteutusServiceValidation(
         lkMetadata.painotukset,
         toteutusDiffResolver.newLukioPainotukset(),
         "painotukset",
-        koulutusKoodiClient.lukioPainotusKoodiUriExists,
+        koulutusKoodiClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, _),
         vCtx
       ),
       validateLukioLinjat(

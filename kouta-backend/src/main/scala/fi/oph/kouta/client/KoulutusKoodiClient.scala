@@ -101,9 +101,6 @@ class KoulutusKoodiClient(urlProperties: OphProperties) extends KoodistoClient(u
     }
   }
 
-  def lukioPainotusKoodiUriExists(koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto("lukiopainotukset", koodiUri)
-
   def lukioErityinenKoulutustehtavaKoodiUriExists(koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto("lukiolinjaterityinenkoulutustehtava", koodiUri)
 
