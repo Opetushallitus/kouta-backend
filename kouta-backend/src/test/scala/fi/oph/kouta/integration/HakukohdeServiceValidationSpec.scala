@@ -687,10 +687,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("puppu", "pohjakoulutusvaatimuskouta_XX#1")),
       Seq(
-        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", invalidPohjakoulutusVaatimusKooriuri("puppu")),
+        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", invalidPohjakoulutusVaatimusKoodiuri("puppu")),
         ValidationError(
           "pohjakoulutusvaatimusKoodiUrit[1]",
-          invalidPohjakoulutusVaatimusKooriuri("pohjakoulutusvaatimuskouta_XX#1")
+          invalidPohjakoulutusVaatimusKoodiuri("pohjakoulutusvaatimuskouta_XX#1")
         )
       )
     )
@@ -898,8 +898,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         List(Liite1.copy(tyyppiKoodiUri = Some("puppu")), Liite2.copy(tyyppiKoodiUri = Some("liitetyypitamm_99#1")))
       ),
       Seq(
-        ValidationError("liitteet[0].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("puppu")),
-        ValidationError("liitteet[1].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("liitetyypitamm_99#1"))
+        ValidationError("liitteet[0].tyyppiKoodiUri", invalidLiitetyyppiKoodiuri("puppu")),
+        ValidationError("liitteet[1].tyyppiKoodiUri", invalidLiitetyyppiKoodiuri("liitetyypitamm_99#1"))
       )
     )
   }
@@ -924,7 +924,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")))),
       "valintakokeet[0].tyyppiKoodiUri",
-      invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#1")
+      invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#1")
     )
   }
 
@@ -1152,7 +1152,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       hk,
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteeterammatillinenerityisopetus_66#1", HakukohdeAmmErityisopetusKoodisto.toString)
+      invalidHakukohdeKoodiuri("hakukohteeterammatillinenerityisopetus_66#1", HakukohdeAmmErityisopetusKoodisto.toString)
     )
   }
 
@@ -1166,7 +1166,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       ),
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", HakukohdePoJalkYhteishakuKoodisto.toString)
+      invalidHakukohdeKoodiuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", HakukohdePoJalkYhteishakuKoodisto.toString)
     )
   }
 

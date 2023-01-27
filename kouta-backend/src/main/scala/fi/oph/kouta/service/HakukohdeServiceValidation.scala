@@ -86,7 +86,7 @@ class HakukohdeServiceValidation(
             koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, _),
             path,
             vCtx,
-            invalidPohjakoulutusVaatimusKooriuri(koodiUri)
+            invalidPohjakoulutusVaatimusKoodiuri(koodiUri)
           )
       ),
       assertFalse(
@@ -245,7 +245,7 @@ class HakukohdeServiceValidation(
             koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, _),
             s"$path.tyyppiKoodiUri",
             vCtx,
-            invalidLiitetyyppiKooriuri(koodiUri)
+            invalidLiitetyyppiKoodiuri(koodiUri)
           )
       ),
       validateIfJulkaistu(
@@ -621,7 +621,7 @@ class HakukohdeServiceValidation(
                           ),
                           "hakukohdeKoodiUri",
                           vCtx,
-                          invalidHakukohdeKooriuri(koodiUri, koodisto.toString)
+                          invalidHakukohdeKoodiuri(koodiUri, koodisto.toString)
                         )
                     )
                   )

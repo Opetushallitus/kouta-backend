@@ -641,7 +641,7 @@ package object domain {
               koodistoCheckFunc,
               s"$path.tyyppiKoodiUri",
               vCtx,
-              invalidValintakoeTyyppiKooriuri(koodiUri)
+              invalidValintakoeTyyppiKoodiuri(koodiUri)
             )
         )
       )

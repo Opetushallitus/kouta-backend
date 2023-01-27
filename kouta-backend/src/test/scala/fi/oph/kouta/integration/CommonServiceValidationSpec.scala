@@ -322,7 +322,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       Valintakoe(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")),
       Tallennettu,
       expected =
-        Seq(ValidationError("path.tyyppiKoodiUri", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#1")))
+        Seq(ValidationError("path.tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#1")))
     )
   }
 

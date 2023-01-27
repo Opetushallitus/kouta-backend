@@ -168,7 +168,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
       koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
       "path",
       validationContext,
-      invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")
+      invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_1#1")
     )
 
   "Koodisto validation" should "succeed when valid koodiUri" in {
@@ -178,7 +178,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
 
   it should "fail when invalid koodiUri" in {
     when(koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
-    doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_1#1")))
+    doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_1#1")))
   }
 
   it should "fail when koodiUri query failed" in {
