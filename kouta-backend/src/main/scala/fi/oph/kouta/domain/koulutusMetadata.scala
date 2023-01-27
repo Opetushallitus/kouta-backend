@@ -599,7 +599,7 @@ case class AmmatillinenMuuKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
+) extends KoulutusMetadata with LaajuusSingle
 
 case class YliopistoKoulutusMetadata(
     tyyppi: Koulutustyyppi = Yo,
