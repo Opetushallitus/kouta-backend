@@ -1103,10 +1103,11 @@ case class MuuToteutusMetadata(tyyppi: Koulutustyyppi = Muu,
                                        lisatietoaHakeutumisesta: Kielistetty = Map(),
                                        lisatietoaValintaperusteista: Kielistetty = Map(),
                                        hakuaika: Option[Ajanjakso] = None,
+                                       aloituspaikat: Option[Int] = None,
                                        isMuokkaajaOphVirkailija: Option[Boolean] = None,
                                        hasJotpaRahoitus: Option[Boolean] = None,
                                        isTaydennyskoulutus: Boolean = false,
-                                       isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata with LaajuusMinMax {
+                                       isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata with LaajuusMinMax {
 
   override def allowSorakuvaus: Boolean = false
 }
