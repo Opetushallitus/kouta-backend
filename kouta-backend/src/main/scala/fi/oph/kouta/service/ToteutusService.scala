@@ -28,7 +28,7 @@ object ToteutusService
       OrganisaatioServiceImpl,
       KoulutusService,
       LokalisointiClient,
-      KoodistoKaannosClient,
+      CachedKoodistoClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ToteutusServiceValidation
@@ -52,7 +52,7 @@ class ToteutusService(
     val organisaatioService: OrganisaatioService,
     koulutusService: KoulutusService,
     lokalisointiClient: LokalisointiClient,
-    koodistoClient: KoodistoKaannosClient,
+    koodistoClient: CachedKoodistoClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation
