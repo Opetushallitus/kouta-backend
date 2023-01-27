@@ -238,21 +238,21 @@ object Validations {
     msg = s"Opetuksen koulutuksenAlkamiskausi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKausiKoodiuri"
   )
-  def invalidHakukohdeKooriuri(koodiUri: String, koodisto: String): ErrorMessage = ErrorMessage(
+  def invalidHakukohdeKoodiuri(koodiUri: String, koodisto: String): ErrorMessage = ErrorMessage(
     msg = s"Hakukohde-koodiuria $koodiUri ei löydy koodistosta $koodisto, tai ei ole voimassa",
-    id = "invalidHakukohdeKooriuri"
+    id = "invalidHakukohdeKoodiuri"
   )
-  def invalidPohjakoulutusVaatimusKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+  def invalidPohjakoulutusVaatimusKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Pohjakoulutusvaatimus-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
-    id = "invalidPohjakoulutusVaatimusKooriuri"
+    id = "invalidPohjakoulutusVaatimusKoodiuri"
   )
-  def invalidLiitetyyppiKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+  def invalidLiitetyyppiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Liitetyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
-    id = "invalidLiitetyyppiKooriuri"
+    id = "invalidLiitetyyppiKoodiuri"
   )
-  def invalidValintakoeTyyppiKooriuri(koodiUri: String): ErrorMessage = ErrorMessage(
+  def invalidValintakoeTyyppiKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Valintakoetyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
-    id = "invalidValintakoeTyyppiKooriuri"
+    id = "invalidValintakoeTyyppiKoodiuri"
   )
   def invalidOppiaineKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Oppiaine-koodiuria $koodiUri ei löydy, tai ei ole voimassa",

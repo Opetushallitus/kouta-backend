@@ -8,7 +8,8 @@ import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.service.ValintaperusteServiceValidation
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
-import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty, invalidValintakoeTyyppiKooriuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg}
+import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty,
+  invalidValintakoeTyyppiKoodiuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg}
 import org.scalatest.Assertion
 
 import java.util.UUID
@@ -104,8 +105,8 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
         )
       ),
       Seq(
-        ValidationError("valintakokeet[0].tyyppiKoodiUri", invalidValintakoeTyyppiKooriuri("puppu")),
-        ValidationError("valintakokeet[1].tyyppiKoodiUri", invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#99"))
+        ValidationError("valintakokeet[0].tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("puppu")),
+        ValidationError("valintakokeet[1].tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#99"))
       )
     )
   }

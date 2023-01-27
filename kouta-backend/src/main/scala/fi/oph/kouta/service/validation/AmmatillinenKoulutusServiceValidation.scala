@@ -3,7 +3,7 @@ package fi.oph.kouta.service.validation
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
 import fi.oph.kouta.client.{EPerusteKoodiClient, CachedKoodistoClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.service.{KoulutusKoodiValidator, ValidatingSubService}
+import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
@@ -13,7 +13,7 @@ object AmmatillinenKoulutusServiceValidation
 class AmmatillinenKoulutusServiceValidation(
     val koodistoClient: CachedKoodistoClient,
     ePerusteKoodiClient: EPerusteKoodiClient
-) extends KoulutusKoodiValidator with ValidatingSubService[Koulutus] {
+) extends KoodistoValidator with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
     val koulutusDiffResolver = KoulutusDiffResolver(koulutus,oldKoulutus)
     val upperLevelErrors = koulutus.koulutustyyppi match {
@@ -101,11 +101,12 @@ class AmmatillinenKoulutusServiceValidation(
           case m: AmmatillinenMuuKoulutusMetadata =>
             and(
               assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx),
-              validateOpintojenLaajuusyksikkoAndNumero(
+              validateOpintojenLaajuusYksikko(
                 m.opintojenLaajuusyksikkoKoodiUri,
                 koulutusDiffResolver.hasLaajuusyksikkoChanged(),
+                vCtx),
+              validateOpintojenLaajuusNumero(
                 m.opintojenLaajuusNumero,
-                true,
                 vCtx
               )
             )

@@ -37,7 +37,7 @@ class ValintaperusteServiceValidation(
         vpDiffResolver.newHakutapaKoodiUri(),
         koodiUri =>
             assertKoodistoQueryResult(
-              koodiUri,
+            koodiUri,
             koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, _),
               "hakutapaKoodiUri",
               vCtx,

@@ -353,11 +353,11 @@ class KoulutusServiceValidation(
         and(
           assertEmpty(m.lisatiedot, "metadata.lisatiedot"),
           validateIfNonEmpty(m.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin", assertValidUrl _),
-          validateOpintojenLaajuusyksikkoAndNumero(
-            m.opintojenLaajuusyksikkoKoodiUri,
+          validateOpintojenLaajuusYksikko(m.opintojenLaajuusyksikkoKoodiUri,
             koulutusDiffResolver.hasLaajuusyksikkoChanged(),
+            validationContext),
+          validateOpintojenLaajuusNumero(
             m.opintojenLaajuusNumero,
-            true,
             validationContext
           ),
           validateIfJulkaistu(
@@ -694,11 +694,10 @@ class KoulutusServiceValidation(
   ): IsValid =
     and(
       validateVapaaSivistystyoKoulutus(validationContext, koulutusDiffResolver, metadata),
-      validateOpintojenLaajuusyksikkoAndNumero(
-        metadata.opintojenLaajuusyksikkoKoodiUri,
-        koulutusDiffResolver.hasLaajuusyksikkoChanged(),
+      validateOpintojenLaajuusYksikko(metadata.opintojenLaajuusyksikkoKoodiUri,
+        koulutusDiffResolver.hasLaajuusyksikkoChanged(), validationContext),
+      validateOpintojenLaajuusNumero(
         metadata.opintojenLaajuusNumero,
-        true,
         validationContext
       )
     )

@@ -37,7 +37,8 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     if (koodiUrit.toSet != koulutusalaKoodiUrit(oldMetadata()).toSet) koodiUrit else Seq()
   }
 
-  def hasLaajuusyksikkoChanged(): Boolean = opintojenLaajuusyksikkoKoodiUri(koulutus.metadata) != opintojenLaajuusyksikkoKoodiUri(oldMetadata())
+  def hasLaajuusyksikkoChanged(): Boolean =
+    opintojenLaajuusyksikkoKoodiUri(koulutus.metadata) != opintojenLaajuusyksikkoKoodiUri(oldMetadata())
 
   def newOpinnonTyyppiKoodiUri(): Option[String] = {
     val koodiUri = opinnonTyyppiKoodiUri(koulutus.metadata)
@@ -66,7 +67,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
 
   def isAvoinKkChanged(): Boolean = oldKoulutus match {
     case Some(old: Koulutus) => koulutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
-    case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
   def getRemovedTarjoajat(): List[OrganisaatioOid] =
@@ -105,17 +106,9 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
 
   private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
     metadata match {
-      case Some(m: KorkeakoulutusKoulutusMetadata)       => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: AmmatillinenMuuKoulutusMetadata)      => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: TuvaKoulutusMetadata)                 => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: TelmaKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: LukioKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: VapaaSivistystyoKoulutusMetadata)     => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: AikuistenPerusopetusKoulutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: KkOpintojaksoKoulutusMetadata)        => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: KkOpintokokonaisuusKoulutusMetadata)  => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: ErikoistumiskoulutusMetadata)         => m.opintojenLaajuusyksikkoKoodiUri
-      case _                                             => None
+      case Some(m: LaajuusSingle) => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: LaajuusMinMax) => m.opintojenLaajuusyksikkoKoodiUri
+      case _                      => None
     }
 
   private def opinnonTyyppiKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =

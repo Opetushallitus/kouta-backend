@@ -157,6 +157,9 @@ class ToteutusServiceValidation(
                   )
                 case m: TaiteenPerusopetusToteutusMetadata =>
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
+                case m: MuuToteutusMetadata => and(
+                  assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
                     vCtx,
@@ -689,30 +692,8 @@ class ToteutusServiceValidation(
                                                   toteutusDiffResolver: ToteutusDiffResolver
   ): IsValid =
     and(
-      validateIfDefined[String](
-        toteutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
-        uri =>
-          assertKoodistoQueryResult(
-            uri,
-            koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, _),
-            "metadata.opintojenLaajuusyksikkoKoodiUri",
-            vCtx,
-            invalidOpintojenLaajuusyksikkoKoodiuri(uri)
-          )
-      ),
-      validateIfDefined[Double](
-        m.opintojenLaajuusNumeroMin,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMin")
-      ),
-      validateIfDefined[Double](
-        m.opintojenLaajuusNumeroMax,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
-      ),
-      validateMinMax(
-        m.opintojenLaajuusNumeroMin,
-        m.opintojenLaajuusNumeroMax,
-        s"metadata.opintojenLaajuusNumeroMin"
-      ),
+      assertOpintojenLaajuusyksikkoKoodiUri(toteutusDiffResolver.changedOpintojenLaajuusyksikkoKoodiUri(), vCtx),
+      validateLaajuusMinMax(m.opintojenLaajuusNumeroMin, m.opintojenLaajuusNumeroMax),
       validateIfNonEmpty[String](
         toteutusDiffResolver.newTaiteenalaKoodiUrit(),
         "metadata.taiteenalaKoodiUrit",
