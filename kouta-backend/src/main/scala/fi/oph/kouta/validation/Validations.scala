@@ -146,10 +146,21 @@ object Validations {
     msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
   )
 
+  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]) = ErrorMessage(
+    id = "cannotRemoveTarjoajaFromAvoinKorkeakoulutus",
+    msg = s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat.mkString(", ")}."
+  )
+
   val invalidIsAvoinKorkeakoulutusIntegrity =
     ErrorMessage(
       id = "invalidIsAvoinKorkeakoulutusIntegrity",
       msg = "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
+    )
+
+  def invalidJarjestajaForAvoinKorkeakoulutus(invalidJarjestajat: List[OrganisaatioOid]) =
+    ErrorMessage(
+      id = "invalidJarjestajaForAvoinKorkeakoulutus",
+      msg = s"Toteutukselle ei voi lisätä järjestäjiksi seuraavia organisaatioita, joita ei ole lisätty koulutuksen järjestäjiksi: ${invalidJarjestajat.mkString(", ")}."
     )
 
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(

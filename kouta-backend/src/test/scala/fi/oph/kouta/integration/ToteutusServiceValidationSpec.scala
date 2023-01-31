@@ -247,8 +247,14 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.130"))).thenAnswer(Some(AmmMuuKoulutus.copy(tila = Julkaistu)))
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.131"))).thenAnswer(Some(YoKoulutus.copy(tila = Julkaistu)))
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.132")))
-      .thenAnswer(Some(KkOpintojaksoKoulutus.copy(tila = Julkaistu)))
+      .thenAnswer(Some(KkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.132")), tila = Julkaistu)))
     when(koulutusDao.get(kkOpintokokonaisuusKoulutus.oid.get)).thenAnswer(Some(kkOpintokokonaisuusKoulutus))
+    // Avoin kk related default mocks
+    when(koulutusDao.listTarjoajaOids(KoulutusOid("1.2.246.562.13.133"))).thenReturn(Seq(YoOid, HkiYoOid))
+    when(koulutusDao.listTarjoajaOids(KoulutusOid("1.2.246.562.13.132"))).thenReturn(Seq(YoOid, HkiYoOid))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(HkiYoOid)).thenAnswer(Seq(HkiYoOid), Seq(Yo))
+
     when(koulutusDao.get(koulutusOid1))
       .thenAnswer(
         Some(AmmKoulutus.copy(oid = Some(koulutusOid1), koulutuksetKoodiUri = Seq(invalidKoulutuksetKoodiUri)))
@@ -998,8 +1004,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(kkOpintojaksoToteutus.koulutusOid))
       .thenReturn(
         Some(
-          KkOpintojaksoKoulutus.copy(metadata =
-            Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
+          KkOpintojaksoKoulutus.copy(
+            oid = Some(kkOpintojaksoToteutus.koulutusOid),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
           )
         )
       )
@@ -1018,22 +1025,78 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail with isAvoinKorkeakoulutus = false when corresponding koulutus value is true" in {
-    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(metadata =
-      Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(
+      tarjoajat = List(YoOid),
+      metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(false)))
     )
     when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
       .thenReturn(
         Some(
-          KkOpintojaksoKoulutus.copy(metadata =
-            Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          KkOpintojaksoKoulutus.copy(
+            oid = Some(opintojaksoToteutusWithOid.koulutusOid),
+            tarjoajat = List(YoOid),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
           )
         )
       )
+    when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq(YoOid))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenReturn((Seq(YoOid), Seq(Yo)))
 
     failsValidation(
-      kkOpintojaksoToteutus,
+      opintojaksoToteutusWithOid,
       "metadata.isAvoinKorkeakoulutus",
       invalidIsAvoinKorkeakoulutusIntegrity
+    )
+  }
+
+  it should "fail validation if avoin kk -toteutus has different jarjestaja than what is allowed in koulutus" in {
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(
+      tarjoajat = List(AmkOid, YoOid),
+      metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+    )
+    when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
+      .thenReturn(
+        Some(
+          KkOpintojaksoKoulutus.copy(
+            oid = Some(opintojaksoToteutusWithOid.koulutusOid),
+            tarjoajat = List(YoOid),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          )
+        )
+      )
+    when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq(YoOid))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(AmkOid)).thenAnswer(Seq(AmkOid), Seq(Amk))
+
+    failsValidation(
+      opintojaksoToteutusWithOid,
+      "tarjoajat",
+      invalidJarjestajaForAvoinKorkeakoulutus(List(AmkOid))
+    )
+  }
+
+  it should "fail validation if avoin kk -toteutus does not have any allowed tarjoajat" in {
+    val opintojaksoToteutusWithOid = kkOpintojaksoToteutus.copy(
+      tarjoajat = List(AmkOid, YoOid),
+      metadata = Some(KkOpintojaksoToteutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+    )
+    when(koulutusDao.get(opintojaksoToteutusWithOid.koulutusOid))
+      .thenReturn(
+        Some(
+          KkOpintojaksoKoulutus.copy(
+            oid = Some(opintojaksoToteutusWithOid.koulutusOid),
+            tarjoajat = List(),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          )
+        )
+      )
+    when(koulutusDao.listTarjoajaOids(opintojaksoToteutusWithOid.koulutusOid)).thenReturn(Seq())
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo))
+
+    failsValidation(
+      opintojaksoToteutusWithOid,
+      "tarjoajat",
+      invalidJarjestajaForAvoinKorkeakoulutus(List(AmkOid, YoOid))
     )
   }
 
@@ -1057,6 +1120,21 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         oppilaitostyypitForAvoinKorkeakoulutus
       )
     ).thenReturn(Seq())
+
+    when(koulutusDao.get(kkOpintojaksoToteutus.koulutusOid))
+      .thenAnswer(
+        Some(
+          KkOpintojaksoKoulutus.copy(
+            oid = Some(kkOpintojaksoToteutus.koulutusOid),
+            tarjoajat = List(YoOid, KuopionKansalaisopistoOid),
+            metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true)))
+          )
+        )
+      )
+
+    when(koulutusDao.listTarjoajaOids(kkOpintojaksoToteutus.koulutusOid)).thenReturn(Seq(YoOid, KuopionKansalaisopistoOid))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(YoOid)).thenAnswer(Seq(YoOid), Seq(Yo))
+    when(organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(KuopionKansalaisopistoOid)).thenAnswer(Seq(KuopionKansalaisopistoOid), Seq(Muu))
 
     val oldOpintojaksoToteutus = kkOpintojaksoToteutus.copy(oid = Some(ToteutusOid("1.2.246.562.17.123")))
     val newOpintojaksoToteutus = oldOpintojaksoToteutus.copy(
