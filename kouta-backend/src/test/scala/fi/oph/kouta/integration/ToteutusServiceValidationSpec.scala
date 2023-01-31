@@ -16,7 +16,7 @@ import fi.oph.kouta.service.{
 }
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
-import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.Validations.{invalidKielistetty, _}
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import org.scalatest.Assertion
 import org.scalatest.matchers.must.Matchers.contain
@@ -849,6 +849,19 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  "AmmOpettajaToteutus validation" should "fail if invalid aloituspaikkakuvaus" in {
+    failsValidation(
+      ammOpettajaToteutus.copy(metadata =
+        Some(
+          AmmOpettajaToteutuksenMetatieto
+            .copy(aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus"))
+        )
+      ),
+      "metadata.aloituspaikkakuvaus",
+      invalidKielistetty(Seq(Sv))
+    )
+  }
+
   "YoOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
     failsValidation(
       yoOpettajaToteutus.copy(metadata =
@@ -859,11 +872,34 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  "YoOpettajaToteutus validation" should "fail if invalid aloituspaikkakuvaus" in {
+    failsValidation(
+      yoOpettajaToteutus.copy(metadata =
+        Some(
+          AmmOpettajaToteutuksenMetatieto
+            .copy(tyyppi = OpePedagOpinnot, aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus"))
+        )
+      ),
+      "metadata.aloituspaikkakuvaus",
+      invalidKielistetty(Seq(Sv))
+    )
+  }
+
   "TuvaToteutus validation" should "fail if negative aloituspaikat" in {
     failsValidation(
       tuvaToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
       "metadata.aloituspaikat",
       notNegativeMsg
+    )
+  }
+
+  "TuvaToteutus validation" should "fail if invalid aloituspaikkakuvaus" in {
+    failsValidation(
+      tuvaToteutus.copy(metadata =
+        Some(TuvaToteutuksenMetatieto.copy(aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")))
+      ),
+      "metadata.aloituspaikkakuvaus",
+      invalidKielistetty(Seq(Sv))
     )
   }
 
@@ -882,6 +918,16 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       telmaToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
       "metadata.aloituspaikat",
       notNegativeMsg
+    )
+  }
+
+  "TelmaToteutus validation" should "fail if invalid aloituspaikkakuvaus" in {
+    failsValidation(
+      telmaToteutus.copy(metadata =
+        Some(TelmaToteutuksenMetatieto.copy(aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")))
+      ),
+      "metadata.aloituspaikkakuvaus",
+      invalidKielistetty(Seq(Sv))
     )
   }
 
@@ -914,7 +960,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           AmmatillinenMuuToteutusMetadata(
             hakulomakeLinkki = Map(Fi -> "puppu fi", Sv -> "puppu sv"),
             hakuaika = Some(ajanjakso),
-            aloituspaikat = Some(-1)
+            aloituspaikat = Some(-1),
+            aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")
           )
         )
       ),
@@ -922,7 +969,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("metadata.hakulomakeLinkki.fi", invalidUrl("puppu fi")),
         ValidationError("metadata.hakulomakeLinkki.sv", invalidUrl("puppu sv")),
         ValidationError("metadata.hakuaika", invalidAjanjaksoMsg(ajanjakso)),
-        ValidationError("metadata.aloituspaikat", notNegativeMsg)
+        ValidationError("metadata.aloituspaikat", notNegativeMsg),
+        ValidationError("metadata.aloituspaikkakuvaus", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -983,11 +1031,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu, koulutustyyppi = metadataWithAloituspaikat.tyyppi)))
     val testedToteutus =
       tpoToteutus.copy(koulutusOid = koulutusOid, sorakuvausId = None, metadata = Some(metadataWithAloituspaikat))
-    failsValidation(testedToteutus, "metadata.aloituspaikat", notMissingMsg(metadataWithAloituspaikat.aloituspaikat))
+    val validationErrors = List(
+      { ValidationError("metadata.aloituspaikat", notMissingMsg(metadataWithAloituspaikat.aloituspaikat)) },
+      { ValidationError("metadata.aloituspaikkakuvaus", notEmptyMsg) }
+    )
+    failsValidation(testedToteutus, validationErrors)
   }
 
   it should "fail if aloituspaikat given for koulutustyyppi not using aloituspaikat" in {
-    failValidationWhenAloituspaikatGiven(TaiteenPerusopetusToteutusMetatieto.copy(aloituspaikat = Some(10)))
+    failValidationWhenAloituspaikatGiven(
+      TaiteenPerusopetusToteutusMetatieto.copy(
+        aloituspaikat = Some(10),
+        aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")
+      )
+    )
   }
 
   "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {
