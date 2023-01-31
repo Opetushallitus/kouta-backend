@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -148,14 +148,14 @@ class ToteutusServiceValidation(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintojaksolla ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
-                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
+                    validateAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case m: KkOpintokokonaisuusToteutusMetadata =>
                   and(
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     // Opintokokonaisuudella ei ole ammattinimikkeitä
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
-                    validateIsAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
+                    validateAvoinKorkeakoulutusIntegrity(koulutus, toteutus)
                   )
                 case m: TaiteenPerusopetusToteutusMetadata =>
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
@@ -175,15 +175,39 @@ class ToteutusServiceValidation(
     Seq(commonErrors, koulutustyyppiSpecificErrors).flatten.distinct
   }
 
-  private def validateIsAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
-    validateIfTrue(
-      koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
-        assertTrue(
-          toteutus.isAvoinKorkeakoulutus() == koulutus.get.isAvoinKorkeakoulutus(),
-          "metadata.isAvoinKorkeakoulutus",
-          invalidIsAvoinKorkeakoulutusIntegrity
-        )
-      }
+  private def validateAvoinKorkeakoulutusIntegrity(koulutus: Option[Koulutus], toteutus: Toteutus) = {
+    val isToteutusAvoinKorkeakoulutus = toteutus.isAvoinKorkeakoulutus()
+    val (tarjoajat, jarjestajat) = if (isToteutusAvoinKorkeakoulutus) {
+      (koulutusDAO.listTarjoajaOids(koulutus.get.oid.get), toteutus.tarjoajat)
+    } else {
+      (Seq(), List())
+    }
+
+    val invalidJarjestajat = if (tarjoajat.isEmpty) {
+      jarjestajat
+    } else {
+      val allTarjoajaParentAndChildOids = tarjoajat.flatMap(tarjoaja => {
+        organisaatioService.getAllChildAndParentOidsWithKoulutustyypitFlat(tarjoaja)._1
+      })
+
+      jarjestajat.filter(jarjestaja => !allTarjoajaParentAndChildOids.contains(jarjestaja))
+    }
+
+    and(
+      validateIfTrue(
+        koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
+          assertTrue(
+            isToteutusAvoinKorkeakoulutus == koulutus.get.isAvoinKorkeakoulutus(),
+            "metadata.isAvoinKorkeakoulutus",
+            invalidIsAvoinKorkeakoulutusIntegrity
+          )
+        }
+      ),
+      assertTrue(
+        invalidJarjestajat.isEmpty,
+        "tarjoajat",
+        invalidJarjestajaForAvoinKorkeakoulutus(invalidJarjestajat)
+      )
     )
   }
 

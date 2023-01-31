@@ -218,6 +218,65 @@ class ToteutusSpec extends KoutaIntegrationSpec
     }
   }
 
+  it should "fail to store julkaistu opintokokonaisuus if attached opintojakso is not julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid = put(julkaistuOpintojaksoKoulutus)
+    val tallennettuKkOpintojaksoToteutus = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid), tila = Tallennettu)
+    val opintojaksoToteutusOid = put(tallennettuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val julkaistuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid),
+      metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))))
+    put(ToteutusPath, bytes(julkaistuKkOpintokokonaisuusToteutus), defaultHeaders) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu""")
+      body should include(s"""toteutukset":["${opintojaksoToteutusOid}"]""")
+    }
+  }
+
+  it should "fail to update opintokokonaisuus tila to julkaistu if attached opintojakso is not julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid = put(julkaistuOpintojaksoKoulutus)
+    val tallennettuKkOpintojaksoToteutus = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid), tila = Tallennettu)
+    val opintojaksoToteutusOid = put(tallennettuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val tallennettuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      tila = Tallennettu,
+      koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid),
+      metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))))
+    val tallennettuKkOpintokokonaisuusToteutusOid = put(tallennettuKkOpintokokonaisuusToteutus)
+    val lastModified = get(tallennettuKkOpintokokonaisuusToteutusOid, tallennettuKkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(tallennettuKkOpintokokonaisuusToteutusOid))))
+    post(
+      ToteutusPath,
+      bytes(tallennettuKkOpintokokonaisuusToteutus.copy(oid = Some(ToteutusOid(tallennettuKkOpintokokonaisuusToteutusOid)), koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid), tila = Julkaistu)),
+      headersIfUnmodifiedSince(lastModified)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu""")
+      body should include(s"""toteutukset":["${opintojaksoToteutusOid}"]""")
+    }
+  }
+
+  it should "succeed to update opintokokonaisuus tila to julkaistu when attached opintojakso is julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid = put(julkaistuOpintojaksoKoulutus)
+    val julkaistuKkOpintojaksoToteutus = JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid))
+    val opintojaksoToteutusOid = put(julkaistuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val julkaistuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid),
+      metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))))
+    put(ToteutusPath, bytes(julkaistuKkOpintokokonaisuusToteutus), defaultHeaders) {
+      status should equal(200)
+    }
+  }
+
   "Update toteutus" should "update toteutus" in {
     val oid = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
