@@ -1,9 +1,8 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.config.KoutaCommonConfigFactory
-import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.mocks.SpecWithMocks
 
 class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
@@ -32,7 +31,6 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
         AmmOsaamisala,
         AmmMuu,
         Lk,
-        Muu,
         Tuva,
         Telma,
         VapaaSivistystyoOpistovuosi,
@@ -42,7 +40,12 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
       )
   }
   it should "return a flat list of oppilaitostyyppi present in parents and children 2" in {
-    organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid)._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoistumiskoulutus)
+    organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid)._2 should contain theSameElementsAs List(
+      Yo,
+      KkOpintojakso,
+      KkOpintokokonaisuus,
+      Erikoistumiskoulutus
+    )
   }
 
   it should "return a flat list of oppilaitostyyppi present in parents and children 3" in {
@@ -53,7 +56,6 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
         AmmOsaamisala,
         AmmMuu,
         Lk,
-        Muu,
         Tuva,
         Telma,
         VapaaSivistystyoOpistovuosi,
@@ -65,18 +67,40 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
 
   it should "return correct oppilaitostyypit for koulutustoimija when requesting only children" in {
     organisaatioService.getAllChildOidsAndKoulutustyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))._2 should
-      contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Erikoistumiskoulutus, OpePedagOpinnot, Lk, Muu, Tuva,
-      AikuistenPerusopetus, TaiteenPerusopetus)
+      contain theSameElementsAs List(
+        Yo,
+        KkOpintojakso,
+        KkOpintokokonaisuus,
+        Erikoislaakari,
+        Erikoistumiskoulutus,
+        OpePedagOpinnot,
+        Lk,
+        Tuva,
+        AikuistenPerusopetus,
+        TaiteenPerusopetus
+      )
   }
 
   it should "return correct oppilaitostyypit for koulutustoimija when requesting both parents and children" in {
     organisaatioService
       .getAllChildAndParentOidsWithKoulutustyypitFlat(OrganisaatioOid("1.2.246.562.10.53814745062"))
-      ._2 should contain theSameElementsAs List(Yo, KkOpintojakso, KkOpintokokonaisuus, Erikoislaakari, Erikoistumiskoulutus, OpePedagOpinnot, Lk, Muu, Tuva,
-      AikuistenPerusopetus, TaiteenPerusopetus)
+      ._2 should contain theSameElementsAs List(
+      Yo,
+      KkOpintojakso,
+      KkOpintokokonaisuus,
+      Erikoislaakari,
+      Erikoistumiskoulutus,
+      OpePedagOpinnot,
+      Lk,
+      Tuva,
+      AikuistenPerusopetus,
+      TaiteenPerusopetus
+    )
   }
 
   "findUnknownOrganisaatioOidsFromHierarkia" should "return correct organisaatioOids" in {
-    organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))) should equal(Right(Set(OrganisaatioOid("1.2.246.562.10.121212121212"))))
+    organisaatioService.findUnknownOrganisaatioOidsFromHierarkia(
+      Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))
+    ) should equal(Right(Set(OrganisaatioOid("1.2.246.562.10.121212121212"))))
   }
 }

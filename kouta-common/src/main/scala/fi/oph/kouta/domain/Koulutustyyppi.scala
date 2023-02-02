@@ -75,18 +75,16 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   )
 
   def oppilaitostyyppi2koulutustyyppi: Map[String, Seq[Koulutustyyppi]] = Map(
-    "oppilaitostyyppi_01#1" -> Seq(TaiteenPerusopetus, Muu), //Taiteen perusopetuksen oppilaitokset (ei musiikki)
-    "oppilaitostyyppi_11#1" -> Seq(Muu, Tuva, AikuistenPerusopetus, TaiteenPerusopetus), //Peruskoulut
+    "oppilaitostyyppi_01#1" -> Seq(TaiteenPerusopetus), //Taiteen perusopetuksen oppilaitokset (ei musiikki)
+    "oppilaitostyyppi_11#1" -> Seq(Tuva, AikuistenPerusopetus, TaiteenPerusopetus), //Peruskoulut
     "oppilaitostyyppi_12#1" -> Seq(
-      Muu,
       Tuva,
       AikuistenPerusopetus,
       TaiteenPerusopetus
     ), //Peruskouluasteen erityiskoulut
-    "oppilaitostyyppi_15#1" -> Seq(Lk, Muu, Tuva, AikuistenPerusopetus, TaiteenPerusopetus), //Lukiot
+    "oppilaitostyyppi_15#1" -> Seq(Lk, Tuva, AikuistenPerusopetus, TaiteenPerusopetus), //Lukiot
     "oppilaitostyyppi_19#1" -> Seq(
       Lk,
-      Muu,
       Tuva,
       AikuistenPerusopetus,
       TaiteenPerusopetus
@@ -97,7 +95,6 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmOsaamisala,
       AmmMuu,
       Lk,
-      Muu,
       Tuva,
       Telma,
       VapaaSivistystyoOpistovuosi,
@@ -155,14 +152,12 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmOsaamisala,
       AmmMuu,
       TaiteenPerusopetus,
-      Muu
     ), //Musiikkioppilaitokset
     "oppilaitostyyppi_62#1" -> Seq(
       Amm,
       AmmTutkinnonOsa,
       AmmOsaamisala,
       AmmMuu,
-      Muu,
       Tuva,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
@@ -177,7 +172,6 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmOsaamisala,
       AmmMuu,
       Lk,
-      Muu,
       Tuva,
       Telma,
       VapaaSivistystyoOpistovuosi,
@@ -188,7 +182,6 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     "oppilaitostyyppi_64#1" -> Seq(
       Amm,
       Lk,
-      Muu,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
       AikuistenPerusopetus,
@@ -202,7 +195,6 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Lk,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      Muu
     ), //Opintokeskukset
     "oppilaitostyyppi_66#1" -> Seq(
       Amm,
@@ -212,11 +204,10 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Lk,
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
-      Muu
     ), //Kesäyliopistot
-    "oppilaitostyyppi_91#1" -> Seq(Muu), //Kirjeoppilaitokset
-    "oppilaitostyyppi_92#1" -> Seq(Muu), //Neuvontajärjestöt
-    "oppilaitostyyppi_93#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Muu), //Muut koulutuksen järjestäjät
+    "oppilaitostyyppi_91#1" -> Seq(), //Kirjeoppilaitokset
+    "oppilaitostyyppi_92#1" -> Seq(), //Neuvontajärjestöt
+    "oppilaitostyyppi_93#1" -> Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu), //Muut koulutuksen järjestäjät
     "oppilaitostyyppi_99#1" -> Seq(
       Amm,
       AmmTutkinnonOsa,
@@ -225,9 +216,8 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       VapaaSivistystyoOpistovuosi,
       VapaaSivistystyoMuu,
       TaiteenPerusopetus,
-      Muu
     ), //Muut oppilaitokset
-    "oppilaitostyyppi_XX#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
+    "oppilaitostyyppi_xx#1" -> Seq(Muu) //Ei tiedossa (oppilaitostyyppi)
   )
 
   def valuesToSwaggerEnum(padStr: String = "      |        "): String =
