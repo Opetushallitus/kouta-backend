@@ -165,7 +165,6 @@ class ToteutusService(
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija),
                     opintojenLaajuusyksikkoKoodiUri = koulutus.get._1.metadata match {
                       case Some(kkOpintokokonaisuusKoulutusMetadata: KkOpintokokonaisuusKoulutusMetadata) =>
-                        println(kkOpintokokonaisuusKoulutusMetadata)
                         kkOpintokokonaisuusKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
                     }
                   ))
