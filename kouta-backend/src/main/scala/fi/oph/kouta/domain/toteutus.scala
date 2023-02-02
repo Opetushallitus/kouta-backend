@@ -2,7 +2,6 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid.{KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
-import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._

@@ -121,7 +121,7 @@ class ToteutusService(
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     t.metadata match {
-      case Some(metadata) =>
+      case Some(metadata: ToteutusMetadata) =>
         metadata match {
           case yoMetadata: YliopistoToteutusMetadata =>
             withMData(t, yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -175,6 +175,7 @@ class ToteutusService(
                   t,
                   taiteenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
                 )
+              case muuToteutusMetadata: MuuToteutusMetadata => withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case lukioMetadata: LukioToteutusMetadata =>
             withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -190,7 +191,6 @@ class ToteutusService(
             )
           case erikoislaakariToteutusMetadata: ErikoislaakariToteutusMetadata =>
             withMData(t, erikoislaakariToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
-          case muuToteutusMetadata: MuuToteutusMetadata => withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
         }
       case None => t.copy(metadata = None)
     }

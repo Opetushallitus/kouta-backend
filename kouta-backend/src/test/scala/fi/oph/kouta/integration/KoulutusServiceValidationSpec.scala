@@ -1322,7 +1322,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError(
           "metadata.opintojenLaajuusNumeroMax",
-          invalidKoulutusOpintojenLaajuusNumeroIntegrity(5, 15, Seq(opintokokonaisuusToteutusOid))
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(5), Some(15), Seq(opintokokonaisuusToteutusOid))
         )
       )
     )
@@ -1368,11 +1368,11 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError(
           "metadata.opintojenLaajuusNumeroMin",
-          invalidKoulutusOpintojenLaajuusNumeroIntegrity(10, 20, Seq(muuToteutusOid))
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(10), Some(20), Seq(muuToteutusOid))
         ),
         ValidationError(
           "metadata.opintojenLaajuusNumeroMax",
-          invalidKoulutusOpintojenLaajuusNumeroIntegrity(10, 20, Seq(muuToteutusOid))
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(10), Some(20), Seq(muuToteutusOid))
         )
       )
     )

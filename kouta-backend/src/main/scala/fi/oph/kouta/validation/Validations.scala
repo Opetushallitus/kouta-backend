@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
@@ -85,15 +85,32 @@ object Validations {
   )
 
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
-      laajuusMin: Double,
-      laajuusMax: Double,
+      laajuusMin: Option[Double],
+      laajuusMax: Option[Double],
       toteutukset: Seq[ToteutusOid]
   ): ErrorMessage = ErrorMessage(
     msg =
-      s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä ($laajuusMin - $laajuusMax)",
+      s"Ainakin yhdellä koulutukseen liitetyllä julkaistulla toteutuksella opintojen laajuus ei ole koulutuksella määritellyllä välillä (${laajuusMin
+        .getOrElse("")} - ${laajuusMax.getOrElse("")})",
     id = "invalidKoulutusOpintojenLaajuusNumeroIntegrity",
     meta = Some(Map("toteutukset" -> toteutukset))
   )
+
+  def invalidToteutusOpintojenLaajuusMin(koulutusLaajuusMin: Option[Double], toteutusLaajuusMin: Option[Double]) = {
+    ErrorMessage(
+      msg =
+        s"Toteutuksen laajuuden minimi ${toteutusLaajuusMin.getOrElse("")} on pienempi kuin koulutuksen laajuuden minimi ${koulutusLaajuusMin.getOrElse("")}",
+      id = "invalidToteutusOpintojenLaajuusMin"
+    )
+  }
+
+  def invalidToteutusOpintojenLaajuusMax(koulutusLaajuusMax: Option[Double], toteutusLaajuusMax: Option[Double]) = {
+    ErrorMessage(
+      msg = s"Toteutuksen laajuuden maksimi ${toteutusLaajuusMax
+        .getOrElse("")} on suurempi kuin koulutuksen laajuuden maksimi ${koulutusLaajuusMax.getOrElse("")}",
+      id = "invalidToteutusOpintojenLaajuusMax"
+    )
+  }
 
   def invalidToteutusOpintojenLaajuusyksikkoIntegrity(
       koulutusLaajuusyksikkoKoodiUri: Option[String],
@@ -148,19 +165,24 @@ object Validations {
 
   def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]) = ErrorMessage(
     id = "cannotRemoveTarjoajaFromAvoinKorkeakoulutus",
-    msg = s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat.mkString(", ")}."
+    msg =
+      s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat
+        .mkString(", ")}."
   )
 
   val invalidIsAvoinKorkeakoulutusIntegrity =
     ErrorMessage(
       id = "invalidIsAvoinKorkeakoulutusIntegrity",
-      msg = "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
+      msg =
+        "Toteutuksen voi tallentaa avoimena korkeakoulutuksena vain jos sen koulutus on myös avointa korkeakoulutusta."
     )
 
   def invalidJarjestajaForAvoinKorkeakoulutus(invalidJarjestajat: List[OrganisaatioOid]) =
     ErrorMessage(
       id = "invalidJarjestajaForAvoinKorkeakoulutus",
-      msg = s"Toteutukselle ei voi lisätä järjestäjiksi seuraavia organisaatioita, joita ei ole lisätty koulutuksen järjestäjiksi: ${invalidJarjestajat.mkString(", ")}."
+      msg =
+        s"Toteutukselle ei voi lisätä järjestäjiksi seuraavia organisaatioita, joita ei ole lisätty koulutuksen järjestäjiksi: ${invalidJarjestajat
+          .mkString(", ")}."
     )
 
   def invalidKieliKoodiUri(kieliField: String, koodiUri: String): ErrorMessage = ErrorMessage(
@@ -313,19 +335,25 @@ object Validations {
       s"Hakukohteen linja $linja ei ole sallittu. Linjan täytyy olla tyhjä (jolloin kyseessä yleislinja), tai vastata toteutuksen lukiopainotuksia tai erityis-koulutustehtäviä",
     id = "invalidHakukohteenLinja"
   )
-  def invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta(koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = ErrorMessage(
-    msg = s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on ${koulutustyyppi.getOrElse("").toString}",
+  def invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
+      koulutustyyppi: Option[Koulutustyyppi]
+  ): ErrorMessage = ErrorMessage(
+    msg =
+      s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on ${koulutustyyppi.getOrElse("").toString}",
     id = "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
-  def invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta: Boolean): ErrorMessage = ErrorMessage(
-    msg = s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
+  def invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
+      jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta: Boolean
+  ): ErrorMessage = ErrorMessage(
+    msg =
+      s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
     id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 
   def notInTheRangeMsg(min: Option[Double], max: Option[Double], givenValue: Option[Double]): ErrorMessage =
-    ErrorMessage(msg = s"$givenValue ei ole välillä min $min - max $max", id = "notInTheRangeMsg")
+    ErrorMessage(msg = s"$givenValue ei ole välillä ${min.getOrElse("")}–${max.getOrElse("")}", id = "notInTheRangeMsg")
 
   def invalidKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
     msg = s"Kielistetystä kentästä puuttuu arvo kielillä [${values.mkString(",")}]",
@@ -404,7 +432,8 @@ object Validations {
     id = "nameNotAllowedForFixedlyNamedEntity"
   )
   def illegalOpintojenLaajuusNumero(expectedValue: Double): ErrorMessage = ErrorMessage(
-    msg = s"Opintojen laajuuden numeroarvon täytyy olla täsmälleen $expectedValue. Arvo asetetaan automaattisesti jos kenttä on tyhjä",
+    msg =
+      s"Opintojen laajuuden numeroarvon täytyy olla täsmälleen $expectedValue. Arvo asetetaan automaattisesti jos kenttä on tyhjä",
     id = "illegalOpintojenLaajuusNumero"
   )
   def integrityViolationMsg(entityDesc: String, relatedEntity: String): ErrorMessage =
@@ -655,7 +684,8 @@ object Validations {
 
   def validateIfDefined[T](value: Option[T], f: T => IsValid): IsValid = value.map(f(_)).getOrElse(NoErrors)
 
-  def validateIfDefinedAndTrue(value: Option[Boolean], f: IsValid): IsValid = value.map(validateIfTrue(_, f)).getOrElse(NoErrors)
+  def validateIfDefinedAndTrue(value: Option[Boolean], f: IsValid): IsValid =
+    value.map(validateIfTrue(_, f)).getOrElse(NoErrors)
 
   def validateIfDefinedOrModified[T](value: Option[T], oldValue: Option[T], f: T => IsValid): IsValid =
     (value, oldValue) match {

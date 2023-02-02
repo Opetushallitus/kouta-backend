@@ -880,11 +880,114 @@
       ],
       "kotipaikkaUri": "kunta_297",
       "children": [],
-      "aliOrganisaatioMaara": 4,
+      "aliOrganisaatioMaara": 0,
       "organisaatiotyypit": [
         "organisaatiotyyppi_02"
       ],
       "status": "AKTIIVINEN"
+    },
+    {
+      "aliOrganisaatioMaara": 1,
+      "alkuPvm": 694216800000,
+      "children": [
+        {
+          "aliOrganisaatioMaara": 0,
+          "alkuPvm": 694216800000,
+          "children": [],
+          "kieletUris": [
+            "oppilaitoksenopetuskieli_1#1"
+          ],
+          "kotipaikkaUri": "kunta_200",
+          "lyhytNimi": {
+            "fi": "Pohjoiskalotin koulutussäätiö",
+            "sv": "Pohjoiskalotin koulutussäätiö",
+            "en": "Pohjoiskalotin koulutussäätiö"
+          },
+          "match": true,
+          "nimi": {
+            "fi": "Pohjoiskalotin koulutussäätiö",
+            "sv": "Pohjoiskalotin koulutussäätiö",
+            "en": "Pohjoiskalotin koulutussäätiö"
+          },
+          "oid": "1.2.246.562.10.88417511545",
+          "oppilaitosKoodi": "30049",
+          "oppilaitostyyppi": "oppilaitostyyppi_xx#1",
+          "organisaatiotyypit": [
+            "organisaatiotyyppi_02"
+          ],
+          "parentOid": "1.2.246.562.10.2013120211542064151791",
+          "parentOidPath": "1.2.246.562.10.88417511545/1.2.246.562.10.2013120211542064151791/1.2.246.562.10.00000000001",
+          "status": "AKTIIVINEN",
+          "subRows": [],
+          "toimipistekoodi": "30049",
+          "tyypit": [
+            "organisaatiotyyppi_02"
+          ]
+        }
+      ],
+      "kieletUris": [
+        "oppilaitoksenopetuskieli_1#1"
+      ],
+      "kotipaikkaUri": "kunta_999",
+      "lyhytNimi": {
+        "fi": "Pohjoiskalotin koulutussäätiö",
+        "sv": "Pohjoiskalotin koulutussäätiö",
+        "en": "Pohjoiskalotin koulutussäätiö"
+      },
+      "match": false,
+      "nimi": {
+        "fi": "Pohjoiskalotin koulutussäätiö",
+        "sv": "Pohjoiskalotin koulutussäätiö",
+        "en": "Pohjoiskalotin koulutussäätiö"
+      },
+      "oid": "1.2.246.562.10.2013120211542064151791",
+      "organisaatiotyypit": [
+        "organisaatiotyyppi_01"
+      ],
+      "parentOid": "1.2.246.562.10.00000000001",
+      "parentOidPath": "1.2.246.562.10.2013120211542064151791/1.2.246.562.10.00000000001",
+      "status": "AKTIIVINEN",
+      "subRows": [
+        {
+          "aliOrganisaatioMaara": 0,
+          "alkuPvm": 694216800000,
+          "children": [],
+          "kieletUris": [
+            "oppilaitoksenopetuskieli_1#1"
+          ],
+          "kotipaikkaUri": "kunta_200",
+          "lyhytNimi": {
+            "fi": "Pohjoiskalotin koulutussäätiö",
+            "sv": "Pohjoiskalotin koulutussäätiö",
+            "en": "Pohjoiskalotin koulutussäätiö"
+          },
+          "match": true,
+          "nimi": {
+            "fi": "Pohjoiskalotin koulutussäätiö",
+            "sv": "Pohjoiskalotin koulutussäätiö",
+            "en": "Pohjoiskalotin koulutussäätiö"
+          },
+          "oid": "1.2.246.562.10.88417511545",
+          "oppilaitosKoodi": "30049",
+          "oppilaitostyyppi": "oppilaitostyyppi_xx#1",
+          "organisaatiotyypit": [
+            "organisaatiotyyppi_02"
+          ],
+          "parentOid": "1.2.246.562.10.2013120211542064151791",
+          "parentOidPath": "1.2.246.562.10.88417511545/1.2.246.562.10.2013120211542064151791/1.2.246.562.10.00000000001",
+          "status": "AKTIIVINEN",
+          "subRows": [],
+          "toimipistekoodi": "30049",
+          "tyypit": [
+            "organisaatiotyyppi_02"
+          ]
+        }
+      ],
+      "toimipistekoodi": "",
+      "tyypit": [
+        "organisaatiotyyppi_01"
+      ],
+      "virastoTunnus": "9999999-9"
     }
   ]
 }

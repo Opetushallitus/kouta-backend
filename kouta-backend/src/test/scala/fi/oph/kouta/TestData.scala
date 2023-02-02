@@ -277,8 +277,8 @@ object TestData {
 
   val MuuKoulutuksenMetatieto = MuuKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-    opintojenLaajuusNumeroMin = Some(5),
-    opintojenLaajuusNumeroMax = Some(15),
+    opintojenLaajuusNumeroMin = Some(10),
+    opintojenLaajuusNumeroMax = Some(30),
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
     isMuokkaajaOphVirkailija = Some(false)
@@ -293,7 +293,7 @@ object TestData {
     metadata = Some(
       MuuKoulutuksenMetatieto
     ),
-    tarjoajat = List(YoOid, HkiYoOid),
+    tarjoajat = List(PohjoiskalotinKoulutussaatio),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -1239,6 +1239,7 @@ object TestData {
   )
 
   val JulkaistuMuuToteutus = JulkaistuAmmToteutus.copy(
+    tarjoajat = List(PohjoiskalotinKoulutussaatio),
     metadata = Some(MuuToteutuksenMetatieto)
   )
 
