@@ -303,4 +303,7 @@ trait ValidatingSubService[E] {
 
 case class KoutaValidationException(errorMessages: IsValid) extends RuntimeException {
   override def getMessage: String = "[" + errorMessages.mkString(",") + "]"
+  def getPaths: List[String] = errorMessages.map(msg => msg.getPath).toList
+  def getMsgs: List[String] = errorMessages.map(msg => msg.getMsg).toList
+  def getErrorTypes: List[String] = errorMessages.map(msg => msg.getErrorType).toList
 }
