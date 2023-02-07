@@ -104,7 +104,7 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
     case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
-  def changedOpintojenLaajuusyksikkoKoodiUri(): Option[String] = {
+  def newOpintojenLaajuusyksikkoKoodiUri(): Option[String] = {
     val koodiUri = opintojenLaajuusyksikkoKoodiUri(toteutus.metadata)
     if (koodiUri != opintojenLaajuusyksikkoKoodiUri(oldMetadata())) koodiUri else None
   }

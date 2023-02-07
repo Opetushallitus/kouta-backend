@@ -734,7 +734,7 @@ class ToteutusServiceValidation(
       toteutusDiffResolver: ToteutusDiffResolver
   ): IsValid =
     and(
-      assertOpintojenLaajuusyksikkoKoodiUri(toteutusDiffResolver.changedOpintojenLaajuusyksikkoKoodiUri(), vCtx),
+      assertOpintojenLaajuusyksikkoKoodiUri(toteutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(), vCtx),
       validateLaajuusMinMax(m.opintojenLaajuusNumeroMin, m.opintojenLaajuusNumeroMax),
       validateIfNonEmpty[String](
         toteutusDiffResolver.newTaiteenalaKoodiUrit(),
