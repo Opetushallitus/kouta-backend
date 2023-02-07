@@ -150,7 +150,15 @@ class ToteutusService(
               case ammatillinenMuuToteutusMetadata: AmmatillinenMuuToteutusMetadata =>
                 withMData(t, ammatillinenMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case kkOpintojaksoMetadata: KkOpintojaksoToteutusMetadata =>
-                withMData(t, kkOpintojaksoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                withMData(
+                  t,
+                  kkOpintojaksoMetadata.copy(
+                    isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    opintojenLaajuusyksikkoKoodiUri = koulutus.get._1.metadata match {
+                      case Some(kkOpintojaksoKoulutusMetadata: KkOpintojaksoKoulutusMetadata) =>
+                        kkOpintojaksoKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
+                    }
+                  ))
               case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata =>
                 withMData(t, vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata =>
