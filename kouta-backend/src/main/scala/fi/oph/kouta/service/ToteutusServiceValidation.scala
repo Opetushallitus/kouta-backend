@@ -639,6 +639,14 @@ class ToteutusServiceValidation(
               metadata.opintojenLaajuusNumeroMax,
               metadata.opintojenLaajuusyksikkoKoodiUri
             )
+          case Some(metadata: KkOpintojaksoKoulutusMetadata) =>
+            (
+              Some(k.tila),
+              Some(k.koulutustyyppi),
+              metadata.opintojenLaajuusNumeroMin,
+              metadata.opintojenLaajuusNumeroMax,
+              metadata.opintojenLaajuusyksikkoKoodiUri
+            )
           case _ => (Some(k.tila), Some(k.koulutustyyppi), None, None, None)
         }
       case None => (None, None, None, None, None)
@@ -647,6 +655,11 @@ class ToteutusServiceValidation(
     val kkOpintokokonaisuusToteutusMetadata = toteutus.metadata match {
       case Some(metadata: KkOpintokokonaisuusToteutusMetadata) => Some(metadata)
       case _                                                   => None
+    }
+
+    val kkOpintojaksoToteutusMetadata = toteutus.metadata match {
+      case Some(metadata: KkOpintojaksoToteutusMetadata) => Some(metadata)
+      case _ => None
     }
 
     val koulutustyypitRequiringToteutusAndKoulutusNamesEqual: Set[Koulutustyyppi] =
@@ -699,6 +712,36 @@ class ToteutusServiceValidation(
               invalidToteutusOpintojenLaajuusyksikkoIntegrity(
                 koulutusOpintojenLaajuusyksikko,
                 kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri
+              )
+            )
+          )
+      ),
+      validateIfDefined[KkOpintojaksoToteutusMetadata](
+        kkOpintojaksoToteutusMetadata,
+        kkOpintojaksoToteutusMetadata =>
+          and(
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenlaajuus(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintojaksoToteutusMetadata.opintojenLaajuusNumero
+              ),
+              "metadata.opintojenLaajuusNumero",
+              notInTheRangeMsg(
+                koulutusOpintojenlaajuusMin,
+                koulutusOpintojenlaajuusMax,
+                kkOpintojaksoToteutusMetadata.opintojenLaajuusNumero
+              )
+            ),
+            assertTrue(
+              ToteutusServiceUtil.isValidOpintojenLaajuusyksikko(
+                koulutusOpintojenLaajuusyksikko,
+                kkOpintojaksoToteutusMetadata.opintojenLaajuusyksikkoKoodiUri
+              ),
+              "metadata.opintojenLaajuusyksikkoKoodiUri",
+              invalidToteutusOpintojenLaajuusyksikkoIntegrity(
+                koulutusOpintojenLaajuusyksikko,
+                kkOpintojaksoToteutusMetadata.opintojenLaajuusyksikkoKoodiUri
               )
             )
           )
