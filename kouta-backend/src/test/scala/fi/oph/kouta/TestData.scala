@@ -1151,6 +1151,7 @@ object TestData {
 
   val KkOpintojaksoToteutuksenMetatieto: KkOpintojaksoToteutusMetadata = KkOpintojaksoToteutusMetadata(
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     hakutermi = Some(Hakeutuminen),
