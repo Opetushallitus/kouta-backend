@@ -8,7 +8,7 @@ import fi.oph.kouta.client.KoutaSearchClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.{AmkKoulutusKoodit, AmmatillisetKoulutusKoodit, YoKoulutusKoodit}
-import fi.oph.kouta.integration.fixture.{Id, Oid, Oids, Updated}
+import fi.oph.kouta.integration.fixture.{DatabaseFixture, Id, Oid, Oids, Updated}
 import fi.oph.kouta.mocks._
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security._
@@ -38,7 +38,7 @@ trait KoutaIntegrationSpec
     with SpecWithMocks
     with UrlProperties
     with HttpSpec
-    with DatabaseSpec
+    with DatabaseFixture
     with DefaultTestImplicits
     with DefaultMocks
     with MockitoSugar {
@@ -99,8 +99,8 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   var yliopistotSession: UUID = _
   var ammAndChildSession: UUID = _
 
-  private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None): UUID = {
-    val sessionId = UUID.randomUUID()
+  private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None, session: Option[UUID] = None): UUID = {
+    val sessionId = session.getOrElse(UUID.randomUUID())
     val oid       = userOid.getOrElse(userOidForTestSessionId(sessionId))
     val user      = TestUser(oid, s"user-$oid", sessionId)
     SessionDAO.store(CasSession(ServiceTicket(user.ticket), user.oid.s, authorities), user.sessionId)
@@ -111,39 +111,43 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   def userOidForTestSessionId(sessionId: UUID): UserOid =
     UserOid(f"1.2.246.562.24.${math.abs(sessionId.getLeastSignificantBits)}%011d".substring(0, userOidLength))
 
-  def addTestSession(): UUID = storeTestSession()
+  def addTestSession(): UUID = storeTestSession(Set(), None, None)
 
-  def addTestSession(role: Role, organisaatioOid: OrganisaatioOid): UUID =
-    addTestSession(Seq(role), organisaatioOid)
-
-  def addTestSession(role: Role, organisaatioOid: OrganisaatioOid, userOid: UserOid): UUID =
-    addTestSession(Seq(role), organisaatioOid, Some(userOid))
-
-  def addTestSession(roles: Seq[Role], organisaatioOid: OrganisaatioOid, userOid: Option[UserOid] = None): UUID = {
-    val authorities: Seq[Authority] = roles.map(Authority(_, organisaatioOid))
-    storeTestSession(authorities.toSet, userOid)
+  def addTestSession(roles: Seq[Role], organisaatioOids: Seq[OrganisaatioOid], userOid: Option[UserOid], session: Option[UUID]): UUID = {
+    val authorities = organisaatioOids.map(org => roles.map(Authority(_, org))).flatten
+    storeTestSession(authorities.toSet, userOid, session)
   }
 
-  def addTestSession(roles: Seq[Role], organisaatioOids: Seq[OrganisaatioOid]): UUID = {
-    val authorities = organisaatioOids.map(org => roles.map(Authority(_, org))).flatten
-    storeTestSession(authorities.toSet, None)
+  def addTestSession(
+      roles: Seq[Role],
+      organisaatioOids: Seq[OrganisaatioOid],
+      userOid: Option[UserOid] = None,
+  ): UUID = {
+    addTestSession(roles, organisaatioOids, userOid, None)
+  }
+
+  def addTestSession(
+      role: Role,
+      organisaatioOid: OrganisaatioOid,
+  ): UUID = {
+    addTestSession(Seq(role), Seq(organisaatioOid), None, None)
   }
 
   def addTestSessions(): Unit = {
     Seq(ChildOid, EvilChildOid, GrandChildOid, ParentOid, LonelyOid, YoOid, AmmOid).foreach { org =>
-      crudSessions.update(org, addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), org))
+      crudSessions.update(org, addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(org), None, crudSessions.get(org)))
     }
 
     Seq(ChildOid, YoOid, AmmOid).foreach { org =>
-      readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), org))
+      readSessions.update(org, addTestSession(roleEntities.map(_.Read.asInstanceOf[Role]), Seq(org), None, readSessions.get(org)))
     }
 
-    yliopistotSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(YoOid, HkiYoOid, LutYoOid))
-    ammAndChildSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(AmmOid, ChildOid))
-    ophSession = addTestSession(Role.Paakayttaja, OphOid, OphUserOid)
-    indexerSession = addTestSession(Role.Indexer, OphOid)
-    fakeIndexerSession = addTestSession(Role.Indexer, ChildOid)
-    otherRoleSession = addTestSession(Role.UnknownRole("APP_OTHER"), ChildOid)
+    yliopistotSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(YoOid, HkiYoOid, LutYoOid), None, Option(yliopistotSession))
+    ammAndChildSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(AmmOid, ChildOid), None, Option(ammAndChildSession))
+    ophSession = addTestSession(Seq(Role.Paakayttaja), Seq(OphOid), Some(OphUserOid), Option(ophSession))
+    indexerSession = addTestSession(Seq(Role.Indexer), Seq(OphOid), None, Option(indexerSession))
+    fakeIndexerSession = addTestSession(Seq(Role.Indexer), Seq(ChildOid), None, Option(fakeIndexerSession))
+    otherRoleSession = addTestSession(Seq(Role.UnknownRole("APP_OTHER")), Seq(ChildOid), None, Option(otherRoleSession))
   }
 }
 
@@ -541,62 +545,5 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     get(s"$path/list", params, headers) {
       status should equal(expectedStatus)
     }
-  }
-}
-
-sealed trait DatabaseSpec {
-
-  import fi.oph.kouta.repository.KoutaDatabase
-  import slick.jdbc.PostgresProfile.api._
-
-  System.setProperty("kouta-backend.useSecureCookies", "false")
-  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
-  TestSetups.setupPostgres()
-  lazy val db: KoutaDatabase.type = KoutaDatabase
-
-  def truncateDatabase(): Int = {
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
-    db.runBlocking(sqlu"""delete from hakukohteet""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
-    db.runBlocking(sqlu"""delete from haut""")
-    db.runBlocking(sqlu"""delete from valintaperusteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from valintaperusteet""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from toteutukset""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from koulutukset""")
-
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakukohteet_history""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakujen_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from haut_history""")
-    db.runBlocking(sqlu"""delete from valintaperusteet_history""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from toteutukset_history""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from koulutukset_history""")
-
-    db.runBlocking(sqlu"""delete from sorakuvaukset""")
-    db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
-
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat""")
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat_history""")
-    db.runBlocking(sqlu"""delete from oppilaitokset""")
-    db.runBlocking(sqlu"""delete from oppilaitokset_history""")
-
-    db.runBlocking(sqlu"""delete from authorities""")
-    db.runBlocking(sqlu"""delete from sessions""")
-
-    deleteAsiasanat()
-  }
-
-  def deleteAsiasanat(): Int = {
-    db.runBlocking(sqlu"""delete from asiasanat""")
-    db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 }

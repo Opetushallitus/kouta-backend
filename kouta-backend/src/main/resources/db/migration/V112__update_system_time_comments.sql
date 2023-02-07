@@ -1,0 +1,15 @@
+COMMENT ON COLUMN koulutukset.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN toteutukset.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteet.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN haut.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN valintaperusteet.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN sorakuvaukset.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN koulutusten_tarjoajat.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN toteutusten_tarjoajat.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteiden_valintakokeet.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteiden_liitteet.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN hakukohteiden_hakuajat.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN valintaperusteiden_valintakokeet.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN hakujen_hakuajat.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN oppilaitokset.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';
+COMMENT ON COLUMN oppilaitosten_osat.system_time IS 'Aikaväli, jonka alaraja kertoo taulun viimeisen muokkausajan. Järjestelmän generoima.';

@@ -12,6 +12,7 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
 import org.json4s.jackson.Serialization.read
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
@@ -354,8 +355,9 @@ class KoulutusSpec
     )
     val oid = put(theKoulutus)
     theKoulutus = theKoulutus.copy(oid = Some(KoulutusOid(oid)))
-    val lastModified    = get(oid, theKoulutus)
-    val updatedKoulutus = theKoulutus.copy(tarjoajat = HkiYoOid :: LutYoOid :: KuopionKansalaisopistoOid :: theKoulutus.tarjoajat)
+    val lastModified = get(oid, theKoulutus)
+    val updatedKoulutus =
+      theKoulutus.copy(tarjoajat = HkiYoOid :: LutYoOid :: KuopionKansalaisopistoOid :: theKoulutus.tarjoajat)
     update(updatedKoulutus, lastModified, expectUpdate = true, crudSessions(YoOid))
   }
 
@@ -418,10 +420,17 @@ class KoulutusSpec
   it should "update the modified time of the koulutus even when just tarjoajat is updated" in {
     val oid = put(koulutus, ophSession)
 
-    setModifiedToPast(oid, "10 minutes") should be(Success(()))
+    setEntityModifiedToPast(
+      oid,
+      "10 minutes",
+      "koulutukset",
+      List("koulutusten_tarjoajat"),
+      "oid",
+      "koulutus_oid"
+    ) should equal(Success(()))
     val lastModified        = get(oid, koulutus(oid))
     val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
-    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(5)) should equal(1)
+    Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(9)) should equal(1)
 
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, EvilChildOid, AmmOid))
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
@@ -431,10 +440,10 @@ class KoulutusSpec
 
       val koulutus = read[Koulutus](body)
       koulutus.modified.isDefined should be(true)
-      val modifiedInstant = koulutus.modified.get.value.atZone(ZoneId.of("Europe/Helsinki")).toInstant
+      val modifiedInstant = modifiedToInstant(koulutus.modified.get)
 
-      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(5)) should equal(1)
-      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(15)) should equal(-1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(9)) should equal(1)
+      Duration.between(lastModifiedInstant, modifiedInstant).compareTo(Duration.ofMinutes(11)) should equal(-1)
     }
   }
 
@@ -445,6 +454,61 @@ class KoulutusSpec
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus) should not equal lastModified
+  }
+
+  it should "set last_modified right for old koulutukset after database migration" in {
+    db.clean()
+    db.migrate("106")
+    addTestSessions()
+    addDefaultSession()
+
+    val (koulutus1, koulutus1Timestamp) = insertKoulutus(koulutus)
+    val oid1                            = koulutus1.oid.get.toString
+
+    val (koulutus2, _)              = insertKoulutus(koulutus)
+    val oid2                        = koulutus2.oid.get.toString
+    val koulutus2NewTarjoajat       = koulutus2.tarjoajat ++ Seq(YoOid)
+    val koulutus2tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
+
+    val (koulutus3, _)        = insertKoulutus(koulutus)
+    val oid3                  = koulutus3.oid.get.toString
+    val koulutus3tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
+
+    db.migrate("107")
+
+    get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Timestamp))))
+    get(
+      oid2,
+      koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatTimestamp)))
+    )
+    get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatTimestamp))))
+
+    db.clean()
+    db.migrate()
+    addTestSessions()
+    addDefaultSession()
+  }
+
+  it should "add right amount of rows to history tables" in {
+    resetTableHistory("koulutukset")
+    resetTableHistory("koulutusten_tarjoajat")
+    val oid          = put(koulutus, ophSession)
+    val lastModified = get(oid, koulutus.copy(oid = Some(KoulutusOid(oid))))
+
+    val koulutus1 = koulutus.copy(oid = Some(KoulutusOid(oid)), tila = Tallennettu, tarjoajat = List())
+    update(koulutus1, lastModified, expectUpdate = true, ophSession)
+
+    assert(getKoulutusHistorySize(koulutus1) == 1)
+    // Poistetaan kolme tarjoajaa, koulutus-oidille kolme riviä tarjoajat-historiaan. Kaikilla kolmella rivillä sama aikaleima.
+    assert(getKoulutusTarjoajatHistorySize(koulutus1) == 3)
+
+    val lastModified2 = get(oid, koulutus1)
+    val koulutus2     = koulutus1.copy(tila = Julkaistu, tarjoajat = koulutus.tarjoajat)
+    update(koulutus2, lastModified2, expectUpdate = true, ophSession)
+
+    assert(getKoulutusHistorySize(koulutus2) == 2)
+    // Tarjoajien lisääminen ei lisää rivejä historiaan
+    assert(getKoulutusTarjoajatHistorySize(koulutus2) == 3)
   }
 
   it should "store and update unfinished koulutus" in {

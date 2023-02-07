@@ -68,10 +68,8 @@ sealed trait SorakuvausModificationSQL extends SQLHelpers {
 
   def selectLastModified(id: UUID): DBIO[Option[Instant]] = {
     sql"""select greatest(
-            max(lower(sk.system_time)),
-            max(upper(skh.system_time)))
+            max(lower(sk.system_time)))
           from sorakuvaukset sk
-          left join sorakuvaukset_history skh on sk.id = skh.id
           where sk.id = ${id.toString}::uuid""".as[Option[Instant]].head
   }
 }

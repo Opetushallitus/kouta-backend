@@ -4,7 +4,7 @@ import java.time.Instant
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -40,11 +40,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       for {
         k <- selectKoulutus(oid, tilaFilter).as[Koulutus].headOption
         t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-        l <- selectLastModified(oid)
-      } yield (k, t, l)
+      } yield (k, t)
     ).get match {
-      case (Some(k), t, Some(l)) =>
-        Some((k.copy(modified = Some(instantToModified(l)), tarjoajat = t.map(_.tarjoajaOid).toList), l))
+      case (Some(k), t) =>
+        Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), modifiedToInstant(k.modified.get)))
       case _ => None
     }
   }
@@ -72,7 +71,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
       m <- selectLastModified(koulutus.oid.get)
     } yield koulutus.withModified(m.get)
 
-  private def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
+  def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
@@ -136,24 +135,13 @@ sealed trait KoulutusModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectLastModified(oid: KoulutusOid): DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(k.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
-            max(upper(tah.system_time)))
-          from koulutukset k
-          left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-          left join koulutukset_history kh on k.oid = kh.oid
-          left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-          where k.oid = $oid""".as[Option[Instant]].head
+    sql"""select k.last_modified from koulutukset k where k.oid = $oid""".as[Instant].headOption
   }
 
   def selectModifiedSince(since: Instant): DBIO[Seq[KoulutusOid]] = {
-    sql"""select oid from koulutukset where $since < lower(system_time)
+    sql"""select oid from koulutukset where $since < last_modified
           union
           select oid from koulutukset_history where $since <@ system_time
-          union
-          select koulutus_oid from koulutusten_tarjoajat where $since < lower(system_time)
           union
           select koulutus_oid from koulutusten_tarjoajat_history where $since <@ system_time""".as[KoulutusOid]
   }
@@ -220,7 +208,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  kielivalinta,
                  teemakuva,
                  eperuste_id,
-                 lower(system_time)
+                 last_modified
           from koulutukset
           where oid = $oid
             #${tilaConditions(tilaFilter)}
@@ -244,19 +232,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.kielivalinta,
                           k.teemakuva,
                           k.eperuste_id,
-                          m.modified
+                          k.last_modified
           from koulutukset k
-          inner join (
-            select k.oid oid, greatest(
-              max(lower(k.system_time)),
-              max(lower(ta.system_time)),
-              max(upper(kh.system_time)),
-              max(upper(tah.system_time))) modified
-            from koulutukset k
-            left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
-            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-            group by k.oid) m on k.oid = m.oid
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
           where k.tila = 'julkaistu'::julkaisutila
           and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})"""
@@ -288,7 +265,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               teemakuva = ${koulutus.teemakuva},
               eperuste_id = ${koulutus.ePerusteId}
             where oid = ${koulutus.oid}
-            and ( johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
+            and (johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
             or external_id is distinct from ${koulutus.externalId}
             or tyyppi is distinct from ${koulutus.koulutustyyppi.toString}::koulutustyyppi
             or koulutukset_koodi_uri is distinct from ${koulutus.koulutuksetKoodiUri}
@@ -320,19 +297,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
 
   val selectKoulutusListSql =
-    """select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
-         from koulutukset k
-         inner join (
-           select k.oid oid, greatest(
-             max(lower(k.system_time)),
-             max(lower(ta.system_time)),
-             max(upper(kh.system_time)),
-             max(upper(tah.system_time))) modified
-           from koulutukset k
-           left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-           left join koulutukset_history kh on k.oid = kh.oid
-           left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
-           group by k.oid) m on k.oid = m.oid"""
+    s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, k.last_modified from koulutukset k"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
     sql"""#$selectKoulutusListSql
@@ -347,32 +312,20 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
       tilaFilter: TilaFilter
   ) = {
 
-    sql"""
-select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, m.modified
-    from koulutukset k
-        inner join (
-        select k.oid oid, greatest(
-            max(lower(k.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(kh.system_time)),
-            max(upper(tah.system_time))) modified
-        from koulutukset k
+    sql"""#$selectKoulutusListSql
             left join koulutusten_tarjoajat ta on k.oid = ta.koulutus_oid
-            left join koulutukset_history kh on k.oid = kh.oid
-            left join koulutusten_tarjoajat_history tah on k.oid = tah.koulutus_oid
         where
             -- Listauksissa halutaan näyttää..
             -- 1. koulutukset, jotka omistaa jokin annetuista organisaatioista, mutta OPH:n omistamat vain, jos koulutustyyppi täsmää.
             -- TODO: Mahdollisesti, jos OPH:n omistama, pitäisi katsoa, että se on lisäksi julkinen ja mätsää oppilaitostyyppeihin
-            (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+            ((k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                 and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
             -- 2. koulutustyyppeihin täsmäävät koulutukset, jotka ovat julkisia
             or (k.julkinen = ${true} and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
             -- 3. jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä) löytyy annettuja organisaatioita
             or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
-                and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-        group by k.oid) m on k.oid = m.oid
-    #${tilaConditions(tilaFilter, glueWord="where")}
+                and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})))
+    #${tilaConditions(tilaFilter, glueWord="and")}
 """.as[KoulutusListItem]
   }
 

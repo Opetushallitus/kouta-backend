@@ -239,7 +239,7 @@ trait SorakuvausExtractors extends ExtractorBase {
       extractArray[String](r.nextObjectOption())))
 }
 
-trait HakukohdeExctractors extends ExtractorBase {
+trait HakukohdeExtractors extends ExtractorBase {
   implicit val getHakukohdeResult: GetResult[Hakukohde] = GetResult(r => Hakukohde(
     oid = r.nextStringOption().map(HakukohdeOid),
     externalId = r.nextStringOption(),

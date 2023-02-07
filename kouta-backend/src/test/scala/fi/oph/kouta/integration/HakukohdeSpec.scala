@@ -488,6 +488,23 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     get(oid, muokattuHakukohde) should not equal lastModified
   }
 
+  it should "add right amount of rows to history tables" in {
+    resetTableHistory("hakukohteet")
+    resetTableHistory("hakukohteiden_hakuajat")
+    resetTableHistory("hakukohteiden_valintakokeet")
+    resetTableHistory("hakukohteiden_liitteet")
+
+    val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
+    val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
+    val muokattuHakukohde = tallennettuHakukohde(oid).copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
+    update(muokattuHakukohde, lastModified, expectUpdate = true)
+
+    assert(getTableHistorySize("hakukohteet") == 1)
+    assert(getTableHistorySize("hakukohteiden_hakuajat") == 1)
+    assert(getTableHistorySize("hakukohteiden_valintakokeet") == 1)
+    assert(getTableHistorySize("hakukohteiden_liitteet") == 2)
+  }
+
   it should "store and update unfinished hakukohde" in {
     val unfinishedHakukohde = Hakukohde(
       muokkaaja = TestUserOid,

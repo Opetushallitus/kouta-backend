@@ -24,12 +24,18 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
   val KoulutusPath = "/koulutus"
 
   def koulutusService: KoulutusService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new KoulutusKoodiClient(urlProperties.get)
-    val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
+    val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
+    val koodistoClient               = new KoulutusKoodiClient(urlProperties.get)
+    val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
     val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
     val koulutusServiceValidation =
-      new KoulutusServiceValidation(koodistoClient, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
+      new KoulutusServiceValidation(
+        koodistoClient,
+        organisaatioService,
+        ToteutusDAO,
+        SorakuvausDAO,
+        ammKoulutusServiceValidation
+      )
 
     new KoulutusService(
       SqsInTransactionServiceIgnoringIndexing,
@@ -134,21 +140,32 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
 
   import slick.dbio.DBIO
   import slick.jdbc.PostgresProfile.api._
+  import scala.concurrent.ExecutionContext.Implicits.global
+  import java.time.Instant
 
-  def setModifiedToPast(oid: String, duration: String): Try[Unit] = {
-    db.runBlockingTransactionally(
-      DBIO.seq(
-        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER koulutukset_history""",
-        sqlu"""ALTER TABLE koulutukset DISABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat DISABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update""",
-        sqlu"""update koulutukset set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where oid = '#$oid'""",
-        sqlu"""update koulutusten_tarjoajat set system_time = tstzrange(now() - interval '#$duration', NULL::timestamp with time zone, '[)'::text) where koulutus_oid = '#$oid'""",
-        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER koulutukset_history""",
-        sqlu"""ALTER TABLE koulutukset ENABLE TRIGGER set_temporal_columns_on_koulutukset_on_update""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER koulutusten_tarjoajat_history""",
-        sqlu"""ALTER TABLE koulutusten_tarjoajat ENABLE TRIGGER set_temporal_columns_on_koulutusten_tarjoajat_on_update"""
-      )
-    )
-  }
+  private def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
+    for {
+      oid <- KoulutusDAO.insertKoulutus(koulutus)
+      _   <- KoulutusDAO.insertKoulutuksenTarjoajat(koulutus.withOid(oid))
+    } yield koulutus.withOid(oid)
+
+  def insertKoulutus(k: Koulutus) = db
+    .runBlockingTransactionally(for {
+      k <- getPutActions(k)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield (k, n))
+    .get
+
+  def updateKoulutusTarjoajat(k: Koulutus) = db
+    .runBlockingTransactionally(for {
+      t <- KoulutusDAO.updateKoulutuksenTarjoajat(k)
+      n <- sql"""select now()::timestamptz""".as[Instant].head
+    } yield n)
+    .get
+
+  def getKoulutusHistorySize(k: Koulutus): Int = getTableHistorySize("koulutukset", "oid", k.oid.get.toString)
+
+  def getKoulutusTarjoajatHistorySize(k: Koulutus): Int =
+    getTableHistorySize("koulutusten_tarjoajat", "koulutus_oid", k.oid.get.toString)
+
 }

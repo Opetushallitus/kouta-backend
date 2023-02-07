@@ -1,14 +1,14 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
 import fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Haku, HakuListItem, TilaFilter, YhteishakuFilter}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait HakuDAO extends EntityModificationDAO[HakuOid] {
@@ -35,12 +35,11 @@ object HakuDAO extends HakuDAO with HakuSQL {
     KoutaDatabase.runBlockingTransactionally( for {
       h <- selectHaku(oid, tilaFilter)
       a <- selectHaunHakuajat(oid)
-      l <- selectLastModified(oid)
-    } yield (h, a, l) ).map {
-      case (Some(h), a, Some(l)) => Some((
-        h.copy(modified = Some(instantToModified(l)),
+    } yield (h, a) ).map {
+      case (Some(h), a) => Some((
+        h.copy(
           hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList),
-        l))
+        modifiedToInstant(h.modified.get)))
       case _ => None
     }.get
   }
@@ -71,26 +70,15 @@ trait HakuModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectModifiedSince(since: Instant): DBIO[Seq[HakuOid]] = {
-    sql"""select oid from haut where $since < lower(system_time)
+    sql"""select oid from haut where $since < last_modified
           union
           select oid from haut_history where $since <@ system_time
-          union
-          select haku_oid from hakujen_hakuajat where $since < lower(system_time)
           union
           select haku_oid from hakujen_hakuajat_history where $since <@ system_time""".as[HakuOid]
   }
 
   def selectLastModified(oid: HakuOid): DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(ha.system_time)),
-            max(lower(hh.system_time)),
-            max(upper(hah.system_time)),
-            max(upper(hhh.system_time)))
-          from haut ha
-          left join haut_history hah on ha.oid = hah.oid
-          left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
-          left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
-          where ha.oid = $oid""".as[Option[Instant]].head
+    sql"""select last_modified from haut ha where ha.oid = $oid""".as[Option[Instant]].head
   }
 }
 
@@ -153,7 +141,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     sql"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
                  ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi, ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
                  hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
-                 muokkaaja, kielivalinta, lower(system_time) from haut where oid = $oid
+                 muokkaaja, kielivalinta, last_modified from haut where oid = $oid
                  #${tilaConditions(tilaFilter)}""".as[Haku].headOption
   }
 
@@ -226,20 +214,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   val selectHakuListSql =
-    """select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, m.modified
-         from haut ha
-         inner join (
-           select ha.oid oid, greatest(
-             max(lower(ha.system_time)),
-             max(lower(hh.system_time)),
-             max(upper(hah.system_time)),
-             max(upper(hhh.system_time))) modified
-           from haut ha
-           left join haut_history hah on ha.oid = hah.oid
-           left join hakujen_hakuajat hh on ha.oid = hh.haku_oid
-           left join hakujen_hakuajat_history hhh on ha.oid = hhh.haku_oid
-           group by ha.oid
-         ) m on m.oid = ha.oid"""
+    """select distinct ha.oid, ha.nimi, ha.tila, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified from haut ha"""
 
   def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter, yf: YhteishakuFilter): DBIO[Vector[HakuListItem]] = {
     def includeYhteishaut = (yf.removeKk, yf.removeToinenaste) match {

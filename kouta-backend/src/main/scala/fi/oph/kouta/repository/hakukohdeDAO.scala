@@ -4,7 +4,7 @@ import fi.oph.kouta.domain
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -56,13 +56,11 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
       a <- selectHakuajat(oid)
       k <- selectValintakokeet(oid)
       i <- selectLiitteet(oid)
-      l <- selectLastModified(oid)
-    } yield (h, a, k, i, l) ).get match {
-      case (Some(h), a, k, i, Some(l)) => Some((h.copy(
-        modified = Some(instantToModified(l)),
+    } yield (h, a, k, i) ).get match {
+      case (Some(h), a, k, i) => Some((h.copy(
         hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList,
         valintakokeet = k.toList,
-        liitteet = i.toList), l))
+        liitteet = i.toList), modifiedToInstant(h.modified.get)))
       case _ => None
     }
   }
@@ -161,46 +159,23 @@ sealed trait HakukohdeModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectModifiedSince(since: Instant): DBIO[Seq[HakukohdeOid]] = {
-    sql"""select oid from hakukohteet where $since < lower(system_time)
+    sql"""select oid from hakukohteet where $since < last_modified
           union
           select oid from hakukohteet_history where $since <@ system_time
           union
-          select hakukohde_oid from hakukohteiden_hakuajat where $since < lower(system_time)
-          union
           select hakukohde_oid from hakukohteiden_hakuajat_history where $since <@ system_time
           union
-          select hakukohde_oid from hakukohteiden_valintakokeet where $since < lower(system_time)
-          union
           select hakukohde_oid from hakukohteiden_valintakokeet_history where $since <@ system_time
-          union
-          select hakukohde_oid from hakukohteiden_liitteet where $since < lower(system_time)
           union
           select hakukohde_oid from hakukohteiden_liitteet_history where $since <@ system_time""".as[HakukohdeOid]
   }
 
   def selectLastModified(oid: HakukohdeOid): DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(ha.system_time)),
-            max(lower(hh.system_time)),
-            max(lower(hv.system_time)),
-            max(lower(hl.system_time)),
-            max(upper(hah.system_time)),
-            max(upper(hhh.system_time)),
-            max(upper(hvh.system_time)),
-            max(upper(hlh.system_time)))
-          from hakukohteet ha
-          left join hakukohteet_history hah on ha.oid = hah.oid
-          left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
-          left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
-          left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
-          left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
-          left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
-          left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
-          where ha.oid = $oid""".as[Option[Instant]].head
+    sql"""select ha.last_modified from hakukohteet ha where ha.oid = $oid""".as[Option[Instant]].head
   }
 }
 
-sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExctractors {
+sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with HakukohdeExtractors {
 
   def insertHakukohde(hakukohde: Hakukohde): DBIO[HakukohdeOid] = {
     sql"""insert into hakukohteet (
@@ -355,7 +330,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
              muokkaaja,
              organisaatio_oid,
              kielivalinta,
-             lower(system_time) from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
+             last_modified from hakukohteet where oid = $oid #${tilaConditions(tilaFilter)}""".as[Hakukohde].headOption
   }
 
   def insertHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
@@ -496,27 +471,8 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   val selectHakukohdeListSql =
-    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, m.modified, t.metadata
+    """select distinct ha.oid, ha.toteutus_oid, ha.haku_oid, ha.valintaperuste_id, ha.nimi, ha.hakukohde_koodi_uri, ha.tila, ha.jarjestyspaikka_oid, ha.organisaatio_oid, ha.muokkaaja, ha.last_modified, t.metadata
          from hakukohteet ha
-         inner join (
-           select ha.oid oid, greatest(
-             max(lower(ha.system_time)),
-             max(lower(hh.system_time)),
-             max(lower(hv.system_time)),
-             max(lower(hl.system_time)),
-             max(upper(hah.system_time)),
-             max(upper(hhh.system_time)),
-             max(upper(hvh.system_time)),
-             max(upper(hlh.system_time))) modified
-           from hakukohteet ha
-           left join hakukohteet_history hah on ha.oid = hah.oid
-           left join hakukohteiden_hakuajat hh on ha.oid = hh.hakukohde_oid
-           left join hakukohteiden_hakuajat_history hhh on ha.oid = hhh.hakukohde_oid
-           left join hakukohteiden_valintakokeet hv on ha.oid = hv.hakukohde_oid
-           left join hakukohteiden_valintakokeet_history hvh on ha.oid = hvh.hakukohde_oid
-           left join hakukohteiden_liitteet hl on ha.oid = hl.hakukohde_oid
-           left join hakukohteiden_liitteet_history hlh on ha.oid = hlh.hakukohde_oid
-           group by ha.oid) m on m.oid = ha.oid
          inner join toteutukset t on t.oid = ha.toteutus_oid"""
 
   def selectByHakuOidAndAllowedOrganisaatiot(hakuOid: HakuOid, organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
