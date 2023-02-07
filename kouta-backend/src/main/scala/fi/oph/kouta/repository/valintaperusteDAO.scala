@@ -1,14 +1,14 @@
 package fi.oph.kouta.repository
 
-import java.time.Instant
-import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Arkistoitu, Koulutustyyppi, TilaFilter, Valintakoe, Valintaperuste, ValintaperusteListItem}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
+import java.time.Instant
+import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait ValintaperusteDAO extends EntityModificationDAO[UUID] {
@@ -43,10 +43,9 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
       for {
         v <- selectValintaperuste(id, tilaFilter).as[Valintaperuste].headOption
         k <- selectValintakokeet(id)
-        l <- selectLastModified(id)
-      } yield (v, k, l)
+      } yield (v, k)
     ).map {
-      case (Some(v), k, Some(l)) => Some((v.copy(modified = Some(instantToModified(l)), valintakokeet = k.toList), l))
+      case (Some(v), k) => Some((v.copy(valintakokeet = k.toList), modifiedToInstant(v.modified.get)))
       case _ => None
     }.get
   }
@@ -69,22 +68,16 @@ sealed trait ValintaperusteModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectModifiedSince(since: Instant): DBIO[Seq[UUID]] = {
-    sql"""select id from valintaperusteet where $since < lower(system_time)
+    sql"""select id from valintaperusteet where $since < last_modified
           union
-          select id from valintaperusteet_history where $since <@ system_time""".as[UUID]
+          select id from valintaperusteet_history where $since <@ system_time
+          union
+          select valintaperuste_id from valintaperusteiden_valintakokeet_history where $since <@ system_time
+          """.as[UUID]
   }
 
   def selectLastModified(id: UUID): DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(vp.system_time)),
-            max(lower(vk.system_time)),
-            max(upper(vph.system_time)),
-            max(upper(vkh.system_time)))
-          from valintaperusteet vp
-          left join valintaperusteet_history vph on vp.id = vph.id
-          left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
-          left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-          where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head
+    sql"""select last_modified from valintaperusteet vp where vp.id = ${id.toString}::uuid""".as[Option[Instant]].head
   }
 }
 
@@ -151,7 +144,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                  organisaatio_oid,
                  muokkaaja,
                  kielivalinta,
-                 lower(system_time)
+                 last_modified
           from valintaperusteet
           where id = ${id.toString}::uuid #${tilaConditions(tilaFilter)}"""
 
@@ -230,19 +223,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   val selectValintaperusteListSql =
-    """select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, m.modified
-         from valintaperusteet v
-         inner join (
-           select vp.id id, greatest(
-             max(lower(vp.system_time)),
-             max(lower(vk.system_time)),
-             max(upper(vph.system_time)),
-             max(upper(vkh.system_time))) modified
-           from valintaperusteet vp
-           left join valintaperusteet_history vph on vp.id = vph.id
-           left join valintaperusteiden_valintakokeet vk on vp.id = vk.valintaperuste_id
-           left join valintaperusteiden_valintakokeet_history vkh on vp.id = vkh.valintaperuste_id
-           group by vp.id) m on v.id = m.id"""
+    """select distinct v.id, v.nimi, v.tila, v.organisaatio_oid, v.muokkaaja, v.last_modified from valintaperusteet v"""
 
   def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ValintaperusteListItem]] = {
     sql"""#$selectValintaperusteListSql

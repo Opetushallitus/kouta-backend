@@ -279,6 +279,19 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     get(id, uusiValintaperuste) should not equal lastModified
   }
 
+  it should "add right amount of rows to history tables" in {
+    resetTableHistory("valintaperusteet")
+    resetTableHistory("valintaperusteiden_valintakokeet")
+
+    val id           = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    val uusiValintaperuste = getIds(valintaperuste(id).copy(valintakokeet = List()))
+    update(uusiValintaperuste, lastModified, expectUpdate = true)
+
+    assert(getTableHistorySize("valintaperusteet") == 1)
+    assert(getTableHistorySize("valintaperusteiden_valintakokeet") == 1)
+  }
+
   it should "store and update unfinished valintaperuste" in {
     val unfinishedValintaperuste = MinYoValintaperuste
     val id = put(unfinishedValintaperuste)

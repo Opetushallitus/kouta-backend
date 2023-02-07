@@ -10,8 +10,9 @@ import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
-import org.json4s.jackson.JsonMethods
+import fi.oph.kouta.util.TimeUtils.instantToModified
 
+import org.json4s.jackson.JsonMethods
 import java.time.LocalDateTime
 
 class ToteutusSpec extends KoutaIntegrationSpec
@@ -108,7 +109,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
     val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), Seq(GrandChildOid))
     val oid = put(newToteutus, session)
     get(oid, newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session)))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(ChildOid)))
@@ -118,7 +119,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val newKoulutus = koulutus.copy(organisaatioOid = LonelyOid, julkinen = false, tarjoajat = List(LonelyOid))
     val koulutusOid = put(newKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), Seq(GrandChildOid))
     put(ToteutusPath, newToteutus, session, 403)
     get(koulutusOid, newKoulutus.copy(oid = Some(KoulutusOid(koulutusOid))))
   }
@@ -127,7 +128,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List())
     val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role]), Seq(GrandChildOid))
     put(ToteutusPath, newToteutus, session, 403)
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid))))
   }
@@ -368,7 +369,7 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val ophKoulutus = koulutus.copy(organisaatioOid = OphOid, julkinen = true, tarjoajat = List(ChildOid))
     val koulutusOid = put(ophKoulutus, ophSession)
     val newToteutus = toteutus(koulutusOid).copy(tila = Tallennettu, organisaatioOid = GrandChildOid, tarjoajat = List(GrandChildOid))
-    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), GrandChildOid)
+    val session = addTestSession(Seq(Role.Toteutus.Crud.asInstanceOf[Role], Role.Koulutus.Read.asInstanceOf[Role]), Seq(GrandChildOid))
     val oid = put(newToteutus, session)
     val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session))
     val lastModified = get(oid, createdToteutus)
@@ -519,6 +520,64 @@ class ToteutusSpec extends KoutaIntegrationSpec
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus) should not equal lastModified
+  }
+
+  it should "set last_modified right for old koulutukset after database migration" in {
+    db.clean()
+    db.migrate("107")
+    addDefaultSession()
+    addTestSessions()
+    koulutusOid = put(koulutus, ophSession)
+
+    val (toteutus1, toteutus1Timestamp) = insertToteutus(toteutus(koulutusOid))
+    val oid1                            = toteutus1.oid.get.toString
+
+    val (toteutus2, _)              = insertToteutus(toteutus(koulutusOid))
+    val oid2                        = toteutus2.oid.get.toString
+    val toteutus2NewTarjoajat       = toteutus2.tarjoajat ++ Seq(YoOid)
+    val toteutus2tarjoajatTimestamp = updateToteutuksenTarjoajat(toteutus2.copy(tarjoajat = toteutus2NewTarjoajat))
+
+    val (toteutus3, _)        = insertToteutus(toteutus(koulutusOid))
+    val oid3                  = toteutus3.oid.get.toString
+    val toteutus3tarjoajatNow = updateToteutuksenTarjoajat(toteutus3.copy(tarjoajat = List()))
+
+    db.migrate("108")
+
+    get(oid1, toteutus1.copy(modified = Some(instantToModified(toteutus1Timestamp))))
+    get(
+      oid2,
+      toteutus2.copy(tarjoajat = toteutus2NewTarjoajat, modified = Some(instantToModified(toteutus2tarjoajatTimestamp)))
+    )
+    get(oid3, toteutus3.copy(tarjoajat = List(), modified = Some(instantToModified(toteutus3tarjoajatNow))))
+
+    db.clean()
+    db.migrate()
+    addDefaultSession()
+    addTestSessions()
+    koulutusOid = put(koulutus, ophSession)
+  }
+
+  it should "add right amount of rows to history tables" in {
+    resetTableHistory("toteutukset")
+    resetTableHistory("toteutusten_tarjoajat")
+    val baseToteutus = toteutus(koulutusOid).copy(muokkaaja = OphUserOid, metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true))))
+
+    val oid          = put(baseToteutus, ophSession)
+    val lastModified = get(oid, baseToteutus.copy(oid = Some(ToteutusOid(oid))))
+
+    val toteutus1 = baseToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Tallennettu, tarjoajat = List())
+    update(toteutus1, lastModified, expectUpdate = true, ophSession)
+
+    assert(getToteutusHistorySize(toteutus1) == 1)
+    assert(getToteutusTarjoajatHistorySize(toteutus1) == 2)
+
+    val lastModified2 = get(oid, toteutus1)
+    val toteutus2     = toteutus1.copy(tila = Julkaistu, tarjoajat = toteutus.tarjoajat)
+    update(toteutus2, lastModified2, expectUpdate = true, ophSession)
+
+    assert(getToteutusHistorySize(toteutus2) == 2)
+    // Tarjoajien lisääminen ei lisää rivejä historiaan
+    assert(getToteutusTarjoajatHistorySize(toteutus2) == 2)
   }
 
   it should "store and update unfinished toteutus" in {

@@ -4,7 +4,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
-import fi.oph.kouta.util.TimeUtils.instantToModified
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
@@ -53,9 +53,8 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlockingTransactionally( for {
       t <- selectToteutus(oid, tilaFilter).as[Toteutus].headOption
       tt <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
-      l <- selectLastModified(oid)
-    } yield (t, tt, l)).get match {
-      case (Some(t), tt, Some(l)) => Some((t.copy(modified = Some(instantToModified(l)), tarjoajat = tt.map(_.tarjoajaOid).toList), l))
+    } yield (t, tt)).get match {
+      case (Some(t), tt) => Some((t.copy(tarjoajat = tt.map(_.tarjoajaOid).toList), modifiedToInstant(t.modified.get)))
       case _ => None
     }
   }
@@ -64,7 +63,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     KoutaDatabase.runBlocking(selectToteutuksetOrderedByOids(oids).as[Toteutus])
   }
 
-  private def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
+  def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
       val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
@@ -94,9 +93,6 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
         )
     }.get
   }
-
-  override def listModifiedSince(since: Instant): Seq[ToteutusOid] =
-    KoutaDatabase.runBlocking(selectModifiedSince(since))
 
   private def listWithTarjoajat(selectListItems : () => DBIO[Seq[ToteutusListItem]]): Seq[ToteutusListItem] =
     KoutaDatabase.runBlockingTransactionally(
@@ -165,28 +161,16 @@ trait ToteutusModificationSQL extends SQLHelpers {
   this: ExtractorBase =>
 
   def selectLastModified(oid: ToteutusOid): DBIO[Option[Instant]] = {
-    sql"""select greatest(
-            max(lower(t.system_time)),
-            max(lower(ta.system_time)),
-            max(upper(th.system_time)),
-            max(upper(tah.system_time)))
-          from toteutukset t
-          left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-          left join toteutukset_history th on t.oid = th.oid
-          left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
-          where t.oid = $oid""".as[Option[Instant]].head
+    sql"""select t.last_modified from toteutukset t where t.oid = $oid""".as[Instant].headOption
   }
 
   def selectModifiedSince(since: Instant): DBIO[Seq[ToteutusOid]] = {
-    sql"""select oid from toteutukset where $since < lower(system_time)
+    sql"""select oid from toteutukset where $since < last_modified
           union
           select oid from toteutukset_history where $since <@ system_time
           union
-          select toteutus_oid from toteutusten_tarjoajat where $since < lower(system_time)
-          union
           select toteutus_oid from toteutusten_tarjoajat_history where $since <@ system_time""".as[ToteutusOid]
   }
-
 }
 
 sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL with SQLHelpers {
@@ -204,23 +188,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               t.kielivalinta,
               t.teemakuva,
               t.sorakuvaus_id,
-              m.modified,
+              t.last_modified,
               k.metadata,
               k.koulutukset_koodi_uri
        from toteutukset t
-                inner join (select oid, koulutukset_koodi_uri, metadata from koulutukset) k on k.oid = t.koulutus_oid
-                inner join (
-           select t.oid oid,
-                  greatest(
-                          max(lower(t.system_time)),
-                          max(lower(ta.system_time)),
-                          max(upper(th.system_time)),
-                          max(upper(tah.system_time))) modified
-           from toteutukset t
-                    left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-                    left join toteutukset_history th on t.oid = th.oid
-                    left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
-           group by t.oid) m on t.oid = m.oid"""
+           inner join (select oid, koulutukset_koodi_uri, metadata from koulutukset) k on k.oid = t.koulutus_oid"""
 
   def selectToteutus(oid: ToteutusOid, tilaFilter: TilaFilter) =
     sql"""#$selectToteutusSql
@@ -307,7 +279,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               teemakuva = ${toteutus.teemakuva},
               sorakuvaus_id = ${toteutus.sorakuvausId.map(_.toString)}::uuid
             where oid = ${toteutus.oid}
-            and ( koulutus_oid is distinct from ${toteutus.koulutusOid}
+            and (koulutus_oid is distinct from ${toteutus.koulutusOid}
             or external_id is distinct from ${toteutus.externalId}
             or tila is distinct from ${toteutus.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(toteutus.nimi)}::jsonb
@@ -335,20 +307,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            where toteutus_oid = $oid"""
 
   val selectToteutusListSql =
-    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, m.modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
+    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
          from toteutukset t
-         inner join (select oid, metadata, koulutukset_koodi_uri from koulutukset) k on k.oid = t.koulutus_oid
-         inner join (
-           select t.oid oid, greatest(
-             max(lower(t.system_time)),
-             max(lower(ta.system_time)),
-             max(upper(th.system_time)),
-             max(upper(tah.system_time))) modified
-           from toteutukset t
-           left join toteutusten_tarjoajat ta on t.oid = ta.toteutus_oid
-           left join toteutukset_history th on t.oid = th.oid
-           left join toteutusten_tarjoajat_history tah on t.oid = tah.toteutus_oid
-           group by t.oid) m on t.oid = m.oid"""
+         inner join (select oid, metadata, koulutukset_koodi_uri from koulutukset) k on k.oid = t.koulutus_oid"""
 
   def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): DBIO[Vector[ToteutusListItem]] = {
     sql"""#$selectToteutusListSql
