@@ -56,13 +56,7 @@ package object koulutus {
       |            - koulutus_371101#1
       |            - koulutus_201000#1
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -161,13 +155,7 @@ package object koulutus {
       |          description: Koulutuksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        tarjoajat:
       |          type: array

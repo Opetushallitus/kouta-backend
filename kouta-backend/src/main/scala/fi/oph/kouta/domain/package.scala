@@ -68,6 +68,7 @@ package object domain {
       |        - julkaistu
       |        - tallennettu
       |        - arkistoitu
+      |        - poistettu
       |""".stripMargin
 
   val HakulomaketyyppiModel: String =

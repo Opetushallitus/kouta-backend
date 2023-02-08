@@ -21,13 +21,7 @@ package object haku {
       |          type: string
       |          description: Ulkoinen tunniste jota voidaan käyttää Kouta lomakkeiden mäppäykseen oppilaitosten omien tietojärjestelmien kanssa
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object
@@ -157,13 +151,7 @@ package object haku {
       |          description: Haun yksilöivä tunniste. Järjestelmän generoima.
       |          example: "1.2.246.562.29.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object

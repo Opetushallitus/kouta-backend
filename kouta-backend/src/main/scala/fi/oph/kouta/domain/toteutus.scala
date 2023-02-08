@@ -24,13 +24,7 @@ package object toteutus {
       |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
       |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -187,13 +181,7 @@ package object toteutus {
       |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
       |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Koulutuksen toteutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        tarjoajat:
       |          type: array

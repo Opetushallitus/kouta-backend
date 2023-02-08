@@ -29,13 +29,7 @@ package object hakukohde {
       |          description: Hakukohteeseen liitetyn haun yksilöivä tunniste.
       |          example: "1.2.246.562.29.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Haun julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -195,13 +189,7 @@ package object hakukohde {
       |          description: Hakukohteeseen liitetyn valintaperusteen yksilöivä tunniste.
       |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Hakukohteen julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object
