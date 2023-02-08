@@ -40,7 +40,8 @@ object TestData {
     puhelinnumero = Map(Fi -> "123", Sv -> "123"),
     sahkoposti = Map(Fi -> "aku.ankka@ankkalinnankoulu.fi", Sv -> "aku.ankka@ankkalinnankoulu.fi"),
     titteli = Map(Fi -> "titteli", Sv -> "titteli sv"),
-    wwwSivu = Map(Fi -> "http://opintopolku.fi", Sv -> "http://studieinfo.fi")
+    wwwSivu = Map(Fi -> "http://opintopolku.fi", Sv -> "http://studieinfo.fi"),
+    wwwSivuTeksti = Map(Fi -> "teksti fi", Sv -> "teksti sv")
   )
 
   val Liite1: Liite = Liite(

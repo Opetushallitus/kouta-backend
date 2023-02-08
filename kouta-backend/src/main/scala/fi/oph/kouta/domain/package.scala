@@ -5,7 +5,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
-import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.Validations.{assertTrue, _}
 import fi.oph.kouta.validation.{
   IsValid,
   JulkaisuValidatableSubEntity,
@@ -13,7 +13,6 @@ import fi.oph.kouta.validation.{
   ValidatableSubEntity,
   ValidationContext
 }
-
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
@@ -202,7 +201,11 @@ package object domain {
       |          $ref: '#/components/schemas/Teksti'
       |        wwwSivu:
       |          type: object
-      |          description: Yhteyshenkilön www-sivu eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          description: Yhteyshenkilön www-sivun linkki eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/Teksti'
+      |        wwwSivuTeksti:
+      |          type: object
+      |          description: Yhteyshenkilön www-sivun linkin kanssa näytettävä teksti eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
@@ -549,7 +552,8 @@ package object domain {
       titteli: Kielistetty = Map(),
       sahkoposti: Kielistetty = Map(),
       puhelinnumero: Kielistetty = Map(),
-      wwwSivu: Kielistetty = Map()
+      wwwSivu: Kielistetty = Map(),
+      wwwSivuTeksti: Kielistetty = Map()
   ) extends ValidatableSubEntity {
     def validate(vCtx: ValidationContext, path: String): IsValid = {
       validateIfJulkaistu(
@@ -560,7 +564,12 @@ package object domain {
           validateOptionalKielistetty(vCtx.kielivalinta, sahkoposti, s"$path.sahkoposti"),
           validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
           validateOptionalKielistetty(vCtx.kielivalinta, wwwSivu, s"$path.wwwSivu"),
-          validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _)
+          validateIfNonEmpty(wwwSivu, s"$path.wwwSivu", assertValidUrl _),
+          validateOptionalKielistetty(vCtx.kielivalinta, wwwSivuTeksti, s"$path.wwwSivuTeksti"),
+          assertKielistetytHavingSameLocales(
+            (wwwSivu, s"$path.wwwSivu"),
+            (wwwSivuTeksti, s"$path.wwwSivuTeksti")
+          )
         )
       )
     }
