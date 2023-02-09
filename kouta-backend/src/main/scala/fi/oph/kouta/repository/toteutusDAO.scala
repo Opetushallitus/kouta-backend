@@ -60,7 +60,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   override def get(oids: List[ToteutusOid]) = {
-    KoutaDatabase.runBlocking(selectToteutuksetByOids(oids).as[Toteutus])
+    KoutaDatabase.runBlocking(selectToteutuksetOrderedByOids(oids).as[Toteutus])
   }
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
@@ -129,7 +129,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   def getToteutuksetByOids(toteutusOids: List[ToteutusOid]): Seq[Toteutus] = {
     KoutaDatabase.runBlockingTransactionally(
       for {
-        toteutukset <- selectToteutuksetByOids(toteutusOids).as[Toteutus]
+        toteutukset <- selectToteutuksetOrderedByOids(toteutusOids).as[Toteutus]
         tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
       } yield (toteutukset, tarjoajat)
     ).map {
@@ -221,9 +221,14 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
                (select oid from toteutukset where koulutus_oid = $koulutusOid #${tilaConditions(tilaFilter)})""".as[Tarjoaja]
   }
 
-  def selectToteutuksetByOids(toteutusOids: List[ToteutusOid]) =
+  // with ordinality explained: https://stackoverflow.com/a/35456954
+  def selectToteutuksetOrderedByOids(toteutusOids: List[ToteutusOid]) = {
+    val oidsAsStr = toteutusOids.map(oid => oid.toString())
     sql"""#$selectToteutusSql
-          where t.oid in (#${createOidInParams(toteutusOids)})"""
+          join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
+          on t.oid = o.oid
+          order by o.ord"""
+  }
 
   def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {
     sql"""insert into toteutukset (
