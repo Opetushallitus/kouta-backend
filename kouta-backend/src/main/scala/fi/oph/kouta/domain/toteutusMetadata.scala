@@ -833,6 +833,8 @@ case class OpePedagOpinnotToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityi
 
 case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
                                          kuvaus: Kielistetty = Map(),
+                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                         opintojenLaajuusNumero: Option[Double] = None,
                                          opetus: Option[Opetus] = None,
                                          asiasanat: List[Keyword] = List(),
                                          ammattinimikkeet: List[Keyword] = List(),
