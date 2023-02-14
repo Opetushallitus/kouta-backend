@@ -374,6 +374,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""select oid, nimi
           from toteutukset t
           where metadata->>'tyyppi' = 'kk-opintokokonaisuus'
-          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]""".as[OidAndNimi]
+          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]
+          #${tilaConditions(TilaFilter.onlyJulkaistut)}""".as[OidAndNimi]
   }
 }
