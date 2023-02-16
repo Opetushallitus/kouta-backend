@@ -47,6 +47,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val kkOpintokokonaisuusToteutus =
     JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.133"))
   val kkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.133")))
+  val kkOpintojaksoKoulutus       = KkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.143")))
   val ammOpettajaKoulutus         = AmmOpettajaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.134")))
   val ammOpettajaToteutus         = JulkaistuAmmOpettajaToteutus.copy(koulutusOid = ammOpettajaKoulutus.oid.get)
   val yoOpettajaKoulutus          = YoOpettajaKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.135")))
@@ -1017,6 +1018,104 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       "metadata.ammattinimikkeet",
       notEmptyMsg
     )
+  }
+
+  it should "fail if opintojen laajuus not in the range given for koulutus" in {
+    val toteutuksenLaajuus = Some(25.0)
+    failsValidation(
+      kkOpintojaksoToteutus.copy(metadata =
+        Some(KkOpintojaksoToteutuksenMetatieto.copy(opintojenLaajuusNumero = toteutuksenLaajuus))
+      ),
+      "metadata.opintojenLaajuusNumero",
+      notInTheRangeMsg(
+        KkOpintojaksoKoulutuksenMetatieto.opintojenLaajuusNumeroMin,
+        KkOpintojaksoKoulutuksenMetatieto.opintojenLaajuusNumeroMax,
+        toteutuksenLaajuus
+      )
+    )
+  }
+
+  it should "fail if opintojen laajuusyksikko is different in koulutus" in {
+    val koulutusLaajuusyksikko = kkOpintojaksoKoulutus.metadata.get
+      .asInstanceOf[KkOpintojaksoKoulutusMetadata]
+      .opintojenLaajuusyksikkoKoodiUri
+    val toteutusLaajuusyksikko = Some("opintojenlaajuusyksikko_5#1")
+    failsValidation(
+      kkOpintojaksoToteutus.copy(metadata =
+        Some(KkOpintojaksoToteutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = toteutusLaajuusyksikko))
+      ),
+      "metadata.opintojenLaajuusyksikkoKoodiUri",
+      invalidToteutusOpintojenLaajuusyksikkoIntegrity(
+        koulutusLaajuusyksikko,
+        toteutusLaajuusyksikko
+      )
+    )
+  }
+
+  it should "pass with any opintojenLaajuusyksikko when related koulutus opintojenlaajuusyksikko is not defined" in {
+    val opintojaksoKoulutusOid = KoulutusOid("1.2.246.562.13.134")
+    when(koulutusDao.get(opintojaksoKoulutusOid))
+      .thenAnswer(
+        Some(
+          kkOpintojaksoKoulutus
+            .copy(metadata = Some(KkOpintojaksoKoulutuksenMetatieto.copy(opintojenLaajuusyksikkoKoodiUri = None)))
+        )
+      )
+    passesValidation(kkOpintojaksoToteutus.copy(koulutusOid = opintojaksoKoulutusOid))
+  }
+
+  it should "pass with any otherwise valid opintojenLaajuusNumero when related koulutus opintojenlaajuus range is not defined" in {
+    val opintojaksoKoulutusOid = KoulutusOid("1.2.246.562.13.134")
+    when(koulutusDao.get(opintojaksoKoulutusOid))
+      .thenAnswer(
+        Some(
+          kkOpintojaksoKoulutus
+            .copy(metadata =
+              Some(
+                KkOpintojaksoKoulutuksenMetatieto.copy(
+                  opintojenLaajuusNumeroMin = None,
+                  opintojenLaajuusNumeroMax = None
+                )
+              )
+            )
+        )
+      )
+    passesValidation(kkOpintojaksoToteutus.copy(koulutusOid = opintojaksoKoulutusOid))
+  }
+
+  it should "pass when opintojenLaajuusNumero within related koulutus partial range (only min or max defined)" in {
+    val opintojaksoKoulutusOid = KoulutusOid("1.2.246.562.13.134")
+    when(koulutusDao.get(opintojaksoKoulutusOid))
+      .thenAnswer(
+        Some(
+          kkOpintojaksoKoulutus
+            .copy(metadata =
+              Some(
+                KkOpintojaksoKoulutuksenMetatieto.copy(
+                  opintojenLaajuusNumeroMin = None
+                )
+              )
+            )
+        )
+      )
+
+    passesValidation(kkOpintojaksoToteutus.copy(koulutusOid = opintojaksoKoulutusOid))
+
+    when(koulutusDao.get(opintojaksoKoulutusOid))
+      .thenAnswer(
+        Some(
+          kkOpintojaksoKoulutus
+            .copy(metadata =
+              Some(
+                KkOpintojaksoKoulutuksenMetatieto.copy(
+                  opintojenLaajuusNumeroMax = None
+                )
+              )
+            )
+        )
+      )
+
+    passesValidation(kkOpintojaksoToteutus.copy(koulutusOid = opintojaksoKoulutusOid))
   }
 
   it should "pass when koulutus has isAvoinKorkeakoulutus = false" in {
