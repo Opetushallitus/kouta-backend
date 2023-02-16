@@ -1,6 +1,6 @@
 package fi.oph.kouta
 
-import fi.oph.kouta.domain.{Julkaisutila, Kieli}
+import fi.oph.kouta.domain.{Julkaisutila}
 
 package object validation {
   type IsValid = Seq[ValidationError]

@@ -31,13 +31,7 @@ package object hakutieto {
       |                description: Haun hakutapa. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/hakutapa/11)
       |                example: hakutapa_03#1
       |              tila:
-      |                type: string
-      |                example: "julkaistu"
-      |                enum:
-      |                  - julkaistu
-      |                  - arkistoitu
-      |                  - tallennettu
-      |                  - poistettu
+      |                $ref: '#/components/schemas/Julkaisutila'
       |                description: Haun julkaisutila. Jos haku on julkaistu, se näkyy oppijalle Opintopolussa.
       |              koulutuksenAlkamiskausi:
       |                type: object
@@ -98,13 +92,7 @@ package object hakutieto {
       |                      description: Hakukohteen yksilöivä tunniste. Järjestelmän generoima.
       |                      example: "1.2.246.562.20.00000000000000000009"
       |                    tila:
-      |                      type: string
-      |                      example: "julkaistu"
-      |                      enum:
-      |                        - julkaistu
-      |                        - arkistoitu
-      |                        - tallennettu
-      |                        - poistettu
+      |                      $ref: '#/components/schemas/Julkaisutila'
       |                      description: Hakukohteen julkaisutila. Jos hakukohde on julkaistu, se näkyy oppijalle Opintopolussa.
       |                    esikatselu:
       |                      type: boolean

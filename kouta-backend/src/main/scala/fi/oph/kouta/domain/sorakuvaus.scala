@@ -31,13 +31,7 @@ package object sorakuvaus {
       |            - muu
       |          example: amm
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        kielivalinta:
       |          type: array
@@ -94,13 +88,7 @@ package object sorakuvaus {
       |          description: SORA-kuvauksen yksilöivä tunniste. Järjestelmän generoima.
       |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: SORA-kuvauksen julkaisutila. Jos SORA-kuvaus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        nimi:
       |          type: object

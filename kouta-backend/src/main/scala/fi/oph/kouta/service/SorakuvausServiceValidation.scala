@@ -1,31 +1,16 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoulutusKoodiClient
-import fi.oph.kouta.domain.{Sorakuvaus, SorakuvausMetadata, TilaFilter}
+import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.domain.{KoulutusKoodisto, KoulutusalaKoodisto, Sorakuvaus, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{
-  and,
-  assertKoodistoQueryResult,
-  assertNotDefined,
-  assertNotOptional,
-  assertTrue,
-  integrityViolationMsg,
-  invalidKoulutusAlaKoodiuri,
-  invalidKoulutuskoodiuri,
-  notModifiableMsg,
-  validateIfDefined,
-  validateIfJulkaistu,
-  validateIfNonEmpty,
-  validateIfTrueOrElse,
-  validateKielistetty
-}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotDefined, assertNotOptional, assertTrue, integrityViolationMsg, invalidKoulutusAlaKoodiuri, invalidKoulutuskoodiuri, notModifiableMsg, validateIfDefined, validateIfJulkaistu, validateIfNonEmpty, validateIfTrueOrElse, validateKielistetty}
 import fi.oph.kouta.validation.{IsValid, NoErrors, SorakuvausDiffResolver, ValidationContext}
 
 object SorakuvausServiceValidation
-    extends SorakuvausServiceValidation(KoulutusKoodiClient, KoulutusDAO)
+    extends SorakuvausServiceValidation(CachedKoodistoClient, KoulutusDAO)
 class SorakuvausServiceValidation(
-    koulutusKoodiClient: KoulutusKoodiClient,
+    koodistoClient: CachedKoodistoClient,
     koulutusDAO: KoulutusDAO
 ) extends ValidatingService[Sorakuvaus] {
   override def validateEntity(sk: Sorakuvaus, oldSk: Option[Sorakuvaus]): IsValid = {
@@ -72,7 +57,7 @@ class SorakuvausServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.koulutusKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, _),
             path,
             vCtx,
             invalidKoulutuskoodiuri(koodiUri)
@@ -83,7 +68,7 @@ class SorakuvausServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.koulutusalaKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
             "metadata.koulutusalaKoodiUri",
             vCtx,
             invalidKoulutusAlaKoodiuri(koodiUri)

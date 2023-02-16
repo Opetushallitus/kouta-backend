@@ -1,19 +1,19 @@
 package fi.oph.kouta.service.validation
 
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoulutusKoodiClient, TutkinnonOsaServiceItem}
+import fi.oph.kouta.client.{EPerusteKoodiClient, CachedKoodistoClient, TutkinnonOsaServiceItem}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.service.{KoulutusKoodiValidator, ValidatingSubService}
+import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
 object AmmatillinenKoulutusServiceValidation
-    extends AmmatillinenKoulutusServiceValidation(KoulutusKoodiClient, EPerusteKoodiClient)
+    extends AmmatillinenKoulutusServiceValidation(CachedKoodistoClient, EPerusteKoodiClient)
 
 class AmmatillinenKoulutusServiceValidation(
-    val koulutusKoodiClient: KoulutusKoodiClient,
+    val koodistoClient: CachedKoodistoClient,
     ePerusteKoodiClient: EPerusteKoodiClient
-) extends KoulutusKoodiValidator with ValidatingSubService[Koulutus] {
+) extends KoodistoValidator with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
     val koulutusDiffResolver = KoulutusDiffResolver(koulutus,oldKoulutus)
     val upperLevelErrors = koulutus.koulutustyyppi match {
@@ -29,7 +29,7 @@ class AmmatillinenKoulutusServiceValidation(
             ),
             validateIfTrue(
               ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-              koulutusKoodiClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+              koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
                 case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
                 case Right(uri) =>
                   assertNimiMatchExternal(
@@ -101,11 +101,12 @@ class AmmatillinenKoulutusServiceValidation(
           case m: AmmatillinenMuuKoulutusMetadata =>
             and(
               assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx),
-              validateOpintojenLaajuusyksikkoAndNumero(
+              validateOpintojenLaajuusYksikko(
                 m.opintojenLaajuusyksikkoKoodiUri,
-                koulutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
+                koulutusDiffResolver.hasLaajuusyksikkoChanged(),
+                vCtx),
+              validateOpintojenLaajuusNumero(
                 m.opintojenLaajuusNumero,
-                true,
                 vCtx
               )
             )

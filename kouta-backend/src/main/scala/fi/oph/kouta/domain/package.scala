@@ -6,7 +6,13 @@ import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, NoErrors, ValidatableSubEntity, ValidationContext}
+import fi.oph.kouta.validation.{
+  IsValid,
+  JulkaisuValidatableSubEntity,
+  NoErrors,
+  ValidatableSubEntity,
+  ValidationContext
+}
 
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
@@ -62,6 +68,7 @@ package object domain {
       |        - julkaistu
       |        - tallennettu
       |        - arkistoitu
+      |        - poistettu
       |""".stripMargin
 
   val HakulomaketyyppiModel: String =
@@ -635,7 +642,7 @@ package object domain {
               koodistoCheckFunc,
               s"$path.tyyppiKoodiUri",
               vCtx,
-              invalidValintakoeTyyppiKooriuri(koodiUri)
+              invalidValintakoeTyyppiKoodiuri(koodiUri)
             )
         )
       )
@@ -661,7 +668,11 @@ package object domain {
           validateIfDefined[Double](vahimmaispisteet, assertNotNegative(_, s"$path.vahimmaispisteet")),
           validateIfTrue(
             liittyyEnnakkovalmistautumista.contains(true),
-            validateKielistetty(vCtx.kielivalinta, ohjeetEnnakkovalmistautumiseen, s"$path.ohjeetEnnakkovalmistautumiseen")
+            validateKielistetty(
+              vCtx.kielivalinta,
+              ohjeetEnnakkovalmistautumiseen,
+              s"$path.ohjeetEnnakkovalmistautumiseen"
+            )
           ),
           validateIfTrue(
             erityisjarjestelytMahdollisia.contains(true),
@@ -757,7 +768,11 @@ package object domain {
       tutkinnonosaId: Option[Long] = None,
       tutkinnonosaViite: Option[Long] = None
   ) {
-    def validate(vCtx: ValidationContext, path: String, tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]]): IsValid = and(
+    def validate(
+        vCtx: ValidationContext,
+        path: String,
+        tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]]
+    ): IsValid = and(
       validateIfJulkaistu(
         vCtx.tila,
         and(
@@ -767,38 +782,41 @@ package object domain {
           assertNotOptional(tutkinnonosaViite, s"$path.tutkinnonosaViite")
         )
       ),
-      validateIfDefined[Long](ePerusteId, epId => {
-        val viitteetJaIdt = tutkinnonOsatFromService(epId)
-        (tutkinnonosaViite, tutkinnonosaId) match {
-          case (Some(viite), Some(id)) =>
-            val viiteJaId = viitteetJaIdt.find(_.viiteId == viite)
-            and(
+      validateIfDefined[Long](
+        ePerusteId,
+        epId => {
+          val viitteetJaIdt = tutkinnonOsatFromService(epId)
+          (tutkinnonosaViite, tutkinnonosaId) match {
+            case (Some(viite), Some(id)) =>
+              val viiteJaId = viitteetJaIdt.find(_.viiteId == viite)
+              and(
+                assertTrue(
+                  viiteJaId.isDefined,
+                  s"$path.tutkinnonosaViite",
+                  invalidTutkinnonOsaViiteForEPeruste(ePerusteId.get, viite)
+                ),
+                assertTrue(
+                  viiteJaId.isDefined && viiteJaId.get.id == id,
+                  s"$path.tutkinnonosaId",
+                  invalidTutkinnonOsaIdForEPeruste(ePerusteId.get, id)
+                )
+              )
+            case (Some(viite), None) =>
               assertTrue(
-                viiteJaId.isDefined,
+                viitteetJaIdt.find(_.viiteId == viite).isDefined,
                 s"$path.tutkinnonosaViite",
                 invalidTutkinnonOsaViiteForEPeruste(ePerusteId.get, viite)
-              ),
+              )
+            case (None, Some(id)) =>
               assertTrue(
-                viiteJaId.isDefined && viiteJaId.get.id == id,
+                viitteetJaIdt.find(_.id == id).isDefined,
                 s"$path.tutkinnonosaId",
                 invalidTutkinnonOsaIdForEPeruste(ePerusteId.get, id)
               )
-            )
-          case (Some(viite), None) =>
-            assertTrue(
-              viitteetJaIdt.find(_.viiteId == viite).isDefined,
-              s"$path.tutkinnonosaViite",
-              invalidTutkinnonOsaViiteForEPeruste(ePerusteId.get, viite)
-            )
-          case (None, Some(id)) =>
-            assertTrue(
-              viitteetJaIdt.find(_.id == id).isDefined,
-              s"$path.tutkinnonosaId",
-              invalidTutkinnonOsaIdForEPeruste(ePerusteId.get, id)
-            )
-          case (_, _) => NoErrors
+            case (_, _) => NoErrors
+          }
         }
-      })
+      )
     )
 
     def idValuesPopulated(): Boolean =
@@ -971,15 +989,15 @@ package object domain {
     val authenticated: Authenticated
   }
 
-  object PainotetutArvoSanatLukioKaikki {
-    val koodiUrit: Set[String] = Set(
-      "painotettavatoppiaineetlukiossa_a1",
-      "painotettavatoppiaineetlukiossa_a2",
-      "painotettavatoppiaineetlukiossa_b1",
-      "painotettavatoppiaineetlukiossa_b2",
-      "painotettavatoppiaineetlukiossa_b3"
-    )
-  }
+  // HUOM! Nämä ei ole koodiston arvoja, vaan koodiURI-etuliitteitä.
+  // Kyseisiä koodiarvoja ei ole koodistossa "painotettavatoppiaineetlukiossa"!
+  val oppiaineKielitasoKoodiUriEtuliitteet: Set[String] = Set(
+    "a1",
+    "a2",
+    "b1",
+    "b2",
+    "b3"
+  ).map(OppiaineKoodisto.toString + "_" + _)
 
   val oppilaitostyypitForAvoinKorkeakoulutus = List(
     "oppilaitostyyppi_41#1", //Ammattikorkeakoulut
@@ -992,7 +1010,7 @@ package object domain {
     "oppilaitostyyppi_64#1", //Kansalaisopistot
     "oppilaitostyyppi_66#1", //Kesäyliopistot
     "oppilaitostyyppi_65#1", //Opintokeskukset
-    "oppilaitostyyppi_99#1", //Muut oppilaitokset,
+    "oppilaitostyyppi_99#1"  //Muut oppilaitokset,
   )
 
   val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"

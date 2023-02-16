@@ -2,7 +2,6 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid.{KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
-import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
@@ -25,13 +24,7 @@ package object toteutus {
       |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
       |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Toteutuksen julkaisutila. Jos toteutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -78,6 +71,7 @@ package object toteutus {
       |            - $ref: '#/components/schemas/ErikoislaakariToteutusMetadata'
       |            - $ref: '#/components/schemas/ErikoistumiskoulutusToteutusMetadata'
       |            - $ref: '#/components/schemas/TaiteenPerusopetusToteutusMetadata'
+      |            - $ref: '#/components/schemas/MuuToteutusMetadata'
       |          example:
       |            tyyppi: amm
       |            kuvaus:
@@ -187,13 +181,7 @@ package object toteutus {
       |          description: Toteutukseen liittyvän koulutuksen yksilöivä tunniste.
       |          example: "1.2.246.562.13.00000000000000000009"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
-      |            - poistettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Koulutuksen toteutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.
       |        tarjoajat:
       |          type: array

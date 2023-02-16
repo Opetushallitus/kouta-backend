@@ -1,11 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, Validatable, ValidationContext}
+import fi.oph.kouta.validation._
+import scalaz.syntax.std.boolean._
 
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
@@ -52,7 +53,7 @@ trait ValidatingService[E <: Validatable] {
     Some(s"$koodiUri#<versionumero>, esim. $koodiUri#1")
 }
 
-trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] with KoulutusKoodiValidator {
+trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingService[E] with KoodistoValidator {
   def organisaatioService: OrganisaatioService
   def sorakuvausDAO: SorakuvausDAO
 
@@ -163,8 +164,8 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
   }
 }
 
-trait KoulutusKoodiValidator {
-  def koulutusKoodiClient: KoulutusKoodiClient
+trait KoodistoValidator {
+  def koodistoClient: CachedKoodistoClient
 
   def validateKoulutusKoodiUrit(
       koodiUriFilter: KoulutusKoodiFilter,
@@ -184,7 +185,7 @@ trait KoulutusKoodiValidator {
             assertKoulutuskoodiQueryResult(
               koodiUri,
               koodiUriFilter,
-              koulutusKoodiClient,
+              koodistoClient,
               path,
               vCtx,
               invalidKoulutuskoodiuri(koodiUri)
@@ -193,60 +194,107 @@ trait KoulutusKoodiValidator {
       )
     )
 
-  def assertKoulutusalaKoodiUrit(koodiUrit: Seq[String], validationContext: ValidationContext): IsValid =
+  def assertKoodiUritExist(
+      koodiUrit: Seq[String],
+      koodisto: KoodistoNimi,
+      path: String,
+      getValidationError: String => ErrorMessage,
+      vCtx: ValidationContext
+  ): IsValid = {
     validateIfNonEmpty[String](
       koodiUrit,
-      "metadata.koulutusalaKoodiUrit",
+      path,
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koulutusKoodiClient.koulutusalaKoodiUriExists,
+          koodistoClient.koodiUriExistsInKoodisto(koodisto, _),
           path,
-          validationContext,
-          invalidKoulutusAlaKoodiuri(koodiUri)
+          vCtx,
+          getValidationError(koodiUri)
         )
     )
+  }
 
-  def assertOpintojenLaajuusyksikkoKoodiUri(
+  def assertKoodiUriExists(
       koodiUri: Option[String],
-      validationContext: ValidationContext
-  ): IsValid =
+      koodisto: KoodistoNimi,
+      path: String,
+      getValidationError: String => ErrorMessage,
+      vCtx: ValidationContext
+  ): IsValid = {
     validateIfDefined[String](
       koodiUri,
-      uri =>
+      koodiUri =>
         assertKoodistoQueryResult(
-          uri,
-          koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
-          "metadata.opintojenLaajuusyksikkoKoodiUri",
-          validationContext,
-          invalidOpintojenLaajuusyksikkoKoodiuri(uri)
+          koodiUri,
+          koodistoClient.koodiUriExistsInKoodisto(koodisto, _),
+          path,
+          vCtx,
+          getValidationError(koodiUri)
         )
+    )
+  }
+
+  def assertKoulutusalaKoodiUrit(koodiUrit: Seq[String], validationContext: ValidationContext): IsValid =
+    assertKoodiUritExist(
+      koodiUrit,
+      KoulutusalaKoodisto,
+      "metadata.koulutusalaKoodiUrit",
+      invalidKoulutusAlaKoodiuri,
+      validationContext
     )
 
-  def validateOpintojenLaajuusyksikkoAndNumero(
-      laajuusyksikkoKoodiUri: Option[String],
-      newLaajuusyksikkoKoodiUri: Option[String],
-      laajuusNumero: Option[Double],
-      mandatoryIfJulkaistu: Boolean,
-      validationContext: ValidationContext
-  ): IsValid =
-    and(
-      assertOpintojenLaajuusyksikkoKoodiUri(newLaajuusyksikkoKoodiUri, validationContext),
-      validateIfDefined[Double](
-        laajuusNumero,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumero")
-      ),
-      validateIfTrue(
-        mandatoryIfJulkaistu,
-        validateIfJulkaistu(
-          validationContext.tila,
-          and(
-            assertNotOptional(laajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri"),
-            assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
-          )
-        )
-      )
+  def assertOpintojenLaajuusyksikkoKoodiUri(koodiUri: Option[String], validationContext: ValidationContext): IsValid =
+    assertKoodiUriExists(
+      koodiUri,
+      OpintojenLaajuusyksikkoKoodisto,
+      "metadata.opintojenLaajuusyksikkoKoodiUri",
+      invalidOpintojenLaajuusyksikkoKoodiuri,
+      validationContext
     )
+
+  def validateLaajuusMinMax(laajuusNumeroMin: Option[Double], laajuusNumeroMax: Option[Double]): IsValid = {
+    and(
+      validateIfDefined[Double](
+        laajuusNumeroMin,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMin")
+      ),
+      validateIfDefined[Double](
+        laajuusNumeroMax,
+        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
+      ),
+      validateMinMax(laajuusNumeroMin, laajuusNumeroMax, s"metadata.opintojenLaajuusNumeroMin")
+    )
+  }
+
+  def validateOpintojenLaajuusYksikko(
+      koodiUri: Option[String],
+      hasChanged: Boolean,
+      validationContext: ValidationContext
+  ) = and(
+    assertOpintojenLaajuusyksikkoKoodiUri(
+      hasChanged.option(koodiUri).flatten,
+      validationContext
+    ),
+    validateIfJulkaistu(
+      validationContext.tila,
+      assertNotOptional(koodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri")
+    )
+  )
+
+  def validateOpintojenLaajuusNumero(
+      laajuusNumero: Option[Double],
+      validationContext: ValidationContext
+  ) = and(
+    validateIfDefined[Double](
+      laajuusNumero,
+      assertNotNegative(_, "metadata.opintojenLaajuusNumero")
+    ),
+    validateIfJulkaistu(
+      validationContext.tila,
+      assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
+    )
+  )
 }
 
 trait ValidatingSubService[E] {

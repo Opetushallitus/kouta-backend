@@ -5,12 +5,9 @@ import fi.oph.kouta.domain.{
   Fi,
   Kieli,
   Kielistetty,
-  KoulutusMetadata,
   LukioKoulutusMetadata,
   LukioToteutusMetadata,
-  LukiolinjaTieto,
   Sv,
-  Toteutus,
   ToteutusMetadata
 }
 import fi.oph.kouta.client.Henkilo
@@ -31,16 +28,6 @@ object NameHelper {
       laajuus.get + " " + localizedKielistetty(opintopistetta, lng)
     } else {
       ""
-    }
-  }
-  def getLukiolinjat(toteutus: Toteutus): Option[Seq[LukiolinjaTieto]] = {
-    toteutus.metadata match {
-      case Some(toteutusMetadata) =>
-        toteutusMetadata match {
-          case lukio: LukioToteutusMetadata => Some(lukio.painotukset ++ lukio.erityisetKoulutustehtavat)
-          case _                            => None
-        }
-      case _ => None
     }
   }
 

@@ -37,10 +37,8 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     if (koodiUrit.toSet != koulutusalaKoodiUrit(oldMetadata()).toSet) koodiUrit else Seq()
   }
 
-  def newOpintojenLaajuusyksikkoKoodiUri(): Option[String] = {
-    val koodiUri = opintojenLaajuusyksikkoKoodiUri(koulutus.metadata)
-    if (koodiUri != opintojenLaajuusyksikkoKoodiUri(oldMetadata())) koodiUri else None
-  }
+  def hasLaajuusyksikkoChanged(): Boolean =
+    opintojenLaajuusyksikkoKoodiUri(koulutus.metadata) != opintojenLaajuusyksikkoKoodiUri(oldMetadata())
 
   def newOpinnonTyyppiKoodiUri(): Option[String] = {
     val koodiUri = opinnonTyyppiKoodiUri(koulutus.metadata)
@@ -69,15 +67,15 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
 
   def isAvoinKkChanged(): Boolean = oldKoulutus match {
     case Some(old: Koulutus) => koulutus.isAvoinKorkeakoulutus() != old.isAvoinKorkeakoulutus()
-    case None => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
+    case None                => false // Ei vanhaa, eli ollaan luomassa -> ei ole muuttunut
   }
 
   def getRemovedTarjoajat(): List[OrganisaatioOid] =
     oldKoulutus.map(_.tarjoajat).getOrElse(List()).diff(koulutus.tarjoajat)
 
   def newErikoistumiskoulutusKoodiUri(): Option[String] = {
-    val koodiUri = erikoitumiskoulutusKoodiUri(koulutus.metadata)
-    if (koodiUri != erikoitumiskoulutusKoodiUri(oldMetadata())) koodiUri else None
+    val koodiUri = erikoistumiskoulutusKoodiUri(koulutus.metadata)
+    if (koodiUri != erikoistumiskoulutusKoodiUri(oldMetadata())) koodiUri else None
   }
 
   private def tutkinnonosat(metadata: Option[KoulutusMetadata]): Seq[TutkinnonOsa] =
@@ -108,17 +106,9 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
 
   private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
     metadata match {
-      case Some(m: KorkeakoulutusKoulutusMetadata)       => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: AmmatillinenMuuKoulutusMetadata)      => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: TuvaKoulutusMetadata)                 => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: TelmaKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: LukioKoulutusMetadata)                => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: VapaaSivistystyoKoulutusMetadata)     => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: AikuistenPerusopetusKoulutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: KkOpintojaksoKoulutusMetadata)        => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: KkOpintokokonaisuusKoulutusMetadata)  => m.opintojenLaajuusyksikkoKoodiUri
-      case Some(m: ErikoistumiskoulutusMetadata)         => m.opintojenLaajuusyksikkoKoodiUri
-      case _                                             => None
+      case Some(m: LaajuusSingle) => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: LaajuusMinMax) => m.opintojenLaajuusyksikkoKoodiUri
+      case _                      => None
     }
 
   private def opinnonTyyppiKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
@@ -134,7 +124,7 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
       case Some(m: ErikoislaakariKoulutusMetadata) => m.tutkintonimikeKoodiUrit
       case _                                       => Seq()
     }
-  private def erikoitumiskoulutusKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
+  private def erikoistumiskoulutusKoodiUri(metadata: Option[KoulutusMetadata]): Option[String] =
     metadata match {
       case Some(m: ErikoistumiskoulutusMetadata) => m.erikoistumiskoulutusKoodiUri
       case _                                     => None

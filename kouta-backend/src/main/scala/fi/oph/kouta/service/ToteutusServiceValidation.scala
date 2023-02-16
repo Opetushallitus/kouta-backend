@@ -1,13 +1,13 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakuKoodiClient, KoulutusKoodiClient}
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
-import fi.oph.kouta.util.ToteutusServiceUtil
+import fi.oph.kouta.util.LaajuusValidationUtil
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
@@ -15,9 +15,8 @@ import fi.oph.kouta.validation._
 
 object ToteutusServiceValidation
     extends ToteutusServiceValidation(
-      KoulutusKoodiClient,
+      CachedKoodistoClient,
       OrganisaatioServiceImpl,
-      HakuKoodiClient,
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO,
@@ -25,9 +24,8 @@ object ToteutusServiceValidation
     )
 
 class ToteutusServiceValidation(
-    val koulutusKoodiClient: KoulutusKoodiClient,
+    val koodistoClient: CachedKoodistoClient,
     val organisaatioService: OrganisaatioService,
-    hakuKoodiClient: HakuKoodiClient,
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO,
@@ -96,8 +94,12 @@ class ToteutusServiceValidation(
             validateIfFalse(metadata.allowSorakuvaus, assertNotDefined(toteutus.sorakuvausId, "sorakuvausId")),
             validateSorakuvausIntegrity(toteutus.sorakuvausId, toteutus.tila, metadata.tyyppi, "metadata.tyyppi")
           ),
-          validateTarjoajat(koulutusTyyppi, toteutus.tarjoajat, oldToteutus.map(_.tarjoajat).getOrElse(List()),
-            if (toteutus.isAvoinKorkeakoulutus()) oppilaitostyypitForAvoinKorkeakoulutus else Seq()),
+          validateTarjoajat(
+            koulutusTyyppi,
+            toteutus.tarjoajat,
+            oldToteutus.map(_.tarjoajat).getOrElse(List()),
+            if (toteutus.isAvoinKorkeakoulutus()) oppilaitostyypitForAvoinKorkeakoulutus else Seq()
+          ),
           validateIfJulkaistu(vCtx.tila, assertNotEmpty(toteutus.tarjoajat, "tarjoajat")),
           validateIfDefined[Opetus](
             metadata.opetus,
@@ -159,6 +161,10 @@ class ToteutusServiceValidation(
                   )
                 case m: TaiteenPerusopetusToteutusMetadata =>
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
+                case m: MuuToteutusMetadata =>
+                  and(
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                  )
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
                     vCtx,
@@ -236,21 +242,21 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newOpetuskieliKoodiUrit(),
         "opetuskieliKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusKieliKoodiUriExists,
+        koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, _),
         invalidOpetusKieliKoodiUri
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetusaikaKoodiUrit(),
         "opetusaikaKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusAikaKoodiUriExists,
+        koodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto, _),
         invalidOpetusAikaKoodiUri
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetustapaKoodiUrit(),
         "opetustapaKoodiUrit",
         vCtx,
-        koulutusKoodiClient.opetusTapaKoodiUriExists,
+        koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, _),
         invalidOpetusTapaKoodiUri
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
@@ -259,7 +265,7 @@ class ToteutusServiceValidation(
           "metadata.opetus.koulutuksenAlkamiskausi",
           toteutusDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.kausiKoodiUriExists
+          koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
       validateIfDefined[Apuraha](opetus.apuraha, apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha)),
@@ -268,7 +274,12 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newLisatiedot(),
         s"$path.lisatiedot",
         (lisatieto, newLisatieto, path) =>
-          lisatieto.validate(path, newLisatieto, vCtx, koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists)
+          lisatieto.validate(
+            path,
+            newLisatieto,
+            vCtx,
+            koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+          )
       ),
       validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
       validateIfDefined[Int](opetus.suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
@@ -341,7 +352,7 @@ class ToteutusServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.osaamisalaKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, _),
             s"$path.koodiUri",
             vCtx,
             invalidOsaamisalaKoodiUri(koodiUri)
@@ -364,7 +375,7 @@ class ToteutusServiceValidation(
             assertKoulutuskoodiQueryResult(
               koodiUri,
               AmmatillisetPerustutkintoKoodit,
-              koulutusKoodiClient,
+              koodistoClient,
               path,
               validationContext,
               invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koodiUri)
@@ -492,7 +503,7 @@ class ToteutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          hakuKoodiClient.kieliKoodiUriExists,
+          koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
           path,
           validationContext,
           invalidKieliKoodiUri(relativePath, koodiUri)
@@ -558,14 +569,14 @@ class ToteutusServiceValidation(
         lkMetadata.painotukset,
         toteutusDiffResolver.newLukioPainotukset(),
         "painotukset",
-        koulutusKoodiClient.lukioPainotusKoodiUriExists,
+        koodistoClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, _),
         vCtx
       ),
       validateLukioLinjat(
         lkMetadata.erityisetKoulutustehtavat,
         toteutusDiffResolver.newLukioErityisetKoulutustehtavat(),
         "erityisetKoulutustehtavat",
-        koulutusKoodiClient.lukioErityinenKoulutustehtavaKoodiUriExists,
+        koodistoClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, _),
         vCtx
       ),
       validateIfNonEmptySeq[LukiodiplomiTieto](
@@ -589,7 +600,7 @@ class ToteutusServiceValidation(
               newDiplomi =>
                 assertKoodistoQueryResult(
                   newDiplomi.koodiUri,
-                  koulutusKoodiClient.lukioDiplomiKoodiUriExists,
+                  koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, _),
                   s"$path.koodiUri",
                   vCtx,
                   invalidLukioDiplomiKoodiUri(newDiplomi.koodiUri)
@@ -601,31 +612,25 @@ class ToteutusServiceValidation(
   }
 
   private def validateKoulutusIntegrity(toteutus: Toteutus, koulutus: Option[Koulutus]): IsValid = {
+    val koulutusTila   = koulutus.map(_.tila)
+    val koulutusTyyppi = koulutus.map(_.koulutustyyppi)
+
     val (
-      koulutusTila,
-      koulutusTyyppi,
-      koulutusOpintojenlaajuusMin,
-      koulutusOpintojenlaajuusMax,
-      koulutusOpintojenLaajuusyksikko
+      koulutusLaajuusMin,
+      koulutusLaajuusMax,
+      koulutusLaajuusyksikko
     ) = koulutus match {
       case Some(k: Koulutus) =>
         k.metadata match {
-          case Some(metadata: KkOpintokokonaisuusKoulutusMetadata) =>
+          case Some(metadata: LaajuusMinMax) =>
             (
-              Some(k.tila),
-              Some(k.koulutustyyppi),
               metadata.opintojenLaajuusNumeroMin,
               metadata.opintojenLaajuusNumeroMax,
               metadata.opintojenLaajuusyksikkoKoodiUri
             )
-          case _ => (Some(k.tila), Some(k.koulutustyyppi), None, None, None)
+          case _ => (None, None, None)
         }
-      case None => (None, None, None, None, None)
-    }
-
-    val kkOpintokokonaisuusToteutusMetadata = toteutus.metadata match {
-      case Some(metadata: KkOpintokokonaisuusToteutusMetadata) => Some(metadata)
-      case _                                                   => None
+      case None => (None, None, None)
     }
 
     val koulutustyypitRequiringToteutusAndKoulutusNamesEqual: Set[Koulutustyyppi] =
@@ -652,76 +657,92 @@ class ToteutusServiceValidation(
             )
           )
       ),
-      validateIfDefined[KkOpintokokonaisuusToteutusMetadata](
-        kkOpintokokonaisuusToteutusMetadata,
-        kkOpintokokonaisuusToteutusMetadata =>
+      toteutus.metadata match {
+        case Some(metadataWithLaajuusNumero: LaajuusSingle) => {
           and(
             assertTrue(
-              ToteutusServiceUtil.isValidOpintojenlaajuus(
-                koulutusOpintojenlaajuusMin,
-                koulutusOpintojenlaajuusMax,
-                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+              LaajuusValidationUtil.isValidOpintojenLaajuus(
+                koulutusLaajuusMin,
+                koulutusLaajuusMax,
+                metadataWithLaajuusNumero.opintojenLaajuusNumero
               ),
               "metadata.opintojenLaajuusNumero",
               notInTheRangeMsg(
-                koulutusOpintojenlaajuusMin,
-                koulutusOpintojenlaajuusMax,
-                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusNumero
+                koulutusLaajuusMin,
+                koulutusLaajuusMax,
+                metadataWithLaajuusNumero.opintojenLaajuusNumero
               )
             ),
             assertTrue(
-              ToteutusServiceUtil.isValidOpintojenLaajuusyksikko(
-                koulutusOpintojenLaajuusyksikko,
-                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri
+              LaajuusValidationUtil.isValidOpintojenLaajuusyksikko(
+                koulutusLaajuusyksikko,
+                metadataWithLaajuusNumero.opintojenLaajuusyksikkoKoodiUri
               ),
               "metadata.opintojenLaajuusyksikkoKoodiUri",
               invalidToteutusOpintojenLaajuusyksikkoIntegrity(
-                koulutusOpintojenLaajuusyksikko,
-                kkOpintokokonaisuusToteutusMetadata.opintojenLaajuusyksikkoKoodiUri
+                koulutusLaajuusyksikko,
+                metadataWithLaajuusNumero.opintojenLaajuusyksikkoKoodiUri
               )
             )
           )
-      )
+        }
+        case Some(metadataWithLaajuusRange: LaajuusMinMax) => {
+          and(
+            assertTrue(
+              LaajuusValidationUtil.isAtLeast(
+                metadataWithLaajuusRange.opintojenLaajuusNumeroMin,
+                koulutusLaajuusMin,
+              ),
+              "metadata.opintojenLaajuusNumeroMin",
+              invalidToteutusOpintojenLaajuusMin(
+                koulutusLaajuusMin,
+                metadataWithLaajuusRange.opintojenLaajuusNumeroMin,
+              )
+            ),
+            assertTrue(
+              LaajuusValidationUtil.isAtMost(
+                metadataWithLaajuusRange.opintojenLaajuusNumeroMax,
+                koulutusLaajuusMax
+              ),
+              "metadata.opintojenLaajuusNumeroMax",
+              invalidToteutusOpintojenLaajuusMax(
+                koulutusLaajuusMax,
+                metadataWithLaajuusRange.opintojenLaajuusNumeroMax,
+              )
+            ),
+            assertTrue(
+              LaajuusValidationUtil.isValidOpintojenLaajuusyksikko(
+                koulutusLaajuusyksikko,
+                metadataWithLaajuusRange.opintojenLaajuusyksikkoKoodiUri
+              ),
+              "metadata.opintojenLaajuusyksikkoKoodiUri",
+              invalidToteutusOpintojenLaajuusyksikkoIntegrity(
+                koulutusLaajuusyksikko,
+                metadataWithLaajuusRange.opintojenLaajuusyksikkoKoodiUri
+              )
+            )
+          )
+        }
+        case _ => NoErrors
+      }
     )
   }
 
   private def validateTaiteenPerusopetusMetadata(
-                                                  m: TaiteenPerusopetusToteutusMetadata,
-                                                  vCtx: ValidationContext,
-                                                  toteutusDiffResolver: ToteutusDiffResolver
+      m: TaiteenPerusopetusToteutusMetadata,
+      vCtx: ValidationContext,
+      toteutusDiffResolver: ToteutusDiffResolver
   ): IsValid =
     and(
-      validateIfDefined[String](
-        toteutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(),
-        uri =>
-          assertKoodistoQueryResult(
-            uri,
-            koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists,
-            "metadata.opintojenLaajuusyksikkoKoodiUri",
-            vCtx,
-            invalidOpintojenLaajuusyksikkoKoodiuri(uri)
-          )
-      ),
-      validateIfDefined[Double](
-        m.opintojenLaajuusNumeroMin,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMin")
-      ),
-      validateIfDefined[Double](
-        m.opintojenLaajuusNumeroMax,
-        assertNotNegative(_, "metadata.opintojenLaajuusNumeroMax")
-      ),
-      validateMinMax(
-        m.opintojenLaajuusNumeroMin,
-        m.opintojenLaajuusNumeroMax,
-        s"metadata.opintojenLaajuusNumeroMin"
-      ),
+      assertOpintojenLaajuusyksikkoKoodiUri(toteutusDiffResolver.newOpintojenLaajuusyksikkoKoodiUri(), vCtx),
+      validateLaajuusMinMax(m.opintojenLaajuusNumeroMin, m.opintojenLaajuusNumeroMax),
       validateIfNonEmpty[String](
         toteutusDiffResolver.newTaiteenalaKoodiUrit(),
         "metadata.taiteenalaKoodiUrit",
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koulutusKoodiClient.taiteenalaKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, _),
             path,
             vCtx,
             invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri)

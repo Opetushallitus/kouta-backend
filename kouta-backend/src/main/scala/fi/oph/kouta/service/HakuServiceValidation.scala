@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
@@ -10,9 +10,9 @@ import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
 import java.util.UUID
 
 object HakuServiceValidation
-    extends HakuServiceValidation(HakuKoodiClient, HakemusPalveluClient, HakukohdeDAO)
+    extends HakuServiceValidation(CachedKoodistoClient, HakemusPalveluClient, HakukohdeDAO)
 class HakuServiceValidation(
-    hakuKoodiClient: HakuKoodiClient,
+    koodistoClient: CachedKoodistoClient,
     hakemusPalveluClient: HakemusPalveluClient,
     hakukohdeDAO: HakukohdeDAO
 ) extends ValidatingService[Haku] {
@@ -41,7 +41,7 @@ class HakuServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.hakutapaKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, _),
             "hakutapaKoodiUri",
             vCtx,
             invalidHakutapaKoodiUri(koodiUri)
@@ -52,7 +52,7 @@ class HakuServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.haunkohdejoukkoKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, _),
             "kohdejoukkoKoodiUri",
             vCtx,
             invalidHaunKohdejoukkoKoodiUri(koodiUri)
@@ -63,7 +63,7 @@ class HakuServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists,
+            koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, _),
             "kohdejoukonTarkenneKoodiUri",
             vCtx,
             invalidHaunKohdejoukonTarkenneKoodiUri(koodiUri)
@@ -143,7 +143,7 @@ class HakuServiceValidation(
           "metadata.koulutuksenAlkamiskausi",
           hakuDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          hakuKoodiClient.kausiKoodiUriExists
+          koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       )
     )

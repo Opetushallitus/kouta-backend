@@ -1,17 +1,17 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.HakuKoodiClient
-import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, Osoite, TietoaOpiskelusta, Yhteystieto}
+import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidEmail, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
-object OppilaitosServiceValidation extends OppilaitosServiceValidation(HakuKoodiClient)
+object OppilaitosServiceValidation extends OppilaitosServiceValidation(CachedKoodistoClient)
 
-class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends ValidatingService[Oppilaitos] {
+class OppilaitosServiceValidation(koodistoClient: CachedKoodistoClient) extends ValidatingService[Oppilaitos] {
 
   def withValidation[R](oppilaitos: Oppilaitos, oldOppilaitos: Option[Oppilaitos], authenticated: Authenticated)(
     f: Oppilaitos => R
@@ -68,7 +68,7 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
         "metadata.hakijapalveluidenYhteystiedot",
         oppilaitosDiffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
-        hakuKoodiClient.postiosoitekoodiExists
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     validateIfDefined[Int](m.opiskelijoita, assertNotNegative(_, "metadata.opiskelijoita")),
@@ -99,7 +99,7 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
         val koodiUri = newValues.otsikkoKoodiUri
         assertKoodistoQueryResult(
           koodiUri,
-          hakuKoodiClient.tietoaOpiskelustaOtsikkoKoodiUriExists,
+          koodistoClient.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, _),
           s"$path.otsikkoKoodiUri",
           vCtx,
           invalidTietoaOpiskelustaOtsikkoKoodiUri(koodiUri)
@@ -112,9 +112,9 @@ class OppilaitosServiceValidation(hakuKoodiClient: HakuKoodiClient) extends Vali
   override def validateInternalDependenciesWhenDeletingEntity(e: Oppilaitos): IsValid = NoErrors
 }
 
-object OppilaitoksenOsaServiceValidation extends OppilaitoksenOsaServiceValidation(HakuKoodiClient, OppilaitosDAO)
+object OppilaitoksenOsaServiceValidation extends OppilaitoksenOsaServiceValidation(CachedKoodistoClient, OppilaitosDAO)
 
-class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppilaitosDAO: OppilaitosDAO)
+class OppilaitoksenOsaServiceValidation(koodistoClient: CachedKoodistoClient, oppilaitosDAO: OppilaitosDAO)
     extends ValidatingService[OppilaitoksenOsa] {
 
   def withValidation[R](osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa], authenticated: Authenticated)(
@@ -157,7 +157,7 @@ class OppilaitoksenOsaServiceValidation(hakuKoodiClient: HakuKoodiClient, oppila
         "metadata.hakijapalveluidenYhteystiedot",
         diffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
-        hakuKoodiClient.postiosoitekoodiExists
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     assertTrue(

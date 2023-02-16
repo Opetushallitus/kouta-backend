@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.Osoite1
 import fi.oph.kouta.TestOids.{ChildOid, EvilCousin, OphOid, UnknownOid}
-import fi.oph.kouta.client.HakuKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.OppilaitosDAO
@@ -24,7 +24,7 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val hakuKoodiClient      = mock[HakuKoodiClient]
+  val koodistoClient      = mock[CachedKoodistoClient]
   val oppilaitosDao       = mock[OppilaitosDAO]
 
   val min = TestData.MinOppilaitoksenOsa
@@ -55,12 +55,12 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
     InetAddress.getByName("127.0.0.1")
   )
 
-  val validator = new OppilaitoksenOsaServiceValidation(hakuKoodiClient, oppilaitosDao)
+  val validator = new OppilaitoksenOsaServiceValidation(koodistoClient, oppilaitosDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_61100#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
     when(oppilaitosDao.getTila(ChildOid)).thenAnswer(Some(Julkaistu))
     when(oppilaitosDao.getTila(UnknownOid)).thenAnswer(None)
     when(oppilaitosDao.getTila(EvilCousin)).thenAnswer(Some(Tallennettu))

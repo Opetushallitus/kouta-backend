@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.repository.HakukohdeDAO
@@ -14,7 +14,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
-  val hakuKoodiClient      = mock[HakuKoodiClient]
+  val koodistoClient      = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val hakukohdeDao         = mock[HakukohdeDAO]
 
@@ -28,17 +28,17 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   val maxWithOidMetadata = maxWithOid.metadata.get
 
   override val validator =
-    new HakuServiceValidation(hakuKoodiClient, hakemusPalveluClient, hakukohdeDao)
+    new HakuServiceValidation(koodistoClient, hakemusPalveluClient, hakukohdeDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_01#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_02#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_03#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.hakutapaKoodiUriExists("hakutapa_04#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.haunkohdejoukkoKoodiUriExists("haunkohdejoukko_17#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.haunkohdejoukonTarkenneKoodiUriExists("haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kausiKoodiUriExists("kausi_k#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_01#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_02#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_04#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_17#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, "haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
     when(hakukohdeDao.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[HakukohdeListItem]())

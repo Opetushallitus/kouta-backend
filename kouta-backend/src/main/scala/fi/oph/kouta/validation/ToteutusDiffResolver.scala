@@ -1,19 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.domain.{
-  AmmatillinenOsaamisala,
-  AmmatillinenToteutusMetadata,
-  Kielivalikoima,
-  KoulutuksenAlkamiskausi,
-  Lisatieto,
-  LukioToteutusMetadata,
-  LukiodiplomiTieto,
-  LukiolinjaTieto,
-  Opetus,
-  TaiteenPerusopetusToteutusMetadata,
-  Toteutus,
-  ToteutusMetadata
-}
+import fi.oph.kouta.domain._
 
 case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus]) {
   private def oldMetadata(): Option[ToteutusMetadata] = oldToteutus.flatMap(_.metadata)
@@ -159,8 +146,9 @@ case class ToteutusDiffResolver(toteutus: Toteutus, oldToteutus: Option[Toteutus
 
   private def opintojenLaajuusyksikkoKoodiUri(metadata: Option[ToteutusMetadata]): Option[String] =
     metadata match {
-      case Some(m: TaiteenPerusopetusToteutusMetadata) => m.opintojenLaajuusyksikkoKoodiUri
-      case _                                           => None
+      case Some(m: LaajuusSingle) => m.opintojenLaajuusyksikkoKoodiUri
+      case Some(m: LaajuusMinMax) => m.opintojenLaajuusyksikkoKoodiUri
+      case _                      => None
     }
 
   private def taiteenalaKoodiUrit(metadata: Option[ToteutusMetadata]): Seq[String] =

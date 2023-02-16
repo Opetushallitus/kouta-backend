@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
@@ -18,7 +18,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
-  val koulutusKoodiClient          = mock[KoulutusKoodiClient]
+  val koodistoClient          = mock[CachedKoodistoClient]
   var organisaatioService          = mock[OrganisaatioService]
   val toteutusDao                  = mock[ToteutusDAO]
   val sorakuvausDao                = mock[SorakuvausDAO]
@@ -123,9 +123,28 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       tarjoajat = tarjoajat
     )
 
+  private def muuKoulutusWithParams(
+      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1"),
+      opintojenLaajuusNumeroMin: Option[Double] = Some(12),
+      opintojenLaajuusNumeroMax: Option[Double] = Some(20),
+      tarjoajat: List[OrganisaatioOid] = List()
+  ): Koulutus =
+    MuuKoulutus.copy(
+      metadata = Some(
+        MuuKoulutusMetadata(
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusyksikkoKoodiUri,
+          opintojenLaajuusNumeroMin = opintojenLaajuusNumeroMin,
+          opintojenLaajuusNumeroMax = opintojenLaajuusNumeroMax,
+        )
+      ),
+      oid = Some(KoulutusOid("1.2.246.562.13.139")),
+      tila = Tallennettu,
+      tarjoajat = tarjoajat
+    )
+
   private def kkOpintokokonaisuusWithParams(
       koulutusalaKoodiUrit: Seq[String] = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
-      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_6#1"),
+      opintojenLaajuusyksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1"),
       opinnonTyyppiKoodiUri: Option[String] = Some("opinnontyyppi_1#1"),
       isAvoinKorkeakoulutus: Option[Boolean] = Some(false)
   ): Koulutus =
@@ -163,7 +182,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   override val validator =
     new KoulutusServiceValidation(
-      koulutusKoodiClient,
+      koodistoClient,
       organisaatioService,
       toteutusDao,
       sorakuvausDao,
@@ -173,11 +192,11 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit = {
     if (filter.filterType() == koulutusTyyppi)
       when(
-        koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
+        koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
       ).thenAnswer(itemFound)
     else
       when(
-        koulutusKoodiClient.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
+        koodistoClient.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
       ).thenAnswer(itemFound)
   }
 
@@ -202,8 +221,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(UnknownOid)).thenAnswer(Seq(UnknownOid), Seq())
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.lisatiedotOtsikkoKoodiUriExists("koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto,"koulutuksenlisatiedot_04#1")).thenAnswer(itemNotFound)
 
     // sorakuvaukset
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
@@ -219,24 +238,20 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       .thenAnswer((Some(Julkaistu), Some(Yo), Some(Seq("koulutus_000001#1"))))
 
     // yleiset metadatat
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_01"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso1_001#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_020#1"))
       .thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusyksikkoKoodiUriExists("opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_40#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_60#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.opintojenLaajuusKoodiUriExists("opintojenlaajuus_v53#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.tutkintoNimikeKoodiUriExists("tutkintonimikekk_110#2")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.erikoistumisKoulutusKoodiUriExists("erikoistumiskoulutukset_001#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, "tutkintonimikekk_110#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, "erikoistumiskoulutukset_001#2")).thenAnswer(itemFound)
 
     // korkeakoulu
     acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_371101#1")
@@ -1307,7 +1322,57 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError(
           "metadata.opintojenLaajuusNumeroMax",
-          invalidKoulutusOpintojenLaajuusNumeroIntegrity(5, 15, Seq(opintokokonaisuusToteutusOid))
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(5), Some(15), Seq(opintokokonaisuusToteutusOid))
+        )
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for luonnos 'muu' koulutus" in {
+    failsValidation(
+      muuKoulutusWithParams(
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+        opintojenLaajuusNumeroMin = Some(-1.0),
+        opintojenLaajuusNumeroMax = Some(-5.0),
+      ).copy(oid = None),
+      Seq(
+        ValidationError("metadata.opintojenLaajuusNumeroMin", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMax", notNegativeMsg),
+        ValidationError("metadata.opintojenLaajuusNumeroMin", minmaxMsg(-1.0, -5.0))
+      )
+    )
+  }
+
+  it should "fail if julkaistu 'muu' koulutus has at least one julkaistu toteutus whose opintojenlaajuusMin is not in the range specified in koulutus" in {
+    val muuKoulutus1   = muuKoulutusWithParams(opintojenLaajuusNumeroMin = Some(10), opintojenLaajuusNumeroMax = Some(20)).copy(tila = Julkaistu)
+    val muuToteutusOid = randomToteutusOid
+
+    when(toteutusDao.getByKoulutusOid(muuKoulutus1.oid.get, TilaFilter.onlyJulkaistut())).thenAnswer(
+      Seq(
+        JulkaistuMuuToteutus.copy(
+          oid = Some(muuToteutusOid),
+          koulutusOid = muuKoulutus1.oid.get,
+          metadata = Some(
+            MuuToteutuksenMetatieto.copy(
+              opintojenLaajuusNumeroMin = Some(9),
+              opintojenLaajuusNumeroMax = Some(21)
+            )
+          )
+        )
+      )
+    )
+
+    failsModifyValidation(
+      muuKoulutus1,
+      muuKoulutus1,
+      Seq(
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMin",
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(10), Some(20), Seq(muuToteutusOid))
+        ),
+        ValidationError(
+          "metadata.opintojenLaajuusNumeroMax",
+          invalidKoulutusOpintojenLaajuusNumeroIntegrity(Some(10), Some(20), Seq(muuToteutusOid))
         )
       )
     )

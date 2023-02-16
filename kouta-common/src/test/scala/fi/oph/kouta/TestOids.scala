@@ -31,6 +31,8 @@ object TestOids {
   val KuopionKansalaisopistoOid = OrganisaatioOid("1.2.246.562.10.71396759145")
   val HelsinginNormaalilyseoOid = OrganisaatioOid("1.2.246.562.10.112212847610")
 
+  val PohjoiskalotinKoulutussaatio = OrganisaatioOid("1.2.246.562.10.88417511545")
+
   val TestUserOid = UserOid("1.2.246.562.24.10000000000")
   val OphUserOid = UserOid("1.2.246.562.24.10000000099")
 

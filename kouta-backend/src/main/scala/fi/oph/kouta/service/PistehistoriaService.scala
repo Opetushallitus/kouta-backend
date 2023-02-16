@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{
-  BasicCachedKoodistoClient,
+  CachedKoodistoClient,
   JononAlimmatPisteet,
   LegacyTarjontaClient,
   ValintaTulosServiceClient
@@ -56,7 +56,7 @@ class PistehistoriaService extends Logging {
 
   private def lukiolinjaToHakukohdekoodi(koodiUri: String) = {
     val result =
-      BasicCachedKoodistoClient
+      CachedKoodistoClient
         .getRinnasteisetCached(koodiUri, "hakukohteet")
         .map(_.koodiUri)
     if (result.nonEmpty) logger.info(s"Löydettiin rinnakkaisia hakukohdekoodeja lukiolinjalle $koodiUri: $result")

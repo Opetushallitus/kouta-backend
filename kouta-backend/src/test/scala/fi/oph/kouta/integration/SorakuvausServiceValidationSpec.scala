@@ -1,11 +1,11 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{MinSorakuvaus, YoSorakuvaus}
-import fi.oph.kouta.client.KoulutusKoodiClient
+import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Amm, Arkistoitu, Fi, Julkaistu, Julkaisutila, Poistettu, Sorakuvaus, Sv, Tallennettu, TilaFilter}
+import fi.oph.kouta.domain.{Amm, Arkistoitu, Fi, Julkaistu, Julkaisutila, KoulutusKoodisto, KoulutusalaKoodisto, Poistettu, Sorakuvaus, Sv, Tallennettu, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
-import fi.oph.kouta.service.{OrganisaatioService, SorakuvausServiceValidation}
+import fi.oph.kouta.service.SorakuvausServiceValidation
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations.{illegalStateChange, integrityViolationMsg, invalidKielistetty, invalidKoulutusAlaKoodiuri, invalidKoulutuskoodiuri, missingMsg, notMissingMsg, notModifiableMsg, validationMsg}
@@ -14,7 +14,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuvaus] {
-  val koulutusKoodiClient = mock[KoulutusKoodiClient]
+  val koodistoClient = mock[CachedKoodistoClient]
   val koulutusDao = mock[KoulutusDAO]
 
   val sorakuvausId = UUID.randomUUID()
@@ -25,12 +25,12 @@ class SorakuvausServiceValidationSpec extends BaseServiceValidationSpec[Sorakuva
   val min: Sorakuvaus = MinSorakuvaus
   val maxMetadata = max.metadata.get
 
-  override val validator = new SorakuvausServiceValidation(koulutusKoodiClient, koulutusDao)
+  override val validator = new SorakuvausServiceValidation(koodistoClient, koulutusDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koulutusKoodiClient.koulutusKoodiUriExists("koulutus_371101#1")).thenAnswer(itemFound)
-    when(koulutusKoodiClient.koulutusalaKoodiUriExists("kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, "koulutus_371101#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_054#1"))
       .thenAnswer(itemFound)
 
     when(koulutusDao.listBySorakuvausId(sorakuvausId, TilaFilter.onlyOlemassaolevat())).thenAnswer(Seq[String]())

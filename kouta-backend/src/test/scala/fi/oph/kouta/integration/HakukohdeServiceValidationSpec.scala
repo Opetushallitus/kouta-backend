@@ -2,8 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.HakukoodiConstants.{hakukohdeKoodistoAmmErityisopetus, hakukohdeKoodistoPoJalkYhteishaku}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakuKoodiClient, KoodiUri, KoulutusKoodiClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, KoodiUri, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -25,8 +24,7 @@ import java.util.UUID
 import scala.util.{Failure, Success, Try}
 
 class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val hakuKoodiClient      = mock[HakuKoodiClient]
-  val koulutusKoodiClient  = mock[KoulutusKoodiClient]
+  val koodistoClient  = mock[CachedKoodistoClient]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val organisaatioService  = mock[OrganisaatioService]
   val lokalisointiClient   = mock[LokalisointiClient]
@@ -84,8 +82,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   val yhteisHakuHakuOid = HakuOid("1.2.246.562.29.321")
 
   val validator = new HakukohdeServiceValidation(
-    hakuKoodiClient,
-    koulutusKoodiClient,
+    koodistoClient,
     hakemusPalveluClient,
     organisaatioService,
     lokalisointiClient,
@@ -217,33 +214,33 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(hakuKoodiClient.hakukohdeKoodiUriPoJalkYhteishakuExists("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
       .thenAnswer(itemFound)
-    when(hakuKoodiClient.hakukohdeKoodiUriAmmErityisopetusExists("hakukohteeterammatillinenerityisopetus_01#1"))
+    when(koodistoClient.koodiUriExistsInKoodisto(HakukohdeAmmErityisopetusKoodisto, "hakukohteeterammatillinenerityisopetus_01#1"))
       .thenAnswer(itemFound)
-    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.pohjakoulutusVaatimusKoodiUriExists("pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_1#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.liiteTyyppiKoodiUriExists("liitetyypitamm_2#1")).thenAnswer(itemFound)
-    when(hakuKoodiClient.postiosoitekoodiExists("posti_04230#2")).thenAnswer(itemFound)
-    when(hakuKoodiClient.valintakoeTyyppiKoodiUriExists("valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_1#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_2#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.oppiaineKoodiUriExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_FI")).thenAnswer(itemFound)
-    when(hakuKoodiClient.kieliKoodiUriExists("kieli_SV")).thenAnswer(itemFound)
+    when(koodistoClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
+    when(koodistoClient.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV")).thenAnswer(itemFound)
 
     when(lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"))
       .thenAnswer(Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje", En -> "Yleislinja"))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
       .thenAnswer(Right(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
       Right(
         KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
       )
     )
-    when(hakuKoodiClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
+    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
@@ -253,13 +250,13 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ZonedDateTime.now().toInstant)))
 
     when(
-      koulutusKoodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
         AmmatillisetKoulutuskooditAllowedForKaksoistutkinto.koulutusTyypit,
         "koulutus_371101#1"
       )
     ).thenAnswer(itemFound)
     when(
-      koulutusKoodiClient.koulutusKoodiUriExists(
+      koodistoClient.koulutusKoodiUriExists(
         LukioKoulutusKooditAllowedForKaksoistutkinto.koulutusKoodiUrit,
         "koulutus_301101#1"
       )
@@ -690,10 +687,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       min.copy(pohjakoulutusvaatimusKoodiUrit = Seq("puppu", "pohjakoulutusvaatimuskouta_XX#1")),
       Seq(
-        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", invalidPohjakoulutusVaatimusKooriuri("puppu")),
+        ValidationError("pohjakoulutusvaatimusKoodiUrit[0]", invalidPohjakoulutusVaatimusKoodiuri("puppu")),
         ValidationError(
           "pohjakoulutusvaatimusKoodiUrit[1]",
-          invalidPohjakoulutusVaatimusKooriuri("pohjakoulutusvaatimuskouta_XX#1")
+          invalidPohjakoulutusVaatimusKoodiuri("pohjakoulutusvaatimuskouta_XX#1")
         )
       )
     )
@@ -901,8 +898,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         List(Liite1.copy(tyyppiKoodiUri = Some("puppu")), Liite2.copy(tyyppiKoodiUri = Some("liitetyypitamm_99#1")))
       ),
       Seq(
-        ValidationError("liitteet[0].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("puppu")),
-        ValidationError("liitteet[1].tyyppiKoodiUri", invalidLiitetyyppiKooriuri("liitetyypitamm_99#1"))
+        ValidationError("liitteet[0].tyyppiKoodiUri", invalidLiitetyyppiKoodiuri("puppu")),
+        ValidationError("liitteet[1].tyyppiKoodiUri", invalidLiitetyyppiKoodiuri("liitetyypitamm_99#1"))
       )
     )
   }
@@ -927,7 +924,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")))),
       "valintakokeet[0].tyyppiKoodiUri",
-      invalidValintakoeTyyppiKooriuri("valintakokeentyyppi_99#1")
+      invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#1")
     )
   }
 
@@ -1155,7 +1152,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       hk,
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteeterammatillinenerityisopetus_66#1", hakukohdeKoodistoAmmErityisopetus)
+      invalidHakukohdeKoodiuri("hakukohteeterammatillinenerityisopetus_66#1", HakukohdeAmmErityisopetusKoodisto.toString)
     )
   }
 
@@ -1169,7 +1166,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       ),
       "hakukohdeKoodiUri",
-      invalidHakukohdeKooriuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", hakukohdeKoodistoPoJalkYhteishaku)
+      invalidHakukohdeKoodiuri("hakukohteetperusopetuksenjalkeinenyhteishaku_66#1", HakukohdePoJalkYhteishakuKoodisto.toString)
     )
   }
 

@@ -28,7 +28,7 @@ object ToteutusService
       OrganisaatioServiceImpl,
       KoulutusService,
       LokalisointiClient,
-      KoodistoKaannosClient,
+      CachedKoodistoClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ToteutusServiceValidation
@@ -52,7 +52,7 @@ class ToteutusService(
     val organisaatioService: OrganisaatioService,
     koulutusService: KoulutusService,
     lokalisointiClient: LokalisointiClient,
-    koodistoClient: KoodistoKaannosClient,
+    koodistoClient: CachedKoodistoClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation
@@ -121,7 +121,7 @@ class ToteutusService(
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
     t.metadata match {
-      case Some(metadata) =>
+      case Some(metadata: ToteutusMetadata) =>
         metadata match {
           case yoMetadata: YliopistoToteutusMetadata =>
             withMData(t, yoMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -175,6 +175,7 @@ class ToteutusService(
                   t,
                   taiteenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
                 )
+              case muuToteutusMetadata: MuuToteutusMetadata => withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case lukioMetadata: LukioToteutusMetadata =>
             withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))

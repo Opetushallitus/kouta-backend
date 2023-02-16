@@ -17,12 +17,7 @@ package object oppilaitos {
       |          description: Oppilaitoksen organisaatio-oid
       |          example: "1.2.246.562.10.00101010101"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Oppilaitoksen julkaisutila. Jos oppilaitos on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -126,12 +121,7 @@ package object oppilaitos {
       |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
       |          example: "1.2.246.562.10.00101010101"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
       |        esikatselu:
       |          type: boolean
@@ -211,12 +201,7 @@ package object oppilaitos {
       |          description: Oppilaitoksen osan oppilaitoksen organisaatio-oid
       |          example: "1.2.246.562.10.00101010101"
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Oppilaitoksen osan julkaisutila. Jos oppilaitoksen osa on julkaistu, se näkyy oppijalle Opintopolussa.
       |        muokkaaja:
       |          type: string

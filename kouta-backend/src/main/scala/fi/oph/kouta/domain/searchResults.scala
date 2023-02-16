@@ -58,12 +58,7 @@ package object searchResults {
       |          description: Viimeisin muokkausaika
       |          example: 2019-08-23T09:55:17
       |        tila:
-      |          type: string
-      |          example: "julkaistu"
-      |          enum:
-      |            - julkaistu
-      |            - arkistoitu
-      |            - tallennettu
+      |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
@@ -135,12 +130,7 @@ package object searchResults {
       |                  description: Viimeisin muokkausaika
       |                  example: 2019-08-23T09:55:17
       |                tila:
-      |                  type: string
-      |                  example: "julkaistu"
-      |                  enum:
-      |                    - julkaistu
-      |                    - arkistoitu
-      |                    - tallennettu
+      |                  $ref: '#/components/schemas/Julkaisutila'
       |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
@@ -189,12 +179,7 @@ package object searchResults {
       |                  description: Viimeisin muokkausaika
       |                  example: 2019-08-23T09:55:17
       |                tila:
-      |                  type: string
-      |                  example: "julkaistu"
-      |                  enum:
-      |                    - julkaistu
-      |                    - arkistoitu
-      |                    - tallennettu
+      |                  $ref: '#/components/schemas/Julkaisutila'
       |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 
@@ -243,12 +228,7 @@ package object searchResults {
       |                  description: Viimeisin muokkausaika
       |                  example: 2019-08-23T09:55:17
       |                tila:
-      |                  type: string
-      |                  example: "julkaistu"
-      |                  enum:
-      |                    - julkaistu
-      |                    - arkistoitu
-      |                    - tallennettu
+      |                  $ref: '#/components/schemas/Julkaisutila'
       |                  description: Julkaisutila. Jos julkaistu, näkyy oppijalle Opintopolussa.
       |""".stripMargin
 

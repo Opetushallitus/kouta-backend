@@ -1,18 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
-import fi.oph.kouta.client.{
-  HakuKoodiClient,
-  KayttooikeusClient,
-  KoutaSearchClient,
-  LokalisointiClient,
-  OppijanumerorekisteriClient
-}
+import fi.oph.kouta.client.{CachedKoodistoClient, KayttooikeusClient, KoutaSearchClient, LokalisointiClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
-import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
@@ -34,7 +26,7 @@ object HakukohdeService
       LokalisointiClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      HakuKoodiClient,
+      CachedKoodistoClient,
       ToteutusService,
       HakukohdeServiceValidation
     )
@@ -57,7 +49,7 @@ class HakukohdeService(
     val lokalisointiClient: LokalisointiClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    hakuKoodiClient: HakuKoodiClient,
+    koodistoClient: CachedKoodistoClient,
     toteutusService: ToteutusService,
     hakukohdeServiceValidation: HakukohdeServiceValidation
 ) extends RoleEntityAuthorizationService[Hakukohde] {
@@ -122,7 +114,7 @@ class HakukohdeService(
               } else {
                 val hkLinja = hakukohde.metadata.flatMap(_.hakukohteenLinja).flatMap(_.linja)
                 if (hkLinja.isDefined) {
-                  hakuKoodiClient.getKoodiUriVersionOrLatestFromCache(hkLinja.get) match {
+                    koodistoClient.getKoodiUriVersionOrLatestFromCache(hkLinja.get) match {
                     case Left(exception) => throw exception
                     case Right(koodiUri) =>
                       hakukohde.copy(nimi = mergeNames(koodiUri.nimi, hakukohde.nimi, hakukohde.kielivalinta))
