@@ -50,7 +50,7 @@
                 <artifactId>httpclient</artifactId>
                 <!-- Jos tämän päivittää >=4.5.8, niin osa KeywordSpec-testeistä alkaa feilata.
                      Scalatran params() ei jostain syystä osaa uudemmilla versioilla lukea ääkkösiä oikein URL:stä -->
-                <version>4.5.7</version>
+                <version>4.5.13</version>
             </dependency>
             <dependency>
                 <groupId>net.java.dev.jna</groupId>
