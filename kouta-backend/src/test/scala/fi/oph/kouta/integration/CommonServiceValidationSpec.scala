@@ -453,16 +453,51 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   "Yhteyshenkilö validation" should "fail if missing or invalid values in julkaistu yhteyshenkilö" in {
     failsValidation(
-      Yhteyshenkilo(Map(), vainSuomeksi, vainSuomeksi, vainSuomeksi, vainSuomeksi),
+      Yhteyshenkilo(
+        nimi = Map(),
+        titteli = vainSuomeksi,
+        sahkoposti = vainSuomeksi,
+        puhelinnumero = vainSuomeksi,
+        wwwSivu = Map(
+          Fi -> "vain suomeksi",
+          Sv -> "https://studieinfo.fi"
+        ),
+        wwwSivuTeksti = fullKielistetty
+      ),
       Julkaistu,
       Seq(
         ValidationError("path.nimi", invalidKielistetty(kielet)),
         ValidationError("path.titteli", kielistettyWoSvenska),
         ValidationError("path.sahkoposti", kielistettyWoSvenska),
         ValidationError("path.puhelinnumero", kielistettyWoSvenska),
-        ValidationError("path.wwwSivu", kielistettyWoSvenska),
-        ValidationError("path.wwwSivu.fi", invalidUrl("vain suomeksi")),
-        ValidationError("path.wwwSivu.sv", invalidUrl(""))
+        ValidationError("path.wwwSivu.fi", invalidUrl("vain suomeksi"))
+      )
+    )
+  }
+
+  "Yhteyshenkilö validation" should "fail if wwwSivu and wwwSivuTeksti don't have same kielet" in {
+    failsValidation(
+      Yhteyshenkilo(
+        nimi = fullKielistetty,
+        titteli = fullKielistetty,
+        sahkoposti = fullKielistetty,
+        puhelinnumero = fullKielistetty,
+        wwwSivu = Map(
+          Fi -> "https://opintopolku.fi",
+          Sv -> "https://studieinfo.fi"
+        ),
+        wwwSivuTeksti = vainSuomeksi
+      ),
+      Julkaistu,
+      Seq(
+        ValidationError("path.wwwSivuTeksti", kielistettyWoSvenska),
+        ValidationError(
+          "path.wwwSivuTeksti",
+          ErrorMessage(
+            msg = "Kielistetystä kentästä puuttuu muissa kentissä määriteltyjä arvoja kielillä [sv]. Muut kentät ovat [path.wwwSivu]",
+            id = "invalidKielistettyByOtherFields"
+          )
+        )
       )
     )
   }

@@ -882,4 +882,24 @@ object Validations {
     )
   )
 
+  def invalidKielistettyByOtherFields(kielet: Seq[Kieli], otherPaths: Seq[String]): ErrorMessage = ErrorMessage(
+    msg = s"Kielistetystä kentästä puuttuu muissa kentissä määriteltyjä arvoja kielillä [${kielet.mkString(",")}]. Muut kentät ovat [${otherPaths.mkString(",")}]",
+    id = "invalidKielistettyByOtherFields"
+  )
+
+  def assertKielistettyHasLocalesRequiredByOtherFields(kaikkiKielet: Seq[Kieli], k: Kielistetty, path: String, allPaths: Seq[String]): IsValid = {
+    val otherPaths = allPaths.filter(!path.equals(_))
+    findMissingKielet(kaikkiKielet, k) match {
+      case x if x.isEmpty => NoErrors
+      case kielet => error(path, invalidKielistettyByOtherFields(kielet, otherPaths))
+    }
+  }
+
+  def assertKielistetytHavingSameLocales(kielistetyt: (Kielistetty, String)*): IsValid = {
+    val kaikkiKielet: Seq[Kieli] = kielistetyt.map(_._1).flatMap(kielistetty => kielistetty.filter(kielistetty => kielistetty._2 != null && kielistetty._2.nonEmpty).keySet).toSet.toSeq
+    val allPaths: Seq[String] = kielistetyt.map(_._2)
+    and(
+      kielistetyt.map {case (kielistetty, path) => assertKielistettyHasLocalesRequiredByOtherFields(kaikkiKielet, kielistetty, path, allPaths)}:_*
+    )
+  }
 }
