@@ -153,7 +153,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   def getOpintokokonaisuudet(oids: Seq[ToteutusOid]): Seq[OidAndNimi] = {
-    KoutaDatabase.runBlocking(selectOpintokokonaisuudet(oids))
+    KoutaDatabase.runBlocking(selectOpintokokonaisuudet(oids, TilaFilter.onlyJulkaistut))
   }
 }
 
@@ -370,11 +370,12 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
               #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
-  def selectOpintokokonaisuudet(oids: Seq[ToteutusOid]): DBIO[Vector[OidAndNimi]] = {
+  def selectOpintokokonaisuudet(oids: Seq[ToteutusOid], tilaFilter: TilaFilter): DBIO[Vector[OidAndNimi]] = {
     val oidsAsStr = oids.map(oid => oid.toString())
     sql"""select oid, nimi
           from toteutukset t
           where metadata->>'tyyppi' = 'kk-opintokokonaisuus'
-          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]""".as[OidAndNimi]
+          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]
+          #${tilaConditions(tilaFilter, "t.tila")}""".as[OidAndNimi]
   }
 }
