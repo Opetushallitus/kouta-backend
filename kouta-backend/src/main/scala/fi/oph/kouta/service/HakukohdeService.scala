@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
@@ -301,7 +301,7 @@ class HakukohdeService(
 
     val tilaChangeResults = hakukohteet.toList.map(hakukohde => {
       try {
-        val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila))
+        val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
         update(hakukohdeWithNewTila, unModifiedSince) match {
           case true =>
             updatedHakukohdeOids += hakukohde.oid.get
