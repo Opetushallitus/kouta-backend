@@ -410,7 +410,7 @@ object Validations {
     )
   def illegalStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): ErrorMessage =
     ErrorMessage(
-      msg = s"Siirtyminen tilasta $oldState tilaan $newState ei ole sallittu $entityDesc",
+      msg = s"Siirtyminen tilasta ${Julkaisutila.getDisplauName(oldState)} (tilan tekninen tunniste: $oldState) tilaan ${Julkaisutila.getDisplauName(newState)} (tilan tekninen tunniste: $newState) ei ole sallittu $entityDesc",
       id = "illegalStateChange"
     )
   def illegalValueForFixedValueMsg(fixedValDesc: String): ErrorMessage = ErrorMessage(
