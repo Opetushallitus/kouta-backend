@@ -12,6 +12,13 @@ object Julkaisutila extends Enum[Julkaisutila] {
       case (_, _)                                                               => false
     }
   }
+
+  def getDisplauName(julkaisutila: Julkaisutila): String = julkaisutila match {
+    case Tallennettu => "Luonnos"
+    case Julkaistu => "Julkaistu"
+    case Arkistoitu => "Arkistoitu"
+    case Poistettu => "Poistettu"
+  }
 }
 
 case object Tallennettu extends Julkaisutila { val name = "tallennettu" }
