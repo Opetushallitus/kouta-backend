@@ -770,13 +770,13 @@ class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with Koul
     response.head.status shouldBe "error"
     response.head.errorPaths shouldBe List("hakukohde")
     response.head.errorMessages should not be empty
-    response.head.errorTypes shouldBe List("authorization")
+    response.head.errorTypes shouldBe List("organizationauthorization")
 
     response(1).oid.toString shouldBe julkaistuHakukohde2Oid
     response(1).status shouldBe "error"
     response(1).errorPaths shouldBe List("hakukohde")
     response(1).errorMessages should not be empty
-    response(1).errorTypes shouldBe List("authorization")
+    response(1).errorTypes shouldBe List("organizationauthorization")
 
     response.last.oid.toString shouldBe randomOid
     response.last.status shouldBe "error"

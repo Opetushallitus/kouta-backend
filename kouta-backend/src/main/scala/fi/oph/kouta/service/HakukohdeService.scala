@@ -338,9 +338,28 @@ class HakukohdeService(
             status = "error",
             errorPaths = List("hakukohde"),
             errorMessages = List(error.getMessage),
-            errorTypes = List("authorization")
+            errorTypes = List("organizationauthorization")
           )
-
+        case error: RoleAuthorizationFailedException =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+            errorPaths = List("hakukohde"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("roleAuthorization")
+          )
+        case error: Exception =>
+          logger.error(s"Changing of tila of hakukohde: ${hakukohde.oid.get} failed: $error")
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
+            oid = hakukohde.oid.get,
+            status = "error",
+            errorPaths = List("hakukohde"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("internalServerError")
+          )
       }
     })
 
