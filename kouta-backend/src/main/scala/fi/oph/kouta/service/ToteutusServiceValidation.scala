@@ -634,7 +634,7 @@ class ToteutusServiceValidation(
     }
 
     val koulutustyypitRequiringToteutusAndKoulutusNamesEqual: Set[Koulutustyyppi] =
-      Set(AmmTutkinnonOsa, AmmOsaamisala, Telma, Tuva, VapaaSivistystyoOpistovuosi)
+      Set(AmmOsaamisala, Telma, Tuva, VapaaSivistystyoOpistovuosi)
 
     and(
       validateDependency(toteutus.tila, koulutusTila, toteutus.koulutusOid, "Koulutusta", "koulutusOid"),

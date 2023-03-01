@@ -851,14 +851,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "AmmTutkinnonosaToteutus validation" should "fail if nimi not matching koulutusnimi" in {
-    failsValidation(
-      ammTutkinnonOsaToteutus.copy(nimi = nimiNotMatchingDefault),
-      Seq(
-        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "koulutuksessa")),
-        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "koulutuksessa"))
-      )
-    )
+  "AmmTutkinnonosaToteutus validation" should "pass if nimi not matching koulutusnimi" in {
+    passesValidation(ammTutkinnonOsaToteutus.copy(nimi = nimiNotMatchingDefault))
   }
 
   "AmmOpettajaToteutus validation" should "fail if negative aloituspaikat" in {

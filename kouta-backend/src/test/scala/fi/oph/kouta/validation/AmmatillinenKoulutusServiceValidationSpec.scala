@@ -320,19 +320,15 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     )
   }
 
-  it should "fail if nimi not matching tutkinnonosa for AmmTutkinnonosa koulutus" in {
+  it should "should succeed even if nimi is not matching tutkinnonosa for AmmTutkinnonosa koulutus" in {
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(124L))
       .thenAnswer(Right(Seq(koodiUriFromString("koulutus_000000"))))
     when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(124)))
       .thenAnswer(Right(Map(124L -> Seq(TutkinnonOsaServiceItem(1345L, 134L, defaultName)))))
-    failsValidation(
+    passesValidation(
       ammTkWithTutkinnonOsaParams(Some(124L), Some("koulutus_000000"), Some(1345L), Some(134L))
-        .copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")),
-      Seq(
-        ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "tutkinnonosassa")),
-        ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "tutkinnonosassa"))
+        .copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv"))
       )
-    )
   }
 
   it should "fail if invalid ePeruste for AmmTutkinnonosa koulutus" in {

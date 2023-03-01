@@ -87,7 +87,6 @@ class AmmatillinenKoulutusServiceValidation(
           case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
             validateAmmTutkinnonosaMetadata(
               vCtx,
-              koulutusDiffResolver.newNimi(),
               m.tutkinnonOsat,
               koulutusDiffResolver.newTutkinnonosat().nonEmpty
             )
@@ -157,25 +156,8 @@ class AmmatillinenKoulutusServiceValidation(
       )
     )
 
-  def tutkinnonOsaNimiShouldBeValidated(
-      newNimi: Option[Kielistetty],
-      currentTutkinnonOsat: Seq[TutkinnonOsa],
-      tutkinnonOsatFromService: Map[Long, Seq[TutkinnonOsaServiceItem]] = Map()
-  ): Boolean =
-    if (newNimi.isDefined && currentTutkinnonOsat.size == 1)
-      (currentTutkinnonOsat.head.tutkinnonosaViite, currentTutkinnonOsat.head.tutkinnonosaId) match {
-        case (Some(viiteId), Some(osaId)) =>
-          tutkinnonOsatFromService.isEmpty || tutkinnonOsatFromService.head._2.exists(osa =>
-            osa.viiteId == viiteId && osa.id == osaId
-          )
-        case _ => false
-      }
-    else
-      false
-
   private def validateAmmTutkinnonosaMetadata(
       vCtx: ValidationContext,
-      newNimi: Option[Kielistetty],
       tutkinnonOsat: Seq[TutkinnonOsa],
       newTutkinnonOsat: Boolean
   ): IsValid = {
@@ -183,7 +165,7 @@ class AmmatillinenKoulutusServiceValidation(
     and(
       validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, path)),
       validateIfTrue(
-        tutkinnonOsaNimiShouldBeValidated(newNimi, tutkinnonOsat) || newTutkinnonOsat,
+        newTutkinnonOsat,
         validateIfSuccessful(
           validateIfTrue(
             newTutkinnonOsat,
@@ -203,31 +185,10 @@ class AmmatillinenKoulutusServiceValidation(
             ) match {
               case Left(_) => error(s"$path.ePerusteId", ePerusteServiceFailureMsg)
               case Right(tutkinnonOsaIdsByEPerusteId) =>
-                and(
-                  validateIfNonEmpty[TutkinnonOsa](
-                    tutkinnonOsat,
-                    path,
-                    _.validate(vCtx, _, tutkinnonOsaIdsByEPerusteId)
-                  ),
-                  validateIfTrue(
-                    tutkinnonOsaNimiShouldBeValidated(
-                      newNimi,
-                      tutkinnonOsat,
-                      tutkinnonOsaIdsByEPerusteId
-                    ), {
-                      val viiteId = tutkinnonOsat.head.tutkinnonosaViite.get
-                      val osaId   = tutkinnonOsat.head.tutkinnonosaId.get
-                      assertNimiMatchExternal(
-                        newNimi.getOrElse(Map()),
-                        tutkinnonOsaIdsByEPerusteId.head._2
-                          .find(osa => osa.viiteId == viiteId && osa.id == osaId)
-                          .map(_.nimi)
-                          .getOrElse(Map()),
-                        "nimi",
-                        "tutkinnonosassa"
-                      )
-                    }
-                  )
+                validateIfNonEmpty[TutkinnonOsa](
+                  tutkinnonOsat,
+                  path,
+                  _.validate(vCtx, _, tutkinnonOsaIdsByEPerusteId)
                 )
               case _ =>
                 validateIfNonEmpty[TutkinnonOsa](
