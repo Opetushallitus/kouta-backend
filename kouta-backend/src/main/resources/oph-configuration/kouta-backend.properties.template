@@ -59,6 +59,7 @@ oppijanumerorekisteri-service.henkilo=https://{{host_virkailija}}/oppijanumerore
 
 hakemuspalvelu-service=https://{{host_virkailija}}/lomake-editori
 hakemuspalvelu-service.forms=https://{{host_virkailija}}/lomake-editori/api/forms
+hakemuspalvelu-service.hakukohde-info=https://{{host_virkailija}}/lomake-editori/api/external/kouta/hakukohde/$1
 
 kouta.external-api.modify.enabled={{kouta_external_api_modify_enabled}}
 
