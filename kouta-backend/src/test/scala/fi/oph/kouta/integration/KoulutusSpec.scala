@@ -12,7 +12,7 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
+import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant, renderHttpDate}
 import org.json4s.jackson.Serialization.read
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
@@ -447,6 +447,44 @@ class KoulutusSpec
     }
   }
 
+  it should "update muokkaaja of the koulutus even when just tarjoajat is updated" in {
+    logger.info(s"luodaan")
+    var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))),
+      organisaatioOid = YoOid,
+      tarjoajat = List(YoOid)
+    )
+    val oid = put(muokattavaKoulutus)
+    muokattavaKoulutus = muokattavaKoulutus.copy(oid = Some(KoulutusOid(oid)))
+    // haetaan kannasta asti
+    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == TestUserOid.toString)
+    logger.info(s"haetaan ")
+    get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val koulutus = read[Koulutus](body)
+      val muokkaaja = koulutus.muokkaaja
+      logger.info(s"muokkaaja apista: " + muokkaaja)
+      muokkaaja.shouldEqual(TestUserOid)
+
+    }
+    val lastModified = get(oid, muokattavaKoulutus)
+    val updatedKoulutus =
+      muokattavaKoulutus.copy(tarjoajat = HkiYoOid :: muokattavaKoulutus.tarjoajat)
+    logger.info(s"päivitetään ")
+    update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
+    logger.info(s"haetaan ")
+    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == OphUserOid.toString)
+    get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val koulutus  = read[Koulutus](body)
+      val muokkaaja = koulutus.muokkaaja
+      logger.info(s"muokkaaja apista2: ", muokkaaja)
+      muokkaaja.shouldEqual(OphUserOid)
+    }
+  }
+
   it should "delete some tarjoajat and read last modified from history" in {
     val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
@@ -470,8 +508,8 @@ class KoulutusSpec
     val koulutus2NewTarjoajat       = koulutus2.tarjoajat ++ Seq(YoOid)
     val koulutus2tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
 
-    val (koulutus3, _)        = insertKoulutus(koulutus)
-    val oid3                  = koulutus3.oid.get.toString
+    val (koulutus3, _)              = insertKoulutus(koulutus)
+    val oid3                        = koulutus3.oid.get.toString
     val koulutus3tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
 
     db.migrate("107")
@@ -624,7 +662,7 @@ class KoulutusSpec
 
   it should "set koulutuksetKoodiUri of taiteen perusopetus koulutus automatically if not given" in {
     val tpoKoulutus = TaiteenPerusopetusKoulutus.copy(koulutuksetKoodiUri = Seq())
-    val oid          = put(tpoKoulutus)
+    val oid         = put(tpoKoulutus)
     get(oid, tpoKoulutus.copy(oid = Some(KoulutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_999907#1")))
   }
 
