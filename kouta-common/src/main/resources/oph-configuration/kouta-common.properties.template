@@ -1,3 +1,4 @@
 host.virkailija={{host_virkailija}}
+host.alb.virkailija={{host_alb_virkailija}}
 
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/api/hierarkia/hae

@@ -33,7 +33,8 @@ object KoulutusService
       CachedKoodistoClient,
       KoulutusServiceValidation,
       KoutaSearchClient,
-      EPerusteKoodiClient
+      EPerusteKoodiClient,
+      KoutaIndeksoijaClient
     ) {
   def apply(
       sqsInTransactionService: SqsInTransactionService,
@@ -55,7 +56,8 @@ object KoulutusService
       koodistoClient,
       koulutusServiceValidation,
       KoutaSearchClient,
-      EPerusteKoodiClient
+      EPerusteKoodiClient,
+      KoutaIndeksoijaClient
     )
   }
 }
@@ -70,7 +72,8 @@ class KoulutusService(
     koodistoClient: CachedKoodistoClient,
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
-    ePerusteKoodiClient: EPerusteKoodiClient
+    ePerusteKoodiClient: EPerusteKoodiClient,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -607,8 +610,9 @@ class KoulutusService(
         _          <- index(Some(k))
         _          <- auditLog.logCreate(k)
       } yield (teema, k)
-    }.map { case (teema, k) =>
+    }.map { case (teema, k: Koulutus) =>
       maybeDeleteTempImage(teema)
+      quickIndex(k.oid)
       k
     }.get
 
@@ -623,13 +627,21 @@ class KoulutusService(
         _          <- index(k)
         _          <- auditLog.logUpdate(before, k)
       } yield (teema, k)
-    }.map { case (teema, k) =>
+    }.map { case (teema, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teema)
+      quickIndex(k.flatMap(_.oid))
       k
     }.get
 
   def index(koulutus: Option[Koulutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
+
+  def quickIndex(koulutusOid: Option[KoulutusOid]): Boolean = {
+    koulutusOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("koulutus", oid.toString)
+      case None => true
+    }
+  }
 
   def getOppilaitosTyypitByKoulutustyypit()(implicit
       authenticated: Authenticated
