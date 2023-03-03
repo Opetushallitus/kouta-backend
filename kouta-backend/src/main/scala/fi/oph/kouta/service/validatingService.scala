@@ -23,13 +23,13 @@ trait ValidatingService[E <: Validatable] {
     }
   }
 
-  def validate(e: E, oldE: Option[E]): IsValid = {
+  def validateWithStateChangeValidationResults(e: E, oldE: Option[E], validateStateChangeResults: IsValid): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila == Tallennettu && e.tila == Julkaistu) {
-        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+        validateEntity(e, oldE) ++ validateStateChangeResults ++
           validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e, oldE) ++ validateStateChangeResults
       }
     } else {
       if (e.tila == Julkaistu) {
@@ -47,6 +47,10 @@ trait ValidatingService[E <: Validatable] {
     }
 
     errors
+  }
+
+  def validate(e: E, oldE: Option[E]): IsValid = {
+    validateWithStateChangeValidationResults(e, oldE, validateStateChange(e.getEntityDescriptionAllative(), oldE.map(_.tila), e.tila))
   }
 
   def koodiUriTipText(koodiUri: String): Option[String] =
