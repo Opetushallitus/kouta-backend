@@ -41,7 +41,12 @@ class HakukohdeServiceValidation(
   def withValidation[R](hakukohde: Hakukohde, oldHakukohde: Option[Hakukohde], authenticated: Authenticated)(
       f: Hakukohde => R
   ): R = {
-    var errors = super.validate(hakukohde, oldHakukohde)
+    val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+    var errors = super.validateWithStateChangeValidationResults(
+      hakukohde,
+      oldHakukohde,
+      validateHakukohdeStateChange(oldHakukohde, hakukohde, haku)
+    )
     if (errors.isEmpty)
       errors = validateDependencyIntegrity(
         hakukohde,
@@ -208,6 +213,41 @@ class HakukohdeServiceValidation(
             assertNotOptional(hk.hakulomaketyyppi, "hakulomaketyyppi")
           )
         )
+      )
+    )
+  }
+
+  private def isHakuaikaMenossa(hakuajat: Ajanjakso): Boolean = {
+    val now = LocalDateTime.now();
+    (hakuajat.alkaa.isBefore(now) && hakuajat.paattyy.isEmpty) || (hakuajat.alkaa.isBefore(now) && !now.isAfter(hakuajat.paattyy.get))
+  }
+
+  private def isHakuaikaMenossa(hakuajat: Seq[Ajanjakso]): Boolean = {
+    hakuajat.exists(isHakuaikaMenossa)
+  }
+
+  private def getValidStateChangesForHakukohde(oldHakukohde: Hakukohde, newHakukohde: Hakukohde, haku: Option[Haku]): Seq[Julkaisutila] = {
+    val stateChanges = validStateChanges.getOrElse(oldHakukohde.tila, Seq())
+    if (oldHakukohde.tila != Arkistoitu && haku.isEmpty) return stateChanges;
+
+    // TODO: Haetaan hakemuspalvelulta hakukohteen hakemusten määrä
+
+    val hakukohteenHakuaikaEiOleMenossa = !isHakuaikaMenossa(newHakukohde.hakuajat)
+    val haunHakuaikaEiOleMenossa = !isHakuaikaMenossa(haku.get.hakuajat)
+    val kaytetaanHaunAikataulua = newHakukohde.kaytetaanHaunAikataulua.getOrElse(false)
+    val isAllowedToRemoveArkistoitu = (kaytetaanHaunAikataulua && haunHakuaikaEiOleMenossa) || hakukohteenHakuaikaEiOleMenossa
+
+    validStateChanges.getOrElse(oldHakukohde.tila, Seq()) ++ (if (isAllowedToRemoveArkistoitu) Seq(Poistettu) else Seq())
+  }
+
+  private def validateHakukohdeStateChange(oldHakukohde: Option[Hakukohde], newHakukohde: Hakukohde, haku: Option[Haku]): IsValid = {
+    val hakukohdeValidStateChanges = if(oldHakukohde.isDefined) Some(getValidStateChangesForHakukohde(oldHakukohde.get, newHakukohde, haku)) else None
+    validateIfDefinedAndTrue(
+      oldHakukohde.map(_.tila != newHakukohde.tila),
+      validateIfDefined[Seq[Julkaisutila]](
+        hakukohdeValidStateChanges,
+        validStates =>
+          assertTrue(validStates.contains(newHakukohde.tila), "tila", illegalStateChange(newHakukohde.getEntityDescriptionAllative(), oldHakukohde.get.tila, newHakukohde.tila))
       )
     )
   }

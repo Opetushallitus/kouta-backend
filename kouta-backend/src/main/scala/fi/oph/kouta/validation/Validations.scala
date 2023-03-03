@@ -850,13 +850,13 @@ object Validations {
     }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
   }
 
-  def validateStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): IsValid = {
-    validateIfTrue(
-      oldState != newState,
+  def validateStateChange(entityDesc: String, oldState: Option[Julkaisutila], newState: Julkaisutila): IsValid = {
+    validateIfDefinedAndTrue(
+      oldState.map(_ != newState),
       validateIfDefined[Seq[Julkaisutila]](
-        validStateChanges.get(oldState),
+        oldState.flatMap(validStateChanges.get(_)),
         validStates =>
-          assertTrue(validStates.contains(newState), "tila", illegalStateChange(entityDesc, oldState, newState))
+          assertTrue(validStates.contains(newState), "tila", illegalStateChange(entityDesc, oldState.get, newState))
       )
     )
   }
