@@ -31,7 +31,8 @@ object ToteutusService
       CachedKoodistoClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      ToteutusServiceValidation
+      ToteutusServiceValidation,
+      KoutaIndeksoijaClient
     )
 
 case class ToteutusCopyOids(
@@ -63,7 +64,8 @@ class ToteutusService(
     koodistoClient: CachedKoodistoClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    toteutusServiceValidation: ToteutusServiceValidation
+    toteutusServiceValidation: ToteutusServiceValidation,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Toteutus]
     with TeemakuvaService[ToteutusOid, Toteutus] {
 
@@ -440,6 +442,7 @@ class ToteutusService(
       } yield (teema, t)
     }.map { case (teema, t) =>
       maybeDeleteTempImage(teema)
+      quickIndex(t.oid)
       t
     }.get
 
@@ -464,11 +467,19 @@ class ToteutusService(
       } yield (teema, t)
     }.map { case (teema, t) =>
       maybeDeleteTempImage(teema)
+      quickIndex(t.flatMap(_.oid))
       t
     }.get
 
   private def index(toteutus: Option[Toteutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
+
+  def quickIndex(toteutusOid: Option[ToteutusOid]): Boolean = {
+    toteutusOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("toteutus", oid.toString)
+      case None => true
+    }
+  }
 
   private def insertAsiasanat(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
