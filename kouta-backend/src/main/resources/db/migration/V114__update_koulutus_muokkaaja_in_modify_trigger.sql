@@ -9,15 +9,20 @@ declare
     tarjoaja_muokkaaja varchar;
 begin
 if (tg_op = 'DELETE') then
-    tarjoaja_muokkaaja := old.muokkaaja;
+    RAISE NOTICE 'old: %', old;
+    update koulutukset
+    set last_modified = now()::timestamptz, muokkaaja = old.muokkaaja
+    where oid = old.koulutus_oid
+      and last_modified <> now()::timestamptz;
+    return null;
 else
-    tarjoaja_muokkaaja := new.muokkaaja;
+    RAISE NOTICE 'new: %', new;
+    update koulutukset
+    set last_modified = now()::timestamptz, muokkaaja = new.muokkaaja
+    where oid = new.koulutus_oid
+      and last_modified <> now()::timestamptz;
+    return null;
 end if;
-update koulutukset
-set last_modified = now()::timestamptz, muokkaaja = tarjoaja_muokkaaja
-where oid = old.koulutus_oid
-  and last_modified <> now()::timestamptz;
-return null;
 end;
 $$ language plpgsql;
 
