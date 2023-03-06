@@ -5,6 +5,11 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
+import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
+import scala.concurrent.duration.Duration
+
 case class Entity(oid: Option[String])
 case class IndeksointiResult(result: List[Entity])
 
@@ -30,13 +35,16 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
         case _ => throw new RuntimeException(s"Tuntematon tyyppi: $tyyppi")
       }
       logger.info(s"Pikaindeksoidaan $tyyppi $oid. Url: $url")
-      post(url, oid) { response =>
-        val isSuccess = parse(response).extract[IndeksointiResult].result.exists(e => e.oid.contains(oid))
-        if (!isSuccess) {
-          logger.warn(s"Pikaindeksointi epäonnistui: ($tyyppi $oid)")
+      val resultF: Future[Boolean] = Future {
+        post(url, oid) { response =>
+          val isSuccess = parse(response).extract[IndeksointiResult].result.exists(e => e.oid.contains(oid))
+          if (!isSuccess) {
+            logger.warn(s"Pikaindeksointi epäonnistui: ($tyyppi $oid)")
+          }
+          isSuccess
         }
-        isSuccess
       }
+      Await.result(resultF, Duration(5, TimeUnit.SECONDS))
     } catch {
       case e: Exception => logger.error(s"Virhe pikaindeksoinnissa ($tyyppi $oid): $e")
       false
