@@ -26,10 +26,10 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   def quickIndexEntity(tyyppi: String, oid: String): Boolean = {
     try {
       val url = tyyppi match {
-        case "koulutus" => urlProperties.url("kouta-indeksoija.koulutus.quick")
-        case "toteutus" => urlProperties.url("kouta-indeksoija.toteutus.quick")
-        case "hakukohde" => urlProperties.url("kouta-indeksoija.hakukohde.quick")
-        case "haku" => urlProperties.url("kouta-indeksoija.haku.quick")
+        case "koulutus" => urlProperties.url("kouta-indeksoija.koulutus.quick", oid)
+        case "toteutus" => urlProperties.url("kouta-indeksoija.toteutus.quick", oid)
+        case "hakukohde" => urlProperties.url("kouta-indeksoija.hakukohde.quick", oid)
+        case "haku" => urlProperties.url("kouta-indeksoija.haku.quick", oid)
         case _ => throw new RuntimeException(s"Tuntematon tyyppi: $tyyppi")
       }
       logger.info(s"Pikaindeksoidaan $tyyppi $oid. Url: $url")
@@ -49,7 +49,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
 
   def quickIndexValintaperuste(id: String): Boolean = {
     try {
-      post(urlProperties.url("kouta-indeksoija.valintaperuste.quick"), id) { response =>
+      post(urlProperties.url("kouta-indeksoija.valintaperuste.quick", id), id) { response =>
         logger.info("indeksoija-response: " + response)
         parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
       }
