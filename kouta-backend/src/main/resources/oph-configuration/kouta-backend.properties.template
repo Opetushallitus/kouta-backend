@@ -70,11 +70,11 @@ valinta-tulos-service.haku.alimmatpisteet=https://{{host_virkailija}}/valinta-tu
 legacy-tarjonta-service.hakukohde.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
 legacy-tarjonta-service.haku.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
 
-kouta-indeksoija.koulutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/koulutus/quick
-kouta-indeksoija.toteutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/toteutus/quick
-kouta-indeksoija.hakukohde.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/hakukohde/quick
-kouta-indeksoija.haku.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/haku/quick
-kouta-indeksoija.valintaperuste.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/valintaperuste/quick
+kouta-indeksoija.koulutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/koulutus/quick?oid=$1
+kouta-indeksoija.toteutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/toteutus/quick?oid=$1
+kouta-indeksoija.hakukohde.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/hakukohde/quick?oid=$1
+kouta-indeksoija.haku.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/haku/quick?oid=$1
+kouta-indeksoija.valintaperuste.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/valintaperuste/quick?oid=$1
 
 tarjonta-service.haku.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
 tarjonta-service.hakukohde.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
