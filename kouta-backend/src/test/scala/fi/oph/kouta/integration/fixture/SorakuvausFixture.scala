@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.{CachedKoodistoClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -21,6 +21,7 @@ trait SorakuvausFixture extends AccessControlSpec {
   def sorakuvausService: SorakuvausService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val sorakuvausServiceValidation =
       new SorakuvausServiceValidation(koodistoClient, KoulutusDAO)
     new SorakuvausService(
@@ -29,7 +30,8 @@ trait SorakuvausFixture extends AccessControlSpec {
       organisaatioService,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      sorakuvausServiceValidation
+      sorakuvausServiceValidation,
+      koutaIndeksoijaClient
     )
   }
 

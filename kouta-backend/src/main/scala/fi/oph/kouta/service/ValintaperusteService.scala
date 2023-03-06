@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndeksoijaClient, KoutaSearchClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.searchResults.ValintaperusteSearchResult
 import fi.oph.kouta.domain._
@@ -26,7 +26,8 @@ object ValintaperusteService
       OrganisaatioServiceImpl,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      ValintaperusteServiceValidation
+      ValintaperusteServiceValidation,
+      KoutaIndeksoijaClient
     )
 
 class ValintaperusteService(
@@ -35,7 +36,8 @@ class ValintaperusteService(
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    valintaperusteServiceValidation: ValintaperusteServiceValidation
+    valintaperusteServiceValidation: ValintaperusteServiceValidation,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
@@ -164,6 +166,9 @@ class ValintaperusteService(
         _ <- index(Some(v))
         _ <- auditLog.logCreate(v)
       } yield v
+    }.map { v: Valintaperuste =>
+      quickIndex(v.id)
+      v
     }.get
 
   private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit
@@ -176,8 +181,18 @@ class ValintaperusteService(
         _ <- index(v)
         _ <- auditLog.logUpdate(before, v)
       } yield v
+    }.map { v: Option[Valintaperuste] =>
+      quickIndex(v.flatMap(_.id))
+      v
     }.get
 
   private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
+
+  private def quickIndex(valintaperusteId: Option[UUID]): Boolean = {
+    valintaperusteId match {
+      case Some(id) => koutaIndeksoijaClient.quickIndexValintaperuste(id.toString)
+      case None => true
+    }
+  }
 }

@@ -474,7 +474,7 @@ class ToteutusService(
   private def index(toteutus: Option[Toteutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
 
-  def quickIndex(toteutusOid: Option[ToteutusOid]): Boolean = {
+  private def quickIndex(toteutusOid: Option[ToteutusOid]): Boolean = {
     toteutusOid match {
       case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("toteutus", oid.toString)
       case None => true
