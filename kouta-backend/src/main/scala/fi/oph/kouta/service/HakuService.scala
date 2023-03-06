@@ -23,7 +23,7 @@ import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient)
 
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
@@ -31,7 +31,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
                   val organisaatioService: OrganisaatioService,
                   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
                   kayttooikeusClient: KayttooikeusClient,
-                  hakuServiceValidation: HakuServiceValidation
+                  hakuServiceValidation: HakuServiceValidation,
+                  koutaIndeksoijaClient: KoutaIndeksoijaClient
                  )
   extends RoleEntityAuthorizationService[Haku] {
 
@@ -190,6 +191,9 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
+    }.map { h =>
+      quickIndex(h.oid)
+      h
     }.get
 
   private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): Option[Haku] =
@@ -200,8 +204,17 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h
+    }.map { h =>
+      quickIndex(h.flatMap(_.oid))
+      h
     }.get
 
+  private def quickIndex(hakuOid: Option[HakuOid]): Boolean = {
+    hakuOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("haku", oid.toString)
+      case None => true
+    }
+  }
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 

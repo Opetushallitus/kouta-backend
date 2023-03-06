@@ -68,7 +68,8 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
         toteutusServiceValidation,
         koutaIndeksoijaClient
       ),
-      hakukohdeServiceValidation
+      hakukohdeServiceValidation,
+      koutaIndeksoijaClient
     )
   }
 

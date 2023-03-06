@@ -21,8 +21,9 @@ trait HakuFixtureWithIndexing extends HakuFixture {
   override def hakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val hakuServiceValidation = new HakuServiceValidation(koodistoClient, mockHakemusPalveluClient, HakukohdeDAO)
-    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, hakuServiceValidation)
+    new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, hakuServiceValidation, koutaIndeksoijaClient)
   }
 }
 
@@ -63,8 +64,9 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   override def valintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoClient, HakukohdeDAO)
-    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
+    new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation, koutaIndeksoijaClient)
   }
 }
 
@@ -82,6 +84,6 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
         koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient),
-    hakukohdeServiceValidation)
+    hakukohdeServiceValidation, koutaIndeksoijaClient)
   }
 }

@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndeksoijaClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Poistettu, Sorakuvaus, SorakuvausEnrichedData, SorakuvausListItem, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -19,7 +19,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, SorakuvausServiceValidation)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, SorakuvausServiceValidation, KoutaIndeksoijaClient)
 
 class SorakuvausService(
   sqsInTransactionService: SqsInTransactionService,
@@ -27,7 +27,8 @@ class SorakuvausService(
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
-  sorakuvausServiceValidation: SorakuvausServiceValidation
+  sorakuvausServiceValidation: SorakuvausServiceValidation,
+  koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
@@ -127,4 +128,12 @@ class SorakuvausService(
 
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
+
+  //Tämä ei ole tällä hetkellä käytössä sorakuvauksille, kun eivät näy kouta-ui:n etusivullakaan. Tehty kuitenkin toteutus valmiiksi tarjolle.
+  private def quickIndex(sorakuvausId: Option[UUID]): Boolean = {
+    sorakuvausId match {
+      case Some(id) => koutaIndeksoijaClient.quickIndexSorakuvaus(id.toString)
+      case None => true
+    }
+  }
 }

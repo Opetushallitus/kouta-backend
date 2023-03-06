@@ -28,7 +28,8 @@ object HakukohdeService
       KayttooikeusClient,
       CachedKoodistoClient,
       ToteutusService,
-      HakukohdeServiceValidation
+      HakukohdeServiceValidation,
+      KoutaIndeksoijaClient
     )
 
 case class CopyOids(
@@ -59,7 +60,8 @@ class HakukohdeService(
     kayttooikeusClient: KayttooikeusClient,
     koodistoClient: CachedKoodistoClient,
     toteutusService: ToteutusService,
-    hakukohdeServiceValidation: HakukohdeServiceValidation
+    hakukohdeServiceValidation: HakukohdeServiceValidation,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Hakukohde] {
 
   protected val roleEntity: RoleEntity = Role.Hakukohde
@@ -384,6 +386,9 @@ class HakukohdeService(
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
+    }.map { h =>
+      quickIndex(h.oid)
+      h
     }.get
 
   private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit
@@ -396,8 +401,18 @@ class HakukohdeService(
         _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h
+    }.map { h =>
+      quickIndex(h.flatMap(_.oid))
+      h
     }.get
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
+
+  private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): Boolean = {
+    hakukohdeOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("hakukohde", oid.toString)
+      case None => true
+    }
+  }
 }

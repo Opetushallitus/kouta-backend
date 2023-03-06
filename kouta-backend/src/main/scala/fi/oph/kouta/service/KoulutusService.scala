@@ -636,7 +636,7 @@ class KoulutusService(
   def index(koulutus: Option[Koulutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
 
-  def quickIndex(koulutusOid: Option[KoulutusOid]): Boolean = {
+  private def quickIndex(koulutusOid: Option[KoulutusOid]): Boolean = {
     koulutusOid match {
       case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("koulutus", oid.toString)
       case None => true

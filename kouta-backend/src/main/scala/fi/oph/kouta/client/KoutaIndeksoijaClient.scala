@@ -17,9 +17,6 @@ object KoutaIndeksoijaClient extends KoutaIndeksoijaClient
 
 class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-  val foo = KoutaConfigurationFactory.configuration
-
-  val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
   implicit val formats = DefaultFormats
 
   //todo, ehkä joku timeout jonnekin, tänne tai kutsujan päähän
@@ -50,22 +47,30 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   def quickIndexValintaperuste(id: String): Boolean = {
     try {
       post(urlProperties.url("kouta-indeksoija.valintaperuste.quick", id), id) { response =>
-        logger.info("indeksoija-response: " + response)
         parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
       }
     } catch {
       case e: Exception => logger.error(s"Virhe valintaperusteen $id pikaindeksoinnissa: $e")
       false
     }
-
-
   }
 
+  def quickIndexSorakuvaus(id: String): Boolean = {
+    try {
+      post(urlProperties.url("kouta-indeksoija.sorakuvaus.quick", id), id) { response =>
+        parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
+      }
+    } catch {
+      case e: Exception => logger.error(s"Virhe sorakuvauksen $id pikaindeksoinnissa: $e")
+        false
+    }
+  }
 }
 
 class MockKoutaIndeksoijaClient extends KoutaIndeksoijaClient {
 
   override def quickIndexEntity(tyyppi: String, oid: String) = true
   override def quickIndexValintaperuste(id: String) = true
+  override def quickIndexSorakuvaus(id: String) = true
 
 }
