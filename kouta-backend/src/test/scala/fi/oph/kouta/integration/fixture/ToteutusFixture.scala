@@ -142,7 +142,6 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   }
 
   def readToteutusMuokkaaja(oid: String): String = {
-    val muokkaaja = getStringColumnValue("toteutukset", "muokkaaja", "oid", oid)
     getStringColumnValue("toteutukset", "muokkaaja", "oid", oid)
   }
   def readToteutusModified(oid: String): Modified = readToteutusModified(ToteutusOid(oid))
