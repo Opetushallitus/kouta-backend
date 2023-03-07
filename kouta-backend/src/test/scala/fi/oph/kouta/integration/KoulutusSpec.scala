@@ -448,82 +448,67 @@ class KoulutusSpec
   }
 
   it should "update muokkaaja of the koulutus when tarjoaja is added" in {
-    logger.info(s"luodaan")
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
       metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid)
     )
-    logger.info(s"tarjoajia " + muokattavaKoulutus.tarjoajat.size)
     val oid = put(muokattavaKoulutus)
     muokattavaKoulutus = muokattavaKoulutus.copy(oid = Some(KoulutusOid(oid)))
     // haetaan kannasta asti
     assert(getKoulutusMuokkaaja(muokattavaKoulutus) == TestUserOid.toString)
-    logger.info(s"haetaan ")
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      logger.info(s"muokkaaja apista: " + muokkaaja)
       muokkaaja.shouldEqual(TestUserOid)
 
     }
     val lastModified = get(oid, muokattavaKoulutus)
     val updatedKoulutus =
       muokattavaKoulutus.copy(tarjoajat = HkiYoOid :: muokattavaKoulutus.tarjoajat)
-    logger.info(s"tarjoajia " + updatedKoulutus.tarjoajat.size)
-    logger.info(s"päivitetään ")
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    logger.info(s"haetaan ")
     assert(getKoulutusMuokkaaja(muokattavaKoulutus) == OphUserOid.toString)
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      logger.info(s"muokkaaja apista2: ", muokkaaja)
       muokkaaja.shouldEqual(OphUserOid)
+      assert(koulutus.tarjoajat.size == 2)
     }
   }
 
   it should "update muokkaaja of the koulutus when tarjoaja is deleted" in {
-    logger.info(s"luodaan")
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
       metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid, HkiYoOid)
     )
-    logger.info(s"tarjoajia " + muokattavaKoulutus.tarjoajat.size)
     val oid = put(muokattavaKoulutus)
     muokattavaKoulutus = muokattavaKoulutus.copy(oid = Some(KoulutusOid(oid)))
     // haetaan kannasta asti
     assert(getKoulutusMuokkaaja(muokattavaKoulutus) == TestUserOid.toString)
-    logger.info(s"haetaan ")
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      logger.info(s"muokkaaja apista: " + muokkaaja)
       muokkaaja.shouldEqual(TestUserOid)
-
     }
     val lastModified = get(oid, muokattavaKoulutus)
     val updatedKoulutus =
       muokattavaKoulutus.copy(tarjoajat = List(HkiYoOid))
-    logger.info(s"tarjoajia " + updatedKoulutus.tarjoajat.size)
-    logger.info(s"päivitetään ")
     update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    logger.info(s"haetaan ")
     assert(getKoulutusMuokkaaja(muokattavaKoulutus) == OphUserOid.toString)
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      logger.info(s"muokkaaja apista2: ", muokkaaja)
       muokkaaja.shouldEqual(OphUserOid)
+      assert(koulutus.tarjoajat.size == 1)
     }
   }
 

@@ -11,8 +11,8 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.util.TimeUtils.instantToModified
+import org.json4s.jackson.{JsonMethods, Serialization}
 
-import org.json4s.jackson.JsonMethods
 import java.time.LocalDateTime
 
 class ToteutusSpec
@@ -614,7 +614,7 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500)
+    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
     post(ToteutusPath, bytes(thisToteutus), headersIfUnmodifiedSince(lastModified)) {
       status should equal(409)
@@ -644,10 +644,45 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid).copy(tila = Tallennettu))
     val thisToteutus = toteutus(oid, koulutusOid).copy(tila = Tallennettu)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500)
+    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus) should not equal lastModified
+  }
+
+  it should "update muokkaaja of the toteutus when adding tarjoaja" in {
+    val oid          = put(toteutus(koulutusOid))
+    val thisToteutus = toteutus(oid, koulutusOid)
+    get(s"$ToteutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val toteutus: Toteutus = Serialization.read[Toteutus](body)
+      val muokkaaja          = toteutus.muokkaaja
+      muokkaaja.shouldEqual(TestUserOid)
+    }
+    val lastModified = get(oid, thisToteutus)
+    val muokattuToteutus = thisToteutus.copy(
+      tarjoajat = List(LonelyOid, OtherOid)
+    )
+    update(muokattuToteutus, lastModified, expectUpdate = true, sessionId = ophSession)
+    assert(readToteutusMuokkaaja(oid) == OphUserOid.toString)
+    get(s"$ToteutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val toteutus: Toteutus = Serialization.read[Toteutus](body)
+      val muokkaaja          = toteutus.muokkaaja
+      muokkaaja.shouldEqual(OphUserOid)
+    }
+  }
+
+  it should "update muokkaaja of toteutus when deleting tarjoaja" in {
+    val oid = put(toteutus(koulutusOid).copy(tila = Tallennettu))
+    assert(readToteutusMuokkaaja(oid) == TestUserOid.toString)
+    val muokattuToteutus = toteutus(oid, koulutusOid).copy(tila = Tallennettu)
+    val lastModified     = get(oid, muokattuToteutus)
+    val uusiToteutus     = muokattuToteutus.copy(tarjoajat = List())
+    update(uusiToteutus, lastModified, expectUpdate = true, sessionId = ophSession)
+    assert(readToteutusMuokkaaja(oid) == OphUserOid.toString)
   }
 
   it should "set last_modified right for old toteutukset after database migration" in {
