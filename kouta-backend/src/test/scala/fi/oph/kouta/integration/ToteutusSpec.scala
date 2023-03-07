@@ -375,7 +375,7 @@ class ToteutusSpec
     val createdToteutus = newToteutus.copy(oid = Some(ToteutusOid(oid)), muokkaaja = userOidForTestSessionId(session))
     val lastModified    = get(oid, createdToteutus)
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(AmmOid)))
-    update(createdToteutus.copy(tarjoajat = List(AmmOid, GrandChildOid)), lastModified)
+    update(createdToteutus.copy(tarjoajat = List(AmmOid, GrandChildOid)), lastModified, expectUpdate = true, session)
     get(oid, createdToteutus.copy(tarjoajat = List(AmmOid, GrandChildOid)))
     get(koulutusOid, ophKoulutus.copy(oid = Some(KoulutusOid(koulutusOid)), tarjoajat = List(AmmOid, ChildOid)))
   }
