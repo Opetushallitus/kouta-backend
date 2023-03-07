@@ -60,7 +60,7 @@ from toteutus_mod
 where t.oid = toteutus_mod.oid
   and t.last_modified is null;
 
--- Asetetaan koulutuksen last_modified nykyhetkeen ennen kuin toteutus itse päivittyy
+-- Asetetaan toteutuksen last_modified nykyhetkeen ennen kuin toteutus itse päivittyy
 create trigger set_toteutukset_last_modified_on_change
     before insert or update
     on toteutukset

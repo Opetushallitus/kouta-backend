@@ -218,7 +218,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
-    logger.info(s"INSERT TARJOAJAT, MUOKKAAJA: " + koulutus.muokkaaja)
     val inserts =
       koulutus.tarjoajat.map(t => sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values (${koulutus.oid}, $t, ${koulutus.muokkaaja})""")
@@ -284,7 +283,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def updateKoulutus(koulutus: Koulutus): DBIO[Int] = {
-    logger.info(s"update koulutus, muokkaaja: " + koulutus.muokkaaja)
     sqlu"""update koulutukset set
               external_id = ${koulutus.externalId},
               johtaa_tutkintoon = ${koulutus.johtaaTutkintoon},
@@ -319,21 +317,18 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def insertTarjoaja(oid: Option[KoulutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
-    logger.info(s"insert TARJOAJA, muokkaaja: " + muokkaaja)
     sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
              on conflict on constraint koulutusten_tarjoajat_pkey do nothing"""
   }
 
   def deleteTarjoajat(oid: Option[KoulutusOid], exclude: List[OrganisaatioOid]): DBIO[Int] = {
-    logger.info(s"DELETE TARJOAJAT org rajauksella")
     sqlu"""delete from koulutusten_tarjoajat
           where koulutus_oid = $oid
            and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
   def deleteTarjoajat(oid: Option[KoulutusOid]): DBIO[Int] = {
-    logger.info(s"DELETE TARJOAJAT")
     sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
   }
 
