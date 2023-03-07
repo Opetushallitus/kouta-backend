@@ -19,11 +19,15 @@ object TestData {
   val endTime1: LocalDateTime =
     LocalDate.now().plusDays(1).atTime(LocalTime.parse("09:58")).truncatedTo(ChronoUnit.MINUTES)
   val muokkaajanNimi: String = "Testi Muokkaaja"
-  val defaultKuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")
+  val defaultKuvaus          = Map(Fi -> "kuvaus", Sv -> "kuvaus sv")
 
   def kieliMap(text: String): Kielistetty = Map(Fi -> s"$text fi", Sv -> s"$text sv")
 
   def getInvalidHakuajat = List(Ajanjakso(TestData.inFuture(9000), Some(TestData.inFuture(3000))))
+
+  def getHakuajatWeeksInFuture(startWeeks: Int, endWeeks: Int) = List(
+    Ajanjakso(alkaa = inFuture().plusWeeks(startWeeks), paattyy = Some(inFuture().plusWeeks(endWeeks)))
+  )
 
   val Osoite1: Osoite =
     Osoite(osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"), postinumeroKoodiUri = Some("posti_04230#2"))
@@ -555,7 +559,7 @@ object TestData {
     linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
     isMuokkaajaOphVirkailija = Some(true),
     opintojenLaajuusNumero = Some(20),
-    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1")
   )
 
   val TelmaKoulutus: Koulutus = Koulutus(
@@ -1204,20 +1208,22 @@ object TestData {
     hasJotpaRahoitus = Some(false)
   )
 
-  val ErikoistumiskoulutusToteutuksenMetatieto: ErikoistumiskoulutusToteutusMetadata = ErikoistumiskoulutusToteutusMetadata(
-    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-    opetus = Some(ToteutuksenOpetus),
-    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-    hakutermi = Some(Hakeutuminen),
-    hakulomaketyyppi = Some(MuuHakulomake),
-    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
-    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
-    yhteyshenkilot = Seq(Yhteystieto1),
-    aloituspaikat = None,
-    isMuokkaajaOphVirkailija = Some(false),
-    hasJotpaRahoitus = Some(false))
+  val ErikoistumiskoulutusToteutuksenMetatieto: ErikoistumiskoulutusToteutusMetadata =
+    ErikoistumiskoulutusToteutusMetadata(
+      kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      opetus = Some(ToteutuksenOpetus),
+      asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+      hakutermi = Some(Hakeutuminen),
+      hakulomaketyyppi = Some(MuuHakulomake),
+      hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+      lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+      lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+      hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+      yhteyshenkilot = Seq(Yhteystieto1),
+      aloituspaikat = None,
+      isMuokkaajaOphVirkailija = Some(false),
+      hasJotpaRahoitus = Some(false)
+    )
 
   val JulkaistuAmmToteutus: Toteutus = Toteutus(
     oid = None,
@@ -1254,7 +1260,7 @@ object TestData {
     JulkaistuAmmToteutus.copy(
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto),
       tarjoajat = List(YoOid, HkiYoOid),
-      koulutuksetKoodiUri = Seq(),
+      koulutuksetKoodiUri = Seq()
     )
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)), tarjoajat = List(AmkOid))
@@ -1387,7 +1393,8 @@ object TestData {
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       isMuokkaajaOphVirkailija = Some(false),
-      hasJotpaRahoitus = Some(false))
+      hasJotpaRahoitus = Some(false)
+    )
 
   val TaiteenPerusopetusToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(TaiteenPerusopetusToteutusMetatieto))
