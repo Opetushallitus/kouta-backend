@@ -1,6 +1,3 @@
--- Korvataan vanhat triggerifunktiot päivitetyillä
-drop function set_toteutukset_last_modified_from_related cascade;
-
 -- Päivitetään toteutuksen last_modified ja muokkaaja kun sen tarjoajat muuttuu, mutta vain jos last_modified muuttuisi.
 -- Näin vältetään turhat muutokset toteutukset-tauluun, kun useampi tarjoaja muuttuu samalla
 create or replace function set_toteutukset_last_modified_from_related() returns trigger as
@@ -21,9 +18,3 @@ begin
     end if;
 end;
 $$ language plpgsql;
-
-create trigger set_last_modified_on_toteutusten_tarjoajat_change
-    after insert or update or delete
-    on toteutusten_tarjoajat
-    for each row
-execute procedure set_toteutukset_last_modified_from_related();
