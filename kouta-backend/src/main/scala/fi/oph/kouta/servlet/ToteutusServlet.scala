@@ -84,7 +84,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.put(parsedBody.extract[Toteutus]) match {
-      case oid => Ok("oid" -> oid)
+      case res: CreateResult => Ok(res)
     }
   }
 
@@ -114,7 +114,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(res)
     }
   }
 

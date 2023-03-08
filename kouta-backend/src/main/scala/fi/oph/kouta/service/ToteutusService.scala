@@ -227,7 +227,7 @@ class ToteutusService(
     )
   }
 
-  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
+  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): CreateResult = {
     authorizePut(
       toteutus,
       AuthorizationRules(
@@ -249,7 +249,7 @@ class ToteutusService(
           )
         )
       }
-    }.oid.get
+    }
   }
 
   def copy(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusCopyResultObject] = {
@@ -257,7 +257,7 @@ class ToteutusService(
     toteutukset.map(toteutus => {
       try {
         val toteutusCopyAsLuonnos = toteutus.copy(oid = None, tila = Tallennettu)
-        val createdToteutusOid    = put(toteutusCopyAsLuonnos)
+        val createdToteutusOid    = put(toteutusCopyAsLuonnos).oid.asInstanceOf[ToteutusOid]
         ToteutusCopyResultObject(
           oid = toteutus.oid.get,
           status = "success",
@@ -271,7 +271,7 @@ class ToteutusService(
     })
   }
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
     val rules            = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
 
@@ -293,7 +293,7 @@ class ToteutusService(
         )
       }
     }
-  }.nonEmpty
+  }
 
   private def getAuthorizationRulesForUpdate(
       toteutusWithTime: Option[(Toteutus, Instant)],
@@ -417,7 +417,7 @@ class ToteutusService(
 
   private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit
       authenticated: Authenticated
-  ): Toteutus =
+  ): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         (oldK, k)  <- koulutusAddTarjoajaActions
@@ -434,8 +434,8 @@ class ToteutusService(
       } yield (teema, t)
     }.map { case (teema, t) =>
       maybeDeleteTempImage(teema)
-      quickIndex(t.oid)
-      t
+      val warnings = quickIndex(t.oid)
+      CreateResult(t.oid.get, warnings)
     }.get
 
   private def doUpdate(
@@ -443,7 +443,7 @@ class ToteutusService(
       notModifiedSince: Instant,
       before: Toteutus,
       koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])]
-  )(implicit authenticated: Authenticated): Option[Toteutus] =
+  )(implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
@@ -459,17 +459,17 @@ class ToteutusService(
       } yield (teema, t)
     }.map { case (teema, t) =>
       maybeDeleteTempImage(teema)
-      quickIndex(t.flatMap(_.oid))
-      t
+      val warnings = quickIndex(t.flatMap(_.oid))
+      UpdateResult(t.isDefined, warnings)
     }.get
 
   private def index(toteutus: Option[Toteutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
 
-  private def quickIndex(toteutusOid: Option[ToteutusOid]): Boolean = {
+  private def quickIndex(toteutusOid: Option[ToteutusOid]): List[String] = {
     toteutusOid match {
       case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("toteutus", oid.toString)
-      case None => true
+      case None => List.empty
     }
   }
 

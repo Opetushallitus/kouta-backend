@@ -84,7 +84,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     koulutusService.put(parsedBody.extract[Koulutus]) match {
-      case oid => Ok("oid" -> oid)
+      case res: CreateResult => Ok(res)
     }
   }
 
@@ -114,7 +114,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     koulutusService.update(parsedBody.extract[Koulutus], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(Map("updated" -> res.updated, "warnings" -> res.warnings))
     }
   }
 
