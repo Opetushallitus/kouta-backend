@@ -5,7 +5,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{TimeUnit, TimeoutException}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
@@ -24,8 +24,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   implicit val formats = DefaultFormats
 
-  //todo, ehkä joku timeout jonnekin, tänne tai kutsujan päähän
-  def quickIndexEntity(tyyppi: String, oid: String): Boolean = {
+  def quickIndexEntity(tyyppi: String, oid: String): List[String] = {
     try {
       val url = tyyppi match {
         case "koulutus" => urlProperties.url("kouta-indeksoija.koulutus.quick", oid)
@@ -44,41 +43,41 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
           isSuccess
         }
       }
-      Await.result(resultF, Duration(5, TimeUnit.SECONDS))
+      val result = Await.result(resultF, Duration(5, TimeUnit.SECONDS))
+      if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
+      case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin ($tyyppi $oid)")
+        List("varoitukset.indeksointiAikakatkaisu")
       case e: Exception => logger.error(s"Virhe pikaindeksoinnissa ($tyyppi $oid): $e")
-      false
+        List("varoitukset.indeksointiEpaonnistui")
     }
 
   }
 
-  def quickIndexValintaperuste(id: String): Boolean = {
+  def quickIndexValintaperuste(id: String): List[String] = {
     try {
-      post(urlProperties.url("kouta-indeksoija.valintaperuste.quick", id), id) { response =>
-        parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
+      val resultF: Future[Boolean] = Future {
+        post(urlProperties.url("kouta-indeksoija.valintaperuste.quick", id), id) { response =>
+          val isSuccess = parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
+          if (!isSuccess) {
+            logger.warn(s"Pikaindeksointi epäonnistui (valintaperuste $id)")
+          }
+          isSuccess
+        }
       }
+      val result = Await.result(resultF, Duration(5, TimeUnit.SECONDS))
+      if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
+      case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin! (Valintaperuste $id)", e)
+        List("varoitukset.indeksointiAikakatkaisu")
       case e: Exception => logger.error(s"Virhe valintaperusteen $id pikaindeksoinnissa: $e")
-      false
-    }
-  }
-
-  def quickIndexSorakuvaus(id: String): Boolean = {
-    try {
-      post(urlProperties.url("kouta-indeksoija.sorakuvaus.quick", id), id) { response =>
-        parse(response).extract[ValintaperusteIndeksointiResult].result.exists(e => e.id.contains(id))
-      }
-    } catch {
-      case e: Exception => logger.error(s"Virhe sorakuvauksen $id pikaindeksoinnissa: $e")
-        false
+        List("varoitukset.indeksointiEpaonnistui")
     }
   }
 }
 
 class MockKoutaIndeksoijaClient extends KoutaIndeksoijaClient {
 
-  override def quickIndexEntity(tyyppi: String, oid: String) = true
-  override def quickIndexValintaperuste(id: String) = true
-  override def quickIndexSorakuvaus(id: String) = true
-
+  override def quickIndexEntity(tyyppi: String, oid: String) = List.empty
+  override def quickIndexValintaperuste(id: String) = List.empty
 }

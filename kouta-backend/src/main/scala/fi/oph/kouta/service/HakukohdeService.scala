@@ -150,7 +150,7 @@ class HakukohdeService(
     }
   }
 
-  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): HakukohdeOid = {
+  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): CreateResult = {
     val rules = hakukohde.jarjestyspaikkaOid match {
       case Some(oid) =>
         AuthorizationRules(
@@ -167,7 +167,7 @@ class HakukohdeService(
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, None, authenticated) { hk =>
         doPut(hk)
       }
-    }.oid.get
+    }
   }
 
   def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit
@@ -189,7 +189,7 @@ class HakukohdeService(
           .map(hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
         val toteutusCopy    = toteutus.copy(oid = None, tila = Tallennettu)
-        val toteutusCopyOid = toteutusService.put(toteutusCopy)
+        val toteutusCopyOid = toteutusService.put(toteutusCopy).oid.asInstanceOf[ToteutusOid]
 
         val hakukohdeCopyAsLuonnos = hk.copy(
           oid = None,
@@ -201,7 +201,7 @@ class HakukohdeService(
           hakuajat = hakuajat
         )
 
-        val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos)
+        val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos).oid.asInstanceOf[HakukohdeOid]
 
         HakukohdeCopyResultObject(
           oid = hk.oid.get,
@@ -232,7 +232,7 @@ class HakukohdeService(
     copyResultObjects ++ notFound
   }
 
-  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
     val oldHakukohdeWithTime = HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat())
 
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(hakukohde, oldHakukohdeWithTime)
@@ -244,7 +244,7 @@ class HakukohdeService(
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, Some(oldHakukohde), authenticated) { h =>
         doUpdate(h, notModifiedSince, oldHakukohde)
       }
-    }.nonEmpty
+    }
   }
 
   private def getAuthorizationRulesForUpdate(
@@ -304,21 +304,20 @@ class HakukohdeService(
     val tilaChangeResults = hakukohteet.toList.map(hakukohde => {
       try {
         val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
-        update(hakukohdeWithNewTila, unModifiedSince) match {
-          case true =>
-            updatedHakukohdeOids += hakukohde.oid.get
-            HakukohdeTilaChangeResultObject(
+        if (update(hakukohdeWithNewTila, unModifiedSince).updated) {
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
             status = "success"
           )
-          case false =>
-            updatedHakukohdeOids += hakukohde.oid.get
-            HakukohdeTilaChangeResultObject(
+        } else {
+          updatedHakukohdeOids += hakukohde.oid.get
+          HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
             status = "error",
-              errorPaths = List("hakukohde"),
-              errorMessages = List("Hakukohteen tilaa ei voitu päivittää"),
-              errorTypes = List("possible transaction error")
+            errorPaths = List("hakukohde"),
+            errorMessages = List("Hakukohteen tilaa ei voitu päivittää"),
+            errorTypes = List("possible transaction error")
           )
         }
       } catch {
@@ -379,7 +378,7 @@ class HakukohdeService(
     tilaChangeResults ++ notFound
   }
 
-  private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): Hakukohde =
+  private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakukohdeDAO.getPutActions(hakukohde)
@@ -387,13 +386,13 @@ class HakukohdeService(
         _ <- auditLog.logCreate(h)
       } yield h
     }.map { h =>
-      quickIndex(h.oid)
-      h
+      val warnings = quickIndex(h.oid)
+      CreateResult(h.oid.get, warnings)
     }.get
 
   private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit
       authenticated: Authenticated
-  ): Option[Hakukohde] =
+  ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
@@ -402,17 +401,17 @@ class HakukohdeService(
         _ <- auditLog.logUpdate(before, h)
       } yield h
     }.map { h =>
-      quickIndex(h.flatMap(_.oid))
-      h
+      val warnings = quickIndex(h.flatMap(_.oid))
+      UpdateResult(updated = h.isDefined, warnings)
     }.get
 
   private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
 
-  private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): Boolean = {
+  private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): List[String] = {
     hakukohdeOid match {
       case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("hakukohde", oid.toString)
-      case None => true
+      case None => List.empty
     }
   }
 }

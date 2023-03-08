@@ -129,11 +129,4 @@ class SorakuvausService(
   private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
 
-  //Tämä ei ole tällä hetkellä käytössä sorakuvauksille, kun eivät näy kouta-ui:n etusivullakaan. Tehty kuitenkin toteutus valmiiksi tarjolle.
-  private def quickIndex(sorakuvausId: Option[UUID]): Boolean = {
-    sorakuvausId match {
-      case Some(id) => koutaIndeksoijaClient.quickIndexSorakuvaus(id.toString)
-      case None => true
-    }
-  }
 }
