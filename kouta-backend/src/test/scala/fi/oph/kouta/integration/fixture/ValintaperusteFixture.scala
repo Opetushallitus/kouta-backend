@@ -16,16 +16,23 @@ import slick.jdbc.GetResult
 
 import java.util.UUID
 
-trait ValintaperusteFixture extends AccessControlSpec  {
+trait ValintaperusteFixture extends AccessControlSpec {
   this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
 
   def valintaperusteService: ValintaperusteService = {
-    val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val organisaatioService             = new OrganisaatioServiceImpl(urlProperties.get)
+    val koodistoClient                  = new CachedKoodistoClient(urlProperties.get)
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoClient, HakukohdeDAO)
-    new ValintaperusteService(SqsInTransactionServiceIgnoringIndexing, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation)
+    new ValintaperusteService(
+      SqsInTransactionServiceIgnoringIndexing,
+      new AuditLog(MockAuditLogger),
+      organisaatioService,
+      mockOppijanumerorekisteriClient,
+      mockKayttooikeusClient,
+      valintaperusteServiceValidation
+    )
   }
 
   override def beforeAll(): Unit = {
@@ -34,7 +41,8 @@ trait ValintaperusteFixture extends AccessControlSpec  {
   }
 
   val valintaperuste: Valintaperuste = TestData.AmmValintaperuste
-  val tuvaValintaperuste: Valintaperuste = TestData.AmmValintaperuste.copy(koulutustyyppi = Tuva, metadata = Some(TestData.TuvaValintaperusteMetadata))
+  val tuvaValintaperuste: Valintaperuste =
+    TestData.AmmValintaperuste.copy(koulutustyyppi = Tuva, metadata = Some(TestData.TuvaValintaperusteMetadata))
 
   def getIds(valintaperuste: Valintaperuste): Valintaperuste = {
     import slick.jdbc.PostgresProfile.api._
@@ -44,47 +52,69 @@ trait ValintaperusteFixture extends AccessControlSpec  {
     })
 
     valintaperuste.copy(
-      valintakokeet = valintaperuste.valintakokeet.map(valintakoe => valintakoe.copy(id = db.runBlocking(
-        sql"""select id from valintaperusteiden_valintakokeet
+      valintakokeet = valintaperuste.valintakokeet.map(valintakoe =>
+        valintakoe.copy(id =
+          db.runBlocking(sql"""select id from valintaperusteiden_valintakokeet
               where valintaperuste_id = ${valintaperuste.id.map(_.toString)}::uuid
-                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String]).headOption.map(UUID.fromString)))
+                and tyyppi_koodi_uri = ${valintakoe.tyyppiKoodiUri}""".as[String])
+            .headOption
+            .map(UUID.fromString)
+        )
+      )
     )
   }
 
   def tallennettuValintaperuste(id: UUID): Valintaperuste = getIds(valintaperuste.copy(id = Some(id)))
 
-  def valintaperuste(id:UUID): Valintaperuste = valintaperuste.copy(id = Some(id))
-  def valintaperuste(id:UUID, tila:Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
+  def valintaperuste(id: UUID): Valintaperuste                     = valintaperuste.copy(id = Some(id))
+  def valintaperuste(id: UUID, tila: Julkaisutila): Valintaperuste = valintaperuste.copy(id = Some(id), tila = tila)
 
   def put(valintaperuste: Valintaperuste): UUID = put(ValintaperustePath, valintaperuste, id)
-  def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID = put(ValintaperustePath, valintaperuste, sessionId, id)
+  def put(valintaperuste: Valintaperuste, sessionId: UUID): UUID =
+    put(ValintaperustePath, valintaperuste, sessionId, id)
 
-  implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) => b match {
-    case v: Valintaperuste =>
-      val that = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
-      val other = v.copy(valintakokeet = v.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
-      Equality.default[Valintaperuste].areEqual(that, other)
-    case _ => false
-  }
+  implicit val valintaperusteEquality: Equality[Valintaperuste] = (a: Valintaperuste, b: Any) =>
+    b match {
+      case v: Valintaperuste =>
+        val that  = a.copy(valintakokeet = a.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
+        val other = v.copy(valintakokeet = v.valintakokeet.map(_.copy(id = None)).sortBy(_.nimi(Fi)))
+        Equality.default[Valintaperuste].areEqual(that, other)
+      case _ => false
+    }
 
-  def get(id: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, expected.copy(modified = Some(readValintaperusteModified(id))))
-  def get(id: UUID, sessionId: UUID, expected: Valintaperuste): String = get(ValintaperustePath, id, sessionId, expected.copy(modified = Some(readValintaperusteModified(id))))
+  def get(id: UUID, expected: Valintaperuste): String =
+    get(ValintaperustePath, id, expected.copy(modified = Some(readValintaperusteModified(id))))
+  def get(id: UUID, sessionId: UUID, expected: Valintaperuste): String =
+    get(ValintaperustePath, id, sessionId, expected.copy(modified = Some(readValintaperusteModified(id))))
 
-  def update(valintaperuste: Valintaperuste, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, sessionId, expectedStatus)
-  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate, sessionId)
-  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit = update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
-  def update(valintaperuste: Valintaperuste, lastModified: String): Unit = update(valintaperuste, lastModified, expectUpdate = true)
+  def update(valintaperuste: Valintaperuste, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit =
+    update(ValintaperustePath, valintaperuste, lastModified, sessionId, expectedStatus)
+  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean, sessionId: UUID): Unit =
+    update(ValintaperustePath, valintaperuste, lastModified, expectUpdate, sessionId)
+  def update(valintaperuste: Valintaperuste, lastModified: String, expectUpdate: Boolean): Unit =
+    update(ValintaperustePath, valintaperuste, lastModified, expectUpdate)
+  def update(valintaperuste: Valintaperuste, lastModified: String): Unit =
+    update(valintaperuste, lastModified, expectUpdate = true)
 
   def valintaperuste(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Valintaperuste =
     valintaperuste.copy(organisaatioOid = organisaatioOid, tila = tila)
 
-  def addToList(valintaperuste:Valintaperuste): ValintaperusteListItem = {
-    val id = put(valintaperuste)
+  def addToList(valintaperuste: Valintaperuste): ValintaperusteListItem = {
+    val id       = put(valintaperuste)
     val modified = readValintaperusteModified(id)
-    ValintaperusteListItem(id, valintaperuste.nimi, valintaperuste.tila,
-      valintaperuste.organisaatioOid, valintaperuste.muokkaaja, modified)
+    ValintaperusteListItem(
+      id,
+      valintaperuste.nimi,
+      valintaperuste.tila,
+      valintaperuste.organisaatioOid,
+      valintaperuste.muokkaaja,
+      modified
+    )
   }
 
+  def readValintaperusteMuokkaaja(id: String): String = {
+    getStringColumnValue("valintaperusteet", "muokkaaja", "id", id)
+  }
   def readValintaperusteModified(id: String): Modified = readValintaperusteModified(UUID.fromString(id))
   def readValintaperusteModified(id: UUID): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ValintaperusteDAO.selectLastModified(id)).get)
