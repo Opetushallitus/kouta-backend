@@ -75,7 +75,8 @@ trait KoutaIntegrationSpec
 
   override def afterAll(): Unit = {
     super.afterAll()
-    truncateDatabase()
+    db.clean()
+    db.migrate()
   }
 }
 
