@@ -47,46 +47,6 @@ trait DatabaseFixture {
             ALTER TABLE ${t} ENABLE TRIGGER set_last_modified_on_${t}_change;""")
       .mkString}"""))
   }
-  def truncateDatabase(): Int = {
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat""")
-    db.runBlocking(sqlu"""delete from hakukohteet""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat""")
-    db.runBlocking(sqlu"""delete from haut""")
-    db.runBlocking(sqlu"""delete from valintaperusteiden_valintakokeet""")
-    db.runBlocking(sqlu"""delete from valintaperusteet""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from toteutukset""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat""")
-    db.runBlocking(sqlu"""delete from koulutukset""")
-
-    db.runBlocking(sqlu"""delete from hakukohteiden_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_liitteet_history""")
-    db.runBlocking(sqlu"""delete from hakukohteiden_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakukohteet_history""")
-    db.runBlocking(sqlu"""delete from hakujen_hakuajat_history""")
-    db.runBlocking(sqlu"""delete from hakujen_valintakokeet_history""")
-    db.runBlocking(sqlu"""delete from haut_history""")
-    db.runBlocking(sqlu"""delete from valintaperusteet_history""")
-    db.runBlocking(sqlu"""delete from toteutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from toteutukset_history""")
-    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat_history""")
-    db.runBlocking(sqlu"""delete from koulutukset_history""")
-
-    db.runBlocking(sqlu"""delete from sorakuvaukset""")
-    db.runBlocking(sqlu"""delete from sorakuvaukset_history""")
-
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat""")
-    db.runBlocking(sqlu"""delete from oppilaitosten_osat_history""")
-    db.runBlocking(sqlu"""delete from oppilaitokset""")
-    db.runBlocking(sqlu"""delete from oppilaitokset_history""")
-
-    db.runBlocking(sqlu"""delete from authorities""")
-    db.runBlocking(sqlu"""delete from sessions""")
-
-    deleteAsiasanat()
-  }
 
   def deleteAsiasanat(): Int = {
     db.runBlocking(sqlu"""delete from asiasanat""")
