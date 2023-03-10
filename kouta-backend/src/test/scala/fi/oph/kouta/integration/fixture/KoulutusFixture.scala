@@ -163,10 +163,6 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
     } yield n)
     .get
 
-  def getKoulutusMuokkaaja(k: Koulutus): String = {
-    getStringColumnValue("koulutukset", "muokkaaja", "oid", k.oid.get.toString)
-  }
-
   def getKoulutusHistorySize(k: Koulutus): Int = getTableHistorySize("koulutukset", "oid", k.oid.get.toString)
 
   def getKoulutusTarjoajatHistorySize(k: Koulutus): Int =

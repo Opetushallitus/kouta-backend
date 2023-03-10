@@ -11,16 +11,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{
-  HakukohdeCopyResultObject,
-  HakukohdeService,
-  HakukohdeServiceValidation,
-  HakukohdeTilaChangeResultObject,
-  KeywordService,
-  OrganisaatioServiceImpl,
-  ToteutusService,
-  ToteutusServiceValidation
-}
+import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, HakukohdeTilaChangeResultObject, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.scalactic.Equality
@@ -29,8 +20,8 @@ import slick.jdbc.PostgresProfile.api._
 trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFixture {
   this: KoutaIntegrationSpec with KoulutusFixture =>
 
-  val HakukohdePath           = "/hakukohde"
-  val HakukohdeCopyPath       = s"/hakukohde/copy/"
+  val HakukohdePath     = "/hakukohde"
+  val HakukohdeCopyPath = s"/hakukohde/copy/"
   val HakukohdeChangeTilaPath = s"/hakukohde/tila/"
 
   def hakukohdeService: HakukohdeService = {
@@ -145,13 +136,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       )
     )
 
-  def tallennettuLukioHakukohde(
-      oid: String,
-      toteutusOid: String,
-      hakuOid: String,
-      nimi: Kielistetty,
-      linja: Option[String]
-  ) =
+  def tallennettuLukioHakukohde(oid: String, toteutusOid: String, hakuOid: String, nimi: Kielistetty, linja: Option[String]) =
     getIds(hakukohde(oid, toteutusOid, hakuOid)).copy(
       nimi = nimi,
       _enrichedData = Some(
@@ -162,10 +147,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       ),
       metadata = Some(
         hakukohde.metadata.get
-          .copy(
-            hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = linja)),
-            valintaperusteenValintakokeidenLisatilaisuudet = Seq()
-          )
+          .copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = linja)), valintaperusteenValintakokeidenLisatilaisuudet = Seq())
       )
     )
 
@@ -264,21 +246,8 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   def put(hakukohteet: List[String], hakuOid: String): List[HakukohdeCopyResultObject] =
     put(s"$HakukohdeCopyPath$hakuOid", hakukohteet, listResponse[HakukohdeCopyResultObject])
 
-  def changeTila(
-      hakukohteet: List[String],
-      tila: String,
-      lastModified: String,
-      sessionId: UUID,
-      expectedStatus: Int
-  ): List[HakukohdeTilaChangeResultObject] =
-    post(
-      s"$HakukohdeChangeTilaPath$tila",
-      hakukohteet,
-      lastModified,
-      sessionId,
-      expectedStatus,
-      listResponse[HakukohdeTilaChangeResultObject]
-    )
+  def changeTila(hakukohteet: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[HakukohdeTilaChangeResultObject] =
+    post(s"$HakukohdeChangeTilaPath$tila", hakukohteet, lastModified, sessionId, expectedStatus, listResponse[HakukohdeTilaChangeResultObject])
 
   def get(oid: String, expected: Hakukohde): String =
     get(HakukohdePath, oid, expected.copy(modified = Some(readHakukohdeModified(oid))))
@@ -312,9 +281,6 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     )
   }
 
-  def readHakukohdeMuokkaaja(oid: String): String = {
-    getStringColumnValue("hakukohteet", "muokkaaja", "oid", oid)
-  }
   def readHakukohdeModified(oid: String): Modified = readHakukohdeModified(HakukohdeOid(oid))
   def readHakukohdeModified(oid: HakukohdeOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(HakukohdeDAO.selectLastModified(oid)).get)
