@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus, MinHakukohde}
+import fi.oph.kouta.TestData.{Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -15,13 +15,7 @@ import org.json4s.jackson.Serialization.read
 import java.time.LocalDateTime
 import java.util.UUID
 
-class HakukohdeSpec
-    extends KoutaIntegrationSpec
-    with HakukohdeFixture
-    with KoulutusFixture
-    with HakuFixture
-    with ValintaperusteFixture
-    with LokalisointiServiceMock {
+class HakukohdeSpec extends KoutaIntegrationSpec with HakukohdeFixture with KoulutusFixture with HakuFixture with ValintaperusteFixture with LokalisointiServiceMock {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
@@ -210,10 +204,7 @@ class HakukohdeSpec
       nimi = Map(),
       metadata = Some(
         hakukohde.metadata.get
-          .copy(
-            valintaperusteenValintakokeidenLisatilaisuudet = Seq(),
-            hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1")))
-          )
+          .copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq(), hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))))
       )
     )
     val oid = put(lkHakukohde)
@@ -488,36 +479,6 @@ class HakukohdeSpec
     get(oid, muokattuHakukohde)
   }
 
-  it should "update hakukohteen muokkaaja on hakuajat change" in {
-    val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde))
-    val lastModified = get(oid, tallennettuHakukohde(oid))
-    assert(readHakukohdeMuokkaaja(oid) == TestUserOid.toString)
-    val muokattuHakukohde = tallennettuHakukohde(oid).copy(
-      hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000))))
-    )
-    update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession)
-    assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
-  }
-
-  it should "update hakukohteen muokkaaja on hakuajat delete" in {
-    // ei julkaistu jotta hakuajan voi poistaa
-    val eiJulkaistuHakukohde = withValintaperusteenValintakokeet(uusiHakukohde).copy(
-      tila = Tallennettu,
-      hakuajat = TestData.getHakuajatWeeksInFuture(2, 3),
-      liitteet = List(),
-      valintakokeet = List()
-    )
-    val oid                = put(eiJulkaistuHakukohde)
-    val eiJulkaistuWithOid = eiJulkaistuHakukohde.copy(oid = Some(HakukohdeOid(oid)))
-    val lastModified       = get(oid, eiJulkaistuWithOid)
-    assert(readHakukohdeMuokkaaja(oid) == TestUserOid.toString)
-    val muokattuHakukohde = eiJulkaistuWithOid.copy(
-      hakuajat = List()
-    )
-    update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession)
-    assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
-  }
-
   it should "delete all hakuajat and read last modified from history" in {
     val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
@@ -535,8 +496,7 @@ class HakukohdeSpec
 
     val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
-    val muokattuHakukohde =
-      tallennettuHakukohde(oid).copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
+    val muokattuHakukohde = tallennettuHakukohde(oid).copy(liitteet = List(), hakuajat = List(), valintakokeet = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
 
     assert(getTableHistorySize("hakukohteet") == 1)
@@ -596,30 +556,6 @@ class HakukohdeSpec
     )
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, getIds(muokattuHakukohde))
-  }
-
-  it should "update muokkaaja on liitteet change" in {
-    val oid         = put(withValintaperusteenValintakokeet(uusiHakukohde))
-    val tallennettu = tallennettuHakukohde(oid)
-    assert(readHakukohdeMuokkaaja(oid) == TestUserOid.toString)
-    val lastModified = get(oid, tallennettu)
-    val muokattuHakukohde = tallennettu.copy(
-      liitteet = tallennettu.liitteet.map(_.copy(toimitusaika = Some(TestData.inFuture(9000))))
-    )
-    update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession)
-    assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
-  }
-
-  it should "update muokkaaja on valintakokeet change" in {
-    val oid         = put(withValintaperusteenValintakokeet(uusiHakukohde))
-    val tallennettu = tallennettuHakukohde(oid)
-    assert(readHakukohdeMuokkaaja(oid) == TestUserOid.toString)
-    val lastModified = get(oid, tallennettu)
-    val muokattuHakukohde = tallennettu.copy(
-      valintakokeet = List(TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_42#2")))
-    )
-    update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession)
-    assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }
 
   it should "put, update and delete valintakokeet correctly" in {
@@ -777,18 +713,15 @@ class HakukohdeSpec
   }
 
   "Change hakukohteet tila" should "change two julkaistu hakukohteet to arkistoitu when muokkaaja is OPH virkailija" in {
-    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-      .copy(liitteet = Seq(), valintakokeet = Seq())
-    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-      .copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
 
     val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
     val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
 
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
-    val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
 
     val metadata1 = julkaistuHakukohde1.metadata.get
@@ -813,24 +746,22 @@ class HakukohdeSpec
     response.last.oid.toString shouldBe julkaistuHakukohde2Oid
     response.last.status shouldBe "success"
 
+
     get(julkaistuHakukohde1Oid, arkistoituHakukohde1)
     get(julkaistuHakukohde2Oid, arkistoituHakukohde2)
   }
 
   it should "fail to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja is non oph user and contains random hakukohdeOid" in {
-    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-      .copy(liitteet = Seq(), valintakokeet = Seq())
-    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId))
-      .copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq())
 
     val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
     val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
-    val randomOid              = randomHakukohdeOid.toString
+    val randomOid = randomHakukohdeOid.toString
 
     val hakukohteet = List(julkaistuHakukohde1Oid, randomOid, julkaistuHakukohde2Oid)
 
-    val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
     response.length shouldBe 3
@@ -855,24 +786,15 @@ class HakukohdeSpec
   }
 
   it should "allow to change tila of hakukohteet from julkaistu to arkistoitu when muokkaaja has rights to hakukohde" in {
-    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(
-      liitteet = Seq(),
-      valintakokeet = Seq(),
-      jarjestyspaikkaOid = Some(ChildOid)
-    )
-    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(
-      liitteet = Seq(),
-      valintakokeet = Seq(),
-      jarjestyspaikkaOid = Some(ChildOid)
-    )
+    val julkaistuHakukohde1 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq(), jarjestyspaikkaOid = Some(ChildOid))
+    val julkaistuHakukohde2 = withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId)).copy(liitteet = Seq(), valintakokeet = Seq(), jarjestyspaikkaOid = Some(ChildOid))
 
     val julkaistuHakukohde1Oid = put(julkaistuHakukohde1)
     val julkaistuHakukohde2Oid = put(julkaistuHakukohde2)
 
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
-    val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+    val lastModified = get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2

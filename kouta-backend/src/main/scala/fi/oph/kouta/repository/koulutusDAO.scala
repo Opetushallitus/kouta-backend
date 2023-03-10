@@ -18,17 +18,9 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)]
   def get(oid: KoulutusOid): Option[Koulutus]
-  def listAllowedByOrganisaatiot(
-      organisaatioOids: Seq[OrganisaatioOid],
-      koulutustyypit: Seq[Koulutustyyppi],
-      tilaFilter: TilaFilter
-  ): Seq[KoulutusListItem]
-  def listAllowedByOrganisaatiotAndKoulutustyyppi(
-      organisaatioOids: Seq[OrganisaatioOid],
-      koulutustyyppi: Koulutustyyppi,
-      tilaFilter: TilaFilter
-  ): Seq[KoulutusListItem]
-  def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem]
+  def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[KoulutusListItem]
+  def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[KoulutusListItem]
+  def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
@@ -44,14 +36,12 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     } yield koulutus.withOid(oid).withModified(m.get)
 
   override def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)] = {
-    KoutaDatabase
-      .runBlockingTransactionally(
-        for {
-          k <- selectKoulutus(oid, tilaFilter).as[Koulutus].headOption
-          t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
-        } yield (k, t)
-      )
-      .get match {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
+        k <- selectKoulutus(oid, tilaFilter).as[Koulutus].headOption
+        t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
+      } yield (k, t)
+    ).get match {
       case (Some(k), t) =>
         Some((k.copy(tarjoajat = t.map(_.tarjoajaOid).toList), modifiedToInstant(k.modified.get)))
       case _ => None
@@ -59,9 +49,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   override def get(oid: KoulutusOid): Option[Koulutus] = {
-    KoutaDatabase
-      .runBlockingTransactionally(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption)
-      .get
+    KoutaDatabase.runBlockingTransactionally(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption).get
   }
 
   override def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]] =
@@ -94,65 +82,44 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   private def listWithTarjoajat(selectListItems: => DBIO[Seq[KoulutusListItem]]): Seq[KoulutusListItem] =
-    KoutaDatabase
-      .runBlockingTransactionally(for {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
         koulutukset <- selectListItems
         tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid).toList).as[Tarjoaja]
-      } yield (koulutukset, tarjoajat))
-      .map {
-        case (toteutukset, tarjoajat) => {
-          toteutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList)
-          )
-        }
+      } yield (koulutukset, tarjoajat) ).map {
+      case (toteutukset, tarjoajat) => {
+        toteutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.toString).map(_.tarjoajaOid).toList))
       }
-      .get
+    }.get
 
-  override def listAllowedByOrganisaatiot(
-      organisaatioOids: Seq[OrganisaatioOid],
-      koulutustyypit: Seq[Koulutustyyppi],
-      tilaFilter: TilaFilter
-  ): Seq[KoulutusListItem] =
+  override def listAllowedByOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid], koulutustyypit: Seq[Koulutustyyppi], tilaFilter: TilaFilter): Seq[KoulutusListItem] =
     (organisaatioOids, koulutustyypit) match {
       case (Nil, _) => Seq()
-      case (_, Nil) =>
-        listWithTarjoajat {
-          selectByCreatorAndNotOph(organisaatioOids, tilaFilter)
-        } //OPH:lla pitäisi olla aina kaikki koulutustyypit
-      case _ =>
-        listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, tilaFilter) }
+      case (_, Nil) => listWithTarjoajat { selectByCreatorAndNotOph(organisaatioOids, tilaFilter) } //OPH:lla pitäisi olla aina kaikki koulutustyypit
+      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForKoulutustyyppi(organisaatioOids, koulutustyypit, tilaFilter) }
     }
 
-  override def listAllowedByOrganisaatiotAndKoulutustyyppi(
-      organisaatioOids: Seq[OrganisaatioOid],
-      koulutustyyppi: Koulutustyyppi,
-      tilaFilter: TilaFilter
-  ): Seq[KoulutusListItem] =
+  override def listAllowedByOrganisaatiotAndKoulutustyyppi(organisaatioOids: Seq[OrganisaatioOid], koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter): Seq[KoulutusListItem] =
     (organisaatioOids, koulutustyyppi) match {
       case (Nil, _) => Seq()
-      case _ =>
-        listWithTarjoajat {
-          selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids, koulutustyyppi, tilaFilter)
-        }
+      case _        => listWithTarjoajat { selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids, koulutustyyppi, tilaFilter) }
     }
 
-  override def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem] =
+  override def listByHakuOid(hakuOid: HakuOid) :Seq[KoulutusListItem] =
     listWithTarjoajat(selectByHakuOid(hakuOid))
 
   override def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus] = {
-    KoutaDatabase
-      .runBlockingTransactionally(for {
+    KoutaDatabase.runBlockingTransactionally(
+      for {
         koulutukset <- findJulkaistutKoulutuksetByTarjoajat(organisaatioOids).as[Koulutus]
         tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (koulutukset, tarjoajat))
-      .map {
-        case (koulutukset, tarjoajat) => {
-          koulutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList)
-          )
-        }
+      } yield (koulutukset, tarjoajat)).map {
+      case (koulutukset, tarjoajat) => {
+        koulutukset.map(t =>
+          t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList))
       }
-      .get
+    }.get
   }
 
   override def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String] = {
@@ -218,8 +185,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
-    val inserts =
-      koulutus.tarjoajat.map(t => sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
+    val inserts = koulutus.tarjoajat.map(t =>
+      sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values (${koulutus.oid}, $t, ${koulutus.muokkaaja})""")
     DBIOHelpers.sumIntDBIOs(inserts)
   }
@@ -277,9 +244,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   }
 
   def selectKoulutustenTarjoajat(oids: List[KoulutusOid]) = {
-    sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid in (#${createOidInParams(
-      oids
-    )})"""
+    sql"""select koulutus_oid, tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid in (#${createOidInParams(oids)})"""
   }
 
   def updateKoulutus(koulutus: Koulutus): DBIO[Int] = {
@@ -316,7 +281,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""
   }
 
-  def insertTarjoaja(oid: Option[KoulutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
+  def insertTarjoaja(oid: Option[KoulutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid ): DBIO[Int] = {
     sqlu"""insert into koulutusten_tarjoajat (koulutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
              on conflict on constraint koulutusten_tarjoajat_pkey do nothing"""
@@ -328,9 +293,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
            and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
-  def deleteTarjoajat(oid: Option[KoulutusOid]): DBIO[Int] = {
+  def deleteTarjoajat(oid: Option[KoulutusOid]): DBIO[Int] =
     sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $oid"""
-  }
 
   val selectKoulutusListSql =
     s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, k.last_modified from koulutukset k"""
@@ -355,15 +319,13 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             -- 1. koulutukset, jotka omistaa jokin annetuista organisaatioista, mutta OPH:n omistamat vain, jos koulutustyyppi täsmää.
             -- TODO: Mahdollisesti, jos OPH:n omistama, pitäisi katsoa, että se on lisäksi julkinen ja mätsää oppilaitostyyppeihin
             ((k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
-                and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(
-      koulutustyypit
-    )})))
+                and (k.organisaatio_oid <> ${RootOrganisaatioOid} or k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)})))
             -- 2. koulutustyyppeihin täsmäävät koulutukset, jotka ovat julkisia
             or (k.julkinen = ${true} and k.tyyppi in (#${createKoulutustyypitInParams(koulutustyypit)}))
             -- 3. jotka ovat avointa korkeakoulutusta ja tarjoajista (järjestäjistä) löytyy annettuja organisaatioita
             or (k.metadata ->> 'isAvoinKorkeakoulutus' = 'true'
                 and ta.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})))
-    #${tilaConditions(tilaFilter, glueWord = "and")}
+    #${tilaConditions(tilaFilter, glueWord="and")}
 """.as[KoulutusListItem]
   }
 
