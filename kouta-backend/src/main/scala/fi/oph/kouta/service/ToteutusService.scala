@@ -4,7 +4,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain.searchResults.ToteutusSearchResultFromIndex
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -42,6 +42,14 @@ case class ToteutusCopyResultObject(
     oid: ToteutusOid,
     status: String,
     created: ToteutusCopyOids
+)
+
+case class ToteutusTilaChangeResultObject(
+  oid: ToteutusOid,
+  status: String,
+  errorPaths: List[String] = List(),
+  errorMessages: List[String] = List(),
+  errorTypes: List[String] = List()
 )
 
 class ToteutusService(
@@ -484,4 +492,93 @@ class ToteutusService(
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOpintokokonaisuudet(oids)
     }
+
+  def changeTila(toteutusOids: Seq[ToteutusOid], tila: String, unModifiedSince: Instant)(implicit
+                                                                                           authenticated: Authenticated
+  ): List[ToteutusTilaChangeResultObject] = {
+    val toteutukset: Seq[Toteutus] = toteutusOids.map(oid => {
+      ToteutusDAO.get(oid, TilaFilter.all())
+    }).collect {
+      case Some(result) => result._1
+    }
+
+    val updatedToteutusOids = scala.collection.mutable.Set[ToteutusOid]()
+
+    val tilaChangeResults = toteutukset.toList.map(toteutus => {
+      try {
+        val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
+        update(toteutusWithNewTila, unModifiedSince) match {
+          case true =>
+            updatedToteutusOids += toteutus.oid.get
+            ToteutusTilaChangeResultObject(
+              oid = toteutus.oid.get,
+              status = "success"
+            )
+          case false =>
+            updatedToteutusOids += toteutus.oid.get
+            ToteutusTilaChangeResultObject(
+              oid = toteutus.oid.get,
+              status = "error",
+              errorPaths = List("toteutus"),
+              errorMessages = List("Toteutuksen tilaa ei voitu päivittää"),
+              errorTypes = List("possible transaction error")
+            )
+        }
+      } catch {
+        case error: KoutaValidationException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = error.getPaths,
+            errorMessages =  error.getMsgs,
+            errorTypes = error.getErrorTypes
+          )
+        case error: OrganizationAuthorizationFailedException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("organizationauthorization")
+          )
+        case error: RoleAuthorizationFailedException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("roleAuthorization")
+          )
+        case error: Exception =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("internalServerError")
+          )
+      }
+    })
+
+    val notFound =
+      for {
+        totOid <- toteutusOids.filterNot(toteutusOid => updatedToteutusOids.contains(toteutusOid))
+      } yield ToteutusTilaChangeResultObject(
+        oid = totOid,
+        status = "error",
+        errorPaths = List("toteutus"),
+        errorMessages = List("Toteutusta ei löytynyt"),
+        errorTypes = List("not found")
+      )
+
+    tilaChangeResults ++ notFound
+  }
 }
