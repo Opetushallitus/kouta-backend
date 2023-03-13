@@ -13,7 +13,8 @@ import fi.oph.kouta.service.{
   OrganisaatioServiceImpl,
   ToteutusCopyResultObject,
   ToteutusService,
-  ToteutusServiceValidation
+  ToteutusServiceValidation,
+  ToteutusTilaChangeResultObject
 }
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
@@ -28,6 +29,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
 
   val ToteutusPath     = "/toteutus"
   val ToteutusCopyPath = "/toteutus/copy"
+  val ToteutusChangeTilaPath = s"/toteutus/tila/"
 
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
@@ -147,6 +149,9 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   def readToteutusModified(oid: String): Modified = readToteutusModified(ToteutusOid(oid))
   def readToteutusModified(oid: ToteutusOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
+
+  def changeToteutusTila(toteutukset: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[ToteutusTilaChangeResultObject] =
+    post(s"$ToteutusChangeTilaPath$tila", toteutukset, lastModified, sessionId, expectedStatus, listResponse[ToteutusTilaChangeResultObject])
 }
 
 trait ToteutusDbFixture extends ToteutusExtractors with SQLHelpers {
