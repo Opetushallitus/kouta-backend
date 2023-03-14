@@ -23,6 +23,7 @@ object KoutaIndeksoijaClient extends KoutaIndeksoijaClient
 class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   implicit val formats = DefaultFormats
+  private val quickIndexTimeout: Int = KoutaConfigurationFactory.configuration.quickIndexTimeoutSeconds
 
   def quickIndexEntity(tyyppi: String, oid: String): List[String] = {
     try {
@@ -33,7 +34,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
         case "haku" => urlProperties.url("kouta-indeksoija.haku.quick", oid)
         case _ => throw new RuntimeException(s"Tuntematon tyyppi: $tyyppi")
       }
-      logger.info(s"Pikaindeksoidaan $tyyppi $oid. Url: $url")
+      logger.info(s"Pikaindeksoidaan $tyyppi $oid. Url: $url. Timeout: $quickIndexTimeout")
       val resultF: Future[Boolean] = Future {
         post(url, oid) { response =>
           val isSuccess = parse(response).extract[IndeksointiResult].result.exists(e => e.oid.contains(oid))
@@ -43,7 +44,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
           isSuccess
         }
       }
-      val result = Await.result(resultF, Duration(5, TimeUnit.SECONDS))
+      val result = Await.result(resultF, Duration(quickIndexTimeout, TimeUnit.SECONDS))
       if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
       case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin ($tyyppi $oid)")
