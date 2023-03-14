@@ -249,6 +249,13 @@ class KoulutusSpec
     get(oid, koulutus(oid, Arkistoitu))
   }
 
+  "Update koulutus" should "update koulutus timestamp and muokkaaja even without changes" in {
+    val oid = put(koulutus, ophSession)
+    val lastModified = get(oid, koulutus(oid))
+    update(koulutus(oid), lastModified, expectUpdate = true, ophSession)
+    get(oid, koulutus(oid))
+  }
+
   it should "read muokkaaja from the session" in {
     val oid          = put(koulutus, ophSession)
     val userOid      = OphUserOid

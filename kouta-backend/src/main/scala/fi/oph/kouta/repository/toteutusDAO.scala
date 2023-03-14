@@ -2,6 +2,7 @@ package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
+import fi.oph.kouta.repository.ToteutusDAO.logger
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
@@ -64,12 +65,13 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
+    logger.info(s"Update tarjoajat $toteutus")
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
-      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
+      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat) :+ updateToteutuksenMuokkaaja(oid, muokkaaja)
       DBIOHelpers.sumIntDBIOs(actions)
     } else {
-      deleteTarjoajat(oid)
+      DBIOHelpers.sumIntDBIOs(Seq(updateToteutuksenMuokkaaja(oid, muokkaaja), deleteTarjoajat(oid)))
     }
   }
 
@@ -291,20 +293,30 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or sorakuvaus_id is distinct from ${toteutus.sorakuvausId.map(_.toString)}::uuid)"""
   }
 
+  def updateToteutuksenMuokkaaja(toteutusOid: Option[ToteutusOid], muokkaaja: UserOid): DBIO[Int] = {
+    logger.info(s"update toteutuksen muokkaaja $muokkaaja")
+    sqlu"""update toteutukset set
+              muokkaaja = ${muokkaaja}
+            where oid = ${toteutusOid}"""
+  }
   def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
+    logger.info(s"insert tarjoaja $tarjoaja")
     sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
              on conflict on constraint toteutusten_tarjoajat_pkey do nothing"""
   }
 
   def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Int] = {
+    logger.info(s"dellataan kaikki tarjoajat paitsi  $exclude" )
     sqlu"""delete from toteutusten_tarjoajat
            where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] =
+  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] = {
+    logger.info(s"dellataan tarjoajat")
     sqlu"""delete from toteutusten_tarjoajat
            where toteutus_oid = $oid"""
+  }
 
   val selectToteutusListSql =
     """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
