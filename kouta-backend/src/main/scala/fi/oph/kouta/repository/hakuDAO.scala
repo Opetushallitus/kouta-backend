@@ -149,6 +149,12 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat where haku_oid = $oid""".as[Hakuaika]
   }
 
+  def updateHaunMuokkaaja(hakuOid: Option[HakuOid], muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""update haut set
+              muokkaaja = ${muokkaaja}
+            where oid = ${hakuOid}"""
+  }
+
   def updateHaku(haku: Haku): DBIO[Int] = {
     sqlu"""update haut set
               external_id = ${haku.externalId},
@@ -207,9 +213,9 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     if (hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
-      DBIOHelpers.sumIntDBIOs(insertSQL :+ deleteSQL)
+      DBIOHelpers.sumIntDBIOs(insertSQL :+ deleteSQL :+ updateHaunMuokkaaja(oid, muokkaaja))
     } else {
-      sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""
+      DBIOHelpers.sumIntDBIOs(Seq(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid""", updateHaunMuokkaaja(oid, muokkaaja)))
     }
   }
 

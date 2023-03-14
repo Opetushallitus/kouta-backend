@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import java.time.{Instant, LocalDateTime}
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{inFuture, now}
+import fi.oph.kouta.TestData.{inFuture, muokkaajanNimi, now}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -184,13 +184,13 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "not update haku" in {
+  it should "update muokkaaja and modify timestamp of haku even when nothing changed" in {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
-    update(thisHaku, lastModified, expectUpdate = false)
-    MockAuditLogger.logs shouldBe empty
+    update(thisHaku, lastModified, expectUpdate = true)
+    MockAuditLogger.logs should not be empty
     get(oid, thisHaku) should equal(lastModified)
   }
 
@@ -218,7 +218,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, expectUpdate = false, crudSessions(haku.organisaatioOid))
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(haku.organisaatioOid)) // muokkaaja and modify timestamp updated
   }
 
   it should "deny a user without access to the haku organization" in {
@@ -232,7 +232,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, expectUpdate = false, crudSessions(ParentOid))
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(ParentOid)) // muokkaaja and modify timestamp updated
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -397,26 +397,34 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   }
 
   it should "update muokkaaja of haku on hakuajat update" in {
-    val hakuWithHakuaika        = haku.copy(tila = Tallennettu, hakuajat = TestData.getHakuajatWeeksInFuture(1, 3))
-    val oid                     = put(hakuWithHakuaika)
+    val hakuWithHakuaika        = haku.copy(tila = Tallennettu, hakuajat = TestData.getHakuajatWeeksInFuture(1, 3),
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid                     = put(hakuWithHakuaika, ophSession)
     val hakuWithHakuaikaWithOid = hakuWithHakuaika.copy(oid = Some(HakuOid(oid)))
-    val lastModified            = get(oid, hakuWithHakuaikaWithOid)
-    assert(readHakuMuokkaaja(oid) == TestUserOid.toString)
+    val lastModified            = get(oid, hakuWithHakuaikaWithOid.copy(muokkaaja = OphUserOid))
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
 
     update(
       hakuWithHakuaikaWithOid.copy(hakuajat = TestData.getHakuajatWeeksInFuture(1, 4)),
       lastModified,
       expectUpdate = true,
-      ophSession
+      ophSession2
     )
-    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
   }
 
   it should "update muokkaaja of haku on hakuajat delete" in {
-    val oid          = put(haku)
-    val thisHaku     = haku(oid)
+    val hakuajat = TestData.getHakuajatWeeksInFuture(1, 4) ++ TestData.getHakuajatWeeksInFuture(6, 8)
+    val oid          = put(haku.copy(hakuajat = hakuajat), ophSession)
+    val thisHaku     = haku(oid).copy(muokkaaja = OphUserOid,
+      hakuajat = hakuajat,
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+    // delete one hakuaika, one left
     val lastModified = get(oid, thisHaku)
-    assert(readHakuMuokkaaja(oid) == TestUserOid.toString)
+    update(thisHaku.copy(hakuajat = List(hakuajat.head)), lastModified, expectUpdate = true, ophSession2)
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
+    // delete hakuaika, no hakuaika left
     update(thisHaku.copy(hakuajat = List()), lastModified, expectUpdate = true, ophSession)
     assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
   }
