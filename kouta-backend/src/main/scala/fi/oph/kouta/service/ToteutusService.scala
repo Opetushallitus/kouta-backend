@@ -518,22 +518,22 @@ class ToteutusService(
     val tilaChangeResults = toteutukset.toList.map(toteutus => {
       try {
         val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
-        update(toteutusWithNewTila, unModifiedSince) match {
-          case true =>
-            updatedToteutusOids += toteutus.oid.get
-            ToteutusTilaChangeResultObject(
-              oid = toteutus.oid.get,
-              status = "success"
-            )
-          case false =>
-            updatedToteutusOids += toteutus.oid.get
-            ToteutusTilaChangeResultObject(
-              oid = toteutus.oid.get,
-              status = "error",
-              errorPaths = List("toteutus"),
-              errorMessages = List("Toteutuksen tilaa ei voitu päivittää"),
-              errorTypes = List("possible transaction error")
-            )
+        val updateResult = update(toteutusWithNewTila, unModifiedSince)
+        if (updateResult.updated) {
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "success"
+          )
+        } else {
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List("Toteutuksen tilaa ei voitu päivittää"),
+            errorTypes = List("possible transaction error")
+          )
         }
       } catch {
         case error: KoutaValidationException =>
