@@ -23,7 +23,7 @@ import java.time.temporal.ChronoUnit
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient)
 
 class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
@@ -31,7 +31,8 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
                   val organisaatioService: OrganisaatioService,
                   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
                   kayttooikeusClient: KayttooikeusClient,
-                  hakuServiceValidation: HakuServiceValidation
+                  hakuServiceValidation: HakuServiceValidation,
+                  koutaIndeksoijaClient: KoutaIndeksoijaClient
                  )
   extends RoleEntityAuthorizationService[Haku] {
 
@@ -63,7 +64,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       enrichedHaku,
       readRules)
   }
-  def put(haku: Haku)(implicit authenticated: Authenticated): HakuOid = {
+  def put(haku: Haku)(implicit authenticated: Authenticated): CreateResult = {
     val rules = if (MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
@@ -74,10 +75,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
       val enrichedHaku = h.copy(metadata = enrichedMetadata)
       hakuServiceValidation.withValidation(enrichedHaku, None)(doPut(_))
-    }.oid.get
+    }
   }
 
-  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
     val oldHaku = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku, oldHaku)
 
@@ -90,7 +91,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       }
 
       hakuServiceValidation.withValidation(enrichedHaku, Some(oldHaku))(doUpdate(_, notModifiedSince, oldHaku))
-    }.nonEmpty
+    }
   }
 
   private def shouldDeleteSchedulerTimestamp(haku: Haku): Boolean = {
@@ -182,7 +183,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  private def doPut(haku: Haku)(implicit authenticated: Authenticated): Haku =
+  private def doPut(haku: Haku)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakuDAO.getPutActions(haku)
@@ -190,9 +191,12 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
+    }.map { h =>
+      val warnings = quickIndex(h.oid)
+      CreateResult(h.oid.get, warnings)
     }.get
 
-  private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): Option[Haku] =
+  private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
@@ -200,8 +204,17 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h
+    }.map { h =>
+      val warnings = quickIndex(h.flatMap(_.oid))
+      UpdateResult(updated = h.isDefined, warnings)
     }.get
 
+  private def quickIndex(hakuOid: Option[HakuOid]): List[String] = {
+    hakuOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("haku", oid.toString)
+      case None => List.empty
+    }
+  }
   private def index(haku: Option[Haku]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 

@@ -101,6 +101,7 @@ abstract class KoutaConfigFactory[TConfig <: KoutaBaseConfig](moduleName: String
         c,
         new OphProperties(s"${prefix}/src/test/resources/${moduleName}.properties") {
           addDefault("host.virkailija", c.getString("host.virkailija"))
+            .addDefault("host.alb.virkailija", c.getString("host.alb.virkailija"))
         }
       )
 

@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.{Koulutustyyppi, TilaFilter, Valintaperuste}
+import fi.oph.kouta.domain.{Koulutustyyppi, TilaFilter, UpdateResult, Valintaperuste, ValintaperusteCreateResult}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.service.ValintaperusteService
 import org.scalatra.{BadRequest, NotFound, Ok}
@@ -86,7 +86,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
     implicit val authenticated: Authenticated = authenticate()
 
     valintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
-      case id => Ok("id" -> id)
+      case res: ValintaperusteCreateResult => Ok(res)
     }
   }
 
@@ -116,7 +116,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
     implicit val authenticated: Authenticated = authenticate()
 
     valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(res)
     }
   }
 
