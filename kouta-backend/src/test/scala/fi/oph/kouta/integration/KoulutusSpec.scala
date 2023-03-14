@@ -468,14 +468,14 @@ class KoulutusSpec
     val lastModified = get(oid, muokattavaKoulutus)
     val updatedKoulutus =
       muokattavaKoulutus.copy(tarjoajat = HkiYoOid :: muokattavaKoulutus.tarjoajat)
-    update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == OphUserOid.toString)
+    update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
+    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == userOidForTestSessionId(yliopistotSession).toString)
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      muokkaaja.shouldEqual(OphUserOid)
+      muokkaaja.shouldEqual(userOidForTestSessionId(yliopistotSession))
       assert(koulutus.tarjoajat.size == 2)
     }
   }
@@ -498,17 +498,31 @@ class KoulutusSpec
       muokkaaja.shouldEqual(TestUserOid)
     }
     val lastModified = get(oid, muokattavaKoulutus)
+    // delete one tarjoaja
     val updatedKoulutus =
       muokattavaKoulutus.copy(tarjoajat = List(HkiYoOid))
-    update(updatedKoulutus, lastModified, expectUpdate = true, ophSession)
-    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == OphUserOid.toString)
+    update(updatedKoulutus, lastModified, expectUpdate = true, yliopistotSession)
+    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == userOidForTestSessionId(yliopistotSession).toString)
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
       status should equal(200)
 
       val koulutus  = read[Koulutus](body)
       val muokkaaja = koulutus.muokkaaja
-      muokkaaja.shouldEqual(OphUserOid)
+      muokkaaja.shouldEqual(userOidForTestSessionId(yliopistotSession))
       assert(koulutus.tarjoajat.size == 1)
+    }
+    // delete all tarjoajas
+    val koulutusWithNoTarjoajas =
+      updatedKoulutus.copy(tarjoajat = List())
+    update(koulutusWithNoTarjoajas, lastModified, expectUpdate = true)
+    assert(getKoulutusMuokkaaja(muokattavaKoulutus) == TestUserOid.toString)
+    get(s"$KoulutusPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+
+      val koulutus = read[Koulutus](body)
+      val muokkaaja = koulutus.muokkaaja
+      muokkaaja.shouldEqual(TestUserOid)
+      assert(koulutus.tarjoajat.size == 0)
     }
   }
 

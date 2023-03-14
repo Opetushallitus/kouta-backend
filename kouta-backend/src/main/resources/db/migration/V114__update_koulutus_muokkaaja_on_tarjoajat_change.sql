@@ -5,16 +5,15 @@ $$
 begin
 if (tg_op = 'DELETE') then
     update koulutukset
-    set last_modified = now()::timestamptz, muokkaaja = old.muokkaaja
+    set last_modified = now()::timestamptz
     where oid = old.koulutus_oid
       and last_modified <> now()::timestamptz;
-    return null;
 else
     update koulutukset
     set last_modified = now()::timestamptz, muokkaaja = new.muokkaaja
     where oid = new.koulutus_oid
       and last_modified <> now()::timestamptz;
-    return null;
 end if;
+return null;
 end;
 $$ language plpgsql;

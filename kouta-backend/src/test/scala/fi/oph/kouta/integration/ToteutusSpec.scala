@@ -662,7 +662,7 @@ class ToteutusSpec
     }
     val lastModified = get(oid, thisToteutus)
     val muokattuToteutus = thisToteutus.copy(
-      tarjoajat = List(LonelyOid, OtherOid)
+      tarjoajat = List(AmmOid)
     )
     update(muokattuToteutus, lastModified, expectUpdate = true, sessionId = ophSession)
     assert(readToteutusMuokkaaja(oid) == OphUserOid.toString)

@@ -86,10 +86,11 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
     if (tarjoajat.nonEmpty) {
-      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
+      // muokkaaja pitää päivittää erikseen, koska insert/update ei tapahdu jos ei lisätty uusia tarjoajia
+      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat) :+ updateKoulutuksenMuokkaaja(oid, muokkaaja)
       DBIOHelpers.sumIntDBIOs(actions)
     } else {
-      deleteTarjoajat(oid)
+      DBIOHelpers.sumIntDBIOs(Seq(updateKoulutuksenMuokkaaja(oid, muokkaaja),deleteTarjoajat(oid)))
     }
   }
 
@@ -314,6 +315,12 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or esikatselu is distinct from ${koulutus.esikatselu}
             or eperuste_id is distinct from ${koulutus.ePerusteId}
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""
+  }
+
+  def updateKoulutuksenMuokkaaja(koulutusOid: Option[KoulutusOid], muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""update koulutukset set
+              muokkaaja = ${muokkaaja}
+            where oid = ${koulutusOid}"""
   }
 
   def insertTarjoaja(oid: Option[KoulutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
