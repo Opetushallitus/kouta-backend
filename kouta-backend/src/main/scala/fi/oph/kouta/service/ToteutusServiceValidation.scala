@@ -163,6 +163,7 @@ class ToteutusServiceValidation(
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
                 case m: MuuToteutusMetadata =>
                   and(
+                    validateTutkintoonJohtamatonMetadata(vCtx, m),
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )
                 case _ =>
