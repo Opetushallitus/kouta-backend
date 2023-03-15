@@ -20,6 +20,4 @@ object MiscUtils {
   def isDIAlukiokoulutus(koulutuksetKoodiUri: Seq[String]) = koulutuksetKoodiUri.map(uri => withoutKoodiVersion(uri)).contains(DIAkoodiuri)
 
   def retryStatusCodes = Set(500, 502, 504)
-
-  def PelastusalanKoulutusKoodiUrit = List("koulutus_381501", "koulutus_381502", "koulutus_381503", "koulutus_381521")
 }

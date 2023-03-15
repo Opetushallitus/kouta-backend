@@ -4,7 +4,6 @@ import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualO
 import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
-import fi.oph.kouta.util.MiscUtils.{PelastusalanKoulutusKoodiUrit, withoutKoodiVersion}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 

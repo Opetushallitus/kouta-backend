@@ -1,11 +1,10 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid,  UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{PelastusalanKoulutusKoodiUrit, withoutKoodiVersion}
+import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.IsValid
-import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
 import java.util.UUID
 
@@ -229,7 +228,7 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   }).getOrElse(false)
 
   def isPelastusalanKoulutus(): Boolean = koulutuksetKoodiUri.headOption match {
-    case Some(koodiUri) => PelastusalanKoulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
+    case Some(koodiUri) => PelastusalanKoulutusKoodit.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
     case _              => false
   }
 }
