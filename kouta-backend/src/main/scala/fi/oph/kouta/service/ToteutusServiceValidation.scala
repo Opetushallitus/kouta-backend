@@ -124,11 +124,13 @@ class ToteutusServiceValidation(
           metadata match {
             case ammMetadata: AmmatillinenToteutusMetadata =>
               and(
-                validateIfNonEmptySeq[AmmatillinenOsaamisala](
-                  ammMetadata.osaamisalat,
-                  toteutusDiffResolver.newAmmatillisetOsaamisalat(),
-                  "metadata.osaamisalat",
-                  validateOsaamisala(_, _, _, vCtx)
+                validateIfFalse(koulutus.map(_.isPelastusalanKoulutus).getOrElse(false),
+                  validateIfNonEmptySeq[AmmatillinenOsaamisala](
+                    ammMetadata.osaamisalat,
+                    toteutusDiffResolver.newAmmatillisetOsaamisalat(),
+                    "metadata.osaamisalat",
+                    validateOsaamisala(_, _, _, vCtx)
+                  )
                 ),
                 validateIfTrue(
                   ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true),

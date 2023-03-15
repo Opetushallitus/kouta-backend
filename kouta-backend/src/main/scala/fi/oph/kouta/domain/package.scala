@@ -305,7 +305,7 @@ package object domain {
       |          description: Valintakokeen järjestämispaikan osoite
       |          $ref: '#/components/schemas/Osoite'
       |        aika:
-      |          type: array
+      |          type: object
       |          description: Valintakokeen järjestämisaika
       |          $ref: '#/components/schemas/Ajanjakso'
       |        jarjestamispaikka:
