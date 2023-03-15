@@ -275,7 +275,9 @@ package object domain {
       |          description: Tietoa valintakokeesta
       |          $ref: '#/components/schemas/Teksti'
       |        vahimmaispisteet:
-      |          type: double
+      |          type: number
+      |          format: double
+      |          minimum: 0
       |          description: Valintakokeen vähimmäispisteet
       |          example: 10.0
       |        liittyyEnnakkovalmistautumista:
@@ -411,7 +413,7 @@ package object domain {
       |      type: object
       |      properties:
       |        ePerusteId:
-      |          type: number
+      |          type: integer
       |          description: Tutkinnon osan käyttämän ePerusteen id.
       |          example: 4804100
       |        koulutusKoodiUri:
@@ -419,11 +421,11 @@ package object domain {
       |          description: Koulutuksen koodi URI. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
       |          example: koulutus_371101#1
       |        tutkinnonosaId:
-      |          type: number
+      |          type: integer
       |          description: Tutkinnon osan id ePerusteissa
       |          example: 12345
       |        tutkinnonosaViite:
-      |          type: number
+      |          type: integer
       |          description: Tutkinnon osan viite
       |          example: 2449201
       |""".stripMargin

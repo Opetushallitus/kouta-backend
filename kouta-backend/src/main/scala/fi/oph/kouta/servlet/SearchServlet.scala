@@ -149,7 +149,7 @@ class SearchServlet(
       |          schema:
       |            type: array
       |            items:
-      |              type: number
+      |              type: integer
       |          required: false
       |          description: Suodata pilkulla erotetuilla vuosilla
       |        - in: query

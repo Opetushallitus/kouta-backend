@@ -59,7 +59,9 @@ package object toteutusMetadata {
       |          description: Koulutuksen toteutuksen maksullisuutta tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
       |        maksunMaara:
-      |          type: double
+      |          type: number
+      |          format: double
+      |          minimum: 0
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
       |        koulutuksenAlkamiskausi:

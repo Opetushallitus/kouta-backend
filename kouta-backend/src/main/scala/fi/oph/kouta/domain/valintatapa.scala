@@ -40,11 +40,15 @@ package object valintatapa {
       |          description: Kynnysehdon kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
       |        enimmaispisteet:
-      |          type: double
+      |          type: number
+      |          format: double
+      |          minimum: 0
       |          description: Valintatavan enimmäispisteet
       |          example: 20.0
       |        vahimmaispisteet:
-      |          type: double
+      |          type: number
+      |          format: double
+      |          minimum: 0
       |          description: Valintatavan vähimmäispisteet
       |          example: 10.0
       |""".stripMargin
