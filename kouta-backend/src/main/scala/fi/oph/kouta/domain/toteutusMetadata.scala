@@ -100,11 +100,11 @@ package object toteutusMetadata {
       |      type: object
       |      properties:
       |        min:
-      |          type: int
+      |          type: integer
       |          description: Apurahan minimi euromäärä tai minimi prosenttiosuus lukuvuosimaksusta
       |          example: 100
       |        max:
-      |          type: int
+      |          type: integer
       |          description: Apurahan maksimi euromäärä tai maksimi prosenttiosuus lukuvuosimaksusta
       |          example: 200
       |        yksikko:

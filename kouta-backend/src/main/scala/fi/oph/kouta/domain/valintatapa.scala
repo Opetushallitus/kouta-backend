@@ -29,9 +29,7 @@ package object valintatapa {
       |          description: Valintatavan sisältö. Voi sisältää sekä teksti- että taulukkoelementtejä.
       |          items:
       |            type: object
-      |            oneOf:
-      |              - $ref: '#/components/schemas/SisaltoTeksti'
-      |              - $ref: '#/components/schemas/SisaltoTaulukko'
+      |            $ref: '#/components/schemas/SisaltoItem'
       |        kaytaMuuntotaulukkoa:
       |          type: boolean
       |          description: "Käytetäänkö muuntotaulukkoa?"
@@ -56,12 +54,17 @@ package object valintatapa {
   val SisaltoTekstiModel =
     """    SisaltoTeksti:
       |      type: object
-      |      description: Tekstimuotoinen valintatavan sisällön kuvaus
+      |      description: Valintatavan Opintopolussa näytettävä kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
       |      properties:
-      |        teksti:
+      |        tyyppi:
+      |          type: string
+      |          enum:
+      |            - teksti
+      |        data:
       |          type: object
-      |          description: Valintatavan Opintopolussa näytettävä kuvausteksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
+      |      required:
+      |        - tyyppi
       |""".stripMargin
 
   val SisaltoTaulukkoModel =
@@ -69,43 +72,59 @@ package object valintatapa {
       |      type: object
       |      description: Taulukkomuotoinen valintatavan sisällön kuvaus
       |      properties:
-      |        id:
+      |        tyyppi:
       |          type: string
-      |          description: Taulukon yksilöivä tunnus
-      |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
-      |        nimi:
+      |          enum:
+      |            - taulukko
+      |        data:
       |          type: object
-      |          description: Taulukon Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
-      |          $ref: '#/components/schemas/Nimi'
-      |        rows:
-      |          type: array
-      |          description: Taukon rivit
-      |          items:
-      |            type: object
-      |            properties:
-      |              index:
-      |                type: integer
-      |                description: Rivin järjestysnumero
-      |              isHeader:
-      |                type: boolean
-      |                description: Onko rivi otsikkorivi
-      |              columns:
-      |                type: array
-      |                description: Rivin sarakkeet
-      |                items:
-      |                  type: object
-      |                  properties:
-      |                    index:
-      |                      type: integer
-      |                      description: Sarakkeen järjestysnumero
-      |                    text:
+      |          properties:
+      |            id:
+      |              type: string
+      |              description: Taulukon yksilöivä tunnus
+      |              example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
+      |            nimi:
+      |              type: object
+      |              description: Taulukon Opintopolussa näytettävä nimi eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
+      |              $ref: '#/components/schemas/Nimi'
+      |            rows:
+      |              type: array
+      |              description: Taulukon rivit
+      |              items:
+      |                type: object
+      |                properties:
+      |                  index:
+      |                    type: integer
+      |                    description: Rivin järjestysnumero
+      |                  isHeader:
+      |                    type: boolean
+      |                    description: Onko rivi otsikkorivi
+      |                  columns:
+      |                    type: array
+      |                    description: Rivin sarakkeet
+      |                    items:
       |                      type: object
-      |                      description: Sarakkeen Opintopolussa näytettävä teksti eri kielillä.
-      |                        Kielet on määritetty valintaperusteen kielivalinnassa.
-      |                      $ref: '#/components/schemas/Teksti'
+      |                      properties:
+      |                        index:
+      |                          type: integer
+      |                          description: Sarakkeen järjestysnumero
+      |                        text:
+      |                          type: object
+      |                          description: Sarakkeen Opintopolussa näytettävä teksti eri kielillä. Kielet on määritetty valintaperusteen kielivalinnassa.
+      |                          $ref: '#/components/schemas/Teksti'
+      |      required:
+      |        - tyyppi
       |""".stripMargin
 
-  def models = List(ValintatapaModel, SisaltoTekstiModel, SisaltoTaulukkoModel)
+  val SisaltoModel =
+    """    SisaltoItem:
+      |      type: object
+      |      oneOf:
+      |        - $ref: '#/components/schemas/SisaltoTeksti'
+      |        - $ref: '#/components/schemas/SisaltoTaulukko'
+      |""".stripMargin
+
+  def models = List(ValintatapaModel, SisaltoTekstiModel, SisaltoTaulukkoModel, SisaltoModel)
 }
 
 case class Valintatapa(

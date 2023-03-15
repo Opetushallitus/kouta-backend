@@ -307,8 +307,7 @@ package object domain {
       |        aika:
       |          type: array
       |          description: Valintakokeen järjestämisaika
-      |          items:
-      |            $ref: '#/components/schemas/Ajanjakso'
+      |          $ref: '#/components/schemas/Ajanjakso'
       |        jarjestamispaikka:
       |          type: object
       |          description: Valintakokeen järjestämispaikka eri kielillä. Kielet on määritetty kielivalinnassa.
