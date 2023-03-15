@@ -5,7 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.MinYoValintaperuste
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.{Fi, Sv, _}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.integration.fixture.ValintaperusteFixture
 import fi.oph.kouta.mocks.MockAuditLogger
@@ -13,6 +13,7 @@ import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
+import org.json4s.jackson.Serialization
 
 class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture {
 
@@ -200,7 +201,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     update(
       tallennettuValintaperuste(id),
       lastModified,
-      expectUpdate = false,
+      expectUpdate = true, // muokkaaja was updated
       crudSessions(valintaperuste.organisaatioOid)
     )
   }
@@ -214,7 +215,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "allow a user of an ancestor organization to update valintaperuste" in {
     val id           = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(ParentOid))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = true, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
@@ -265,9 +266,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   }
 
   it should "put, update and delete valintakokeet correctly" in {
-    val valintaperusteWithValintakokeet = valintaperuste.copy(
-      valintakokeet =
-        Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
+    val valintaperusteWithValintakokeet = valintaperuste.copy(valintakokeet =
+      Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
     )
     val id            = put(valintaperusteWithValintakokeet)
     val lastModified  = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
@@ -279,33 +279,59 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   }
 
   it should "update muokkaaja of valintaperuste on put, update and delete for valintakokeet" in {
-    val valintaperusteWithValintakokeet = valintaperuste.copy(
-      valintakokeet =
-        Seq(TestData.Valintakoe1, TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_66#6")))
-    )
-    val id = put(valintaperusteWithValintakokeet)
+    val valintakokeet =
+      Seq(TestData.Valintakoe1)
+    val valintaperusteWithValintakokeet = valintaperuste.copy(valintakokeet = valintakokeet)
+    val id                              = put(valintaperusteWithValintakokeet)
     assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
-    val lastModified  = get(id, getIds(valintaperusteWithValintakokeet.copy(id = Some(id))))
-    val newValintakoe = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
-    val updateValintakoe =
-      getIds(valintaperuste(id)).valintakokeet.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    val valintaperusteetWithId = valintaperusteWithValintakokeet.copy(id = Some(id))
+    val valintakokeetWithIds = getIds(valintaperusteetWithId).valintakokeet
+    val lastModified       = get(id, valintaperusteetWithId)
+    // päivitetään valintakoe
+    val updatedValintakoe = valintakokeetWithIds.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
+    update(valintaperusteetWithId.copy(valintakokeet = Seq(updatedValintakoe)), lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
+    assert(readValintaperusteMuokkaaja(id.toString) == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
+      status should equal(200)
+      val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
+      valintaperuste.valintakokeet.size.shouldEqual(1)
+      valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
+    }
+    // lisätään valintakoe
+    val newValintakoe      = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
+    val updatedValintakokeetWithIds = getIds(valintaperusteetWithId).valintakokeet
     update(
-      valintaperuste(id).copy(valintakokeet = Seq(newValintakoe, updateValintakoe)),
+      valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds :+ newValintakoe),
       lastModified,
-      expectUpdate = true,
-      ophSession
+      expectUpdate = true
     )
-    assert(readValintaperusteMuokkaaja(id.toString) == OphUserOid.toString)
-    get(
-      id,
-      getIds(
-        valintaperuste(id).copy(
-          muokkaaja = OphUserOid,
-          valintakokeet = Seq(newValintakoe, updateValintakoe),
-          metadata = Some(TestData.AmmValintaperusteMetadata.copy(isMuokkaajaOphVirkailija = Some(true)))
-        )
-      )
-    )
+    assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
+    get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
+      status should equal(200)
+      val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
+      valintaperuste.valintakokeet.size.shouldEqual(2)
+      valintaperuste.muokkaaja.shouldEqual(TestUserOid)
+    }
+    // poistetaan valintakoe
+    update(valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds), lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
+    assert(readValintaperusteMuokkaaja(id.toString) == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
+      status should equal(200)
+
+      val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
+      valintaperuste.valintakokeet.size.shouldEqual(1)
+      valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
+    }
+    // poistetaan kaikki valintakokeet
+    update(valintaperusteetWithId.copy(valintakokeet = List()), lastModified, expectUpdate = true)
+    assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
+    get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
+      status should equal(200)
+
+      val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
+      valintaperuste.valintakokeet shouldBe empty
+      valintaperuste.muokkaaja.shouldEqual(TestUserOid)
+    }
   }
 
   it should "delete all valintakokeet and read last modified from history" in {

@@ -149,12 +149,6 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat where haku_oid = $oid""".as[Hakuaika]
   }
 
-  def updateHaunMuokkaaja(hakuOid: Option[HakuOid], muokkaaja: UserOid): DBIO[Int] = {
-    sqlu"""update haut set
-              muokkaaja = ${muokkaaja}
-            where oid = ${hakuOid}"""
-  }
-
   def updateHaku(haku: Haku): DBIO[Int] = {
     sqlu"""update haut set
               external_id = ${haku.externalId},
@@ -190,6 +184,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or ajastettu_julkaisu is distinct from ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp
+            or muokkaaja is distinct from ${haku.muokkaaja}
             or organisaatio_oid is distinct from ${haku.organisaatioOid}
             or tila is distinct from ${haku.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(haku.nimi)}::jsonb
@@ -213,9 +208,9 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     if (hakuajat.nonEmpty) {
       val insertSQL = hakuajat.map(insertHakuaika(oid, _, muokkaaja))
       val deleteSQL = deleteHakuajat(oid, hakuajat)
-      DBIOHelpers.sumIntDBIOs(insertSQL :+ deleteSQL :+ updateHaunMuokkaaja(oid, muokkaaja))
+      DBIOHelpers.sumIntDBIOs(insertSQL :+ deleteSQL)
     } else {
-      DBIOHelpers.sumIntDBIOs(Seq(sqlu"""delete from hakujen_hakuajat where haku_oid = $oid""", updateHaunMuokkaaja(oid, muokkaaja)))
+      sqlu"""delete from hakujen_hakuajat where haku_oid = $oid"""
     }
   }
 

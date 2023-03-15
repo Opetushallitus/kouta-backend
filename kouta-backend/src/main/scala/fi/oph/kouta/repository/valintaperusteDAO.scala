@@ -120,7 +120,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
 
-  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] =
+  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja)
            values (${valintakoe.id.map(_.toString)}::uuid,
                    ${valintaperusteId.map(_.toString)}::uuid,
@@ -129,6 +129,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                    ${toJsonParam(valintakoe.metadata)}::jsonb,
                    ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
                    $muokkaaja)"""
+  }
 
   def selectValintaperuste(id: UUID, tilaFilter: TilaFilter) =
     sql"""select id,
@@ -178,6 +179,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
              or julkinen is distinct from ${valintaperuste.julkinen}
              or esikatselu is distinct from ${valintaperuste.esikatselu}
              or metadata is distinct from ${toJsonParam(valintaperuste.metadata)}::jsonb
+             or muokkaaja is distinct from ${valintaperuste.muokkaaja}
              or organisaatio_oid is distinct from ${valintaperuste.organisaatioOid}
              or kielivalinta is distinct from ${toJsonParam(valintaperuste.kielivalinta)}::jsonb )"""
   }
@@ -200,7 +202,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
     val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
-
     val deleteSQL = if (update.nonEmpty) {
       deleteValintakokeet(valintaperusteId, update.map(_.id.get))
     } else {

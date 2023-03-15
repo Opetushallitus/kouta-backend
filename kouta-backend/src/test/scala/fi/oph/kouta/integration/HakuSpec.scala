@@ -184,13 +184,13 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "update muokkaaja and modify timestamp of haku even when nothing changed" in {
+  it should "not update haku" in {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
-    update(thisHaku, lastModified, expectUpdate = true)
-    MockAuditLogger.logs should not be empty
+    update(thisHaku, lastModified, expectUpdate = false)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisHaku) should equal(lastModified)
   }
 
