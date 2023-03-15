@@ -572,7 +572,12 @@ case class AmmatillinenKoulutusMetadata(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
-    isMuokkaajaOphVirkailija: Option[Boolean] = None
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    // Alla olevat kentät vain pelastusalan koulutuksilla!
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusNumero: Option[Double] = None,
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
 ) extends KoulutusMetadata
 
 case class AmmatillinenTutkinnonOsaKoulutusMetadata(

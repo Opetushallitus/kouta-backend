@@ -1,9 +1,10 @@
 package fi.oph.kouta.service.validation
 
 import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient, CachedKoodistoClient, TutkinnonOsaServiceItem}
+import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
+import fi.oph.kouta.util.MiscUtils.{PelastusalanKoulutusKoodiUrit, withoutKoodiVersion}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
@@ -13,43 +14,58 @@ object AmmatillinenKoulutusServiceValidation
 class AmmatillinenKoulutusServiceValidation(
     val koodistoClient: CachedKoodistoClient,
     ePerusteKoodiClient: EPerusteKoodiClient
-) extends KoodistoValidator with ValidatingSubService[Koulutus] {
+) extends KoodistoValidator
+    with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
-    val koulutusDiffResolver = KoulutusDiffResolver(koulutus,oldKoulutus)
+    val koulutusDiffResolver = KoulutusDiffResolver(koulutus, oldKoulutus)
+
     val upperLevelErrors = koulutus.koulutustyyppi match {
-      case Amm =>
-        and(
-          validateIfSuccessful(
+      case Amm => {
+        if (koulutus.isPelastusalanKoulutus) {
+          and(
+            assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
             validateKoulutusKoodiUrit(
               AmmatillisetKoulutusKoodit,
               koulutus.koulutuksetKoodiUri,
               koulutusDiffResolver.newKoulutusKoodiUrit(),
               Some(1),
               vCtx
-            ),
-            validateIfTrue(
-              ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-              koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
-                case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
-                case Right(uri) =>
-                  assertNimiMatchExternal(
-                    koulutus.nimi,
-                    uri.nimi,
-                    "nimi",
-                    s"koulutuksessa ${koulutus.koulutuksetKoodiUri.head}"
-                  )
-                case _ => error("koulutuksetKoodiUri", invalidKoulutuskoodiuri(koulutus.koulutuksetKoodiUri.head))
-              }
             )
-          ),
-          validateIfJulkaistu(koulutus.tila, assertNotOptional(koulutus.ePerusteId, "ePerusteId")),
-          validateEPeruste(
-            koulutusDiffResolver.newEPerusteId(),
-            "ePerusteId",
-            koulutusDiffResolver.newKoulutusKoodiUrit()
           )
-        )
-
+        } else {
+          and(
+            validateIfSuccessful(
+              validateKoulutusKoodiUrit(
+                AmmatillisetKoulutusKoodit,
+                koulutus.koulutuksetKoodiUri,
+                koulutusDiffResolver.newKoulutusKoodiUrit(),
+                Some(1),
+                vCtx
+              ),
+              validateIfTrue(
+                ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
+                koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+                  case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
+                  case Right(uri) =>
+                    assertNimiMatchExternal(
+                      koulutus.nimi,
+                      uri.nimi,
+                      "nimi",
+                      s"koulutuksessa ${koulutus.koulutuksetKoodiUri.head}"
+                    )
+                  case _ => error("koulutuksetKoodiUri", invalidKoulutuskoodiuri(koulutus.koulutuksetKoodiUri.head))
+                }
+              )
+            ),
+            validateIfJulkaistu(koulutus.tila, assertNotOptional(koulutus.ePerusteId, "ePerusteId")),
+            validateEPeruste(
+              koulutusDiffResolver.newEPerusteId(),
+              "ePerusteId",
+              koulutusDiffResolver.newKoulutusKoodiUrit()
+            )
+          )
+        }
+      }
       case AmmOsaamisala =>
         and(
           validateKoulutusKoodiUrit(
@@ -84,6 +100,22 @@ class AmmatillinenKoulutusServiceValidation(
     val metadataErrors = koulutus.metadata match {
       case Some(metadata) =>
         metadata match {
+          case m: AmmatillinenKoulutusMetadata => {
+            if (koulutus.isPelastusalanKoulutus) {
+              and(
+                validateOpintojenLaajuusNumero(m.opintojenLaajuusNumero, vCtx),
+                validateOpintojenLaajuusYksikko(
+                  m.opintojenLaajuusyksikkoKoodiUri,
+                  koulutusDiffResolver.hasLaajuusyksikkoChanged(),
+                  vCtx
+                ),
+                assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), vCtx),
+                assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx)
+              )
+            } else {
+              NoErrors
+            }
+          }
           case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
             validateAmmTutkinnonosaMetadata(
               vCtx,
@@ -103,7 +135,8 @@ class AmmatillinenKoulutusServiceValidation(
               validateOpintojenLaajuusYksikko(
                 m.opintojenLaajuusyksikkoKoodiUri,
                 koulutusDiffResolver.hasLaajuusyksikkoChanged(),
-                vCtx),
+                vCtx
+              ),
               validateOpintojenLaajuusNumero(
                 m.opintojenLaajuusNumero,
                 vCtx
