@@ -249,10 +249,10 @@ class KoulutusSpec
     get(oid, koulutus(oid, Arkistoitu))
   }
 
-  "Update koulutus" should "update koulutus timestamp and muokkaaja even without changes" in {
+  "Update koulutus" should " not update koulutus without changes" in {
     val oid = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    update(koulutus(oid), lastModified, expectUpdate = true, ophSession)
+    update(koulutus(oid), lastModified, expectUpdate = false, ophSession)
     get(oid, koulutus(oid))
   }
 

@@ -525,7 +525,7 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid, ChildOid)))
     val thisToteutus = toteutus(oid, koulutusOid).copy(tarjoajat = List(AmmOid, ChildOid))
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, expectUpdate = true, ammAndChildSession) // muokkaaja and last_modified are updated
+    update(thisToteutus, lastModified, expectUpdate = false, ammAndChildSession)
   }
 
   it should "deny a user without access to the toteutus organization" in {
@@ -546,7 +546,7 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid).copy(organisaatioOid = ChildOid, tarjoajat = List(GrandChildOid)))
     val thisToteutus = toteutus(oid, koulutusOid).copy(organisaatioOid = ChildOid, tarjoajat = List(GrandChildOid))
     val lastModified = get(oid, thisToteutus)
-    update(thisToteutus, lastModified, expectUpdate = true, crudSessions(ParentOid)) // last_modified and muokkaaja are updated
+    update(thisToteutus, lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {

@@ -66,11 +66,21 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
-    if (tarjoajat.nonEmpty) {
-      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat) :+ updateToteutuksenMuokkaaja(oid, muokkaaja)
-      DBIOHelpers.sumIntDBIOs(actions)
-    } else {
-      DBIOHelpers.sumIntDBIOs(Seq(updateToteutuksenMuokkaaja(oid, muokkaaja), deleteTarjoajat(oid)))
+    val oldTarjoajat = KoutaDatabase.runBlockingTransactionally(
+      for {
+        t <- selectToteutuksenTarjoajat(oid.get).as[Tarjoaja]
+      } yield t.toList)
+    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.get.map(_.tarjoajaOid).contains(oid))
+    val deleted = oldTarjoajat.get.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
+
+    (inserted.nonEmpty, deleted.nonEmpty) match {
+      case (true, any) =>
+        val actions = inserted.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajatByOids(oid, deleted.map(_.tarjoajaOid))
+        DBIOHelpers.sumIntDBIOs(actions)
+      case (false, true)  =>
+        // if changes were deletions, database trigger won't update muokkaaja of toteutus
+        DBIOHelpers.sumIntDBIOs(Seq(updateToteutuksenMuokkaaja(oid, muokkaaja), deleteTarjoajatByOids(oid, deleted.map(_.tarjoajaOid))))
+      case _ => DBIO.successful(0)
     }
   }
 
@@ -293,6 +303,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def updateToteutuksenMuokkaaja(toteutusOid: Option[ToteutusOid], muokkaaja: UserOid): DBIO[Int] = {
+    logger.info(s"update toteutuksen muokkaaja")
     sqlu"""update toteutukset set
               muokkaaja = ${muokkaaja}
             where oid = ${toteutusOid}"""
@@ -306,6 +317,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Int] = {
     sqlu"""delete from toteutusten_tarjoajat
            where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
+  }
+
+  def deleteTarjoajatByOids(oid: Option[ToteutusOid], deletedOids: List[OrganisaatioOid]): DBIO[Int] = {
+    sqlu"""delete from toteutusten_tarjoajat
+           where toteutus_oid = $oid and tarjoaja_oid in (#${createOidInParams(deletedOids)})"""
   }
 
   def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] = {
