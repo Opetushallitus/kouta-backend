@@ -45,7 +45,8 @@ case object AmmatillisetKoulutusKoodit
         "koulutustyyppi_18",
         "koulutustyyppi_19",
         "koulutustyyppi_24",
-        "koulutustyyppi_26"
+        "koulutustyyppi_26",
+        "koulutustyyppi_42"
       )
     )
 
