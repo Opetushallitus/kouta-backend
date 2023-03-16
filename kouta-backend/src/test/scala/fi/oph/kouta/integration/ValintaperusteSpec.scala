@@ -187,6 +187,24 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     get(id, valintaperuste(id)) should equal(lastModified)
   }
 
+  it should "not update muokkaaja of valintaperuste if there are no changes" in {
+    val id = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    update(
+      tallennettuValintaperuste(id),
+      lastModified,
+      expectUpdate = false,
+      crudSessions(valintaperuste.organisaatioOid)
+    )
+    MockAuditLogger.logs should not be empty // audit log is updated anyway
+    get(id, valintaperuste(id)) should equal(lastModified)
+    get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
+      status should equal(200)
+      val valintaperusteResult: Valintaperuste = Serialization.read[Valintaperuste](body)
+      valintaperusteResult.muokkaaja.shouldEqual(TestUserOid)
+    }
+  }
+
   it should "return 401 if no session is found" in {
     val id           = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
@@ -201,7 +219,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     update(
       tallennettuValintaperuste(id),
       lastModified,
-      expectUpdate = true, // muokkaaja was updated
+      expectUpdate = false,
       crudSessions(valintaperuste.organisaatioOid)
     )
   }
@@ -215,7 +233,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "allow a user of an ancestor organization to update valintaperuste" in {
     val id           = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    update(tallennettuValintaperuste(id), lastModified, expectUpdate = true, crudSessions(ParentOid))
+    update(tallennettuValintaperuste(id), lastModified, expectUpdate = false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {

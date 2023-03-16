@@ -184,7 +184,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "not update haku" in {
+  it should "not update haku with same muokkaaja if nothing changes" in {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
@@ -192,6 +192,16 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     update(thisHaku, lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
     get(oid, thisHaku) should equal(lastModified)
+  }
+
+  it should "update haku with different muokkaaja even if nothing changes" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(haku.organisaatioOid)) // muokkaaja and modify timestamp updated
+    MockAuditLogger.logs should not be empty
+    get(oid, thisHaku.copy(muokkaaja = userOidForTestSessionId(crudSessions(haku.organisaatioOid)))) should equal(lastModified)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {

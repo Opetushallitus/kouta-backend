@@ -354,20 +354,23 @@ class ToteutusSpec
     get(oid, toteutus(oid, koulutusOid, Arkistoitu).copy(muokkaaja = testUser.oid, tarjoajat = List(GrandChildOid)))
   }
 
-  it should "update muokkaaja and modify timestamp of toteutus even without changes" in {
+  it should "not update toteutus" in {
     val oid          = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
     MockAuditLogger.clean()
-    update(thisToteutus, lastModified, expectUpdate = true)
-    MockAuditLogger.logs should not be empty
-    get(s"$ToteutusPath/$oid", headers = defaultHeaders) {
-      status should equal(200)
+    update(thisToteutus, lastModified, expectUpdate = false)
+    MockAuditLogger.logs shouldBe empty
+    get(oid, thisToteutus)
+  }
 
-      val toteutus: Toteutus = Serialization.read[Toteutus](body)
-      toteutus.modified should not equal thisToteutus.modified
-      toteutus.muokkaaja.shouldEqual(thisToteutus.muokkaaja)
-    }
+  it should "not update toteutus with different muokkaaja if nothing else changed" in {
+    val oid = put(toteutus(koulutusOid), ophSession)
+    val thisToteutus = toteutus(oid, koulutusOid).copy(metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true))), muokkaaja = OphUserOid)
+    val lastModified = get(oid, thisToteutus)
+    MockAuditLogger.clean()
+    update(thisToteutus, lastModified, expectUpdate = false, ophSession2)
+    MockAuditLogger.logs shouldBe empty
     get(oid, thisToteutus)
   }
 
