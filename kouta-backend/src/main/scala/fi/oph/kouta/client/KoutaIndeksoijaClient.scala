@@ -66,7 +66,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
           isSuccess
         }
       }
-      val result = Await.result(resultF, Duration(5, TimeUnit.SECONDS))
+      val result = Await.result(resultF, Duration(quickIndexTimeout, TimeUnit.SECONDS))
       if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
       case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin! (Valintaperuste $id)", e)
