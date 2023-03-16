@@ -296,14 +296,18 @@ trait KoodistoValidator {
     )
   )
 
-  def assertTutkintonimikeKoodiUrit(koodiUrit: Seq[String], validationContext: ValidationContext): IsValid = {
+  def assertTutkintonimikeKoodiUrit(
+      koodiUrit: Seq[String],
+      validationContext: ValidationContext,
+      koodistoNimi: KoodistoNimi = TutkintonimikeKorkeakoulutusKoodisto
+  ): IsValid = {
     validateIfNonEmpty[String](
       koodiUrit,
       "metadata.tutkintonimikeKoodiUrit",
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
+          koodistoClient.koodiUriExistsInKoodisto(koodistoNimi, _),
           path,
           validationContext,
           invalidTutkintoNimikeKoodiuri(koodiUri)

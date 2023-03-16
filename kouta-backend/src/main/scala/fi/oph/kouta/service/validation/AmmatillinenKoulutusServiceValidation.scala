@@ -108,7 +108,7 @@ class AmmatillinenKoulutusServiceValidation(
                   koulutusDiffResolver.hasLaajuusyksikkoChanged(),
                   vCtx
                 ),
-                assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), vCtx),
+                assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), vCtx, TutkintonimikkeetKoodisto),
                 assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx)
               )
             } else {
