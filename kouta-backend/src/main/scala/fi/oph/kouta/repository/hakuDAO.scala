@@ -150,6 +150,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def updateHaku(haku: Haku): DBIO[Int] = {
+    // note! This updates always when muokkaaja changes, even without other changes
     sqlu"""update haut set
               external_id = ${haku.externalId},
               hakutapa_koodi_uri = ${haku.hakutapaKoodiUri},
