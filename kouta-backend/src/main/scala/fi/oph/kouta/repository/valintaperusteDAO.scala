@@ -206,18 +206,18 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
     val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
-    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
-    val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
-    val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
-    val toBeDeletedValintakokeet = KoutaDatabase.runBlockingTransactionally(
+    val oldValintakokeet = KoutaDatabase.runBlockingTransactionally(
       for {
         k <- selectValintakokeet(valintaperusteId.get)
-      } yield k.toList.map(_.id).filterNot(uuid => update.map(_.id).contains(uuid)))
-    if(!toBeDeletedValintakokeet.get.isEmpty) {
-      deleteValintakokeetByIds(valintaperusteId, toBeDeletedValintakokeet.get.map(_.get)).
+      } yield k.toList)
+    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
+    val deleted = oldValintakokeet.get.map(_.id).filterNot(uuid => update.map(_.id).contains(uuid))
+    val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
+    val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
+    deleted.nonEmpty match {
+      case true => deleteValintakokeetByIds(valintaperusteId, deleted.map(_.get)).
         zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ updateValintaperusteenMuokkaaja(valintaperusteId, muokkaaja)))(_ + _)
-    } else {
-      DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL)
+      case _ => DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL)
     }
   }
 
