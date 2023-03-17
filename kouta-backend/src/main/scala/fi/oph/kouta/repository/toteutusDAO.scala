@@ -2,7 +2,6 @@ package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.repository.ToteutusDAO.logger
 import fi.oph.kouta.service.ToteutusService
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
@@ -303,7 +302,6 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   def updateToteutuksenMuokkaaja(toteutusOid: Option[ToteutusOid], muokkaaja: UserOid): DBIO[Int] = {
-    logger.info(s"update toteutuksen muokkaaja")
     sqlu"""update toteutukset set
               muokkaaja = ${muokkaaja}
             where oid = ${toteutusOid}"""

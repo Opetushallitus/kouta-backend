@@ -301,7 +301,6 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def updateHakukohteenMuokkaaja(hakukohdeOid: Option[HakukohdeOid], muokkaaja: UserOid): DBIO[Int] = {
-    logger.info(s"Päivitetään hakukohteen muokkaaja")
     sqlu"""update hakukohteet set
               muokkaaja = ${muokkaaja}
           where oid = ${hakukohdeOid} and muokkaaja is distinct from ${muokkaaja}"""

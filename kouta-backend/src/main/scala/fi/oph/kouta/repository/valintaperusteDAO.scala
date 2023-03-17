@@ -199,7 +199,6 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
   def updateValintaperusteenMuokkaaja(valintaperusteId: Option[UUID], muokkaaja: UserOid): DBIO[Int] = {
-    logger.info(s"update valintaperusteen muokkaaja: ${muokkaaja}")
     sqlu"""update valintaperusteet set
             muokkaaja = ${muokkaaja}
            where id = ${valintaperusteId.map(_.toString)}::uuid"""
