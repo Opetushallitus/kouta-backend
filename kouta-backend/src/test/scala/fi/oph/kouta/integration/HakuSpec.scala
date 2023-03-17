@@ -384,26 +384,27 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   }
 
   it should "update muokkaaja of haku on hakuajat insert" in {
-    val hakuWithoutHakuaika        = haku.copy(tila = Tallennettu, hakuajat = List())
-    val oid                        = put(hakuWithoutHakuaika)
-    val hakuWithoutHakuaikaWithOid = hakuWithoutHakuaika.copy(oid = Some(HakuOid(oid)))
+    val hakuWithoutHakuaika        = haku.copy(tila = Tallennettu, hakuajat = List(),
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid                        = put(hakuWithoutHakuaika, ophSession)
+    val hakuWithoutHakuaikaWithOid = hakuWithoutHakuaika.copy(oid = Some(HakuOid(oid)), muokkaaja = OphUserOid)
     val lastModified               = get(oid, hakuWithoutHakuaikaWithOid)
 
-    assert(readHakuMuokkaaja(oid) == TestUserOid.toString)
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
     get(s"$HakuPath/$oid", headers = defaultHeaders) {
       status should equal(200)
       val haku      = Serialization.read[Haku](body)
       val muokkaaja = haku.muokkaaja
-      muokkaaja.shouldEqual(TestUserOid)
+      muokkaaja.shouldEqual(OphUserOid)
       assert(haku.hakuajat.size == 0)
     }
     update(
       hakuWithoutHakuaikaWithOid.copy(hakuajat = TestData.getHakuajatWeeksInFuture(1, 3)),
       lastModified,
       expectUpdate = true,
-      ophSession
+      ophSession2
     )
-    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
   }
 
   it should "update muokkaaja of haku on hakuajat update" in {

@@ -68,10 +68,10 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   private def updateHakuajat(hakukohde: Hakukohde): DBIO[Int] = {
     val (oid, hakuajat, muokkaaja) = (hakukohde.oid, hakukohde.hakuajat, hakukohde.muokkaaja)
     if (hakuajat.nonEmpty) {
-      val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat)
+      val actions = hakuajat.map(t => insertHakuaika(oid, t, muokkaaja)) :+ deleteHakuajat(oid, hakuajat) :+ updateHakukohteenMuokkaaja(oid, muokkaaja)
       DBIOHelpers.sumIntDBIOs(actions)
     } else {
-      deleteHakuajat(oid)
+      DBIOHelpers.sumIntDBIOs(Seq(deleteHakuajat(oid), updateHakukohteenMuokkaaja(oid, muokkaaja)))
     }
   }
 
@@ -298,6 +298,13 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or metadata is distinct from ${toJsonParam(hakukohde.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
+  }
+
+  def updateHakukohteenMuokkaaja(hakukohdeOid: Option[HakukohdeOid], muokkaaja: UserOid): DBIO[Int] = {
+    logger.info(s"Päivitetään hakukohteen muokkaaja")
+    sqlu"""update hakukohteet set
+              muokkaaja = ${muokkaaja}
+          where oid = ${hakukohdeOid} and muokkaaja is distinct from ${muokkaaja}"""
   }
 
   def selectHakukohde(oid: HakukohdeOid, tilaFilter: TilaFilter): DBIO[Option[Hakukohde]] = {
