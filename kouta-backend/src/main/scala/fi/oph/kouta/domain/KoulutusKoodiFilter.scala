@@ -88,5 +88,5 @@ case object LukioKoulutusKooditAllowedForKaksoistutkinto
 case object ErikoislaakariKoulutusKoodit
     extends KoulutusKoodiUriFilter(Seq("koulutus_775101", "koulutus_775201", "koulutus_775301"))
 
-case object PelastusalanKoulutusKoodit
+case object AmmKoulutusKooditWithoutEperuste
     extends KoulutusKoodiUriFilter(Seq("koulutus_381501", "koulutus_381502", "koulutus_381503", "koulutus_381521"))

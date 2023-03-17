@@ -20,7 +20,7 @@ class AmmatillinenKoulutusServiceValidation(
 
     val upperLevelErrors = koulutus.koulutustyyppi match {
       case Amm => {
-        if (koulutus.isPelastusalanKoulutus) {
+        if (koulutus.isAmmTutkintoWithoutEPeruste) {
           and(
             assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
             validateKoulutusKoodiUrit(
@@ -100,7 +100,7 @@ class AmmatillinenKoulutusServiceValidation(
       case Some(metadata) =>
         metadata match {
           case m: AmmatillinenKoulutusMetadata => {
-            if (koulutus.isPelastusalanKoulutus) {
+            if (koulutus.isAmmTutkintoWithoutEPeruste) {
               and(
                 validateOpintojenLaajuusNumero(m.opintojenLaajuusNumero, vCtx),
                 validateOpintojenLaajuusYksikko(

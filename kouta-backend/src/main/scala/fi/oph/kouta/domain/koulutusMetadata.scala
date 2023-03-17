@@ -573,7 +573,7 @@ case class AmmatillinenKoulutusMetadata(
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-    // Alla olevat kentät vain pelastusalan koulutuksilla!
+    // Alla olevat kentät vain ammatillisilla tutkintoon johtavilla koulutuksilla, joilla ei ole ePerustetta (pelastusala ja rikosseuraamusala)!
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,

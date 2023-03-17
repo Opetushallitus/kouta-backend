@@ -118,7 +118,7 @@ object TestData {
         ),
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         opintojenLaajuusNumero = Some(10),
-        tutkintonimikeKoodiUrit = Seq("tutkintonimikekk_110#2"),
+        tutkintonimikeKoodiUrit = Seq("tutkintonimikkeet_110#2"),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"),
         isMuokkaajaOphVirkailija = Some(true)
       )

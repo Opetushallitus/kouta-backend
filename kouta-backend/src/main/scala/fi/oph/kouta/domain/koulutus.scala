@@ -227,8 +227,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     case _                                            => None
   }).getOrElse(false)
 
-  def isPelastusalanKoulutus(): Boolean = koulutuksetKoodiUri.headOption match {
-    case Some(koodiUri) => PelastusalanKoulutusKoodit.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
+  def isAmmTutkintoWithoutEPeruste(): Boolean = koulutuksetKoodiUri.headOption match {
+    case Some(koodiUri) => koulutustyyppi == Amm && AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
     case _              => false
   }
 }
