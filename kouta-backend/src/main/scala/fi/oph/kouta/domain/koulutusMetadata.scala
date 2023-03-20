@@ -210,7 +210,7 @@ package object koulutusMetadata {
       |            koulutusalaKoodiUrit:
       |              type: array
       |              description: |
-      |                Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso2/1).
+      |                Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/kansallinenkoulutusluokitus2016koulutusalataso2).
       |                ${AmmTutkintoWithoutEperusteFieldDescription}
       |              items:
       |                type: string
@@ -220,17 +220,17 @@ package object koulutusMetadata {
       |            tutkintonimikeKoodiUrit:
       |              type: array
       |              description: |
-      |                Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/tutkintonimikekk/2).
+      |                Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/tutkintonimikkeet).
       |                ${AmmTutkintoWithoutEperusteFieldDescription}
       |              items:
       |                type: string
       |              example:
-      |                - tutkintonimikekk_110#2
-      |                - tutkintonimikekk_111#2
+      |                - tutkintonimikkeet_10091#2
+      |                - tutkintonimikkeet_10015#2
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: |
-      |                Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1).
+      |                Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/opintojenlaajuusyksikko).
       |                ${AmmTutkintoWithoutEperusteFieldDescription}
       |              example: opintojenlaajuusyksikko_2#1
       |            opintojenLaajuusNumero:
