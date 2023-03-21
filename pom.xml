@@ -7,7 +7,7 @@
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend-parent</artifactId>
     <packaging>pom</packaging>
-    <version>7.3.8-SNAPSHOT</version>
+    <version>7.3.9-SNAPSHOT</version>
     <name>kouta-backend-parent</name>
 
     <modules>
@@ -35,7 +35,7 @@
         <logback-access.version>1.2.3</logback-access.version>
 
         <!-- Cas properties -->
-        <scala-cas.version>2.2.1-SNAPSHOT</scala-cas.version>
+        <scala-cas.version>2.2.2.1-SNAPSHOT</scala-cas.version>
 
         <!-- Http related properties -->
         <scalatra.version>2.7.0</scalatra.version>
