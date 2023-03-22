@@ -1,17 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient, HakukohdeInfo, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{
-  isDIAlukiokoulutus,
-  isEBlukiokoulutus,
-  isToisenAsteenYhteishaku,
-  isYhteishakuHakutapa
-}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToisenAsteenYhteishaku, isYhteishakuHakutapa}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
@@ -218,10 +213,10 @@ class HakukohdeServiceValidation(
     )
   }
 
-  private def isHakuaikaMenossa(hakuajat: Ajanjakso): Boolean = {
+  private def isHakuaikaMenossa(hakuaika: Ajanjakso): Boolean = {
     val now = LocalDateTime.now();
-    (hakuajat.alkaa.isBefore(now) && hakuajat.paattyy.isEmpty) || (hakuajat.alkaa.isBefore(now) && !now.isAfter(
-      hakuajat.paattyy.get
+    (hakuaika.alkaa.isBefore(now) && hakuaika.paattyy.isEmpty) || (hakuaika.alkaa.isBefore(now) && !now.isAfter(
+      hakuaika.paattyy.get
     ))
   }
 
@@ -239,13 +234,14 @@ class HakukohdeServiceValidation(
     val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
     if (oldHakukohde.get.tila != Arkistoitu) return validStates
 
-    // TODO: Haetaan hakemuspalvelulta hakukohteen hakemusten määrä
+    val hakukohdeInfo: Option[HakukohdeInfo] = newHakukohde.oid.map(oid => hakemusPalveluClient.getHakukohdeInfo(oid))
+    val hakukohteessaEiOleHakijoita: Boolean = hakukohdeInfo.exists(_.applicationCount == 0)
 
-    val hakukohteenHakuaikaEiOleMenossa = !isHakuaikaMenossa(newHakukohde.hakuajat)
-    val haunHakuaikaEiOleMenossa        = !isHakuaikaMenossa(haku.map(_.hakuajat).getOrElse(Seq()))
-    val kaytetaanHaunAikataulua         = newHakukohde.kaytetaanHaunAikataulua.getOrElse(false)
-    val isAllowedToRemoveArkistoitu =
-      (kaytetaanHaunAikataulua && haunHakuaikaEiOleMenossa) || hakukohteenHakuaikaEiOleMenossa
+    val hakukohteenHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(newHakukohde.hakuajat)
+    val haunHakuaikaEiOleMenossa: Boolean        = !isHakuaikaMenossa(haku.map(_.hakuajat).getOrElse(Seq()))
+    val kaytetaanHaunAikataulua: Boolean         = newHakukohde.kaytetaanHaunAikataulua.getOrElse(false)
+    val hakuaikaEiOleMenossa: Boolean            = (kaytetaanHaunAikataulua && haunHakuaikaEiOleMenossa) || hakukohteenHakuaikaEiOleMenossa
+    val isAllowedToRemoveArkistoitu: Boolean     = hakuaikaEiOleMenossa && hakukohteessaEiOleHakijoita
 
     validStates ++ (if (isAllowedToRemoveArkistoitu) Seq(Poistettu) else Seq())
   }
