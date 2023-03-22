@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{KoodistoClient, HakemusPalveluClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient, HakukohdeInfo}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -225,6 +225,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
+    when(hakemusPalveluClient.getHakukohdeInfo(maxWithIds.oid.get)).thenAnswer(HakukohdeInfo(applicationCount = 0))
 
     when(koodistoService.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b3pt")).thenAnswer(itemFound)
     when(koodistoService.oppiaineArvoExists("painotettavatoppiaineetlukiossa_b1lt")).thenAnswer(itemFound)
@@ -1607,6 +1608,40 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
   it should "succeed from julkaistu to tallennettu" in {
     passesValidation(initMockSeq(maxWithIds.copy(tila = Tallennettu)), Some(maxWithIds))
+  }
+  it should "succeed from arkistoitu to poistettu when hakuaika is not on and hakukohde has no applications" in {
+    passesValidation(initMockSeq(maxWithIds.copy(
+      kaytetaanHaunAikataulua = Some(false),
+      tila = Poistettu,
+      hakuajat = Seq(Ajanjakso(inFuture(1000), None))
+    )), Some(maxWithIds.copy(tila = Arkistoitu)))
+  }
+  it should "fail from arkistoitu to poistettu when hakuaika is on" in {
+    failsModifyValidation(
+      initMockSeq(maxWithIds.copy(
+        kaytetaanHaunAikataulua = Some(false),
+        tila = Poistettu,
+        hakuajat = Seq(Ajanjakso(inPast(1000), None))
+      )),
+      maxWithIds.copy(tila = Arkistoitu),
+      Seq(ValidationError(
+        path = "tila",
+        error = ErrorMessage(msg = "Siirtyminen tilasta Arkistoitu (tilan tekninen tunniste: arkistoitu) tilaan Poistettu (tilan tekninen tunniste: poistettu) ei ole sallittu hakukohteelle", id = "illegalStateChange")
+      )))
+  }
+  it should "fail from arkistoitu to poistettu when hakukohde has applications" in {
+    when(hakemusPalveluClient.getHakukohdeInfo(maxWithIds.oid.get)).thenAnswer(HakukohdeInfo(applicationCount = 10))
+    failsModifyValidation(
+      initMockSeq(maxWithIds.copy(
+        kaytetaanHaunAikataulua = Some(false),
+        tila = Poistettu,
+        hakuajat = Seq(Ajanjakso(inFuture(1000), None))
+      )),
+      maxWithIds.copy(tila = Arkistoitu),
+      Seq(ValidationError(
+        path = "tila",
+        error = ErrorMessage(msg = "Siirtyminen tilasta Arkistoitu (tilan tekninen tunniste: arkistoitu) tilaan Poistettu (tilan tekninen tunniste: poistettu) ei ole sallittu hakukohteelle", id = "illegalStateChange")
+      )))
   }
   it should "succeed from tallennettu to poistettu" in {
     passesValidation(initMockSeq(maxWithIds.copy(tila = Poistettu)), Some(maxWithIds.copy(tila = Tallennettu)))
