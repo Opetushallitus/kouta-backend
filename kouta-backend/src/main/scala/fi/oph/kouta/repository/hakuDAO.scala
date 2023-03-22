@@ -150,6 +150,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def updateHaku(haku: Haku): DBIO[Int] = {
+    // note! This updates always when muokkaaja changes, even without other changes
     sqlu"""update haut set
               external_id = ${haku.externalId},
               hakutapa_koodi_uri = ${haku.hakutapaKoodiUri},
@@ -184,6 +185,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or ajastettu_julkaisu is distinct from ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp
+            or muokkaaja is distinct from ${haku.muokkaaja}
             or organisaatio_oid is distinct from ${haku.organisaatioOid}
             or tila is distinct from ${haku.tila.toString}::julkaisutila
             or nimi is distinct from ${toJsonParam(haku.nimi)}::jsonb

@@ -94,6 +94,7 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   val readSessions: mutable.Map[OrganisaatioOid, UUID] = mutable.Map.empty
 
   var ophSession: UUID         = _
+  var ophSession2: UUID         = _
   var indexerSession: UUID     = _
   var fakeIndexerSession: UUID = _
   var otherRoleSession: UUID = _
@@ -146,6 +147,7 @@ trait AccessControlSpec extends ScalatraFlatSpec {
     yliopistotSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(YoOid, HkiYoOid, LutYoOid), None, Option(yliopistotSession))
     ammAndChildSession = addTestSession(roleEntities.map(_.Crud.asInstanceOf[Role]), Seq(AmmOid, ChildOid), None, Option(ammAndChildSession))
     ophSession = addTestSession(Seq(Role.Paakayttaja), Seq(OphOid), Some(OphUserOid), Option(ophSession))
+    ophSession2 = addTestSession(Seq(Role.Paakayttaja), Seq(OphOid), Some(OphUserOid2), Option(ophSession2))
     indexerSession = addTestSession(Seq(Role.Indexer), Seq(OphOid), None, Option(indexerSession))
     fakeIndexerSession = addTestSession(Seq(Role.Indexer), Seq(ChildOid), None, Option(fakeIndexerSession))
     otherRoleSession = addTestSession(Seq(Role.UnknownRole("APP_OTHER")), Seq(ChildOid), None, Option(otherRoleSession))

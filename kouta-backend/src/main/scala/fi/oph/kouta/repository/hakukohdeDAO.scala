@@ -240,6 +240,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
   }
 
   def updateHakukohde(hakukohde: Hakukohde): DBIO[Int] = {
+    // note! This updates always when muokkaaja changes, even without other changes
     sqlu"""update hakukohteet set
               external_id = ${hakukohde.externalId},
               toteutus_oid = ${hakukohde.toteutusOid},
@@ -297,6 +298,7 @@ sealed trait HakukohdeSQL extends SQLHelpers with HakukohdeModificationSQL with 
             or esikatselu is distinct from ${hakukohde.esikatselu}
             or metadata is distinct from ${toJsonParam(hakukohde.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(hakukohde.kielivalinta)}::jsonb
+            or muokkaaja is distinct from ${hakukohde.muokkaaja}
             or organisaatio_oid is distinct from ${hakukohde.organisaatioOid})"""
   }
 

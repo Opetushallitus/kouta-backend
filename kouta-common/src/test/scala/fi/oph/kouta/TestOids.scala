@@ -35,6 +35,7 @@ object TestOids {
 
   val TestUserOid = UserOid("1.2.246.562.24.10000000000")
   val OphUserOid = UserOid("1.2.246.562.24.10000000099")
+  val OphUserOid2 = UserOid("1.2.246.562.24.10000000098")
 
   val random = new Random()
 

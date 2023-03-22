@@ -15,7 +15,7 @@ class MockKayttooikeusClient(securityContext: SecurityContext, defaultAuthoritie
 
   override def getOrganisaatiotFromCache(oid: UserOid): List[OrganisaatioHenkilo] = {
     val organisaatiot = List(OrganisaatioHenkilo(GrandChildOid.s), OrganisaatioHenkilo(EvilCousin.s))
-    if (oid.equals(OphUserOid)) {
+    if (oid.equals(OphUserOid) || oid.equals(OphUserOid2)) {
       OrganisaatioHenkilo(OphOid.s) :: organisaatiot
     } else {
       organisaatiot

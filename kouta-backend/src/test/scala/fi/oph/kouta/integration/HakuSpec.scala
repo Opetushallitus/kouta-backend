@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import java.time.{Instant, LocalDateTime}
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.{inFuture, muokkaajanNimi, now}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -10,25 +11,26 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+import org.json4s.jackson.Serialization
 
 class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Haku)
 
-  val ophHaku: Haku = haku.copy(organisaatioOid = OphOid)
+  val ophHaku: Haku    = haku.copy(organisaatioOid = OphOid)
   val yhteisHaku: Haku = haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1"))
 
   "Get haku by oid" should "return 404 if haku not found" in {
     get("/haku/123", headers = Seq(defaultSessionHeader)) {
-      status should equal (404)
-      body should include ("Unknown haku oid")
+      status should equal(404)
+      body should include("Unknown haku oid")
     }
   }
 
   it should "return 401 without a valid session" in {
     get("/haku/123") {
-      status should equal (401)
-      body should include ("Unauthorized")
+      status should equal(401)
+      body should include("Unauthorized")
     }
   }
 
@@ -104,7 +106,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   }
 
   it should "set haun ohjausparametrit" in {
-    val oid = HakuOid(put(haku))
+    val oid              = HakuOid(put(haku))
     val ohjausparametrit = ohjausparametritClient.mockedValues(oid)
     ohjausparametrit.hakuOid should equal(oid)
     ohjausparametrit.paikanVastaanottoPaattyy should equal(Some(Instant.ofEpochMilli(46800000L)))
@@ -118,7 +120,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   it should "return 401 without a valid session" in {
     put(HakuPath, bytes(haku), Seq(jsonHeader)) {
       status should equal(401)
-      body should include ("Unauthorized")
+      body should include("Unauthorized")
     }
   }
 
@@ -152,29 +154,29 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal(validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
 
   "Update haku" should "update haku" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
     get(oid, thisHaku.copy(tila = Arkistoitu))
   }
 
   it should "read muokkaaja from the session" in {
-    val oid = put(haku, crudSessions(ChildOid))
-    val userOid = userOidForTestSessionId(crudSessions(ChildOid))
+    val oid          = put(haku, crudSessions(ChildOid))
+    val userOid      = userOidForTestSessionId(crudSessions(ChildOid))
     val lastModified = get(oid, haku(oid).copy(muokkaaja = userOid))
     update(haku(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
     get(oid, haku(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
   }
 
   it should "write haku update to audit log" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
     update(thisHaku.copy(tila = Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
@@ -182,106 +184,116 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
-  it should "not update haku" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+  it should "not update haku with same muokkaaja if nothing changes" in {
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     MockAuditLogger.clean()
     update(thisHaku, lastModified, expectUpdate = false)
     MockAuditLogger.logs shouldBe empty
-    get(oid, thisHaku) should equal (lastModified)
+    get(oid, thisHaku) should equal(lastModified)
+  }
+
+  it should "update haku with different muokkaaja even if nothing changes" in {
+    val oid = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    MockAuditLogger.clean()
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(haku.organisaatioOid)) // muokkaaja and modify timestamp updated
+    MockAuditLogger.logs should not be empty
+    get(oid, thisHaku.copy(muokkaaja = userOidForTestSessionId(crudSessions(haku.organisaatioOid)))) should equal(lastModified)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
-    val oid = put(haku)
+    val oid      = put(haku)
     val thisHaku = haku(oid)
     get(oid, thisHaku)
     post(HakuPath, bytes(thisHaku), Seq(defaultSessionHeader)) {
-      status should equal (400)
-      body should include (KoutaServlet.IfUnmodifiedSinceHeader)
+      status should equal(400)
+      body should include(KoutaServlet.IfUnmodifiedSinceHeader)
     }
   }
 
   it should "return 401 without a valid session" in {
-    val oid = put(haku)
+    val oid      = put(haku)
     val thisHaku = haku(oid)
     get(oid, thisHaku)
     post(HakuPath, bytes(thisHaku), Map.empty) {
-      status should equal (401)
-      body should include ("Unauthorized")
+      status should equal(401)
+      body should include("Unauthorized")
     }
   }
 
   it should "allow a user of the haku organization to update the haku" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, expectUpdate = false, crudSessions(haku.organisaatioOid))
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(haku.organisaatioOid)) // muokkaaja and modify timestamp updated
   }
 
   it should "deny a user without access to the haku organization" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the haku" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku, lastModified, expectUpdate = false, crudSessions(ParentOid))
+    update(thisHaku, lastModified, expectUpdate = true, crudSessions(ParentOid)) // muokkaaja and modify timestamp updated
   }
 
   it should "deny a user with only access to a descendant organization" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, readSessions(haku.organisaatioOid))
   }
 
   it should "allow organisaatioOid change if user had rights to new organisaatio" in {
-    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
-    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val oid          = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku     = haku(oid).copy(organisaatioOid = HkiYoOid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
   }
 
   it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
-    val oid = put(haku.copy(organisaatioOid = HkiYoOid))
-    val thisHaku = haku(oid).copy(organisaatioOid = HkiYoOid)
+    val oid          = put(haku.copy(organisaatioOid = HkiYoOid))
+    val thisHaku     = haku(oid).copy(organisaatioOid = HkiYoOid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(organisaatioOid = LukioOid), lastModified, 403, yliopistotSession)
   }
 
   it should "deny indexer access" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku, lastModified, 403, indexerSession)
   }
 
   it should "fail update if modified in between get and update" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     Thread.sleep(1500)
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
     post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
-      status should equal (409)
+      status should equal(409)
     }
   }
 
   it should "delete all hakuajat and read last modified from history" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     Thread.sleep(1500)
     val uusiHaku = thisHaku.copy(hakuajat = List())
@@ -296,7 +308,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    val uusiHaku = thisHaku.copy(hakuajat = List())
+    val uusiHaku     = thisHaku.copy(hakuajat = List())
     update(uusiHaku, lastModified, expectUpdate = true)
 
     assert(getTableHistorySize("haut") == 1)
@@ -304,45 +316,127 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
   }
 
   it should "store and update unfinished haku" in {
-    val unfinishedHaku = Haku(muokkaaja = TestUserOid, organisaatioOid = LonelyOid, modified = None, kielivalinta = Seq(Fi), nimi = Map(Fi -> "haku"), kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"), hakutapaKoodiUri = Some("hakutapa_03#1"))
+    val unfinishedHaku = Haku(
+      muokkaaja = TestUserOid,
+      organisaatioOid = LonelyOid,
+      modified = None,
+      kielivalinta = Seq(Fi),
+      nimi = Map(Fi -> "haku"),
+      kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
+      hakutapaKoodiUri = Some("hakutapa_03#1")
+    )
     val oid = put(unfinishedHaku)
-    val lastModified = get(oid, unfinishedHaku.copy(oid = Some(HakuOid(oid)), _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
-    val newUnfinishedHaku = unfinishedHaku.copy(oid = Some(HakuOid(oid)), organisaatioOid = AmmOid, _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"))))
+    val lastModified = get(
+      oid,
+      unfinishedHaku.copy(
+        oid = Some(HakuOid(oid)),
+        _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))
+      )
+    )
+    val newUnfinishedHaku = unfinishedHaku.copy(
+      oid = Some(HakuOid(oid)),
+      organisaatioOid = AmmOid,
+      _enrichedData = Some(HakuEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))
+    )
     update(newUnfinishedHaku, lastModified)
     get(oid, newUnfinishedHaku)
   }
 
   it should "validate updated haku" in {
-    val oid = put(haku)
-    val lastModified = get(oid, haku(oid))
+    val oid             = put(haku)
+    val lastModified    = get(oid, haku(oid))
     val invalidHakuajat = TestData.getInvalidHakuajat
-    val thisHaku = haku(oid).copy(hakuajat = invalidHakuajat)
+    val thisHaku        = haku(oid).copy(hakuajat = invalidHakuajat)
     post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
       }
-      body should equal (validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
+      body should equal(validationErrorBody(invalidAjanjaksoMsg(invalidHakuajat.head), "hakuajat[0]"))
     }
   }
 
   it should "delete all hakuajat if none is given" in {
-    val oid = put(haku)
-    val thisHaku = haku(oid)
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(hakuajat = List()), lastModified)
     get(oid, thisHaku.copy(hakuajat = List()))
   }
 
   it should "allow oph user to update from julkaistu to tallennettu" in {
-    val id = put(haku)
+    val id           = put(haku)
     val lastModified = get(id, haku(id))
     update(haku(id).copy(tila = Tallennettu), lastModified, expectUpdate = true, ophSession)
-    get(id, haku(id).copy(tila = Tallennettu, muokkaaja = OphUserOid, metadata = Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))))
+    get(
+      id,
+      haku(id).copy(
+        tila = Tallennettu,
+        muokkaaja = OphUserOid,
+        metadata = Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+      )
+    )
   }
 
   it should "not allow non oph user to update from julkaistu to tallennettu" in {
-    val id = put(haku)
+    val id           = put(haku)
     val lastModified = get(id, haku(id))
     update(haku(id).copy(tila = Tallennettu), lastModified, 403, crudSessions(haku.organisaatioOid))
+  }
+
+  it should "update muokkaaja of haku on hakuajat insert" in {
+    val hakuWithoutHakuaika        = haku.copy(tila = Tallennettu, hakuajat = List(),
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid                        = put(hakuWithoutHakuaika, ophSession)
+    val hakuWithoutHakuaikaWithOid = hakuWithoutHakuaika.copy(oid = Some(HakuOid(oid)), muokkaaja = OphUserOid)
+    val lastModified               = get(oid, hakuWithoutHakuaikaWithOid)
+
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+    get(s"$HakuPath/$oid", headers = defaultHeaders) {
+      status should equal(200)
+      val haku      = Serialization.read[Haku](body)
+      val muokkaaja = haku.muokkaaja
+      muokkaaja.shouldEqual(OphUserOid)
+      assert(haku.hakuajat.size == 0)
+    }
+    update(
+      hakuWithoutHakuaikaWithOid.copy(hakuajat = TestData.getHakuajatWeeksInFuture(1, 3)),
+      lastModified,
+      expectUpdate = true,
+      ophSession2
+    )
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
+  }
+
+  it should "update muokkaaja of haku on hakuajat update" in {
+    val hakuWithHakuaika        = haku.copy(tila = Tallennettu, hakuajat = TestData.getHakuajatWeeksInFuture(1, 3),
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid                     = put(hakuWithHakuaika, ophSession)
+    val hakuWithHakuaikaWithOid = hakuWithHakuaika.copy(oid = Some(HakuOid(oid)))
+    val lastModified            = get(oid, hakuWithHakuaikaWithOid.copy(muokkaaja = OphUserOid))
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+
+    update(
+      hakuWithHakuaikaWithOid.copy(hakuajat = TestData.getHakuajatWeeksInFuture(1, 4)),
+      lastModified,
+      expectUpdate = true,
+      ophSession2
+    )
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
+  }
+
+  it should "update muokkaaja of haku on hakuajat delete" in {
+    val hakuajat = TestData.getHakuajatWeeksInFuture(1, 4) ++ TestData.getHakuajatWeeksInFuture(6, 8)
+    val oid          = put(haku.copy(hakuajat = hakuajat), ophSession)
+    val thisHaku     = haku(oid).copy(muokkaaja = OphUserOid,
+      hakuajat = hakuajat,
+      metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
+    // delete one hakuaika, one left
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(hakuajat = List(hakuajat.head)), lastModified, expectUpdate = true, ophSession2)
+    assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
+    // delete hakuaika, no hakuaika left
+    update(thisHaku.copy(hakuajat = List()), lastModified, expectUpdate = true, ophSession)
+    assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
   }
 }

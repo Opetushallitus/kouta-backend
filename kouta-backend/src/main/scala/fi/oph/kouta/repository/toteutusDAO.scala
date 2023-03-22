@@ -65,11 +65,21 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
-    if (tarjoajat.nonEmpty) {
-      val actions = tarjoajat.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajat(oid, tarjoajat)
-      DBIOHelpers.sumIntDBIOs(actions)
-    } else {
-      deleteTarjoajat(oid)
+    val oldTarjoajat = KoutaDatabase.runBlockingTransactionally(
+      for {
+        t <- selectToteutuksenTarjoajat(oid.get).as[Tarjoaja]
+      } yield t.toList)
+    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.get.map(_.tarjoajaOid).contains(oid))
+    val deleted = oldTarjoajat.get.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
+
+    (inserted.nonEmpty, deleted.nonEmpty) match {
+      case (true, any) =>
+        val actions = inserted.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajatByOids(oid, deleted.map(_.tarjoajaOid))
+        DBIOHelpers.sumIntDBIOs(actions)
+      case (false, true)  =>
+        // if changes were deletions, database trigger won't update muokkaaja of toteutus
+        DBIOHelpers.sumIntDBIOs(Seq(updateToteutuksenMuokkaaja(oid, muokkaaja), deleteTarjoajatByOids(oid, deleted.map(_.tarjoajaOid))))
+      case _ => DBIO.successful(0)
     }
   }
 
@@ -291,6 +301,11 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
             or sorakuvaus_id is distinct from ${toteutus.sorakuvausId.map(_.toString)}::uuid)"""
   }
 
+  def updateToteutuksenMuokkaaja(toteutusOid: Option[ToteutusOid], muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""update toteutukset set
+              muokkaaja = ${muokkaaja}
+            where oid = ${toteutusOid}"""
+  }
   def insertTarjoaja(oid: Option[ToteutusOid], tarjoaja: OrganisaatioOid, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into toteutusten_tarjoajat (toteutus_oid, tarjoaja_oid, muokkaaja)
              values ($oid, $tarjoaja, $muokkaaja)
@@ -302,9 +317,15 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
            where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] =
+  def deleteTarjoajatByOids(oid: Option[ToteutusOid], deletedOids: List[OrganisaatioOid]): DBIO[Int] = {
+    sqlu"""delete from toteutusten_tarjoajat
+           where toteutus_oid = $oid and tarjoaja_oid in (#${createOidInParams(deletedOids)})"""
+  }
+
+  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] = {
     sqlu"""delete from toteutusten_tarjoajat
            where toteutus_oid = $oid"""
+  }
 
   val selectToteutusListSql =
     """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
