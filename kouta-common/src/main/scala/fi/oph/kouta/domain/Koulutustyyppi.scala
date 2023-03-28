@@ -120,7 +120,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       AmmMuu,
       Tuva
     ), //Ammatilliset aikuiskoulutuskeskukset
-    "oppilaitostyyppi_28#1" -> Seq(Amm), //Palo-, poliisi- ja vartiointialojen oppilaitokset
+    "oppilaitostyyppi_28#1" -> Seq(Amm, Amk, AmmMuu), //Palo-, poliisi- ja vartiointialojen oppilaitokset
     "oppilaitostyyppi_29#1" -> Seq(Amm), //Sotilasalan ammatilliset oppilaitokset
     "oppilaitostyyppi_41#1" -> Seq(
       Amk,
