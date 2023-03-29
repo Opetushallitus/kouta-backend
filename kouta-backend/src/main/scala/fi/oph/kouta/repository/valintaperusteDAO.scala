@@ -120,7 +120,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
   }
 
 
-  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] =
+  def insertValintakoe(valintaperusteId: Option[UUID], valintakoe: Valintakoe, muokkaaja: UserOid): DBIO[Int] = {
     sqlu"""insert into valintaperusteiden_valintakokeet (id, valintaperuste_id, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja)
            values (${valintakoe.id.map(_.toString)}::uuid,
                    ${valintaperusteId.map(_.toString)}::uuid,
@@ -129,6 +129,7 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
                    ${toJsonParam(valintakoe.metadata)}::jsonb,
                    ${toJsonParam(valintakoe.tilaisuudet)}::jsonb,
                    $muokkaaja)"""
+  }
 
   def selectValintaperuste(id: UUID, tilaFilter: TilaFilter) =
     sql"""select id,
@@ -197,26 +198,33 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
               or metadata is distinct from ${toJsonParam(valintakoe.metadata)}::jsonb)"""
   }
 
-  def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
-    val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
-    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
-
-    val deleteSQL = if (update.nonEmpty) {
-      deleteValintakokeet(valintaperusteId, update.map(_.id.get))
-    } else {
-      deleteValintakokeet(valintaperusteId)
-    }
-    val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
-    val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
-
-    deleteSQL.zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL))(_ + _)
+  def updateValintaperusteenMuokkaaja(valintaperusteId: Option[UUID], muokkaaja: UserOid): DBIO[Int] = {
+    sqlu"""update valintaperusteet set
+            muokkaaja = ${muokkaaja}
+           where id = ${valintaperusteId.map(_.toString)}::uuid"""
   }
 
-  def deleteValintakokeet(valintaperusteId: Option[UUID], exclude: Seq[UUID]): DBIO[Int] = {
-    sqlu"""delete from valintaperusteiden_valintakokeet
-           where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id not in (#${createUUIDInParams(exclude)})"""
-}
+  def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
+    val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
+    val oldValintakokeet = KoutaDatabase.runBlockingTransactionally(
+      for {
+        k <- selectValintakokeet(valintaperusteId.get)
+      } yield k.toList)
+    val (insert, update) = valintakokeet.partition(_.id.isEmpty)
+    val deleted = oldValintakokeet.get.map(_.id).filterNot(uuid => update.map(_.id).contains(uuid))
+    val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
+    val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
+    deleted.nonEmpty match {
+      case true => deleteValintakokeetByIds(valintaperusteId, deleted.map(_.get)).
+        zipWith(DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL :+ updateValintaperusteenMuokkaaja(valintaperusteId, muokkaaja)))(_ + _)
+      case _ => DBIOHelpers.sumIntDBIOs(insertSQL ++ updateSQL)
+    }
+  }
 
+  def deleteValintakokeetByIds(valintaperusteId: Option[UUID], deletedIds: Seq[UUID]): DBIO[Int] = {
+    sqlu"""delete from valintaperusteiden_valintakokeet
+           where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid and id in (#${createUUIDInParams(deletedIds)})"""
+  }
   def deleteValintakokeet(valintaperusteId: Option[UUID]): DBIO[Int] = {
     sqlu"""delete from valintaperusteiden_valintakokeet
            where valintaperuste_id = ${valintaperusteId.map(_.toString)}::uuid"""
