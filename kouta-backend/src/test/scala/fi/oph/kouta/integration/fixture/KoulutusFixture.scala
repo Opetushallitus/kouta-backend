@@ -112,7 +112,7 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
     update(koulutus, lastModified, expectUpdate = true)
 
   def addToList(koulutus: Koulutus): KoulutusListItem = {
-    val oid = if (Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(koulutus.koulutustyyppi)) {
+    val oid = if (koulutus.isSavingAllowedOnlyForOPH()) {
       put(koulutus, ophSession)
     } else {
       put(koulutus)

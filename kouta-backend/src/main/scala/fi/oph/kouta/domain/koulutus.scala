@@ -231,6 +231,8 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     case Some(koodiUri) => koulutustyyppi == Amm && AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
     case _              => false
   }
+
+  def isSavingAllowedOnlyForOPH(): Boolean = Koulutustyyppi.onlyOphCanSaveKoulutus.contains(koulutustyyppi) || (koulutustyyppi == Amm && !isAmmTutkintoWithoutEPeruste())
 }
 
 case class KoulutusListItem(oid: KoulutusOid,
