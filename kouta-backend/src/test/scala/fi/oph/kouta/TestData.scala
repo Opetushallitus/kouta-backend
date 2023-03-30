@@ -103,7 +103,43 @@ object TestData {
       )
     )
   )
-
+  val PelastusalanAmmKoulutus: Koulutus = Koulutus(
+    oid = None,
+    johtaaTutkintoon = true,
+    esikatselu = true,
+    koulutustyyppi = Amm,
+    koulutuksetKoodiUri = Seq("koulutus_381501#1"),
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    metadata = Some(
+      AmmatillinenKoulutusMetadata(
+        kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        lisatiedot = Seq(
+          Lisatieto(
+            otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
+            teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv")
+          )
+        ),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+        opintojenLaajuusNumero = Some(10),
+        tutkintonimikeKoodiUrit = Seq("tutkintonimikkeet_110#2"),
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_020#1"),
+        isMuokkaajaOphVirkailija = Some(true)
+      )
+    ),
+    tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    kielivalinta = List(Fi, Sv),
+    teemakuva = Some("http://kuva.fi/ammkuva"),
+    ePerusteId = None,
+    modified = None,
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
   val AmmKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = true,

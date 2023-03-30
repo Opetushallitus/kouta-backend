@@ -44,7 +44,9 @@ case object AmmatillisetKoulutusKoodit
         "koulutustyyppi_13",
         "koulutustyyppi_18",
         "koulutustyyppi_19",
-        "koulutustyyppi_26"
+        "koulutustyyppi_24",
+        "koulutustyyppi_26",
+        "koulutustyyppi_42"
       )
     )
 
@@ -85,3 +87,6 @@ case object LukioKoulutusKooditAllowedForKaksoistutkinto
 
 case object ErikoislaakariKoulutusKoodit
     extends KoulutusKoodiUriFilter(Seq("koulutus_775101", "koulutus_775201", "koulutus_775301"))
+
+case object AmmKoulutusKooditWithoutEperuste
+    extends KoulutusKoodiUriFilter(Seq("koulutus_381501", "koulutus_381502", "koulutus_381503", "koulutus_381521"))

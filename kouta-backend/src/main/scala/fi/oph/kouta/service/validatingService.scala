@@ -295,6 +295,25 @@ trait KoodistoValidator {
       assertNotOptional(laajuusNumero, "metadata.opintojenLaajuusNumero")
     )
   )
+
+  def assertTutkintonimikeKoodiUrit(
+      koodiUrit: Seq[String],
+      validationContext: ValidationContext,
+      koodistoNimi: KoodistoNimi = TutkintonimikeKorkeakoulutusKoodisto
+  ): IsValid = {
+    validateIfNonEmpty[String](
+      koodiUrit,
+      "metadata.tutkintonimikeKoodiUrit",
+      (koodiUri, path) =>
+        assertKoodistoQueryResult(
+          koodiUri,
+          koodistoClient.koodiUriExistsInKoodisto(koodistoNimi, _),
+          path,
+          validationContext,
+          invalidTutkintoNimikeKoodiuri(koodiUri)
+        )
+    )
+  }
 }
 
 trait ValidatingSubService[E] {

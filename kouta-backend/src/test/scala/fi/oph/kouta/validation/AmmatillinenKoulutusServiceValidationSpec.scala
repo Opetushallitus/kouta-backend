@@ -1,17 +1,17 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.TestData.{AmmKoulutus, AmmMuuKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus}
+import fi.oph.kouta.TestData.{AmmKoulutus, AmmMuuKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, PelastusalanAmmKoulutus}
 import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
 import fi.oph.kouta.client._
-import fi.oph.kouta.domain.oid.KoulutusOid
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.KoulutusOid
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
 import org.scalatest.Assertion
 
 class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidationSpec[Koulutus] {
-  val koodistoClient = mock[CachedKoodistoClient]
+  val koodistoClient      = mock[CachedKoodistoClient]
   val ePerusteKoodiClient = mock[EPerusteKoodiClient]
 
   val amm: Koulutus   = AmmKoulutus
@@ -22,47 +22,11 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
   override def validator = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
 
-  private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit =
-      when(
-        koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
-      ).thenAnswer(itemFound)
-
-  private def ammTkWithTutkinnonOsaParams(
-      ePerusteId: Option[Long] = None,
-      koulutusKoodiUri: Option[String] = None,
-      tutkinnonOsaId: Option[Long] = None,
-      tutkinnonOsaViite: Option[Long] = None
-  ) =
-    ammTk.copy(
-      tila = Tallennettu,
-      metadata = Some(
-        ammTk.metadata.get
-          .asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
-          .copy(tutkinnonOsat = Seq(TutkinnonOsa(ePerusteId, koulutusKoodiUri, tutkinnonOsaId, tutkinnonOsaViite)))
-      )
-    )
-
-  private def ammMuuKoulutusWithParameters(
-      koulutusalaKoodiUri: String = "kansallinenkoulutusluokitus2016koulutusalataso2_080#1",
-      opintojenlaajusyksikkoKoodiUri: String = "opintojenlaajuusyksikko_6#1",
-      opintojenLaajuusNumero: Option[Double] = Some(10)
-  ): Koulutus =
-    AmmMuuKoulutus.copy(metadata =
-      Some(
-        AmmMuuKoulutus.metadata.get
-          .asInstanceOf[AmmatillinenMuuKoulutusMetadata]
-          .copy(
-            koulutusalaKoodiUrit = Seq(koulutusalaKoodiUri),
-            opintojenLaajuusyksikkoKoodiUri = Some(opintojenlaajusyksikkoKoodiUri),
-            opintojenLaajuusNumero = opintojenLaajuusNumero
-          )
-      )
-    )
-
   override def beforeEach(): Unit = {
     super.beforeEach()
 
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#1")
+    acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_381501#1")
     when(koodistoClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#1"))
       .thenAnswer(Right(KoodiUri("koulutus_371101", 1, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#12")
@@ -99,10 +63,53 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     when(ePerusteKoodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L)).thenAnswer(Left(ePerusteFailure))
     when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(66))).thenAnswer(Left(ePerusteFailure))
 
-    when(koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"))
+    when(
+      koodistoClient.koodiUriExistsInKoodisto(
+        KoulutusalaKoodisto,
+        "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"
+      )
+    )
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
+      .thenAnswer(itemFound)
   }
+
+  private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit =
+    when(
+      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
+    ).thenAnswer(itemFound)
+
+  private def ammTkWithTutkinnonOsaParams(
+      ePerusteId: Option[Long] = None,
+      koulutusKoodiUri: Option[String] = None,
+      tutkinnonOsaId: Option[Long] = None,
+      tutkinnonOsaViite: Option[Long] = None
+  ) =
+    ammTk.copy(
+      tila = Tallennettu,
+      metadata = Some(
+        ammTk.metadata.get
+          .asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
+          .copy(tutkinnonOsat = Seq(TutkinnonOsa(ePerusteId, koulutusKoodiUri, tutkinnonOsaId, tutkinnonOsaViite)))
+      )
+    )
+
+  private def ammMuuKoulutusWithParameters(
+      koulutusalaKoodiUri: String = "kansallinenkoulutusluokitus2016koulutusalataso2_080#1",
+      opintojenlaajusyksikkoKoodiUri: String = "opintojenlaajuusyksikko_6#1",
+      opintojenLaajuusNumero: Option[Double] = Some(10)
+  ): Koulutus =
+    AmmMuuKoulutus.copy(metadata =
+      Some(
+        AmmMuuKoulutus.metadata.get
+          .asInstanceOf[AmmatillinenMuuKoulutusMetadata]
+          .copy(
+            koulutusalaKoodiUrit = Seq(koulutusalaKoodiUri),
+            opintojenLaajuusyksikkoKoodiUri = Some(opintojenlaajusyksikkoKoodiUri),
+            opintojenLaajuusNumero = opintojenLaajuusNumero
+          )
+      )
+    )
 
   "Ammatillinen koulutus validation" should "succeed when new valid Amm koulutus" in {
     passesValidation(amm)
@@ -328,7 +335,7 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     passesValidation(
       ammTkWithTutkinnonOsaParams(Some(124L), Some("koulutus_000000"), Some(1345L), Some(134L))
         .copy(nimi = Map(Fi -> "eri nimi", Sv -> "eri nimi sv"))
-      )
+    )
   }
 
   it should "fail if invalid ePeruste for AmmTutkinnonosa koulutus" in {
@@ -455,4 +462,11 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     )
   }
 
+  it should "pass julkaistu pelastusalan koulutus" in {
+    passesValidation(PelastusalanAmmKoulutus)
+  }
+
+  it should "fail pelastusalan koulutus with ePerusteId" in {
+    failsSingleValidation(PelastusalanAmmKoulutus.copy(ePerusteId = Some(11L)), "ePerusteId", notMissingMsg(Some(11L)))
+  }
 }

@@ -380,7 +380,7 @@ class KoulutusService(
   }
 
   def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
-    val rules = if (Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(koulutus.koulutustyyppi)) {
+    val rules = if (koulutus.isSavingAllowedOnlyForOPH()) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
     } else {
       val rulesForCreatingKoulutus = Some(
@@ -430,7 +430,7 @@ class KoulutusService(
     } else {
 
         oldKoulutus.koulutustyyppi match {
-          case kt if Koulutustyyppi.isKoulutusSaveAllowedOnlyForOph(kt) =>
+          case kt if newKoulutus.isSavingAllowedOnlyForOPH() =>
             List(AuthorizationRules(Seq(Role.Paakayttaja)))
           case _ =>
             val rulesForUpdatingKoulutus = Some(AuthorizationRules(roleEntity.updateRoles))

@@ -59,7 +59,9 @@ package object toteutusMetadata {
       |          description: Koulutuksen toteutuksen maksullisuutta tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
       |        maksunMaara:
-      |          type: double
+      |          type: number
+      |          format: double
+      |          minimum: 0
       |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
       |          example: 220.50
       |        koulutuksenAlkamiskausi:
@@ -98,11 +100,11 @@ package object toteutusMetadata {
       |      type: object
       |      properties:
       |        min:
-      |          type: int
+      |          type: integer
       |          description: Apurahan minimi euromäärä tai minimi prosenttiosuus lukuvuosimaksusta
       |          example: 100
       |        max:
-      |          type: int
+      |          type: integer
       |          description: Apurahan maksimi euromäärä tai maksimi prosenttiosuus lukuvuosimaksusta
       |          example: 200
       |        yksikko:

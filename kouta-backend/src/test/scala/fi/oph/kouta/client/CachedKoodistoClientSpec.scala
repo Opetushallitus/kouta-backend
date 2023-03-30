@@ -2,7 +2,8 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, HakutapaKoodisto, HaunKohdejoukkoKoodisto, HaunKohdejoukonTarkenneKoodisto, KausiKoodisto, KieliKoodisto, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LiiteTyyppiKoodisto, LukioDiplomiKoodisto, LukioErityinenKoulutustehtavaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, PohjakoulutusvaatimusKoodisto, PostiosoiteKoodisto, Sv, TutkintonimikeKoodisto, ValintakoeTyyppiKoodisto, ValintatapaKoodisto, YoKoulutusKoodit}
+import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, Fi, HakukohdeAmmErityisopetusKoodisto, HakukohdePoJalkYhteishakuKoodisto, HakutapaKoodisto, HaunKohdejoukkoKoodisto, HaunKohdejoukonTarkenneKoodisto, KausiKoodisto, KieliKoodisto, Kielistetty, KoulutuksenLisatiedotKoodisto, KoulutusalaKoodisto, LiiteTyyppiKoodisto, LukioDiplomiKoodisto, LukioErityinenKoulutustehtavaKoodisto, LukioKoulutusKoodit, LukioPainotuksetKoodisto, OpetusaikaKoodisto, OpetuskieliKoodisto, OpetustapaKoodisto, OpintojenLaajuusyksikkoKoodisto, OsaamisalaKoodisto, PohjakoulutusvaatimusKoodisto, PostiosoiteKoodisto, Sv,
+  TutkintonimikeKorkeakoulutusKoodisto, ValintakoeTyyppiKoodisto, ValintatapaKoodisto, YoKoulutusKoodit}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
 import java.time.LocalDate
@@ -318,11 +319,11 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
     )
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemFound)
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemNotFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, "tutkintonimikekk_110") should equal(itemFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_111#2") should equal(itemFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_112") should equal(itemNotFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_111#4") should equal(itemNotFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_120") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto, "tutkintonimikekk_110") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_111#2") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_112") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_111#4") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_120") should equal(itemNotFound)
 
     koodiClient.koodiuriVersionCache.invalidateAll()
     koodiClient.koodiUriCache.invalidateAll()
@@ -340,8 +341,8 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
     )
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemNotFound)
     koodiClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_110") should equal(itemNotFound)
-    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto,"tutkintonimikekk_120") should equal(itemFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_110") should equal(itemNotFound)
+    koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_120") should equal(itemFound)
   }
 
   "When koodisto-query failed" should "return error status" in {
