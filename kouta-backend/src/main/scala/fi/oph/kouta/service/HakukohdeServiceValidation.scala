@@ -228,8 +228,7 @@ class HakukohdeServiceValidation(
 
     val hakukohteenHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(newHakukohde.hakuajat)
     val haunHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(haku.map(_.hakuajat).getOrElse(Seq()))
-    val kaytetaanHaunAikataulua: Boolean = newHakukohde.kaytetaanHaunAikataulua.getOrElse(false)
-    val hakuaikaEiOleMenossa: Boolean = (kaytetaanHaunAikataulua && haunHakuaikaEiOleMenossa) || hakukohteenHakuaikaEiOleMenossa
+    val hakuaikaEiOleMenossa: Boolean = haunHakuaikaEiOleMenossa && hakukohteenHakuaikaEiOleMenossa
     hakuaikaEiOleMenossa && hakukohteessaEiOleHakijoita
   }
 
@@ -238,8 +237,9 @@ class HakukohdeServiceValidation(
       newHakukohde: Hakukohde,
       haku: Option[Haku]
   ): Seq[Julkaisutila] = {
-    if (oldHakukohde.isEmpty) return Seq()
-
+    if (oldHakukohde.isEmpty) {
+      return Seq()
+    }
     val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
     if (oldHakukohde.get.tila != Arkistoitu) {
       validStates

@@ -289,6 +289,20 @@ class HakukohdeService(
       HakukohdeDAO.getOidsByJarjestyspaikka(jarjestyspaikkaOids, tilaFilter)
     }
 
+  def tilaChangeAllowed(hakukohdeOid: HakukohdeOid, tila: String)(implicit authenticated: Authenticated): Boolean = {
+    try {
+      val hakukohde: Option[Hakukohde] = HakukohdeDAO.get(hakukohdeOid, TilaFilter.all()).map(_._1)
+      val withNewTila: Option[Hakukohde] = hakukohde.map(_.copy(tila = Julkaisutila.withName(tila)))
+      hakukohde.isDefined && hakukohdeServiceValidation.withValidation(withNewTila.get, hakukohde, authenticated) { _ =>
+        true
+      };
+    } catch {
+      case _: KoutaValidationException => {
+        false
+      }
+    }
+  }
+
   def changeTila(hakukohdeOids: Seq[HakukohdeOid], tila: String, unModifiedSince: Instant)(implicit
       authenticated: Authenticated
   ): List[HakukohdeTilaChangeResultObject] = {
