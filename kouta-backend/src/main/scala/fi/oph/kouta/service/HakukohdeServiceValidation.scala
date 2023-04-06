@@ -241,7 +241,7 @@ class HakukohdeServiceValidation(
       return Seq()
     }
     val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
-    validStates ++ (if (oldHakukohde.get.tila != Arkistoitu && isAllowedToRemoveArchived(newHakukohde, haku))
+    validStates ++ (if (oldHakukohde.get.tila == Arkistoitu && isAllowedToRemoveArchived(newHakukohde, haku))
                         Seq(Poistettu)
                     else Seq())
   }

@@ -645,7 +645,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "fail when invalid perustiedot" in {
-    /*
     failsValidation(
       max.copy(oid = Some(HakukohdeOid("1.2.3"))),
       Seq(
@@ -659,9 +658,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("1.2.3")), "organisaatioOid", validationMsg("1.2.3"))
 
     failsValidation(min.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
-     */
     failsValidation(min.copy(hakuOid = HakuOid("2.3.4")), "hakuOid", validationMsg("2.3.4"))
-    //failsValidation(min.copy(toteutusOid = ToteutusOid("3.4.5")), "toteutusOid", validationMsg("3.4.5"))
+    failsValidation(min.copy(toteutusOid = ToteutusOid("3.4.5")), "toteutusOid", validationMsg("3.4.5"))
   }
 
   it should "fail when oid not given for modified hakukohde" in {
@@ -1610,16 +1608,17 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     passesValidation(initMockSeq(maxWithIds.copy(tila = Tallennettu)), Some(maxWithIds))
   }
   it should "succeed from arkistoitu to poistettu when hakuaika is not on and hakukohde has no applications" in {
+    val past = Ajanjakso(inPast(50000), Some(inPast(40000)))
+    when(hakuDao.get(HakuOid("1.2.246.562.29.123"), TilaFilter.onlyOlemassaolevat()))
+      .thenAnswer(Some((haku.copy(hakuajat = List(past)), ZonedDateTime.now().toInstant)))
     passesValidation(initMockSeq(maxWithIds.copy(
-      kaytetaanHaunAikataulua = Some(false),
       tila = Poistettu,
-      hakuajat = Seq(Ajanjakso(inFuture(1000), None))
+      hakuajat = Seq(past)
     )), Some(maxWithIds.copy(tila = Arkistoitu)))
   }
   it should "fail from arkistoitu to poistettu when hakuaika is on" in {
     failsModifyValidation(
       initMockSeq(maxWithIds.copy(
-        kaytetaanHaunAikataulua = Some(false),
         tila = Poistettu,
         hakuajat = Seq(Ajanjakso(inPast(1000), None))
       )),
@@ -1633,7 +1632,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(hakemusPalveluClient.getHakukohdeInfo(maxWithIds.oid.get)).thenAnswer(HakukohdeInfo(applicationCount = 10))
     failsModifyValidation(
       initMockSeq(maxWithIds.copy(
-        kaytetaanHaunAikataulua = Some(false),
         tila = Poistettu,
         hakuajat = Seq(Ajanjakso(inFuture(1000), None))
       )),
