@@ -250,7 +250,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_5#1")).thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_6#1")).thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto,"opintojenlaajuusyksikko_8#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, "tutkintonimikekk_110#2")).thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto, "tutkintonimikekk_110#2")).thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, "erikoistumiskoulutukset_001#2")).thenAnswer(itemFound)
 
     // korkeakoulu

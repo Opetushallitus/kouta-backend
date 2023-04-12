@@ -39,9 +39,7 @@ package object valintaperusteMetadata {
       |          description: Valintaperusteen kuvauksen sisältö. Voi sisältää sekä teksti- että taulukkoelementtejä.
       |          items:
       |            type: object
-      |            oneOf:
-      |              - $ref: '#/components/schemas/SisaltoTeksti'
-      |              - $ref: '#/components/schemas/SisaltoTaulukko'
+      |            $ref: '#/components/schemas/SisaltoItem'
       |""".stripMargin
 
   def models = List(

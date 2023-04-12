@@ -87,6 +87,10 @@ package object hakukohde {
       |          example:
       |            - pohjakoulutusvaatimuskouta_104#1
       |            - pohjakoulutusvaatimuskouta_109#1
+      |        pohjakoulutusvaatimusTarkenne:
+      |          type: object
+      |          description: Pohjakoulutusvaatimukset tarkenneteksti eri kielillä
+      |          $ref: '#/components/schemas/Kuvaus'
       |        muuPohjakoulutusvaatimus:
       |          type: object
       |          description: Hakukohteen muiden pohjakoulutusvaatimusten kuvaus eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
@@ -242,6 +246,10 @@ package object hakukohde {
       |          type: object
       |          description: Hakukohteen aloituspaikkojen tiedot
       |          $ref: '#/components/schemas/Aloituspaikat'
+      |        hakukohteenLinja:
+      |          type: object
+      |          description: lukiototeutuksen hakukohteen linja
+      |          $ref: '#/components/schemas/HakukohteenLinja'
       |        uudenOpiskelijanUrl:
       |          type: object
       |          description: Uuden opiskelijan ohjeita sisältävän verkkosivun URL
@@ -318,6 +326,7 @@ package object hakukohde {
       |          $ref: '#/components/schemas/OppiaineKoodiUrit'
       |        painokerroin:
       |          type: number
+      |          minimum: 0
       |          description: Oppiaineelle määritty opiskelijavalinnassa käytettävä painokerroin
       |          example: 1.2
       |""".stripMargin
@@ -346,6 +355,7 @@ package object hakukohde {
       |          example: lukiopainotukset_0102#1
       |        alinHyvaksyttyKeskiarvo:
       |          type: number
+      |          minimum: 0
       |          description: Linjan alin hyväksytty keskiarvo
       |          example: 8,2
       |        lisatietoa:

@@ -191,10 +191,14 @@ package object koulutusMetadata {
       |              example: opinnontyyppi_1#1
       |""".stripMargin
 
+  val AmmTutkintoWithoutEperusteFieldDescription =
+    s"""HUOM! Syötettävissä vain kun koulutuksetKoodiUri-kenttään on valittu jokin seuraavista&#58; ${AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit
+      .mkString(", ")}. Muuten käytetään valitulta ePerusteelta (ePerusteId) tulevaa arvoa."""
+
   val AmmatillinenKoulutusMetadataModel: String =
-    """    AmmatillinenKoulutusMetadata:
+    s"""    AmmatillinenKoulutusMetadata:
       |      allOf:
-      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - $$ref: '#/components/schemas/KoulutusMetadata'
       |        - type: object
       |          properties:
       |            tyyppi:
@@ -203,6 +207,36 @@ package object koulutusMetadata {
       |              example: amm
       |              enum:
       |                - amm
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: |
+      |                Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/kansallinenkoulutusluokitus2016koulutusalataso2).
+      |                ${AmmTutkintoWithoutEperusteFieldDescription}
+      |              items:
+      |                type: string
+      |              example:
+      |                - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
+      |                - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
+      |            tutkintonimikeKoodiUrit:
+      |              type: array
+      |              description: |
+      |                Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/tutkintonimikkeet).
+      |                ${AmmTutkintoWithoutEperusteFieldDescription}
+      |              items:
+      |                type: string
+      |              example:
+      |                - tutkintonimikkeet_10091#2
+      |                - tutkintonimikkeet_10015#2
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: |
+      |                Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/opintojenlaajuusyksikko).
+      |                ${AmmTutkintoWithoutEperusteFieldDescription}
+      |              example: opintojenlaajuusyksikko_2#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona. ${AmmTutkintoWithoutEperusteFieldDescription}
+      |              example: 10
       |""".stripMargin
 
   val AmmatillinenTutkinnonOsaKoulutusMetadataModel: String =
@@ -572,7 +606,12 @@ case class AmmatillinenKoulutusMetadata(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
-    isMuokkaajaOphVirkailija: Option[Boolean] = None
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    // Alla olevat kentät vain ammatillisilla tutkintoon johtavilla koulutuksilla, joilla ei ole ePerustetta (pelastusala ja rikosseuraamusala)!
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    tutkintonimikeKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusNumero: Option[Double] = None,
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None
 ) extends KoulutusMetadata
 
 case class AmmatillinenTutkinnonOsaKoulutusMetadata(
@@ -599,7 +638,8 @@ case class AmmatillinenMuuKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusSingle
+) extends KoulutusMetadata
+    with LaajuusSingle
 
 case class YliopistoKoulutusMetadata(
     tyyppi: Koulutustyyppi = Yo,
@@ -657,7 +697,8 @@ case class KkOpintojaksoKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata with LaajuusMinMax
+) extends KoulutusMetadata
+    with LaajuusMinMax
 
 case class KkOpintokokonaisuusKoulutusMetadata(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
@@ -671,7 +712,8 @@ case class KkOpintokokonaisuusKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata with LaajuusMinMax
+) extends KoulutusMetadata
+    with LaajuusMinMax
 
 case class LukioKoulutusMetadata(
     tyyppi: Koulutustyyppi = Lk,
@@ -681,7 +723,8 @@ case class LukioKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusSingle
+) extends KoulutusMetadata
+    with LaajuusSingle
 
 case class TuvaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Tuva,
@@ -691,7 +734,8 @@ case class TuvaKoulutusMetadata(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusSingle
+) extends KoulutusMetadata
+    with LaajuusSingle
 
 case class TelmaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Telma,
@@ -701,7 +745,8 @@ case class TelmaKoulutusMetadata(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusSingle
+) extends KoulutusMetadata
+    with LaajuusSingle
 
 trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata with LaajuusSingle {
   val kuvaus: Kielistetty
@@ -739,7 +784,8 @@ case class AikuistenPerusopetusKoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusSingle
+) extends KoulutusMetadata
+    with LaajuusSingle
 
 // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
 case class ErikoislaakariKoulutusMetadata(
@@ -761,7 +807,8 @@ case class ErikoistumiskoulutusMetadata(
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusMinMax
+) extends KoulutusMetadata
+    with LaajuusMinMax
 
 case class TaiteenPerusopetusKoulutusMetadata(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
@@ -780,4 +827,5 @@ case class MuuKoulutusMetadata(
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata with LaajuusMinMax
+) extends KoulutusMetadata
+    with LaajuusMinMax

@@ -752,21 +752,6 @@ class KoulutusServiceValidation(
     )
   }
 
-  private def assertTutkintonimikeKoodiUrit(koodiUrit: Seq[String], validationContext: ValidationContext): IsValid = {
-    validateIfNonEmpty[String](
-      koodiUrit,
-      "metadata.tutkintonimikeKoodiUrit",
-      (koodiUri, path) =>
-        assertKoodistoQueryResult(
-          koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(TutkintonimikeKoodisto, _),
-          path,
-          validationContext,
-          invalidTutkintoNimikeKoodiuri(koodiUri)
-        )
-    )
-  }
-
   private def validateOpintopisteKoodiUriAndValues(
       opintojenLaajuusyksikkoKoodiUri: Option[String],
       laajuusNumeroMin: Option[Double],

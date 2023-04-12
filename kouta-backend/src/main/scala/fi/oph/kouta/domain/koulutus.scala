@@ -1,10 +1,10 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid,  UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import fi.oph.kouta.validation.IsValid
-import fi.oph.kouta.validation.Validations.{validateIfTrue, _}
 
 import java.util.UUID
 
@@ -136,13 +136,13 @@ package object koulutus {
       |          description: Koulutuksen Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/koulutus-teemakuva/1.2.246.562.13.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
       |        ePerusteId:
-      |          type: number
+      |          type: integer
       |          description: Koulutuksen käyttämän ePerusteen id.
       |          example: 4804100
       |        modified:
       |           type: string
       |           format: date-time
-      |           description: Koulutuksen viimeisin muokkausaika. Järjestelmän generoima
+      |           description: Koulutuksen viimeisin muokkausaika. Järjestelmän generoima.
       |           example: 2019-08-23T09:55:17
       |""".stripMargin
 
@@ -226,6 +226,13 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
     case Some(m: KkOpintojaksoKoulutusMetadata)       => m.isAvoinKorkeakoulutus
     case _                                            => None
   }).getOrElse(false)
+
+  def isAmmTutkintoWithoutEPeruste(): Boolean = koulutuksetKoodiUri.headOption match {
+    case Some(koodiUri) => koulutustyyppi == Amm && AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
+    case _              => false
+  }
+
+  def isSavingAllowedOnlyForOPH(): Boolean = Koulutustyyppi.onlyOphCanSaveKoulutus.contains(koulutustyyppi) || (koulutustyyppi == Amm && !isAmmTutkintoWithoutEPeruste())
 }
 
 case class KoulutusListItem(oid: KoulutusOid,

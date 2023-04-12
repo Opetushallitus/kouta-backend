@@ -34,7 +34,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
   val toteutusDao         = mock[ToteutusDAO]
-
   val lukioToteutus = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"), nimi = Map())
   val lukioDIAKoulutus =
     LukioKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.122")), koulutuksetKoodiUri = Seq("koulutus_301103"))
@@ -64,29 +63,28 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val tpoToteutus                 = TaiteenPerusopetusToteutus.copy(koulutusOid = tpoKoulutus.oid.get)
   val muuKoulutus                 = MuuKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.141")))
   val muuToteutus                 = JulkaistuMuuToteutus.copy(koulutusOid = muuKoulutus.oid.get)
-
+  val pelastusalanAmmKoulutus     = PelastusalanAmmKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.142")))
+  val pelastusalanAmmToteutus = JulkaistuAmmToteutus.copy(
+    koulutusOid = pelastusalanAmmKoulutus.oid.get,
+    metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = List()))
+  )
   val sorakuvausId  = UUID.randomUUID()
   val sorakuvausId2 = UUID.randomUUID()
   val sorakuvausId3 = UUID.randomUUID()
   val sorakuvausId4 = UUID.randomUUID()
   val sorakuvausId5 = UUID.randomUUID()
   val sorakuvausId6 = UUID.randomUUID()
-
   val toteutusOid  = ToteutusOid("1.2.246.562.17.00000000000000000123")
   val toteutusOid2 = ToteutusOid("1.2.246.562.17.00000000000000000124")
   val toteutusOid3 = ToteutusOid("1.2.246.562.17.00000000000000000125")
   val toteutusOid4 = ToteutusOid("1.2.246.562.17.00000000000000000126")
-
   val existingToteutus   = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
   val koulutusOid1       = KoulutusOid("1.2.246.562.13.00000000000000000997")
   val koulutusOid2       = KoulutusOid("1.2.246.562.13.00000000000000000998")
   val invalidKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000000999")
-
   val organisaatioOidCausingFailure = OrganisaatioOid("1.2.246.562.10.66666666666")
-
   val invalidKoulutuksetKoodiUri = "koulutus_XXX#1"
   val validKoulutuksetKoodiUri   = "koulutus_371101#1"
-
   val authenticatedNonPaakayttaja = Authenticated(
     UUID.randomUUID().toString,
     CasSession(
@@ -275,6 +273,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(lukioDIAKoulutus.oid.get)).thenAnswer(Some(lukioDIAKoulutus))
     when(koulutusDao.get(tpoKoulutus.oid.get)).thenAnswer(Some(tpoKoulutus))
     when(koulutusDao.get(muuKoulutus.oid.get)).thenAnswer(Some(muuKoulutus))
+    when(koulutusDao.get(pelastusalanAmmKoulutus.oid.get)).thenAnswer(Some(pelastusalanAmmKoulutus))
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri)))
@@ -1957,5 +1956,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       "koulutusOid",
       nonExistent("Koulutusta", invalidKoulutusOid)
     )
+  }
+
+  it should "pass validation of pelastusalan amm koulutus with empty osaamisalat" in {
+    passesValidation(pelastusalanAmmToteutus)
   }
 }
