@@ -101,9 +101,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
       opetusaikaKoodiUrit: Seq[String] = Seq("opetusaikakk_1#1"),
       opetustapaKoodiUrit: Seq[String] = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
-      apuraha: Option[Apuraha] = Some(
-        Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
-      ),
+      apuraha: Option[Apuraha] = None,
       lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1)
   ): Toteutus = {
     val opetus: Opetus = ToteutuksenOpetus.copy(
@@ -114,6 +112,30 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       lisatiedot = lisatiedot
     )
     JulkaistuAmmToteutus.copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(opetus))))
+  }
+
+  private def yoToteutusWithOpetusParameters(
+      opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_4#1"),
+      opetusaikaKoodiUrit: Seq[String] = Seq("opetusaikakk_1#1"),
+      opetustapaKoodiUrit: Seq[String] = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+      apuraha: Option[Apuraha] = Some(
+        Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
+      ),
+      lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1),
+      maksullisuustyyppi: Option[Maksullisuustyyppi] = Some(Lukuvuosimaksu)
+  ): Toteutus = {
+    val opetus: Opetus = ToteutuksenOpetus.copy(
+      opetuskieliKoodiUrit = opetuskieliKoodiUrit,
+      opetusaikaKoodiUrit = opetusaikaKoodiUrit,
+      opetustapaKoodiUrit = opetustapaKoodiUrit,
+      apuraha = apuraha,
+      lisatiedot = lisatiedot,
+      maksullisuustyyppi = maksullisuustyyppi
+    )
+    JulkaistuYoToteutus.copy(
+      koulutusOid = KoulutusOid("1.2.246.562.13.131"),
+      metadata = Some(YoToteutuksenMetatieto.copy(opetus = Some(opetus)))
+    )
   }
 
   private def ammToteutusWithKoulutuksenAlkamiskausi(
@@ -229,6 +251,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
     when(organisaatioService.getAllChildOidsFlat(ChildOid)).thenAnswer(Seq(ChildOid, GrandChildOid, GrandGrandChildOid))
     when(koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1"))
+      .thenAnswer(itemFound)
+    when(koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_4#1"))
       .thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto, "opetusaikakk_1#1")).thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
@@ -711,10 +735,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if invalid apuraha" in {
+  "validateApuraha" should "fail if invalid apuraha" in {
     val validKuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
     failsValidation(
-      ammToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(-100), Some(-200), Some(Euro), validKuvaus))),
+      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(-100), Some(-200), Some(Euro), validKuvaus))),
       Seq(
         ValidationError("metadata.opetus.apuraha.min", minmaxMsg(-100, -200)),
         ValidationError("metadata.opetus.apuraha.min", notNegativeMsg),
@@ -722,16 +746,52 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       )
     )
     failsValidation(
-      ammToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(50), Some(200), Some(Prosentti), validKuvaus))),
+      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(50), Some(200), Some(Prosentti), validKuvaus))),
       "metadata.opetus.apuraha.max",
       lessOrEqualMsg(200, 100)
     )
     failsValidation(
-      ammToteutusWithOpetusParameters(apuraha = Some(Apuraha(None, None, None, Map(Fi -> "vain suomeksi")))),
+      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(None, None, None, Map(Fi -> "vain suomeksi")))),
       Seq(
         ValidationError("metadata.opetus.apuraha.kuvaus", invalidKielistetty(Seq(Sv))),
         ValidationError("metadata.opetus.apuraha.min", missingMsg),
         ValidationError("metadata.opetus.apuraha.max", missingMsg)
+      )
+    )
+  }
+
+  it should "fail if English is not set as opetuskieli" in {
+    failsValidation(
+      yoToteutusWithOpetusParameters(opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1")),
+      Seq(
+        ValidationError("metadata.opetus.apuraha", invalidOpetuskieliWithApuraha)
+      )
+    )
+  }
+
+  it should "fail if maksullisuustyyppi is not lukuvuosimaksu" in {
+    failsValidation(
+      yoToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+        maksullisuustyyppi = Some(Maksullinen)
+      ),
+      Seq(
+        ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
+      )
+    )
+  }
+
+  it should "fail if koulutustyyppi is not yo or amk" in {
+    failsValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+        apuraha = Some(
+          Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
+        )
+      ),
+      Seq(
+        ValidationError("metadata.opetus.apuraha", invalidKoulutustyyppiWithApurahaMsg(Amm)),
+        ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
       )
     )
   }

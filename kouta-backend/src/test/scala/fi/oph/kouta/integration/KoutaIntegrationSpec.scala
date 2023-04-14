@@ -202,7 +202,10 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
   }
 
   def addDefaultKoodistoMockResponsesForToteutus(): Unit = {
-    mockKoodistoResponse("oppilaitoksenopetuskieli", Seq(("oppilaitoksenopetuskieli_1", 1, None)))
+    mockKoodistoResponse(
+      "oppilaitoksenopetuskieli",
+      Seq(("oppilaitoksenopetuskieli_1", 1, None), ("oppilaitoksenopetuskieli_4", 1, None))
+    )
     mockKoodistoResponse("opetusaikakk", Seq(("opetusaikakk_1", 1, None)))
     mockKoodistoResponse("opetuspaikkakk", Seq(("opetuspaikkakk_1", 1, None), ("opetuspaikkakk_2", 1, None)))
     mockKoodistoResponse("osaamisala", Seq(("osaamisala_0001", 1, None)))
