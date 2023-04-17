@@ -155,7 +155,6 @@ class OppilaitosService(
 
   private def index(oppilaitos: Option[Oppilaitos]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
-      .fold(warning => List(warning), _ => List.empty)
 }
 
 object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OppilaitosServiceValidation, OppilaitoksenOsaServiceValidation)
@@ -264,5 +263,4 @@ class OppilaitoksenOsaService(
 
   private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
-      .fold(warning => List(warning), _ => List.empty)
 }

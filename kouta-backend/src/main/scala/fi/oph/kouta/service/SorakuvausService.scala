@@ -132,6 +132,5 @@ class SorakuvausService(
 
   private def index(sorakuvaus: Option[Sorakuvaus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
-      .fold(warning => List(warning), _ => List.empty)
 
 }

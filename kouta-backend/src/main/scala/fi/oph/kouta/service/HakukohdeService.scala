@@ -405,7 +405,6 @@ class HakukohdeService(
 
   private def index(hakukohde: Option[Hakukohde]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
-      .fold(warning => List(warning), _ => List.empty)
 
   private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): List[String] = {
     hakukohdeOid match {

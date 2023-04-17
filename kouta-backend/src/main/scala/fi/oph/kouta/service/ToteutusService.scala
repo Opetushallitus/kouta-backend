@@ -461,7 +461,6 @@ class ToteutusService(
 
   private def index(toteutus: Option[Toteutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
-      .fold(warning => List(warning), _ => List.empty)
 
   private def quickIndex(toteutusOid: Option[ToteutusOid]): List[String] = {
     toteutusOid match {

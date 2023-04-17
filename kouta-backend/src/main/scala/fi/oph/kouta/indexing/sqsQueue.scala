@@ -80,27 +80,27 @@ object SqsService extends Logging {
 object SqsInTransactionService extends SqsInTransactionService
 
 abstract class SqsInTransactionService extends Logging {
-  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): Either[String, _] =
+  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): List[String] =
     maybeValue match {
       case Some(value) => toSQSQueue(priority, index, value)
-      case None        => Right()
+      case None        => List.empty
     }
 
-  def toSQSQueue(priority: Priority, index: IndexType, value: String): Either[String, _] =
+  def toSQSQueue(priority: Priority, index: IndexType, value: String): List[String] =
     toSQSQueue(priority, index, Seq(value))
 
-  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): Either[String, _] =
+  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): List[String] =
     toSQSQueue(priority, Map(index -> values))
 
-  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): Either[String, _] = {
+  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): List[String] = {
     logger.info(s"Sending a message to Kouta-indeksoija SQS queue: $values with priority $priority")
     SqsService.addToQueue(priority, values) match {
       case Left(t) =>
         logger.error(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority failed: ${t.getStackTrace}")
-        Left("varoitukset.indeksointiEpaonnistui")
+        List("varoitukset.indeksointiEpaonnistui")
       case Right(_) =>
         logger.info(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority success.")
-        Right()
+        List.empty
     }
   }
 }

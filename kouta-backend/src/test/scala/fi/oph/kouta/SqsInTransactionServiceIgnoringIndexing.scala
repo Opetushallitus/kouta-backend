@@ -6,6 +6,6 @@ import slick.dbio.DBIO
 
 object SqsInTransactionServiceIgnoringIndexing extends SqsInTransactionService {
 
-  override def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): Either[String, _] = Right()
+  override def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): List[String] = List.empty
 
 }

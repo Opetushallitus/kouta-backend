@@ -634,7 +634,6 @@ class KoulutusService(
 
   def index(koulutus: Option[Koulutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
-      .fold(warning => List(warning), _ => List.empty)
 
   private def quickIndex(koulutusOid: Option[KoulutusOid]): List[String] = {
     koulutusOid match {
