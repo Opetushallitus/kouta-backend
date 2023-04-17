@@ -111,9 +111,11 @@ class SorakuvausService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         s <- SorakuvausDAO.getPutActions(sorakuvaus)
-        _ <- index(Some(s))
         _ <- auditLog.logCreate(s)
       } yield s
+    }.map { s =>
+      index(Some(s))
+      s
     }.get
 
   private def doUpdate(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, before: Sorakuvaus)(implicit authenticated: Authenticated): Option[Sorakuvaus] =
@@ -121,12 +123,14 @@ class SorakuvausService(
       for {
         _ <- SorakuvausDAO.checkNotModified(sorakuvaus.id.get, notModifiedSince)
         s <- SorakuvausDAO.getUpdateActions(sorakuvaus)
-        _ <- index(s)
         _ <- auditLog.logUpdate(before, s)
       } yield s
+    }.map { s =>
+      index(s)
+      s
     }.get
 
-  private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
+  private def index(sorakuvaus: Option[Sorakuvaus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
 
 }
