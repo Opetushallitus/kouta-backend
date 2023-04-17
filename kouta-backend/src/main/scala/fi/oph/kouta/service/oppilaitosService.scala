@@ -127,12 +127,12 @@ class OppilaitosService(
         o          <- maybeCopyLogo(logo, o)
         o          <- teema.orElse(logo).map(_ => OppilaitosDAO.updateJustOppilaitos(o)).getOrElse(DBIO.successful(o))
         _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitos)
-        _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, logo, o)
     }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
       maybeDeleteTempImage(logo)
+      index(Some(o))
       o
     }.get
 
@@ -144,17 +144,18 @@ class OppilaitosService(
         (logo, o) <- checkAndMaybeCopyLogo(o)
         o          <- OppilaitosDAO.getUpdateActions(o)
         _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitos)
-        _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, logo, o)
     }.map { case (teema, logo, o) =>
       maybeDeleteTempImage(teema)
       maybeDeleteTempImage(logo)
+      index(o)
       o
     }.get
 
-  private def index(oppilaitos: Option[Oppilaitos]): DBIO[_] =
+  private def index(oppilaitos: Option[Oppilaitos]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitos.map(_.oid.toString))
+      .fold(warning => List(warning), _ => List.empty)
 }
 
 object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionService, S3ImageService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, OppilaitosServiceValidation, OppilaitoksenOsaServiceValidation)
@@ -238,11 +239,11 @@ class OppilaitoksenOsaService(
         o          <- maybeCopyTeemakuva(teema, o)
         o          <- teema.map(_ => OppilaitoksenOsaDAO.updateJustOppilaitoksenOsa(o)).getOrElse(DBIO.successful(o))
         _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitoksenOsa)
-        _          <- index(Some(o))
         _          <- auditLog.logCreate(o)
       } yield (teema, o)
     }.map { case (teema, o) =>
       maybeDeleteTempImage(teema)
+      index(Some(o))
       o
     }.get
 
@@ -253,14 +254,15 @@ class OppilaitoksenOsaService(
         (teema, o) <- checkAndMaybeCopyTeemakuva(oppilaitoksenOsa)
         o          <- OppilaitoksenOsaDAO.getUpdateActions(o)
         _          <- removeJarjestaaUrheilijanAmmatillistaKoulutusta(oppilaitoksenOsa)
-        _          <- index(o)
         _          <- auditLog.logUpdate(before, o)
       } yield (teema, o)
     }.map { case (teema, o) =>
       maybeDeleteTempImage(teema)
+      index(o)
       o
     }.get
 
-  private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): DBIO[_] =
+  private def index(oppilaitoksenOsa: Option[OppilaitoksenOsa]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeOppilaitos, oppilaitoksenOsa.map(_.oid.toString))
+      .fold(warning => List(warning), _ => List.empty)
 }

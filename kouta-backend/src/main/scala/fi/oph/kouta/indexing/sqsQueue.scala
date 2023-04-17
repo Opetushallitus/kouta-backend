@@ -80,33 +80,27 @@ object SqsService extends Logging {
 object SqsInTransactionService extends SqsInTransactionService
 
 abstract class SqsInTransactionService extends Logging {
-
-  import fi.oph.kouta.repository.KoutaDatabase
-  import slick.dbio.DBIO
-
-  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): DBIO[_] =
+  def toSQSQueue(priority: Priority, index: IndexType, maybeValue: Option[String]): Either[String, _] =
     maybeValue match {
       case Some(value) => toSQSQueue(priority, index, value)
-      case None        => DBIO.successful(true)
+      case None        => Right()
     }
 
-  def toSQSQueue(priority: Priority, index: IndexType, value: String): DBIO[_] =
+  def toSQSQueue(priority: Priority, index: IndexType, value: String): Either[String, _] =
     toSQSQueue(priority, index, Seq(value))
 
-  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): DBIO[_] =
+  def toSQSQueue(priority: Priority, index: IndexType, values: Seq[String]): Either[String, _] =
     toSQSQueue(priority, Map(index -> values))
 
-  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): DBIO[_] = {
+  def toSQSQueue(priority: Priority, values: Map[IndexType, Seq[String]]): Either[String, _] = {
     logger.info(s"Sending a message to Kouta-indeksoija SQS queue: $values with priority $priority")
     SqsService.addToQueue(priority, values) match {
-      case Left(t) => {
+      case Left(t) =>
         logger.error(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority failed: ${t.getStackTrace}")
-        DBIO.failed(t)
-      }
-      case Right(s) => {
+        Left("varoitukset.indeksointiEpaonnistui")
+      case Right(_) =>
         logger.info(s"SQS queue message to Kouta-indeksoija with values: $values and priority $priority success.")
-        DBIO.successful(s)
-      }
+        Right()
     }
   }
 }

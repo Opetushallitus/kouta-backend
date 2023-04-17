@@ -382,11 +382,10 @@ class HakukohdeService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakukohdeDAO.getPutActions(hakukohde)
-        _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.oid)
+      val warnings = quickIndex(h.oid) ++ index(Some(h))
       CreateResult(h.oid.get, warnings)
     }.get
 
@@ -397,16 +396,16 @@ class HakukohdeService(
       for {
         _ <- HakukohdeDAO.checkNotModified(hakukohde.oid.get, notModifiedSince)
         h <- HakukohdeDAO.getUpdateActions(hakukohde)
-        _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.flatMap(_.oid))
+      val warnings = quickIndex(h.flatMap(_.oid)) ++ index(h)
       UpdateResult(updated = h.isDefined, warnings)
     }.get
 
-  private def index(hakukohde: Option[Hakukohde]): DBIO[_] =
+  private def index(hakukohde: Option[Hakukohde]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
+      .fold(warning => List(warning), _ => List.empty)
 
   private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): List[String] = {
     hakukohdeOid match {
