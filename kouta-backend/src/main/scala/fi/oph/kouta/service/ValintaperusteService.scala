@@ -186,7 +186,6 @@ class ValintaperusteService(
 
   private def index(valintaperuste: Option[Valintaperuste]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
-      .fold(warning => List(warning), _ => List())
 
   private def quickIndex(valintaperusteId: Option[UUID]): List[String] = {
     valintaperusteId match {
