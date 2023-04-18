@@ -2,7 +2,6 @@ package fi.oph.kouta
 
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{IndexType, Priority}
-import slick.dbio.DBIO
 
 object SqsInTransactionServiceIgnoringIndexing extends SqsInTransactionService {
 

@@ -1,21 +1,42 @@
 package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
-import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.TestData.LukioHakukohteenLinja
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.indexing.SqsInTransactionService
+import fi.oph.kouta.indexing.indexing.{IndexType, IndexTypeHakukohde, IndexTypeKoulutus, Priority}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, HakukohdeTilaChangeResultObject, KeywordService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
+import org.junit.Assert
 import org.scalactic.Equality
 import slick.jdbc.PostgresProfile.api._
+
+object SqsInTransactionServiceCheckingRowExistsWhenIndexing extends SqsInTransactionService {
+  override def toSQSQueue(priority: Priority, index: IndexType, value: String): List[String] = {
+    index match {
+      case IndexTypeHakukohde =>
+        HakukohdeDAO.get(HakukohdeOid(value), TilaFilter.all()) match {
+          case None => Assert.fail("Hakukohde not found in db")
+          case Some(h) => Assert.assertEquals(value, h._1.oid.get.s)
+        }
+      case IndexTypeKoulutus =>
+        KoulutusDAO.get(KoulutusOid(value)) match {
+          case None => Assert.fail("Koulutus not found in db")
+          case Some(k) => Assert.assertEquals(value, k.oid.get.s)
+        }
+      case _ =>
+    }
+    List.empty
+  }
+}
 
 trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFixture {
   this: KoutaIntegrationSpec with KoulutusFixture =>
@@ -47,7 +68,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     )
 
     new HakukohdeService(
-      SqsInTransactionServiceIgnoringIndexing,
+      SqsInTransactionServiceCheckingRowExistsWhenIndexing,
       new AuditLog(MockAuditLogger),
       organisaatioService,
       lokalisointiClient,
@@ -55,7 +76,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       mockKayttooikeusClient,
       koodistoClient,
       new ToteutusService(
-        SqsInTransactionServiceIgnoringIndexing,
+        SqsInTransactionServiceCheckingRowExistsWhenIndexing,
         MockS3ImageService,
         auditLog,
         new KeywordService(auditLog, organisaatioService),
