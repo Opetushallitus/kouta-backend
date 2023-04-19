@@ -608,12 +608,11 @@ class KoulutusService(
         k          <- KoulutusDAO.getPutActions(k)
         k          <- maybeCopyTeemakuva(teema, k)
         k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
-        _          <- index(Some(k))
         _          <- auditLog.logCreate(k)
       } yield (teema, k)
     }.map { case (teema, k: Koulutus) =>
       maybeDeleteTempImage(teema)
-      val warnings = quickIndex(k.oid)
+      val warnings = quickIndex(k.oid) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
 
@@ -625,16 +624,15 @@ class KoulutusService(
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
         (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
         k          <- KoulutusDAO.getUpdateActions(k)
-        _          <- index(k)
         _          <- auditLog.logUpdate(before, k)
       } yield (teema, k)
     }.map { case (teema, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teema)
-      val warnings = quickIndex(k.flatMap(_.oid))
+      val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get
 
-  def index(koulutus: Option[Koulutus]): DBIO[_] =
+  def index(koulutus: Option[Koulutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
 
   private def quickIndex(koulutusOid: Option[KoulutusOid]): List[String] = {

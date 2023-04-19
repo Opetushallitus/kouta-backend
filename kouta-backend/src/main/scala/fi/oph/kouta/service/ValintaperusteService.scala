@@ -163,11 +163,10 @@ class ValintaperusteService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         v <- ValintaperusteDAO.getPutActions(valintaperuste)
-        _ <- index(Some(v))
         _ <- auditLog.logCreate(v)
       } yield v
     }.map { v: Valintaperuste =>
-      val warnings = quickIndex(v.id)
+      val warnings = quickIndex(v.id) ++ index(Some(v))
       ValintaperusteCreateResult(v.id, created = v.id.isDefined, warnings)
     }.get
 
@@ -178,15 +177,14 @@ class ValintaperusteService(
       for {
         _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
         v <- ValintaperusteDAO.getUpdateActions(valintaperuste)
-        _ <- index(v)
         _ <- auditLog.logUpdate(before, v)
       } yield v
     }.map { v: Option[Valintaperuste] =>
-      val warnings = quickIndex(v.flatMap(_.id))
+      val warnings = quickIndex(v.flatMap(_.id)) ++ index(v)
       UpdateResult(v.isDefined, warnings)
     }.get
 
-  private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
+  private def index(valintaperuste: Option[Valintaperuste]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
 
   private def quickIndex(valintaperusteId: Option[UUID]): List[String] = {
