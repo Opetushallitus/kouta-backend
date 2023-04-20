@@ -120,6 +120,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_4#1"),
       opetusaikaKoodiUrit: Seq[String] = Seq("opetusaikakk_1#1"),
       opetustapaKoodiUrit: Seq[String] = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+      onkoApuraha: Boolean = true,
       apuraha: Option[Apuraha] = Some(
         Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
       ),
@@ -130,6 +131,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit = opetuskieliKoodiUrit,
       opetusaikaKoodiUrit = opetusaikaKoodiUrit,
       opetustapaKoodiUrit = opetustapaKoodiUrit,
+      onkoApuraha = onkoApuraha,
       apuraha = apuraha,
       lisatiedot = lisatiedot,
       maksullisuustyyppi = maksullisuustyyppi
@@ -1022,6 +1024,19 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ),
       Seq(
         ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
+      )
+    )
+  }
+
+  it should "fail if onkoApuraha is true for opetus with no apuraha" in {
+    failsValidation(
+      yoToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+        onkoApuraha = true,
+        apuraha = None
+      ),
+      Seq(
+        ValidationError("metadata.opetus.apuraha", missingMsg)
       )
     )
   }

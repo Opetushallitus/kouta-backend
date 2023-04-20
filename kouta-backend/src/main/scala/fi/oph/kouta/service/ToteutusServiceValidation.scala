@@ -276,7 +276,7 @@ class ToteutusServiceValidation(
       validateMaksullisuus(opetus, koulutustyyppi, path),
       validateIfDefined[Apuraha](
         opetus.apuraha,
-        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus, koulutustyyppi)
+        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus)
       ),
       validateIfNonEmptySeq[Lisatieto](
         opetus.lisatiedot,
@@ -323,7 +323,6 @@ class ToteutusServiceValidation(
       kielivalinta: Seq[Kieli],
       apuraha: Apuraha,
       opetus: Opetus,
-      koulutustyyppi: Koulutustyyppi
   ): IsValid = {
     val path = "metadata.opetus.apuraha"
     val min  = apuraha.min
