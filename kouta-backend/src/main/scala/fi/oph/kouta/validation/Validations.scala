@@ -501,14 +501,17 @@ object Validations {
   val InvalidMetadataTyyppi: ErrorMessage =
     ErrorMessage(msg = "Koulutustyyppi ei vastaa metadatan tyyppiä", id = "InvalidMetadataTyyppi")
 
-  val invalidOpetuskieliWithApuraha: ErrorMessage =
+  val invalidOpetuskieliWithLukuvuosimaksu: ErrorMessage =
     ErrorMessage(
-      msg = s"Apurahaa ei voi määritellä, jos englantia ei ole valittu opetuskieleksi",
-      id = "invalidOpetuskieliWithApuraha"
+      msg = s"Lukuvuosimaksua ei voi määritellä, jos englantia ei ole valittu opetuskieleksi",
+      id = "invalidOpetuskieliWithLukuvuosimaksu"
     )
 
-  def invalidKoulutustyyppiWithApurahaMsg(koulutustyyppi: Koulutustyyppi): ErrorMessage =
-    ErrorMessage(msg = s"Apurahaa ei voi määritellä valitulle koulutustyypille: $koulutustyyppi", id = "invalidKoulutustyyppiWithApuraha")
+  def invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi: Koulutustyyppi): ErrorMessage =
+    ErrorMessage(
+      msg = s"Lukuvuosimaksua ei voi määritellä valitulle koulutustyypille: $koulutustyyppi",
+      id = "invalidKoulutustyyppiWithLukuvuosimaksu"
+    )
 
   val invalidMaksullisuustyyppiWithApuraha: ErrorMessage =
     ErrorMessage(
