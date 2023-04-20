@@ -273,6 +273,7 @@ class ToteutusServiceValidation(
           koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
+      validateMaksullisuus(opetus, koulutustyyppi, path),
       validateIfDefined[Apuraha](
         opetus.apuraha,
         apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus, koulutustyyppi)
@@ -328,7 +329,7 @@ class ToteutusServiceValidation(
     val min  = apuraha.min
     val max  = apuraha.max
     and(
-      validateApurahaDependencies(opetus, koulutustyyppi, path),
+      assertTrue(opetus.maksullisuustyyppi == Some(Lukuvuosimaksu), s"$path", invalidMaksullisuustyyppiWithApuraha),
       validateMinMax(min, max, s"$path.min"),
       validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
       validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
@@ -347,17 +348,23 @@ class ToteutusServiceValidation(
     )
   }
 
-  private def validateApurahaDependencies(opetus: Opetus, koulutustyyppi: Koulutustyyppi, path: String) = {
-    // Apuraha voidaan asettaa vain englanninkielisille tutkintoon johtaville kk-toteutuksille,
-    // joille on valittu lukuvuosimaksu maksullisuustyypiksi
+  private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, path: String): IsValid = {
     and(
-      assertTrue(List(Yo, Amk).contains(koulutustyyppi), s"$path", invalidKoulutustyyppiWithApurahaMsg(koulutustyyppi)),
-      assertTrue(
-        opetus.opetuskieliKoodiUrit.map(_.split("#")).flatten.contains("oppilaitoksenopetuskieli_4"),
-        s"$path",
-        invalidOpetuskieliWithApuraha
-      ),
-      assertTrue(opetus.maksullisuustyyppi == Some(Lukuvuosimaksu), s"$path", invalidMaksullisuustyyppiWithApuraha)
+      validateIfTrue(
+        opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
+        and(
+          assertTrue(
+            opetus.opetuskieliKoodiUrit.map(_.split("#")).flatten.contains("oppilaitoksenopetuskieli_4"),
+            s"$path.maksullisuustyyppi",
+            invalidOpetuskieliWithLukuvuosimaksu
+          ),
+          assertTrue(
+            Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi),
+            s"$path.maksullisuustyyppi",
+            invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
+          )
+        )
+      )
     )
   }
 
