@@ -1032,7 +1032,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failsValidation(
       yoToteutusWithOpetusParameters(
         opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-        onkoApuraha = true,
         apuraha = None
       ),
       Seq(
