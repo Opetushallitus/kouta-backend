@@ -14,10 +14,14 @@ import scala.util.{Failure, Success, Try}
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
 
-  def createOidInParams(x: Seq[Oid]): String = x.find(!_.isValid) match {
-    case None if x.isEmpty => s"''"
-    case Some(i) => throw new IllegalArgumentException(s"$i ei ole validi oid.")
-    case None => x.map(s => s"'$s'").mkString(",")
+  def createOidInParams(x: Seq[Oid]): String =
+    if (x.isEmpty) {
+      s"''"
+    } else {
+      val validOids = x.filter(_.isValid)
+      val invalidOids = x.diff(validOids)
+      logger.error(s"$invalidOids ei ole validi oid.")
+      validOids.map(s => s"'$s'").mkString(",")
   }
 
   def createUUIDInParams(x: Seq[UUID]): String = if( x.isEmpty) s"''" else x.map(s => s"'${s.toString}'").mkString(",")

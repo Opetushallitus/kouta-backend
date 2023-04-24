@@ -502,6 +502,7 @@ class HakukohdeSpec
     val ophTallennettuHakukohde = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
       metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     val lastModified = get(oid, ophTallennettuHakukohde)
+    Thread.sleep(1500)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
       hakuajat = List(Ajanjakso(alkaa = TestData.now(), paattyy = Some(TestData.inFuture(12000))))
