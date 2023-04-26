@@ -33,7 +33,8 @@ object KoulutusService
       CachedKoodistoClient,
       KoulutusServiceValidation,
       KoutaSearchClient,
-      EPerusteKoodiClient
+      EPerusteKoodiClient,
+      KoutaIndeksoijaClient
     ) {
   def apply(
       sqsInTransactionService: SqsInTransactionService,
@@ -55,7 +56,8 @@ object KoulutusService
       koodistoClient,
       koulutusServiceValidation,
       KoutaSearchClient,
-      EPerusteKoodiClient
+      EPerusteKoodiClient,
+      KoutaIndeksoijaClient
     )
   }
 }
@@ -70,7 +72,8 @@ class KoulutusService(
     koodistoClient: CachedKoodistoClient,
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
-    ePerusteKoodiClient: EPerusteKoodiClient
+    ePerusteKoodiClient: EPerusteKoodiClient,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -379,7 +382,7 @@ class KoulutusService(
     )
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): KoulutusOid = {
+  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult = {
     val rules = if (koulutus.isSavingAllowedOnlyForOPH()) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
     } else {
@@ -398,12 +401,12 @@ class KoulutusService(
       koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, None) { ek =>
         doPut(ek)
       }
-    }.oid.get
+    }
   }
 
   def update(newKoulutus: Koulutus, notModifiedSince: Instant, fromExternal: Boolean = false)(implicit
       authenticated: Authenticated
-  ): Boolean = {
+  ): UpdateResult = {
     val oldKoulutusWithInstant = KoulutusDAO.get(newKoulutus.oid.get, TilaFilter.onlyOlemassaolevat())
     oldKoulutusWithInstant match {
       case Some((oldKoulutus, _)) =>
@@ -414,12 +417,13 @@ class KoulutusService(
           )
         }
         val rules: List[AuthorizationRules] = getAuthorizationRulesForUpdate(newKoulutus, oldKoulutus)
-        rules.nonEmpty && authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
+        val result = authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
           koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
             doUpdate(_, notModifiedSince, oldKoulutus)
           }
-        }.nonEmpty
+        }
+        result
       case _ => throw EntityNotFoundException(s"Päivitettävää asiaa ei löytynyt")
     }
   }
@@ -428,7 +432,6 @@ class KoulutusService(
     if (Julkaisutila.isTilaUpdateAllowedOnlyForOph(oldKoulutus.tila, newKoulutus.tila)) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
     } else {
-
         oldKoulutus.koulutustyyppi match {
           case kt if newKoulutus.isSavingAllowedOnlyForOPH() =>
             List(AuthorizationRules(Seq(Role.Paakayttaja)))
@@ -597,7 +600,7 @@ class KoulutusService(
     } yield Some(k)
   }
 
-  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): Koulutus =
+  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teema, k) <- checkAndMaybeClearTeemakuva(koulutus)
@@ -607,14 +610,15 @@ class KoulutusService(
         _          <- index(Some(k))
         _          <- auditLog.logCreate(k)
       } yield (teema, k)
-    }.map { case (teema, k) =>
+    }.map { case (teema, k: Koulutus) =>
       maybeDeleteTempImage(teema)
-      k
+      val warnings = quickIndex(k.oid)
+      CreateResult(k.oid.get, warnings)
     }.get
 
   private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
       authenticated: Authenticated
-  ): Option[Koulutus] =
+  ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
@@ -623,13 +627,21 @@ class KoulutusService(
         _          <- index(k)
         _          <- auditLog.logUpdate(before, k)
       } yield (teema, k)
-    }.map { case (teema, k) =>
+    }.map { case (teema, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teema)
-      k
+      val warnings = quickIndex(k.flatMap(_.oid))
+      UpdateResult(updated = k.isDefined, warnings)
     }.get
 
   def index(koulutus: Option[Koulutus]): DBIO[_] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
+
+  private def quickIndex(koulutusOid: Option[KoulutusOid]): List[String] = {
+    koulutusOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("koulutus", oid.toString)
+      case None => List.empty
+    }
+  }
 
   def getOppilaitosTyypitByKoulutustyypit()(implicit
       authenticated: Authenticated

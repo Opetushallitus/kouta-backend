@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.{CachedKoodistoClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -26,6 +26,7 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
   def hakuService: HakuService = {
     val organisaatioService   = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient        = new CachedKoodistoClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val hakuServiceValidation = new HakuServiceValidation(koodistoClient, mockHakemusPalveluClient, HakukohdeDAO)
     new HakuService(
       SqsInTransactionServiceIgnoringIndexing,
@@ -34,7 +35,8 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
       organisaatioService,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      hakuServiceValidation
+      hakuServiceValidation,
+      koutaIndeksoijaClient
     )
   }
 
