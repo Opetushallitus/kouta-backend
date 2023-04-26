@@ -515,13 +515,13 @@ class ToteutusService(
       try {
         val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
         update(toteutusWithNewTila, unModifiedSince) match {
-          case true =>
+          case UpdateResult(true, _) =>
             updatedToteutusOids += toteutus.oid.get
             ToteutusTilaChangeResultObject(
               oid = toteutus.oid.get,
               status = "success"
             )
-          case false =>
+          case UpdateResult(false, _) =>
             updatedToteutusOids += toteutus.oid.get
             ToteutusTilaChangeResultObject(
               oid = toteutus.oid.get,
