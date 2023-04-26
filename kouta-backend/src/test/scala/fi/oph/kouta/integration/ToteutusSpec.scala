@@ -1148,4 +1148,91 @@ class ToteutusSpec
       )
     )
   }
+
+  "Change toteutuksen tila" should "change two julkaistu toteutukset to arkistoitu when muokkaaja is OPH virkailija" in {
+
+    val julkaistuToteutus1 = toteutus(koulutusOid)
+    val julkaistuToteutus2 = toteutus(koulutusOid)
+    val julkaistuToteutusOid1 = put(julkaistuToteutus1)
+    val julkaistuToteutusOid2 = put(julkaistuToteutus2)
+
+    val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
+
+    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid))
+    val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, ophSession, 200)
+
+    val arkistoituToteutus1 = julkaistuToteutus1.copy(
+      oid = Some(ToteutusOid(julkaistuToteutusOid1)),
+      tila = Arkistoitu,
+      muokkaaja = OphUserOid,
+      metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
+    val arkistoituToteutus2 = julkaistuToteutus2.copy(
+      oid = Some(ToteutusOid(julkaistuToteutusOid2)),
+      tila = Arkistoitu,
+      muokkaaja = OphUserOid,
+      metadata = Some(AmmToteutuksenMetatieto.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
+
+    response.length shouldBe 2
+    response.head.oid.toString shouldBe julkaistuToteutusOid1
+    response.head.status shouldBe "success"
+    response.last.oid.toString shouldBe julkaistuToteutusOid2
+    response.last.status shouldBe "success"
+
+
+    get(julkaistuToteutusOid1, arkistoituToteutus1)
+    get(julkaistuToteutusOid2, arkistoituToteutus2)
+  }
+
+  it should "fail to change tila of toteutukset from julkaistu to arkistoitu when muokkaaja is non oph user and contains random toteutusOid" in {
+    val julkaistuToteutus1 = toteutus(koulutusOid)
+    val julkaistuToteutus2 = toteutus(koulutusOid)
+    val julkaistuToteutusOid1 = put(julkaistuToteutus1)
+    val julkaistuToteutusOid2 = put(julkaistuToteutus2)
+
+    val randomOid = randomHakukohdeOid.toString
+    val toteutukset = List(julkaistuToteutusOid1, randomOid, julkaistuToteutusOid2)
+
+    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid))
+    val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
+
+    response.length shouldBe 3
+
+    response.head.oid.toString shouldBe julkaistuToteutusOid1
+    response.head.status shouldBe "error"
+    response.head.errorPaths shouldBe List("toteutus")
+    response.head.errorMessages should not be empty
+    response.head.errorTypes shouldBe List("organizationauthorization")
+
+    response(1).oid.toString shouldBe julkaistuToteutusOid2
+    response(1).status shouldBe "error"
+    response(1).errorPaths shouldBe List("toteutus")
+    response(1).errorMessages should not be empty
+    response(1).errorTypes shouldBe List("organizationauthorization")
+
+    response.last.oid.toString shouldBe randomOid
+    response.last.status shouldBe "error"
+    response.last.errorPaths shouldBe List("toteutus")
+    response.last.errorMessages should not be empty
+    response.last.errorTypes shouldBe List("not found")
+  }
+
+  it should "allow to change tila of toteutukset from julkaistu to arkistoitu when muokkaaja has rights to toteutus" in {
+    val julkaistuToteutus1 = toteutus(koulutusOid).copy(tarjoajat = List(ChildOid))
+    val julkaistuToteutus2 = toteutus(koulutusOid).copy(tarjoajat = List(AmmOid))
+    val julkaistuToteutusOid1 = put(julkaistuToteutus1)
+    val julkaistuToteutusOid2 = put(julkaistuToteutus2)
+
+    val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
+
+    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid).copy(tarjoajat = List(ChildOid)))
+    val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, ammAndChildSession, 200)
+
+    response.length shouldBe 2
+    response.head.oid.toString shouldBe julkaistuToteutusOid1
+    response.head.status shouldBe "success"
+    response.last.oid.toString shouldBe julkaistuToteutusOid2
+    response.last.status shouldBe "success"
+  }
 }
