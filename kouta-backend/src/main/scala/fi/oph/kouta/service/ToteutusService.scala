@@ -435,14 +435,12 @@ class ToteutusService(
         t          <- ToteutusDAO.getPutActions(t)
         t          <- maybeCopyTeemakuva(teema, t)
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
-        _          <- koulutusService.index(k)
-        _          <- index(Some(t))
         _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logCreate(t)
-      } yield (teema, t)
-    }.map { case (teema, t) =>
+      } yield (teema, t, k)
+    }.map { case (teema, t, k) =>
       maybeDeleteTempImage(teema)
-      val warnings = quickIndex(t.oid)
+      val warnings = quickIndex(t.oid) ++ koulutusService.index(k) ++ index(Some(t))
       CreateResult(t.oid.get, warnings)
     }.get
 
@@ -460,18 +458,16 @@ class ToteutusService(
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)
-        _          <- koulutusService.index(k)
-        _          <- index(t)
         _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logUpdate(before, t)
-      } yield (teema, t)
-    }.map { case (teema, t) =>
+      } yield (teema, t, k)
+    }.map { case (teema, t, k) =>
       maybeDeleteTempImage(teema)
-      val warnings = quickIndex(t.flatMap(_.oid))
+      val warnings = quickIndex(t.flatMap(_.oid)) ++ koulutusService.index(k) ++ index(t)
       UpdateResult(t.isDefined, warnings)
     }.get
 
-  private def index(toteutus: Option[Toteutus]): DBIO[_] =
+  private def index(toteutus: Option[Toteutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
 
   private def quickIndex(toteutusOid: Option[ToteutusOid]): List[String] = {
@@ -519,13 +515,13 @@ class ToteutusService(
       try {
         val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
         update(toteutusWithNewTila, unModifiedSince) match {
-          case true =>
+          case UpdateResult(true, _) =>
             updatedToteutusOids += toteutus.oid.get
             ToteutusTilaChangeResultObject(
               oid = toteutus.oid.get,
               status = "success"
             )
-          case false =>
+          case UpdateResult(false, _) =>
             updatedToteutusOids += toteutus.oid.get
             ToteutusTilaChangeResultObject(
               oid = toteutus.oid.get,

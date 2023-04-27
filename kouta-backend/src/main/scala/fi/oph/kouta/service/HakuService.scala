@@ -188,11 +188,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       for {
         h <- HakuDAO.getPutActions(haku)
         _ <- setHaunOhjausparametrit(h)
-        _ <- index(Some(h))
         _ <- auditLog.logCreate(h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.oid)
+      val warnings = quickIndex(h.oid) ++ index(Some(h))
       CreateResult(h.oid.get, warnings)
     }.get
 
@@ -201,11 +200,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       for {
         _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
         h <- HakuDAO.getUpdateActions(haku)
-        _ <- index(h)
         _ <- auditLog.logUpdate(before, h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.flatMap(_.oid))
+      val warnings = quickIndex(h.flatMap(_.oid)) ++ index(h)
       UpdateResult(updated = h.isDefined, warnings)
     }.get
 
@@ -215,10 +213,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       case None => List.empty
     }
   }
-  private def index(haku: Option[Haku]): DBIO[_] =
+  private def index(haku: Option[Haku]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, haku.map(_.oid.get.toString))
 
-  def indexByOid(hakuOid: HakuOid): DBIO[_] =
+  def indexByOid(hakuOid: HakuOid): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHaku, hakuOid.toString)
 
   private def setHaunOhjausparametrit(haku: Haku): DBIO[Unit] = {
