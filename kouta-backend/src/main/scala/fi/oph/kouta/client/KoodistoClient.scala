@@ -132,6 +132,10 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
     .expireAfterWrite(10.minutes)
     .build()
 
+  implicit val koulutuksetByTutkintotyyppiCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(10.minutes)
+    .build()
+
   def getKoodistoKaannoksetFromCache(koodisto: String): Map[String, Kielistetty] = {
     val res: KoodistoQueryResponse = getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache)
 
@@ -155,6 +159,12 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
     }
   }
 
+  def getKoulutuksetByTutkintotyyppiCached(tutkintotyyppi: String) = {
+    val res = koulutuksetByTutkintotyyppiCache.get(tutkintotyyppi, tutkintotyyppi => getYlakoodit(tutkintotyyppi))
+    println(res)
+    res
+  }
+
   def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto(koodisto.toString, koodiUri)
 
@@ -166,7 +176,6 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
     }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
-    val now = ZonedDateTime.now().toLocalDateTime
     getYlakoodit(
       tyyppi,
       koodi =>
