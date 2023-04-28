@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -103,7 +103,7 @@ class ToteutusServiceValidation(
           validateIfJulkaistu(vCtx.tila, assertNotEmpty(toteutus.tarjoajat, "tarjoajat")),
           validateIfDefined[Opetus](
             metadata.opetus,
-            opetus => validateOpetus(vCtx, toteutusDiffResolver, opetus, koulutusTyyppi)
+            opetus => validateOpetus(vCtx, toteutusDiffResolver, opetus, koulutusTyyppi, koulutusKoodiUrit)
           ),
           validateIfNonEmpty[Yhteyshenkilo](
             metadata.yhteyshenkilot,
@@ -239,7 +239,8 @@ class ToteutusServiceValidation(
       vCtx: ValidationContext,
       toteutusDiffResolver: ToteutusDiffResolver,
       opetus: Opetus,
-      koulutustyyppi: Koulutustyyppi
+      koulutustyyppi: Koulutustyyppi,
+      koulutuskoodiurit: Seq[String],
   ): IsValid = {
     val path = "metadata.opetus"
     and(
@@ -273,7 +274,7 @@ class ToteutusServiceValidation(
           koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
-      validateMaksullisuus(opetus, koulutustyyppi, path),
+      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
       validateIfDefined[Apuraha](
         opetus.apuraha,
         apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus)
@@ -347,7 +348,9 @@ class ToteutusServiceValidation(
     )
   }
 
-  private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, path: String): IsValid = {
+  private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, koulutuskoodiurit: Seq[String], path: String): IsValid = {
+    val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
+
     and(
       validateIfTrue(
         opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
@@ -358,9 +361,23 @@ class ToteutusServiceValidation(
             invalidOpetuskieliWithLukuvuosimaksu
           ),
           assertTrue(
-            Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi),
+            isTutkintoonJohtavaKorkeakoulutus,
             s"$path.maksullisuustyyppi",
             invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
+          ),
+          validateIfTrue(
+            isTutkintoonJohtavaKorkeakoulutus,
+            koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16") match {
+              case Right(tohtorikoulutuskoodiurit: Seq[KoodiUri]) =>
+                val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
+                val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                assertEmpty(
+                  tohtorikoulutukset,
+                  s"$path.maksullisuustyyppi",
+                  invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
+                )
+              case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+            }
           )
         )
       )

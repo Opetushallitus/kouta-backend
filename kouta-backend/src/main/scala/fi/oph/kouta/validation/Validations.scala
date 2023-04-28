@@ -507,6 +507,12 @@ object Validations {
       id = "invalidOpetuskieliWithLukuvuosimaksu"
     )
 
+  def invalidKoulutusWithLukuvuosimaksu(koulutuskoodiuri: Seq[String]): ErrorMessage =
+    ErrorMessage(
+      msg = s"Lukuvuosimaksua ei voi määritellä seuraavalle koulutukselle: $koulutuskoodiuri",
+      id = "invalidKoulutusWithLukuvuosimaksu"
+    )
+
   def invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi: Koulutustyyppi): ErrorMessage =
     ErrorMessage(
       msg = s"Lukuvuosimaksua ei voi määritellä valitulle koulutustyypille: $koulutustyyppi",

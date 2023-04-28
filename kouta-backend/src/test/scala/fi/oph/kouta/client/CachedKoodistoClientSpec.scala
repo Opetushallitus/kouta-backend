@@ -370,6 +370,7 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
       "koulutus_371101#12"
     ) should equal(queryFailed)
   }
+
   "Finding hakukohdeKoodiUri" should "return true when koodiUri exists" in {
     mockKoodistoResponse(
       "hakukohteetperusopetuksenjalkeinenyhteishaku",
@@ -606,5 +607,12 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
     koodiClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#2") should equal(itemFound)
     koodiClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_km") should equal(itemNotFound)
     koodiClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_xx") should equal(itemNotFound)
+  }
+
+  "When tutkintotyyppi-koodisto-query failed" should "return error status" in {
+    mockKoulutusByTutkintotyyppiFailure("tutkintotyyppi_16")
+    koodiClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16").left.get.getMessage should equal(
+      s"Failed to get koulutusKoodiUris for koulutustyyppi tutkintotyyppi_16 from koodisto."
+    )
   }
 }
