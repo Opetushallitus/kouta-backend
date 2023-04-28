@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -350,13 +350,6 @@ class ToteutusServiceValidation(
 
   private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, koulutuskoodiurit: Seq[String], path: String): IsValid = {
     val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
-    val tohtorikoulutukset = if (isTutkintoonJohtavaKorkeakoulutus) {
-      val tohtorikoulutuskoodiurit = koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16")
-      val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-      tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
-    } else {
-      Seq()
-    }
 
     and(
       validateIfTrue(
@@ -372,15 +365,20 @@ class ToteutusServiceValidation(
             s"$path.maksullisuustyyppi",
             invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
           ),
-          validateIfDefined[Seq[String]](
-            Some(tohtorikoulutukset),
-            assertEmpty(
-              _,
-              s"$path.maksullisuustyyppi",
-              invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
-            )
+          validateIfTrue(
+            isTutkintoonJohtavaKorkeakoulutus,
+            koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16") match {
+              case Right(tohtorikoulutuskoodiurit: Seq[KoodiUri]) =>
+                val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
+                val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                assertEmpty(
+                  tohtorikoulutukset,
+                  s"$path.maksullisuustyyppi",
+                  invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
+                )
+              case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+            }
           )
-
         )
       )
     )

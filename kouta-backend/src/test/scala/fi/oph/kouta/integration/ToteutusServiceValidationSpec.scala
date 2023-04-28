@@ -365,7 +365,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
       .thenAnswer(itemFound)
     when(koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16"))
-      .thenReturn(Seq(KoodiUri("koulutus_655101", 2), KoodiUri("koulutus_755101", 2), KoodiUri("koulutus_855101", 2)))
+      .thenReturn(Right(Seq(KoodiUri("koulutus_655101", 2), KoodiUri("koulutus_755101", 2), KoodiUri("koulutus_855101", 2))))
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
@@ -1059,7 +1059,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if lukuvuosimaksu is selected and koulutus is not tohtorikoulutus" in {
+  it should "fail if lukuvuosimaksu is selected and koulutus is tohtorikoulutus" in {
     failsValidation(
       yoToteutusWithOpetusParameters(
         maksullisuustyyppi = Some(Lukuvuosimaksu),
@@ -1067,6 +1067,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ),
       Seq(
         ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutusWithLukuvuosimaksu(Seq("koulutus_855101")))
+      )
+    )
+  }
+
+  it should "fail with error message if koodistoservice is down" in {
+    when(koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16"))
+      .thenReturn(Left(new RuntimeException()))
+    failsValidation(
+      yoToteutusWithOpetusParameters(
+        maksullisuustyyppi = Some(Lukuvuosimaksu),
+        koulutusOid = Some(yoTohtoriKoulutus.oid.get)
+      ),
+      Seq(
+        ValidationError("metadata.opetus.maksullisuustyyppi", koodistoServiceFailureMsg)
       )
     )
   }
