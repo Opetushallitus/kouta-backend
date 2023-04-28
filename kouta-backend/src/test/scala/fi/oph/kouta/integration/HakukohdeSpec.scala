@@ -521,6 +521,8 @@ class HakukohdeSpec
       metadata = Some(withValintaperusteenValintakokeet(uusiHakukohde).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
     )
     val oid                = put(eiJulkaistuHakukohde, ophSession)
+    println("HAKUKOHDE OID")
+    println(oid)
     val eiJulkaistuWithOid = eiJulkaistuHakukohde.copy(oid = Some(HakukohdeOid(oid)), muokkaaja = OphUserOid)
     val lastModified       = get(oid, eiJulkaistuWithOid)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
@@ -528,12 +530,16 @@ class HakukohdeSpec
     val muokattuHakukohde = eiJulkaistuWithOid.copy(
       hakuajat = TestData.getHakuajatWeeksInFuture(1, 4)
     )
+    Thread.sleep(1500)
+    println(muokattuHakukohde)
     update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession2)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid2.toString)
     // poistetaan kaikki hakuajat
     val muokattuHakukohde2 = eiJulkaistuWithOid.copy(
       hakuajat = List()
     )
+    println(muokattuHakukohde2)
+    Thread.sleep(3000)
     update(muokattuHakukohde2, lastModified, expectUpdate = true, ophSession)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }
