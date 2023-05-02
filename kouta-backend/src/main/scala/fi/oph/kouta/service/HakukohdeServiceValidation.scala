@@ -238,12 +238,13 @@ class HakukohdeServiceValidation(
       haku: Option[Haku]
   ): Seq[Julkaisutila] = {
     if (oldHakukohde.isEmpty) {
-      return Seq()
-    }
-    val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
-    validStates ++ (if (oldHakukohde.get.tila == Arkistoitu && isAllowedToRemoveArchived(newHakukohde, haku))
+      Seq()
+    } else {
+      val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
+      validStates ++ (if (oldHakukohde.get.tila == Arkistoitu && isAllowedToRemoveArchived(newHakukohde, haku))
                         Seq(Poistettu)
-                    else Seq())
+                      else Seq())
+    }
   }
 
   private def validateHakukohdeStateChange(
