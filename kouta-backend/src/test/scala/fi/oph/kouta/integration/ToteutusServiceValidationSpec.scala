@@ -1022,7 +1022,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if maksullisuustyyppi is not lukuvuosimaksu" in {
+  it should "fail if maksullisuustyyppi is not lukuvuosimaksu and apuraha is defined" in {
     failsValidation(
       yoToteutusWithOpetusParameters(
         opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),

@@ -6,7 +6,7 @@ import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
 import fi.oph.kouta.util.LaajuusValidationUtil
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
@@ -350,13 +350,15 @@ class ToteutusServiceValidation(
 
   private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, koulutuskoodiurit: Seq[String], path: String): IsValid = {
     val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
+    val English = "oppilaitoksenopetuskieli_4"
+    val Tohtorikoulutus = "tutkintotyyppi_16"
 
     and(
       validateIfTrue(
         opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
         and(
           assertTrue(
-            opetus.opetuskieliKoodiUrit.map(_.split("#")).flatten.contains("oppilaitoksenopetuskieli_4"),
+            opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
             s"$path.maksullisuustyyppi",
             invalidOpetuskieliWithLukuvuosimaksu
           ),
@@ -367,7 +369,7 @@ class ToteutusServiceValidation(
           ),
           validateIfTrue(
             isTutkintoonJohtavaKorkeakoulutus,
-            koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16") match {
+            koodistoClient.getKoulutuksetByTutkintotyyppiCached(Tohtorikoulutus) match {
               case Right(tohtorikoulutuskoodiurit: Seq[KoodiUri]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
                 val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
