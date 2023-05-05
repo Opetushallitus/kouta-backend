@@ -304,11 +304,14 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
     val valintaperusteetWithId = valintaperusteWithValintakokeet.copy(id = Some(id))
     val valintakokeetWithIds = getIds(valintaperusteetWithId).valintakokeet
-    val lastModified       = get(id, valintaperusteetWithId)
+    var lastModified       = get(id, valintaperusteetWithId)
+
     // päivitetään valintakoe
     val updatedValintakoe = valintakokeetWithIds.head.copy(nimi = Map(Fi -> "Uusi nimi", Sv -> "Uusi nimi på svenska"))
-    update(valintaperusteetWithId.copy(valintakokeet = Seq(updatedValintakoe)), lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
-    assert(readValintaperusteMuokkaaja(id.toString) == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    var updatedValintaperusteetWithId = valintaperusteetWithId.copy(valintakokeet = Seq(updatedValintakoe))
+    update(updatedValintaperusteetWithId, lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
+    var updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
+    assert(updatedMuokkaaja === userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
       val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
@@ -316,14 +319,17 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
     // lisätään valintakoe
+    lastModified       = get(id, updatedValintaperusteetWithId.copy(muokkaaja = UserOid(updatedMuokkaaja)))
     val newValintakoe      = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
     val updatedValintakokeetWithIds = getIds(valintaperusteetWithId).valintakokeet
+    updatedValintaperusteetWithId = valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds :+ newValintakoe)
     update(
-      valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds :+ newValintakoe),
+      updatedValintaperusteetWithId,
       lastModified,
       expectUpdate = true
     )
-    assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
+    updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
+    assert(updatedMuokkaaja === TestUserOid.toString)
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
       val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
@@ -331,8 +337,10 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.muokkaaja.shouldEqual(TestUserOid)
     }
     // poistetaan valintakoe
+    lastModified       = get(id, updatedValintaperusteetWithId.copy(valintakokeet = newValintakoe +: updatedValintakokeetWithIds, muokkaaja = UserOid(updatedMuokkaaja)))
     update(valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds), lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
-    assert(readValintaperusteMuokkaaja(id.toString) == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
+    assert(updatedMuokkaaja == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
 
@@ -341,6 +349,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
     // poistetaan kaikki valintakokeet
+    lastModified       = get(id, updatedValintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds, muokkaaja = UserOid(updatedMuokkaaja)))
     update(valintaperusteetWithId.copy(valintakokeet = List()), lastModified, expectUpdate = true)
     assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {

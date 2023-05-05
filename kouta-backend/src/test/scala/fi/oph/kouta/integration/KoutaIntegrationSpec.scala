@@ -202,7 +202,10 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
   }
 
   def addDefaultKoodistoMockResponsesForToteutus(): Unit = {
-    mockKoodistoResponse("oppilaitoksenopetuskieli", Seq(("oppilaitoksenopetuskieli_1", 1, None)))
+    mockKoodistoResponse(
+      "oppilaitoksenopetuskieli",
+      Seq(("oppilaitoksenopetuskieli_1", 1, None), ("oppilaitoksenopetuskieli_4", 1, None))
+    )
     mockKoodistoResponse("opetusaikakk", Seq(("opetusaikakk_1", 1, None)))
     mockKoodistoResponse("opetuspaikkakk", Seq(("opetuspaikkakk_1", 1, None), ("opetuspaikkakk_2", 1, None)))
     mockKoodistoResponse("osaamisala", Seq(("osaamisala_0001", 1, None)))
@@ -222,6 +225,9 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockKoodistoResponse("lukiopainotukset", Seq(("lukiopainotukset_1", 1, None)))
     mockKoodistoResponse("lukiolinjaterityinenkoulutustehtava", Seq(("lukiolinjaterityinenkoulutustehtava_1", 1, None)))
     mockKoodistoResponse("moduulikoodistolops2021", Seq(("moduulikoodistolops2021_kald3", 1, None)))
+    mockKoulutusByTutkintotyyppiResponse(
+      "tutkintotyyppi_16",
+      Seq(("koulutus_655101", 2, None), ("koulutus_755101", 2, None), ("koulutus_855101", 2, None)))
   }
 
   def addDefaultKoodistoMockResponsesForHakukohde(): Unit = {
