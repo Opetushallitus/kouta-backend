@@ -476,7 +476,7 @@ class KoulutusService(
 
   def getTarjoajanJulkaistutKoulutukset(
       organisaatioOid: OrganisaatioOid
-  )(implicit authenticated: Authenticated): Seq[Koulutus] =
+  )(implicit authenticated: Authenticated): Seq[KoulutusWithTarjoajat] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getJulkaistutByTarjoajaOids(
         organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
