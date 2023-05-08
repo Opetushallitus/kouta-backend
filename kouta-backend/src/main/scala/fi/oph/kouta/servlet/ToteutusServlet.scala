@@ -84,7 +84,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.put(parsedBody.extract[Toteutus]) match {
-      case oid => Ok("oid" -> oid)
+      case res: CreateResult => Ok(res)
     }
   }
 
@@ -114,7 +114,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(res)
     }
   }
 
@@ -286,6 +286,56 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     params.get("organisaatioOid").map(OrganisaatioOid) match {
       case None => NotFound()
       case Some(organisaatioOid) => Ok(toteutusService.listOpintojaksot(organisaatioOid))
+    }
+  }
+
+  registerPath("/toteutus/tila/{tila}",
+    """    post:
+      |      summary: Muuttaa usean toteutuksen tilat
+      |      operationId: Muuttaa toteutusten tilat
+      |      description: Muuttaa annettavien toteutusoidien tilat. Tila annetaan parametrina.
+      |        Rajapinta palauttaa muutettujen toteutusten yksilöivät oidit.
+      |      tags:
+      |        - Toteutus
+      |      parameters:
+      |        - $ref: '#/components/parameters/xIfUnmodifiedSince'
+      |        - in: path
+      |          name: tila
+      |          required: true
+      |          schema:
+      |            type: string
+      |          description: Toteutuksen julkaisutila, joka päivitetään toteutuksille
+      |          example: tallennettu
+      |      requestBody:
+      |        description: Lista muutettavien toteutusten oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |              example: ["1.2.246.562.20.00000000000000011083", "1.2.246.562.20.00000000000000011084"]
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  $ref: '#/components/schemas/TilaChangeResult'
+      |""".stripMargin)
+
+  post("/tila/:tila") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    val toteutusStateChangeResults = toteutusService.changeTila(parsedBody.extract[List[ToteutusOid]], params("tila"), getIfUnmodifiedSince)
+    if (toteutusStateChangeResults.isEmpty) {
+      NotFound("error" -> "No toteutus state was changed")
+    } else {
+      Ok(toteutusStateChangeResults)
     }
   }
 }

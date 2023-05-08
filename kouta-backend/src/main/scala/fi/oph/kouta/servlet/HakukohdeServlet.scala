@@ -1,8 +1,8 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.{CreateResult, Hakukohde, TilaFilter, UpdateResult}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
-import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 
@@ -84,7 +84,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
     implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
-      case oid => Ok("oid" -> oid)
+      case res: CreateResult => Ok(res)
     }
   }
   registerPath( "/hakukohde/copy/{hakuOid}",
@@ -163,8 +163,46 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
     implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(res)
     }
+  }
+
+  registerPath("/hakukohde/:oid/tila/{tila}",
+    """    get:
+      |      summary: Onko tilamuutos hakukohteelle sallittu
+      |      operationId: Onko tilamuutos sallittu hakukohteelle
+      |      description: Muuttaa annettavien hakukohdeoidien tilat. Tila annetaan parametrina.
+      |        Rajapinta palauttaa true/false sen perusteella onko tilamuutos sallittu.
+      |      tags:
+      |        - Hakukohde
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Hakukohde-oid
+      |          example: 1.2.246.562.20.00000000000000000009
+      |        - in: path
+      |          name: tila
+      |          required: true
+      |          schema:
+      |            type: string
+      |          description: Tila jolle kysytään
+      |          example: poistettu
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: boolean
+      |""".stripMargin)
+
+  get("/:oid/tila/:tila") {
+    implicit val authenticated: Authenticated = authenticate()
+    val result: Boolean = hakukohdeService.tilaChangeAllowed(HakukohdeOid(params("oid")), params("tila"))
+    Ok(result)
   }
 
   registerPath("/hakukohde/tila/{tila}",

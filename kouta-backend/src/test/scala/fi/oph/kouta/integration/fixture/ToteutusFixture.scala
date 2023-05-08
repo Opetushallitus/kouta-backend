@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
@@ -13,7 +13,8 @@ import fi.oph.kouta.service.{
   OrganisaatioServiceImpl,
   ToteutusCopyResultObject,
   ToteutusService,
-  ToteutusServiceValidation
+  ToteutusServiceValidation,
+  ToteutusTilaChangeResultObject
 }
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
@@ -28,12 +29,14 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
 
   val ToteutusPath     = "/toteutus"
   val ToteutusCopyPath = "/toteutus/copy"
+  val ToteutusChangeTilaPath = s"/toteutus/tila/"
 
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
   def toteutusService: ToteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val koodistoClient      = new CachedKoodistoClient(urlProperties.get)
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoClient,
@@ -54,7 +57,8 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
       koodistoClient,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      toteutusServiceValidation
+      toteutusServiceValidation,
+      koutaIndeksoijaClient
     )
   }
 
@@ -147,6 +151,9 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   def readToteutusModified(oid: String): Modified = readToteutusModified(ToteutusOid(oid))
   def readToteutusModified(oid: ToteutusOid): Modified =
     TimeUtils.instantToModifiedAt(db.runBlocking(ToteutusDAO.selectLastModified(oid)).get)
+
+  def changeToteutusTila(toteutukset: List[String], tila: String, lastModified: String, sessionId: UUID, expectedStatus: Int): List[ToteutusTilaChangeResultObject] =
+    post(s"$ToteutusChangeTilaPath$tila", toteutukset, lastModified, sessionId, expectedStatus, listResponse[ToteutusTilaChangeResultObject])
 }
 
 trait ToteutusDbFixture extends ToteutusExtractors with SQLHelpers {

@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndeksoijaClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Poistettu, Sorakuvaus, SorakuvausEnrichedData, SorakuvausListItem, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -19,7 +19,7 @@ import java.time.Instant
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, SorakuvausServiceValidation)
+object SorakuvausService extends SorakuvausService(SqsInTransactionService, AuditLog, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, SorakuvausServiceValidation, KoutaIndeksoijaClient)
 
 class SorakuvausService(
   sqsInTransactionService: SqsInTransactionService,
@@ -27,7 +27,8 @@ class SorakuvausService(
   val organisaatioService: OrganisaatioService,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
-  sorakuvausServiceValidation: SorakuvausServiceValidation
+  sorakuvausServiceValidation: SorakuvausServiceValidation,
+  koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Sorakuvaus] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
@@ -110,9 +111,11 @@ class SorakuvausService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         s <- SorakuvausDAO.getPutActions(sorakuvaus)
-        _ <- index(Some(s))
         _ <- auditLog.logCreate(s)
       } yield s
+    }.map { s =>
+      index(Some(s))
+      s
     }.get
 
   private def doUpdate(sorakuvaus: Sorakuvaus, notModifiedSince: Instant, before: Sorakuvaus)(implicit authenticated: Authenticated): Option[Sorakuvaus] =
@@ -120,11 +123,14 @@ class SorakuvausService(
       for {
         _ <- SorakuvausDAO.checkNotModified(sorakuvaus.id.get, notModifiedSince)
         s <- SorakuvausDAO.getUpdateActions(sorakuvaus)
-        _ <- index(s)
         _ <- auditLog.logUpdate(before, s)
       } yield s
+    }.map { s =>
+      index(s)
+      s
     }.get
 
-  private def index(sorakuvaus: Option[Sorakuvaus]): DBIO[_] =
+  private def index(sorakuvaus: Option[Sorakuvaus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeSorakuvaus, sorakuvaus.map(_.id.get.toString))
+
 }
