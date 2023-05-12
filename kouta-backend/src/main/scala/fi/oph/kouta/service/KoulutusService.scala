@@ -647,4 +647,10 @@ class KoulutusService(
 
     KoulutustyyppiToOppilaitostyyppiResult(koulutustyyppi2oppilaitostyyppi)
   }
+
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated
+  ): Seq[KoulutusOid] =
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.getOidsByTarjoajat(tarjoajaOids, tilaFilter)
+    }
 }

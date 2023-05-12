@@ -162,6 +162,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid] = {
     KoutaDatabase.runBlocking(selectKoulutuksenTarjoajat(oid).as[Tarjoaja]).map(_.tarjoajaOid)
   }
+
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[KoulutusOid] = {
+    KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter))
+  }
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -406,5 +410,16 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           where sorakuvaus_id = ${sorakuvausId.toString}::uuid
           #${tilaConditions(tilaFilter)}
       """.as[String]
+  }
+
+  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid],
+                                tilaFilter: TilaFilter
+                               ): DBIO[Vector[KoulutusOid]] = {
+    sql"""select distinct k.oid
+          from koulutukset k, koulutusten_tarjoajat kt
+          where k.oid = kt.koulutus_oid
+          and (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+             or kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
+              #${tilaConditions(tilaFilter, "k.tila")}""".as[KoulutusOid]
   }
 }
