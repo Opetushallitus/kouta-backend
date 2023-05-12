@@ -34,7 +34,7 @@ case class HakuOid(s: String) extends Oid {
 }
 
 case class OrganisaatioOid(s: String) extends Oid {
-  override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.10\.\d+$""")
+  override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.(10|99)\.\d+$""")
 }
 
 object RootOrganisaatioOid extends OrganisaatioOid("1.2.246.562.10.00000000001")
