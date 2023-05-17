@@ -109,7 +109,7 @@ class IndexerServlet(
 
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(koulutusService.getTarjoajanJulkaistutKoulutukset(OrganisaatioOid(params("organisaatioOid"))))
+    Ok(koulutusService.getTarjoajanJulkaistutKoulutuksetJaToteutukset(OrganisaatioOid(params("organisaatioOid"))))
   }
 
   registerPath(

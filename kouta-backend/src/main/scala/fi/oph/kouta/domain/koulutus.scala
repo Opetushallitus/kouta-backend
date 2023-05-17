@@ -257,23 +257,50 @@ case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)
 
 case class ExternalKoulutusRequest(authenticated: Authenticated, koulutus: Koulutus) extends ExternalRequest
 
-case class KoulutusWithTarjoajat(
-    oid: Option[KoulutusOid] = None,
-    externalId: Option[String] = None,
+case class KoulutusWithMaybeToteutus(
+    oid: KoulutusOid,
     johtaaTutkintoon: Boolean,
     koulutustyyppi: Koulutustyyppi,
     koulutuksetKoodiUri: Seq[String] = Seq(),
     tila: Julkaisutila = Tallennettu,
-    esikatselu: Boolean = false,
     tarjoajat: List[OrganisaatioOid] = List(),
     nimi: Kielistetty = Map(),
-    sorakuvausId: Option[UUID] = None,
     metadata: Option[KoulutusMetadata] = None,
-    julkinen: Boolean = false,
-    muokkaaja: UserOid,
     organisaatioOid: OrganisaatioOid,
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
-    ePerusteId: Option[Long] = None,
-    modified: Option[Modified],
+    toteutus: MaybeToteutus
 )
+
+case class KoulutusWithToteutukset(
+    oid: KoulutusOid,
+    johtaaTutkintoon: Boolean,
+    koulutustyyppi: Koulutustyyppi,
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    tila: Julkaisutila = Tallennettu,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    metadata: Option[KoulutusMetadata] = None,
+    organisaatioOid: OrganisaatioOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    toteutukset: List[Toteutus] = List()
+)
+object KoulutusWithToteutukset {
+  def apply(koulutus: KoulutusWithMaybeToteutus, toteutukset: Seq[Toteutus]): KoulutusWithToteutukset = {
+    new KoulutusWithToteutukset(
+      oid = koulutus.oid,
+      johtaaTutkintoon = koulutus.johtaaTutkintoon,
+      koulutustyyppi = koulutus.koulutustyyppi,
+      koulutuksetKoodiUri = koulutus.koulutuksetKoodiUri,
+      tila = koulutus.tila,
+      tarjoajat = koulutus.tarjoajat,
+      nimi = koulutus.nimi,
+      metadata = koulutus.metadata,
+      organisaatioOid = koulutus.organisaatioOid,
+      kielivalinta = koulutus.kielivalinta,
+      teemakuva = koulutus.teemakuva,
+      toteutukset = toteutukset.toList
+    )
+  }
+}
