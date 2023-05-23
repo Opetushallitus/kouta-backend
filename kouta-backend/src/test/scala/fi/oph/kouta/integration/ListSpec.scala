@@ -770,7 +770,25 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
               modified = Some(hk6.modified),
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
-              valintakoeIds = hk6valintakokeet))))))
+              valintakoeIds = hk6valintakokeet))))),
+        Hakutieto(
+          t2.oid,
+          List(HakutietoHaku(
+            hakuOid = h1.oid,
+            nimi = h1.nimi,
+            hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+            tila = Julkaistu,
+            koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
+            hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
+            hakulomakeAtaruId = TestData.JulkaistuHaku.hakulomakeAtaruId,
+            hakulomakeKuvaus = TestData.JulkaistuHaku.hakulomakeKuvaus,
+            hakulomakeLinkki = TestData.JulkaistuHaku.hakulomakeLinkki,
+            organisaatioOid = h1.organisaatioOid,
+            kohdejoukkoKoodiUri = Some("haunkohdejoukko_17#1"),
+            hakuajat = TestData.JulkaistuHaku.hakuajat,
+            muokkaaja = h1.muokkaaja,
+            modified = Some(h1.modified),
+            hakukohteet = Seq()))))
 
       read[List[Hakutieto]](body) shouldMatchTo(expected)
     }
