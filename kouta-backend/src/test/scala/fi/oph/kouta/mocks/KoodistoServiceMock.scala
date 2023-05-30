@@ -22,6 +22,7 @@ trait KoodistoServiceMock extends ServiceMockBase {
     s"""{
         "koodiUri": "${uri._1}",
         "versio": ${uri._2},
+        "koodiArvo": "${uri._1.split("_")(1)}",
         "metadata": [
           {
             "nimi": "nimi",

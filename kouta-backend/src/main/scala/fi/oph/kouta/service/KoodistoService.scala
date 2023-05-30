@@ -1,9 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.{contains, getVersio, removeVersio}
-import fi.oph.kouta.client.{KoodistoClient, KoodistoElement}
+import fi.oph.kouta.client.{KoodistoClient, KoodistoElement, KoodistoError}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
+
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalTime, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
@@ -93,6 +94,19 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
+  def getLisattavatKoulutukset(ylakoodi: String): Either[KoodistoError, Seq[KoodistoElement]] = {
+    koodistoClient.getYlakoodit(ylakoodi) match {
+      case Right(result) => Right(result.view
+        .filter(isKoodiVoimassa)
+        .filter(element => element.koodisto.isDefined && element.koodisto.get.koodistoUri == "koulutus")
+        .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)))
+      case Left(err) if err.status.isDefined && err.status.get == 404 =>
+        logger.warn(s"No koulutukset were found for yläkoodi ${ylakoodi}")
+        Right(Seq.empty)
+      case Left(err) => Left(err)
+    }
+  }
+
   protected def isKoodiVoimassa(koodistoElement: KoodistoElement) = {
     val dateToCompare = koodistoElement.voimassaLoppuPvm
     val currentDate = ZonedDateTime.now().toLocalDateTime
@@ -110,6 +124,10 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     } else {
       true
     }
+  }
+
+  def isKoulutusValiotsikkoKoodiUri(koodiArvo: String): Boolean = {
+    koodiArvo.endsWith("00");
   }
 
   def invalidateCaches() = koodistoClient.invalidateCaches()

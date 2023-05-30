@@ -25,6 +25,7 @@ case class KoodistoMetadataElement(
 
 case class KoodistoElement(
     koodiUri: String,
+    koodiArvo: String,
     versio: Int = 1,
     koodisto: Option[KoodistoSubElement] = None,
     voimassaLoppuPvm: Option[String] = None,
