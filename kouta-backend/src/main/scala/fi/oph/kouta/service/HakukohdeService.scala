@@ -124,10 +124,10 @@ class HakukohdeService(
               } else {
                 val hkLinja = hakukohde.metadata.flatMap(_.hakukohteenLinja).flatMap(_.linja)
                 if (hkLinja.isDefined) {
-                    koodistoClient.getKoodiUriVersionOrLatestFromCache(hkLinja.get) match {
+                    koodistoClient.getKoodistoElementVersionOrLatestFromCache(hkLinja.get) match {
                     case Left(exception) => throw exception
-                    case Right(koodiUri) =>
-                      hakukohde.copy(nimi = mergeNames(koodiUri.nimi, hakukohde.nimi, hakukohde.kielivalinta))
+                    case Right(koodistoElement) =>
+                      hakukohde.copy(nimi = mergeNames(koodistoElement.asKielistetty, hakukohde.nimi, hakukohde.kielivalinta))
                     case _ => hakukohde
                   }
                 } else

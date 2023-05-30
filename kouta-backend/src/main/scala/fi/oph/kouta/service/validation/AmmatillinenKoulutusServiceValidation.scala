@@ -1,6 +1,6 @@
 package fi.oph.kouta.service.validation
 
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
+import fi.oph.kouta.client.KoodiUriUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
 import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
@@ -43,12 +43,12 @@ class AmmatillinenKoulutusServiceValidation(
               ),
               validateIfTrue(
                 ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-                koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+                koodistoClient.getKoodistoElementVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
                   case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
-                  case Right(uri) =>
+                  case Right(koodistoElement) =>
                     assertNimiMatchExternal(
                       koulutus.nimi,
-                      uri.nimi,
+                      koodistoElement.asKielistetty,
                       "nimi",
                       s"koulutuksessa ${koulutus.koulutuksetKoodiUri.head}"
                     )

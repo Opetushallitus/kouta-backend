@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
-import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
+import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
@@ -10,6 +10,61 @@ import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Right, Success, Try}
+
+case class KoodiUri(koodiUri: String, versio: Int, nimi: Kielistetty = Map())
+object KoodiUri {
+  def apply(koodiUri: String, versio: Int, metadata: List[KoodistoMetadataElement]): KoodiUri = KoodiUri(
+    koodiUri,
+    versio,
+    metadata.map(mDataElem => Kieli.withName(mDataElem.kieli.toLowerCase) -> mDataElem.nimi).toMap
+  )
+}
+
+object KoodiUriUtils {
+  def koodiUriFromString(koodiUriString: String): KoodiUri = {
+    splitToBaseAndVersion(koodiUriString) match {
+      case (baseVal: String, Some(versio: Int)) => KoodiUri(baseVal, versio)
+      case _                                    => KoodiUri(koodiUriString, 1)
+    }
+  }
+
+  def splitToBaseAndVersion(koodiUri: String): (String, Option[Int]) =
+    if (koodiUri.contains("#")) {
+      val baseVal    = koodiUri.split("#").head
+      val versioPart = koodiUri.split("#").last
+      if (versioPart.forall(Character.isDigit)) {
+        (baseVal, Some(versioPart.toInt))
+      } else {
+        // Tämä on käytännössä virhetilanne, KoodiUrin versio on aina numeerinen
+        (koodiUri, None)
+      }
+    } else {
+      (koodiUri, None)
+    }
+
+  def koodiUriStringsMatch(a: String, b: String): Boolean =
+    koodiUriFromString(a).koodiUri.equals(koodiUriFromString(b).koodiUri)
+
+  def koodiUrisEqual(koodiUri: KoodiUri, other: KoodiUri): Boolean =
+    koodiUri.koodiUri == other.koodiUri &&
+      koodiUri.versio == other.versio
+
+  def koodiUriEqualOrNewerAsOther(koodiUri: KoodiUri, other: KoodiUri): Boolean =
+    koodiUri.koodiUri == other.koodiUri &&
+      koodiUri.versio >= other.versio
+
+  def koodiUriWithEqualOrHigherVersioNbrInList(
+                                                koodiUri: String,
+                                                koodiUriList: Seq[KoodiUri],
+                                                checkVersio: Boolean = true
+                                              ): Boolean = {
+    val koodiUriObjectToSearch =
+      if (checkVersio) koodiUriFromString(koodiUri)
+      else
+        koodiUriFromString(koodiUri).copy(versio = 1)
+    koodiUriList.exists(uri => koodiUriEqualOrNewerAsOther(uri, koodiUriObjectToSearch))
+  }
+}
 
 case class KoulutusKoodiUri(koulutuskoodiUri: String)
 case class EPeruste(voimassaoloLoppuu: Option[Long], koulutukset: List[KoulutusKoodiUri] = List())

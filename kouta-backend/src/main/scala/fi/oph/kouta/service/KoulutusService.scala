@@ -99,8 +99,8 @@ class KoulutusService(
       )
     } else { None }
 
-  private def getKoodiUriVersion(koodiUriAsString: String): KoodiUri =
-    koodistoClient.getKoodiUriVersionOrLatestFromCache(koodiUriAsString) match {
+  private def getKoodiUriVersion(koodiUriAsString: String): KoodistoElement =
+    koodistoClient.getKoodistoElementVersionOrLatestFromCache(koodiUriAsString) match {
       case Left(exp)  => throw exp
       case Right(uri) => uri
     }
@@ -295,9 +295,9 @@ class KoulutusService(
     val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
     val enrichedKoulutus = koulutus.koulutustyyppi match {
       case Amm if koulutus.nimi.isEmpty && koulutus.koulutuksetKoodiUri.nonEmpty =>
-        val koodiUri = getKoodiUriVersion(koulutus.koulutuksetKoodiUri.head)
+        val koodistoElement = getKoodiUriVersion(koulutus.koulutuksetKoodiUri.head)
         koulutus.copy(
-          nimi = NameHelper.mergeNames(koodiUri.nimi, koulutus.nimi, koulutus.kielivalinta)
+          nimi = NameHelper.mergeNames(koodistoElement.asKielistetty, koulutus.nimi, koulutus.kielivalinta)
         )
       case AmmTutkinnonOsa if notFullyPopulated(koulutus.nimi, koulutus.kielivalinta) && koulutus.metadata.isDefined =>
         koulutus.metadata match {

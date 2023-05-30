@@ -1,10 +1,11 @@
 package fi.oph.kouta.validation
 
 import fi.oph.kouta.TestData.{AmmKoulutus, AmmMuuKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, PelastusalanAmmKoulutus}
-import fi.oph.kouta.client.KoodistoUtils.koodiUriFromString
+import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.KoulutusOid
+import fi.oph.kouta.mocks.TestKoodistoElement
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
@@ -27,13 +28,13 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#1")
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_381501#1")
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#1"))
-      .thenAnswer(Right(KoodiUri("koulutus_371101", 1, defaultName)))
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371101#1"))
+      .thenAnswer(Right(TestKoodistoElement("koulutus_371101", 1, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#12")
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("koulutus_371101#12"))
-      .thenAnswer(Right(KoodiUri("koulutus_371101", 12, defaultName)))
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371101#12"))
+      .thenAnswer(Right(TestKoodistoElement("koulutus_371101", 12, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371666#1")
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("koulutus_371666#1"))
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371666#1"))
       .thenAnswer(Left(new RuntimeException("")))
 
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L))

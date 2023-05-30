@@ -1,17 +1,12 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, LokalisointiClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{
-  isDIAlukiokoulutus,
-  isEBlukiokoulutus,
-  isToisenAsteenYhteishaku,
-  isYhteishakuHakutapa
-}
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToisenAsteenYhteishaku, isYhteishakuHakutapa}
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
@@ -341,12 +336,12 @@ class HakukohdeServiceValidation(
           hakukohdeDiffResolver.newNimi().isDefined,
           validateIfTrueOrElse(
             hkLinja.linja.isDefined,
-            koodistoClient.getKoodiUriVersionOrLatestFromCache(hkLinja.linja.get) match {
+            koodistoClient.getKoodistoElementVersionOrLatestFromCache(hkLinja.linja.get) match {
               case Left(_) => error("metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
-              case Right(uri) =>
+              case Right(koodistoElement) =>
                 assertNimiMatchExternal(
                   nimi,
-                  uri.nimi,
+                  koodistoElement.asKielistetty,
                   "nimi",
                   "hakukohteen linjalla"
                 )

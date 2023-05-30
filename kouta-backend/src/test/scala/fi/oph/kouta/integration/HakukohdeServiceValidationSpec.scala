@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, CachedKoodistoClient, KoodiUri, LokalisointiClient}
+import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -17,6 +17,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.{Assertion, BeforeAndAfterEach}
+import fi.oph.kouta.mocks.{KoodistoServiceMock, TestKoodistoElement}
 
 import java.net.InetAddress
 import java.time.ZonedDateTime
@@ -233,14 +234,14 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
     when(lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"))
       .thenAnswer(Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje", En -> "Yleislinja"))
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiopainotukset_1#1"))
-      .thenAnswer(Right(KoodiUri("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("lukiopainotukset_1#1"))
+      .thenAnswer(Right(TestKoodistoElement("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
       Right(
-        KoodiUri("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
+        TestKoodistoElement("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
       )
     )
-    when(koodistoClient.getKoodiUriVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
+    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("failure")).thenAnswer(Left(new RuntimeException()))
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))

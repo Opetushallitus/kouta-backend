@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri}
+import fi.oph.kouta.client.{CachedKoodistoClient, KoodistoElement}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -370,7 +370,7 @@ class ToteutusServiceValidation(
           validateIfTrue(
             isTutkintoonJohtavaKorkeakoulutus,
             koodistoClient.getKoulutuksetByTutkintotyyppiCached(Tohtorikoulutus) match {
-              case Right(tohtorikoulutuskoodiurit: Seq[KoodiUri]) =>
+              case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
                 val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
                 assertEmpty(

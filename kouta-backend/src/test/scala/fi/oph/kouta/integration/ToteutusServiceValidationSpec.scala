@@ -2,18 +2,14 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri}
+import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri, KoodistoElement}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.mocks.TestKoodistoElement
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.{
-  KoutaValidationException,
-  OrganisaatioService,
-  OrganizationAuthorizationFailedException,
-  ToteutusServiceValidation
-}
+import fi.oph.kouta.service.{KoutaValidationException, OrganisaatioService, OrganizationAuthorizationFailedException, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
@@ -365,7 +361,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
       .thenAnswer(itemFound)
     when(koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16"))
-      .thenReturn(Right(Seq(KoodiUri("koulutus_655101", 2), KoodiUri("koulutus_755101", 2), KoodiUri("koulutus_855101", 2))))
+      .thenReturn(Right(Seq(TestKoodistoElement("koulutus_655101", 2, defaultName), TestKoodistoElement("koulutus_755101", 2, defaultName), TestKoodistoElement("koulutus_855101", 2, defaultName))))
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
