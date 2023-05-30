@@ -99,6 +99,8 @@ case class OsaamisalaTopItem(osaamisala: Option[OsaamisalaItem])
 object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
 class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
+  val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
+
   implicit val cacheTTL = 15.minutes
 
   implicit val ePerusteToKoodiuritCache: Cache[Long, Seq[KoodiUri]] = Scaffeine()

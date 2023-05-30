@@ -358,7 +358,7 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
   "When getting latest version of koodiUri" should "throw error" in {
     mockLatestKoodiUriFailure("koulutus_201101")
     koodiClient.getKoodistoElementVersionOrLatestFromCache("koulutus_201101").left.get.getMessage should equal(
-      "Failed to get koodiuri-version from koodisto for koulutus_201101 after retry, got response 500, Failure in koodisto-service for koodiuri-base koulutus_201101"
+      "Failure in koodisto-service for koodiuri-base koulutus_201101"
     )
   }
 
