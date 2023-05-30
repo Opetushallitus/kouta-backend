@@ -123,22 +123,14 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
   }
 
   def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
-    koodiUriExistsInKoodisto(koodisto.toString, koodiUri)
-
-  protected def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult =
-    getAndUpdateFromKoodistoElementCache(koodisto, koodistoElementCache, getKoodistoKoodit) match {
+    getAndUpdateFromKoodistoElementCache(koodisto.toString, koodistoElementCache, getKoodistoKoodit) match {
       case resp if resp.success =>
         fromBoolean(contains(koodiUri, resp.elements))
       case _ => queryFailed
     }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodistoElement] = {
-    getYlakoodit(
-      tyyppi,
-      koodi =>
-        koodi.koodisto.getOrElse(emptyKoodistoSubElement).koodistoUri == "koulutus" &&
-          isKoodiVoimassa(koodi)
-    )
+    getVoimassaOlevatYlakoodit(tyyppi).filter(element => element.koodisto.map(koodisto => koodisto.koodistoUri == "koulutus").getOrElse(false))
   }
 
   private def getKoulutusKoodistoElementsOfKoulutusTyypit(tyyppi: String): Seq[KoodistoElement] = {
@@ -220,8 +212,6 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
 
   val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
 
-  val emptyKoodistoSubElement = KoodistoSubElement("")
-
   protected def getKoodistoKoodit(koodisto: String): Seq[KoodistoElement] =
     get(
       urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
@@ -234,20 +224,6 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
           .filter(isKoodiVoimassa)
       }
     }
-
-  protected def getYlakoodit(
-      koodi: String,
-      filter: KoodistoElement => Boolean = (_: KoodistoElement) => true
-  ): List[KoodistoElement] = {
-    get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodi), errorHandler, followRedirects = true) {
-      response =>
-        {
-          parse(response)
-            .extract[List[KoodistoElement]]
-            .filter(filter)
-        }
-    }
-  }
 
   protected def getVoimassaOlevatYlakoodit(koodi: String): List[KoodistoElement] = {
     get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodi), errorHandler, followRedirects = true) {
