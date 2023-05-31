@@ -324,8 +324,7 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
     koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_111#4") should equal(itemNotFound)
     koodiClient.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_120") should equal(itemNotFound)
 
-    koodiClient.koodistoElementVersionCache.invalidateAll()
-    koodiClient.koodistoElementCache.invalidateAll()
+    koodiClient.invalidateCaches()
     clearServiceMocks()
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10)
     mockKoulutustyyppiResponse(
@@ -610,7 +609,7 @@ class CachedKoodistoClientSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "When tutkintotyyppi-koodisto-query failed" should "return error status" in {
     mockKoulutusByTutkintotyyppiFailure("tutkintotyyppi_16")
-    koodiClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16").left.get.getMessage should equal(
+    koodiClient.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16").left.get.getMessage should equal(
       s"Failed to get koulutusKoodiUris for koulutustyyppi tutkintotyyppi_16 from koodisto."
     )
   }

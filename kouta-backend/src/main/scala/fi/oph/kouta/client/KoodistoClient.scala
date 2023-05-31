@@ -20,6 +20,8 @@ import scala.concurrent.duration.DurationInt
 case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
 case class KoodistoNotFoundException(message: String)                        extends RuntimeException(message)
 
+case class KoodistoError(url: String, status: Option[Int], message: String) extends RuntimeException(message)
+
 case class KoodistoSubElement(koodistoUri: String)
 
 case class KoodistoMetadataElement(
@@ -43,8 +45,6 @@ case class KoodistoElement(
     metadata.map(element => Kieli.withName(element.kieli.toLowerCase) -> element.nimi).toMap
   }
 }
-
-case class KoodistoQueryResponse(success: Boolean, elements: Seq[KoodistoElement])
 
 object KoodistoUtils {
 
@@ -70,97 +70,75 @@ object CachedKoodistoClient extends CachedKoodistoClient(KoutaConfigurationFacto
 
 class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
 
-  implicit val koodistoElementCache: Cache[String, Seq[KoodistoElement]] = Scaffeine()
-    .expireAfterWrite(10.minutes)
-    .build()
-
-  implicit val koodistoElementVersionCache: Cache[String, KoodistoElement] = Scaffeine()
-    .expireAfterWrite(10.minutes)
-    .build()
-
-  implicit val rinnasteinenKoodistoElementCache: Cache[(String, String), Seq[KoodistoElement]] = Scaffeine()
-    .expireAfterWrite(10.minutes)
-    .build()
-
-  implicit val koulutuksetByTutkintotyyppiCache: Cache[String, Seq[KoodistoElement]] = Scaffeine()
-    .expireAfterWrite(10.minutes)
-    .build()
+  val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
   def getKoodistoKaannoksetFromCache(koodisto: String): Map[String, Kielistetty] = {
-    val res: KoodistoQueryResponse = getAndUpdateFromKoodistoElementCache(koodisto, koodistoElementCache, getKoodistoKoodit)
-
-    if (res.success) {
-      res.elements.map(element => (element.koodiUri, element.asKielistetty)).toMap
-    } else {
-      Map.empty
-    }
+    getKoodistoKoodit(koodisto).map(elements => elements
+        .filter(isKoodiVoimassa)
+        .map(element => (element.koodiUri, element.asKielistetty()))
+        .toMap)
+      .getOrElse(Map.empty);
   }
 
   def getRinnasteisetCached(koodiUri: String, koodisto: String): Seq[KoodistoElement] = {
-    rinnasteinenKoodistoElementCache.get((koodiUri, koodisto), params => getRinnasteisetKooditInKoodisto(params._1, params._2))
-  }
-
-  def getKoodistoElementVersionOrLatestFromCache(koodiUriAsString: String): Either[Throwable, KoodistoElement] = {
-    Try[KoodistoElement] {
-      koodistoElementVersionCache.get(koodiUriAsString, koodiUriAsString => getKoodistoElementVersionOrLatestFromKoodistoService(koodiUriAsString))
-    } match {
-      case Success(koodistoElement) => Right(koodistoElement)
-      case Failure(exp)      => Left(exp)
+    logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
+    getRinnasteisetKoodit(removeVersio(koodiUri)) match {
+      case Right(result) => result
+        .filter(element => element.belongsToKoodisto(koodisto))
+        .filter(isKoodiVoimassa)
+      case Left(exp) if exp.status.isDefined && exp.status == 404 => Seq.empty
+      case Left(exp) => {
+        logger.error("Rinnasteisten koodien haku epäonnistui: ", exp)
+        throw exp
+      }
     }
   }
 
-  def getKoulutuksetByTutkintotyyppiCached(tutkintotyyppi: String): Either[Throwable, Seq[KoodistoElement]] = {
-    val res: KoodistoQueryResponse = getAndUpdateFromKoodistoElementCache(
-      tutkintotyyppi,
-      koulutuksetByTutkintotyyppiCache,
-      getVoimassaOlevatYlakoodit)
-
-    if (res.success) {
-      Right(res.elements)
-    } else {
-      Left(new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyyppi $tutkintotyyppi from koodisto."))
+  def getKoodistoElementVersionOrLatestFromCache(koodiUri: String): Either[Throwable, KoodistoElement] = {
+    getVersio(koodiUri) match {
+      case Some(_) => getKoodistoElementVersion(koodiUri)
+      case None => getKoodistoElementLatestVersion(koodiUri)
     }
   }
 
-  def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
-    getAndUpdateFromKoodistoElementCache(koodisto.toString, koodistoElementCache, getKoodistoKoodit) match {
-      case resp if resp.success =>
-        fromBoolean(contains(koodiUri, resp.elements))
-      case _ => queryFailed
-    }
-
-  private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodistoElement] = {
-    getVoimassaOlevatYlakoodit(tyyppi).filter(element => element.koodisto.map(koodisto => koodisto.koodistoUri == "koulutus").getOrElse(false))
-  }
-
-  def koulutusKoodiUriOfKoulutustyypitExistFromCache(
-      koulutustyypit: Seq[String],
-      koodiUri: String
-  ): ExternalQueryResult = {
-    try {
-      val exits = koulutustyypit.exists(tyyppi => {
-        val koodiUritOfKoulutustyyppi =
-          koodistoElementCache.get(tyyppi, tyyppi => getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi))
-        contains(koodiUri, koodiUritOfKoulutustyyppi)
-      })
-      if (exits) itemFound
-      else itemNotFound
-    } catch {
-      case _: Throwable => queryFailed
+  def getKoulutuksetByTutkintotyyppi(tutkintotyyppi: String): Either[Throwable, Seq[KoodistoElement]] = {
+    getYlakoodit(tutkintotyyppi) match {
+      case Right(result) => Right(result.filter(isKoodiVoimassa))
+      case Left(_) => Left(new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyyppi $tutkintotyyppi from koodisto."))
     }
   }
 
-  // Oletus: koodiUriFilter:in URIt eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata koodiUriFilterissä
+  def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult = {
+    getKoodistoKoodit(koodisto.toString) match {
+      case Right(elements: Seq[KoodiUri]) => fromBoolean(contains(koodiUri, elements.filter(isKoodiVoimassa)))
+      case Left(exp) if exp.status.isDefined && exp.status.get == 404 => itemNotFound
+      case Left(exp) => queryFailed
+    }
+  }
+
+  def koulutusKoodiUriOfKoulutustyypitExistFromCache(koulutustyypit: Seq[String], koodiUri: String): ExternalQueryResult = {
+    for(koulutusTyyppi <- koulutustyypit) {
+      getYlakoodit(koulutusTyyppi).map(result => result
+        .filter(isKoodiVoimassa)
+        .filter(element => element.koodisto.isDefined && element.koodisto.get.koodistoUri == "koulutus")) match {
+          case Right(koulutusTyyppiKoodiUrit) => if(contains(koodiUri, koulutusTyyppiKoodiUrit)) return itemFound
+          case Left(_) => return queryFailed
+        }
+    }
+    itemNotFound
+  }
+
+  // Oletus: sallitutKoodiUrit eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata sallituissa koodiUreissa
   // mahdollisesti annettuihin versioihin.
   def koulutusKoodiUriExists(sallitutKoodiUrit: Seq[String], koodiUri: String): ExternalQueryResult = {
-    val queryResponse = getAndUpdateFromKoodistoElementCache("koulutus", koodistoElementCache, getKoodistoKoodit)
-    if (queryResponse.success) {
-      val koulutusKoodiUrit = queryResponse.elements.filter(koodistoElement =>
-        sallitutKoodiUrit.exists(sallittuKoodiUri => koodistoElement.koodiUri == sallittuKoodiUri)
-      )
-      fromBoolean(contains(koodiUri, koulutusKoodiUrit))
-    } else {
-      queryFailed
+    getKoodistoKoodit("koulutus") match {
+      case Right(elements) =>
+        val koulutusKoodiUrit = elements
+          .filter(isKoodiVoimassa)
+          .filter(koodistoElement => sallitutKoodiUrit.exists(sallittuKoodiUri => koodistoElement.koodiUri == sallittuKoodiUri)
+        )
+        fromBoolean(contains(koodiUri, koulutusKoodiUrit))
+      case Left(_) => queryFailed
     }
   }
 
@@ -171,96 +149,10 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
       koodiUriExistsInKoodisto(OppiaineKoodisto, oppiaineArvo)
     }
   }
-}
-
-abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
-
-  val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-
-  implicit val formats = DefaultFormats
-
-  private def getWithRetry[A](url: String, followRedirects: Boolean = false) (parse: String => A): A = {
-    val maxRetries = 1;
-    var retry = 0;
-    while(true) {
-      Try[A] {
-        get(url, (url, status, response) => throw KoodistoQueryException(url, status, response), followRedirects)(parse)
-      } match {
-        case Success(result) => return result
-        case Failure(exp: KoodistoQueryException) if retry<maxRetries && retryStatusCodes.contains(exp.status) => {
-          retry += 1
-          logger.warn(s"Failed to get data from koodisto, retrying ($retry) ...")
-        }
-        case Failure(exp: KoodistoQueryException) if exp.status==404 => throw KoodistoNotFoundException(s"Koodisto url ${url} returned not found")
-        case Failure(exp: Throwable) => throw exp
-      }
-    }
-    throw new RuntimeException() // tänne ei tulla koskaan mutta kääntäjä vaatii
-  }
-
-  protected def getKoodistoKoodit(koodisto: String): Seq[KoodistoElement] =
-    getWithRetry(
-      urlProperties.url("koodisto-service.koodisto-koodit", koodisto),
-      followRedirects = true
-    ) { response =>
-      {
-        parse(response)
-          .extract[List[KoodistoElement]]
-          .filter(isKoodiVoimassa)
-      }
-    }
-
-  protected def getVoimassaOlevatYlakoodit(koodi: String): List[KoodistoElement] = {
-    getWithRetry(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodi), followRedirects = true) {
-      response => {
-        parse(response)
-          .extract[List[KoodistoElement]]
-          .filter(isKoodiVoimassa)
-      }
-    }
-  }
-
-  def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodistoElement] = {
-    logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
-    try {
-      getWithRetry(
-        urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", removeVersio(koodiUri)),
-        followRedirects = true
-      ) { response =>
-        {
-          parse(response)
-            .extract[List[KoodistoElement]]
-            .filter((koodi: KoodistoElement) =>
-              koodi.belongsToKoodisto(koodisto) &&
-                isKoodiVoimassa(koodi)
-            )
-        }
-      }
-    } catch {
-      case _: KoodistoNotFoundException => List.empty
-      case e: Throwable =>
-        logger.error("Rinnasteisten koodien haku epäonnistui: ", e)
-        throw e
-    }
-  }
-
-  protected def getAndUpdateFromKoodistoElementCache(
-                                               koodisto: String,
-                                               koodiUriCache: Cache[String, Seq[KoodistoElement]],
-                                               getFromKoodistoFunction: String => Seq[KoodistoElement]
-                                             ): KoodistoQueryResponse = {
-    try {
-      val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getFromKoodistoFunction(koodisto))
-      KoodistoQueryResponse(success = true, koodiUritFromCache)
-    } catch {
-      case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())
-      case _: Throwable                 => KoodistoQueryResponse(success = false, Seq())
-    }
-  }
 
   protected def isKoodiVoimassa(koodistoElement: KoodistoElement) = {
     val dateToCompare = koodistoElement.voimassaLoppuPvm
-    val currentDate   = ZonedDateTime.now().toLocalDateTime
+    val currentDate = ZonedDateTime.now().toLocalDateTime
     if (koodistoElement.voimassaLoppuPvm.isDefined) {
       Try[LocalDate] {
         LocalDate.parse(dateToCompare.get, ISO_LOCAL_DATE_FORMATTER)
@@ -276,18 +168,90 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
       true
     }
   }
+}
 
-  protected def getKoodistoElementVersionOrLatestFromKoodistoService(koodiUriAsString: String): KoodistoElement = {
-    val base = removeVersio(koodiUriAsString)
-    val versio = getVersio(koodiUriAsString);
-    getWithRetry(
-      if (versio.isDefined)
-        urlProperties.url("koodisto-service.koodiuri-version", base, versio.get.toString)
-      else
-        urlProperties.url("koodisto-service.latest-koodiuri", base),
-      followRedirects = true
-    ) { response =>
-      parse(response).extract[KoodistoElement]
+class CachedMethod[A, B](cache: Cache[A, B], method: A => Either[KoodistoError, B]) extends Function[A, Either[KoodistoError, B]] {
+
+  def apply(key: A): Either[KoodistoError, B] = {
+    try {
+      Right(cache.get(key, k => {
+        method(k: A) match {
+          case Right(result: B) => result
+          case Left(err: KoodistoError) => throw err
+        }
+      }))
+    } catch {
+      case(err: KoodistoError) => Left(err)
     }
+  }
+
+  def clearCache() = {
+    cache.invalidateAll()
+  }
+}
+
+abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
+
+  implicit val formats = DefaultFormats
+
+  private def getWithRetry[A](url: String, followRedirects: Boolean = false) (parse: String => A): Either[KoodistoError, A] = {
+    val maxRetries = 1;
+    var retry = 0;
+    while(true) {
+      Try[A] {
+        get(url, (url, status, response) => throw KoodistoError(url, Some(status), response), followRedirects)(parse)
+      } match {
+        case Success(result) => return Right(result)
+        case Failure(exp: KoodistoError) if retry<maxRetries && exp.status.isDefined && retryStatusCodes.contains(exp.status.get) =>
+          retry += 1
+          logger.warn(s"Failed to get data from koodisto url ${url}, retrying ($retry) ...")
+        case Failure(exp: KoodistoError) => return Left(exp)
+        case Failure(exp: Throwable) => Left(KoodistoError(url, None, exp.getMessage)) // parse feilaa
+      }
+    }
+    throw new RuntimeException() // tänne ei tulla koskaan mutta kääntäjä vaatii
+  }
+
+  protected val getKoodistoKoodit = new CachedMethod[String, Seq[KoodistoElement]](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodisto => getWithRetry(
+      urlProperties.url("koodisto-service.koodisto-koodit",
+      koodisto), followRedirects = true
+    ) { response => parse(response).extract[List[KoodistoElement]]})
+
+  protected val getYlakoodit = new CachedMethod[String, Seq[KoodistoElement]](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodiUri => getWithRetry(
+      urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodiUri),
+      followRedirects = true
+    ) { response => parse(response).extract[List[KoodistoElement]] })
+
+  protected val getRinnasteisetKoodit = new CachedMethod[String, Seq[KoodistoElement]](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodiUri => getWithRetry(
+      urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
+      followRedirects = true)
+    { response => parse(response).extract[List[KoodistoElement]] })
+
+  protected val getKoodistoElementVersion = new CachedMethod[String, KoodistoElement](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodiUri => getWithRetry(
+        urlProperties.url("koodisto-service.koodiuri-version", removeVersio(koodiUri), getVersio(koodiUri).get.toString),
+        followRedirects = true
+      ) { response => parse(response).extract[KoodistoElement] })
+
+  protected val getKoodistoElementLatestVersion = new CachedMethod[String, KoodistoElement](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodiUri => getWithRetry(
+        urlProperties.url("koodisto-service.latest-koodiuri", removeVersio(koodiUri)),
+        followRedirects = true
+      ) { response => parse(response).extract[KoodistoElement] })
+
+  def invalidateCaches() = {
+    getKoodistoKoodit.clearCache()
+    getYlakoodit.clearCache()
+    getRinnasteisetKoodit.clearCache()
+    getKoodistoElementVersion.clearCache()
+    getKoodistoElementLatestVersion.clearCache()
   }
 }

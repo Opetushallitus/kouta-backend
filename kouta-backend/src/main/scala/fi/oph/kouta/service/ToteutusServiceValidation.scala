@@ -369,7 +369,7 @@ class ToteutusServiceValidation(
           ),
           validateIfTrue(
             isTutkintoonJohtavaKorkeakoulutus,
-            koodistoClient.getKoulutuksetByTutkintotyyppiCached(Tohtorikoulutus) match {
+            koodistoClient.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
               case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
                 val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)

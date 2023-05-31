@@ -360,7 +360,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(itemFound)
     when(koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
       .thenAnswer(itemFound)
-    when(koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16"))
+    when(koodistoClient.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
       .thenReturn(Right(Seq(TestKoodistoElement("koulutus_655101", 2, defaultName), TestKoodistoElement("koulutus_755101", 2, defaultName), TestKoodistoElement("koulutus_855101", 2, defaultName))))
   }
 
@@ -1068,7 +1068,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail with error message if koodistoservice is down" in {
-    when(koodistoClient.getKoulutuksetByTutkintotyyppiCached("tutkintotyyppi_16"))
+    when(koodistoClient.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
       .thenReturn(Left(new RuntimeException()))
     failsValidation(
       yoToteutusWithOpetusParameters(
