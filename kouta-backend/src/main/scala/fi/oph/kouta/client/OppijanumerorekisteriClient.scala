@@ -29,6 +29,7 @@ object OppijanumerorekisteriClient
     with Logging
     with KoutaJsonFormats {
   private val config = KoutaConfigurationFactory.configuration.oppijanumerorekisteriClientConfiguration
+  private val isTestEnvironment = KoutaConfigurationFactory.configuration.isTestEnvironment
   private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   private val params = CasParams(
     urlProperties.url("oppijanumerorekisteri-service"),
@@ -66,6 +67,8 @@ object OppijanumerorekisteriClient
                 .map(responseBody => {
                   parse(responseBody).extract[Henkilo]
                 })
+            case r if r.status.code == 404 && isTestEnvironment =>
+              Task(Henkilo(kutsumanimi = Some("Henkilö"), sukunimi = Some("Puuttuu"), etunimet = Some("Henkilö")))
             case r =>
               r.bodyAsText
                 .runLog
