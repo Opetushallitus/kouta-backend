@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, EPerusteKoodiClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
@@ -20,9 +20,9 @@ trait HakuFixtureWithIndexing extends HakuFixture {
 
   override def hakuService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val hakuServiceValidation = new HakuServiceValidation(koodistoClient, mockHakemusPalveluClient, HakukohdeDAO)
+    val hakuServiceValidation = new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO)
     new HakuService(SqsInTransactionService, new AuditLog(MockAuditLogger), MockOhjausparametritClient, organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, hakuServiceValidation, koutaIndeksoijaClient)
   }
 }
@@ -32,15 +32,15 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 
   override def koulutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
-    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
+    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
 
     val koulutusServiceValidation =
-      new KoulutusServiceValidation(koodistoClient, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
+      new KoulutusServiceValidation(koodistoService, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
 
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient, koulutusServiceValidation, mockKoutaSearchClient, ePerusteKoodiClient, koutaIndeksoijaClient)
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoService, koulutusServiceValidation, mockKoutaSearchClient, ePerusteKoodiClient, koutaIndeksoijaClient)
   }
 }
 
@@ -50,11 +50,11 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   override def toteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
+    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
-      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient)
+      new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient)
   }
 }
 
@@ -63,9 +63,9 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
 
   override def valintaperusteService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoClient, HakukohdeDAO)
+    val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoService, HakukohdeDAO)
     new ValintaperusteService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, valintaperusteServiceValidation, koutaIndeksoijaClient)
   }
 }
@@ -76,14 +76,14 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
   override def hakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val hakukohdeServiceValidation = new HakukohdeServiceValidation(koodistoClient, mockHakemusPalveluClient, organisaatioService, lokalisointiClient, HakukohdeDAO, HakuDAO)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoClient, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
-    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoClient,
+    val hakukohdeServiceValidation = new HakukohdeServiceValidation(koodistoService, mockHakemusPalveluClient, organisaatioService, lokalisointiClient, HakukohdeDAO, HakuDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoService,
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,
-        koodistoClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient),
+        koodistoService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient),
     hakukohdeServiceValidation, koutaIndeksoijaClient)
   }
 }

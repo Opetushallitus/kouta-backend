@@ -1,14 +1,14 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient, KoodistoClient, KoutaIndeksoijaClient, KoutaSearchClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, EPerusteKoodiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
-import fi.oph.kouta.service.{KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{KoodistoService, KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
@@ -16,7 +16,6 @@ import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
 import org.scalactic.Equality
 
 import java.util.UUID
-import scala.util.Try
 
 trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
   this: KoutaIntegrationSpec =>
@@ -25,13 +24,13 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
 
   def koulutusService: KoulutusService = {
     val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient               = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService              = new KoodistoService(new KoodistoClient(urlProperties.get))
     val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
-    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
+    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
     val koulutusServiceValidation =
       new KoulutusServiceValidation(
-        koodistoClient,
+        koodistoService,
         organisaatioService,
         ToteutusDAO,
         SorakuvausDAO,
@@ -45,7 +44,7 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
       organisaatioService,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      koodistoClient,
+      koodistoService,
       koulutusServiceValidation,
       mockKoutaSearchClient,
       ePerusteKoodiClient,

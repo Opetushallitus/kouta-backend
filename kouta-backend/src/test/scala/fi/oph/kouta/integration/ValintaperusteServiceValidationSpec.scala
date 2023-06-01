@@ -1,21 +1,19 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{MinHakukohdeListItem, MinYoValintaperuste, Valintakoe1, Valintatapa1, YoValintaperuste, inPast}
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Ajanjakso, Amm, Arkistoitu, Column, Fi, GenericValintaperusteMetadata, HakukohdeListItem, HakutapaKoodisto, HaunKohdejoukkoKoodisto, Julkaistu, Julkaisutila, Poistettu, PostiosoiteKoodisto, Row, SisaltoTeksti, Sv, Tallennettu, Taulukko, TilaFilter, ValintakoeTyyppiKoodisto, Valintaperuste, Valintatapa, ValintatapaKoodisto}
 import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.service.ValintaperusteServiceValidation
+import fi.oph.kouta.service.{KoodistoService, ValintaperusteServiceValidation}
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
-import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty,
-  invalidValintakoeTyyppiKoodiuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg}
+import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty, invalidValintakoeTyyppiKoodiuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg}
 import org.scalatest.Assertion
 
 import java.util.UUID
 
 class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Valintaperuste] {
-  val koodistoClient     = mock[CachedKoodistoClient]
+  val koodistoService     = mock[KoodistoService]
   val hakukohdeDao        = mock[HakukohdeDAO]
 
   val valintaperusteId  = UUID.randomUUID()
@@ -33,16 +31,16 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
     max.copy(valintakokeet = List(max.valintakokeet.head.copy(tilaisuudet = List(tilaisuus))))
   }
 
-  override val validator = new ValintaperusteServiceValidation(koodistoClient, hakukohdeDao)
+  override val validator = new ValintaperusteServiceValidation(koodistoService, hakukohdeDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_15#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_av#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_15#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_av#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#1")).thenAnswer(itemFound)
 
     when(hakukohdeDao.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Seq[HakukohdeListItem]())

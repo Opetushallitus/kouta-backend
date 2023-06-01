@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
@@ -9,9 +8,9 @@ import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
-object OppilaitosServiceValidation extends OppilaitosServiceValidation(CachedKoodistoClient)
+object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
 
-class OppilaitosServiceValidation(koodistoClient: CachedKoodistoClient) extends ValidatingService[Oppilaitos] {
+class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends ValidatingService[Oppilaitos] {
 
   def withValidation[R](oppilaitos: Oppilaitos, oldOppilaitos: Option[Oppilaitos], authenticated: Authenticated)(
     f: Oppilaitos => R
@@ -112,9 +111,9 @@ class OppilaitosServiceValidation(koodistoClient: CachedKoodistoClient) extends 
   override def validateInternalDependenciesWhenDeletingEntity(e: Oppilaitos): IsValid = NoErrors
 }
 
-object OppilaitoksenOsaServiceValidation extends OppilaitoksenOsaServiceValidation(CachedKoodistoClient, OppilaitosDAO)
+object OppilaitoksenOsaServiceValidation extends OppilaitoksenOsaServiceValidation(KoodistoService, OppilaitosDAO)
 
-class OppilaitoksenOsaServiceValidation(koodistoClient: CachedKoodistoClient, oppilaitosDAO: OppilaitosDAO)
+class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilaitosDAO: OppilaitosDAO)
     extends ValidatingService[OppilaitoksenOsa] {
 
   def withValidation[R](osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa], authenticated: Authenticated)(

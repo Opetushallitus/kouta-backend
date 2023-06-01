@@ -13,7 +13,6 @@ import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParam
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import slick.dbio.DBIO
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -26,7 +25,7 @@ object HakukohdeService
       LokalisointiClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      CachedKoodistoClient,
+      KoodistoService,
       ToteutusService,
       HakukohdeServiceValidation,
       KoutaIndeksoijaClient
@@ -58,7 +57,7 @@ class HakukohdeService(
     val lokalisointiClient: LokalisointiClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     toteutusService: ToteutusService,
     hakukohdeServiceValidation: HakukohdeServiceValidation,
     koutaIndeksoijaClient: KoutaIndeksoijaClient
@@ -124,7 +123,7 @@ class HakukohdeService(
               } else {
                 val hkLinja = hakukohde.metadata.flatMap(_.hakukohteenLinja).flatMap(_.linja)
                 if (hkLinja.isDefined) {
-                    koodistoClient.getKoodistoElementVersionOrLatestFromCache(hkLinja.get) match {
+                    koodistoService.getKoodistoElementVersionOrLatest(hkLinja.get) match {
                     case Left(exception) => throw exception
                     case Right(koodistoElement) =>
                       hakukohde.copy(nimi = mergeNames(koodistoElement.asKielistetty, hakukohde.nimi, hakukohde.kielivalinta))

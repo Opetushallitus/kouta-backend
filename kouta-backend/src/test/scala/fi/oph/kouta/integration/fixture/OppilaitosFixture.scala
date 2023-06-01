@@ -2,14 +2,14 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Oppilaitos}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.OppilaitosDAO
-import fi.oph.kouta.service.{OppilaitosService, OppilaitosServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{KoodistoService, OppilaitosService, OppilaitosServiceValidation, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.OppilaitosServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
@@ -24,8 +24,8 @@ trait OppilaitosFixture extends AccessControlSpec {
 
   def oppilaitosService: OppilaitosService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get, mockOrganisaatioServiceClient)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
-    val oppilaitosServiceValidation = new OppilaitosServiceValidation(koodistoClient)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
+    val oppilaitosServiceValidation = new OppilaitosServiceValidation(koodistoService)
     new OppilaitosService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, oppilaitosServiceValidation, mockOppilaitosDao)
   }
 

@@ -3,12 +3,11 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.Osoite1
 import fi.oph.kouta.TestOids.{ChildOid, EvilCousin, OphOid, UnknownOid}
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.{KoutaValidationException, OppilaitoksenOsaServiceValidation}
+import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OppilaitoksenOsaServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
@@ -24,7 +23,7 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val koodistoClient      = mock[CachedKoodistoClient]
+  val koodistoService     = mock[KoodistoService]
   val oppilaitosDao       = mock[OppilaitosDAO]
 
   val min = TestData.MinOppilaitoksenOsa
@@ -55,12 +54,12 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
     InetAddress.getByName("127.0.0.1")
   )
 
-  val validator = new OppilaitoksenOsaServiceValidation(koodistoClient, oppilaitosDao)
+  val validator = new OppilaitoksenOsaServiceValidation(koodistoService, oppilaitosDao)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
     when(oppilaitosDao.getTila(ChildOid)).thenAnswer(Some(Julkaistu))
     when(oppilaitosDao.getTila(UnknownOid)).thenAnswer(None)
     when(oppilaitosDao.getTila(EvilCousin)).thenAnswer(Some(Tallennettu))

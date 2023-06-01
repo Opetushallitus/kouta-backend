@@ -6,13 +6,14 @@ import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.KoulutusOid
 import fi.oph.kouta.mocks.TestKoodistoElement
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
 import org.scalatest.Assertion
 
 class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidationSpec[Koulutus] {
-  val koodistoClient      = mock[CachedKoodistoClient]
+  val koodistoService     = mock[KoodistoService]
   val ePerusteKoodiClient = mock[EPerusteKoodiClient]
 
   val amm: Koulutus   = AmmKoulutus
@@ -21,20 +22,20 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
   val koulutusOid: Option[KoulutusOid] = Some(KoulutusOid("1.2.246.562.13.125"))
 
-  override def validator = new AmmatillinenKoulutusServiceValidation(koodistoClient, ePerusteKoodiClient)
+  override def validator = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
 
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#1")
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_381501#1")
-    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371101#1"))
+    when(koodistoService.getKoodistoElementVersionOrLatest("koulutus_371101#1"))
       .thenAnswer(Right(TestKoodistoElement("koulutus_371101", 1, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371101#12")
-    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371101#12"))
+    when(koodistoService.getKoodistoElementVersionOrLatest("koulutus_371101#12"))
       .thenAnswer(Right(TestKoodistoElement("koulutus_371101", 12, defaultName)))
     acceptKoulutusKoodiUri(AmmatillisetKoulutusKoodit, "koulutus_371666#1")
-    when(koodistoClient.getKoodistoElementVersionOrLatestFromCache("koulutus_371666#1"))
+    when(koodistoService.getKoodistoElementVersionOrLatest("koulutus_371666#1"))
       .thenAnswer(Left(new RuntimeException("")))
 
     when(ePerusteKoodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L))
@@ -65,19 +66,19 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     when(ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(66))).thenAnswer(Left(ePerusteFailure))
 
     when(
-      koodistoClient.koodiUriExistsInKoodisto(
+      koodistoService.koodiUriExistsInKoodisto(
         KoulutusalaKoodisto,
         "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"
       )
     )
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
       .thenAnswer(itemFound)
   }
 
   private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit =
     when(
-      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(filter.koulutusTyypit, koodiUri)
+      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(filter.koulutusTyypit, koodiUri)
     ).thenAnswer(itemFound)
 
   private def ammTkWithTutkinnonOsaParams(

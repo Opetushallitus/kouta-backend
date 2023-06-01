@@ -3,14 +3,13 @@ package fi.oph.kouta.integration.fixture
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, MockKoutaIndeksoijaClient}
-import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.client.{KoodistoClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, SQLHelpers}
-import fi.oph.kouta.service.{HakuService, HakuServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{HakuService, HakuServiceValidation, KoodistoService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.HakuServlet
 import fi.oph.kouta.util.TimeUtils
 
@@ -25,9 +24,9 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
 
   def hakuService: HakuService = {
     val organisaatioService   = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient        = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val hakuServiceValidation = new HakuServiceValidation(koodistoClient, mockHakemusPalveluClient, HakukohdeDAO)
+    val hakuServiceValidation = new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO)
     new HakuService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

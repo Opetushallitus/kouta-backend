@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedKoodistoClient, KoodistoElement}
+import fi.oph.kouta.client.{KoodistoElement}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -15,7 +15,7 @@ import fi.oph.kouta.validation._
 
 object ToteutusServiceValidation
     extends ToteutusServiceValidation(
-      CachedKoodistoClient,
+      KoodistoService,
       OrganisaatioServiceImpl,
       KoulutusDAO,
       HakukohdeDAO,
@@ -24,12 +24,12 @@ object ToteutusServiceValidation
     )
 
 class ToteutusServiceValidation(
-    val koodistoClient: CachedKoodistoClient,
-    val organisaatioService: OrganisaatioService,
-    koulutusDAO: KoulutusDAO,
-    hakukohdeDAO: HakukohdeDAO,
-    val sorakuvausDAO: SorakuvausDAO,
-    toteutusDAO: ToteutusDAO
+                                 val koodistoService: KoodistoService,
+                                 val organisaatioService: OrganisaatioService,
+                                 koulutusDAO: KoulutusDAO,
+                                 hakukohdeDAO: HakukohdeDAO,
+                                 val sorakuvausDAO: SorakuvausDAO,
+                                 toteutusDAO: ToteutusDAO
 ) extends KoulutusToteutusValidatingService[Toteutus]
     with RoleEntityAuthorizationService[Toteutus] {
 
@@ -248,21 +248,21 @@ class ToteutusServiceValidation(
         toteutusDiffResolver.newOpetuskieliKoodiUrit(),
         "opetuskieliKoodiUrit",
         vCtx,
-        koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, _),
+        koodistoService.koodiUriExistsInKoodisto(OpetuskieliKoodisto, _),
         invalidOpetusKieliKoodiUri
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetusaikaKoodiUrit(),
         "opetusaikaKoodiUrit",
         vCtx,
-        koodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto, _),
+        koodistoService.koodiUriExistsInKoodisto(OpetusaikaKoodisto, _),
         invalidOpetusAikaKoodiUri
       ),
       validateOpetusKoodiUriListItem(
         toteutusDiffResolver.newOpetustapaKoodiUrit(),
         "opetustapaKoodiUrit",
         vCtx,
-        koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, _),
+        koodistoService.koodiUriExistsInKoodisto(OpetustapaKoodisto, _),
         invalidOpetusTapaKoodiUri
       ),
       validateIfDefined[KoulutuksenAlkamiskausi](
@@ -271,7 +271,7 @@ class ToteutusServiceValidation(
           "metadata.opetus.koulutuksenAlkamiskausi",
           toteutusDiffResolver.koulutuksenAlkamiskausiWithNewValues(),
           vCtx,
-          koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, _)
+          koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
       validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
@@ -288,7 +288,7 @@ class ToteutusServiceValidation(
             path,
             newLisatieto,
             vCtx,
-            koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+            koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
           )
       ),
       validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
@@ -369,7 +369,7 @@ class ToteutusServiceValidation(
           ),
           validateIfTrue(
             isTutkintoonJohtavaKorkeakoulutus,
-            koodistoClient.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
+            koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
               case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
                 val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
@@ -406,7 +406,7 @@ class ToteutusServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koodistoClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(OsaamisalaKoodisto, _),
             s"$path.koodiUri",
             vCtx,
             invalidOsaamisalaKoodiUri(koodiUri)
@@ -429,7 +429,7 @@ class ToteutusServiceValidation(
             assertKoulutuskoodiQueryResult(
               koodiUri,
               AmmatillisetPerustutkintoKoodit,
-              koodistoClient,
+              koodistoService,
               path,
               validationContext,
               invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(koodiUri)
@@ -557,7 +557,7 @@ class ToteutusServiceValidation(
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, _),
+          koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, _),
           path,
           validationContext,
           invalidKieliKoodiUri(relativePath, koodiUri)
@@ -623,14 +623,14 @@ class ToteutusServiceValidation(
         lkMetadata.painotukset,
         toteutusDiffResolver.newLukioPainotukset(),
         "painotukset",
-        koodistoClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, _),
+        koodistoService.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, _),
         vCtx
       ),
       validateLukioLinjat(
         lkMetadata.erityisetKoulutustehtavat,
         toteutusDiffResolver.newLukioErityisetKoulutustehtavat(),
         "erityisetKoulutustehtavat",
-        koodistoClient.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, _),
+        koodistoService.koodiUriExistsInKoodisto(LukioErityinenKoulutustehtavaKoodisto, _),
         vCtx
       ),
       validateIfNonEmptySeq[LukiodiplomiTieto](
@@ -654,7 +654,7 @@ class ToteutusServiceValidation(
               newDiplomi =>
                 assertKoodistoQueryResult(
                   newDiplomi.koodiUri,
-                  koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, _),
+                  koodistoService.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, _),
                   s"$path.koodiUri",
                   vCtx,
                   invalidLukioDiplomiKoodiUri(newDiplomi.koodiUri)
@@ -796,7 +796,7 @@ class ToteutusServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(TaiteenalaKoodisto, _),
             path,
             vCtx,
             invalidTaiteenPerusopetusTaiteenalaKoodiuri(koodiUri)

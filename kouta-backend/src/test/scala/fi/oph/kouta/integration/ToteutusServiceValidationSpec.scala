@@ -2,14 +2,13 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.client.{CachedKoodistoClient, KoodiUri, KoodistoElement}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.mocks.TestKoodistoElement
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.{KoutaValidationException, OrganisaatioService, OrganizationAuthorizationFailedException, ToteutusServiceValidation}
+import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OrganisaatioService, OrganizationAuthorizationFailedException, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
@@ -24,7 +23,7 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] {
-  val koodistoClient      = mock[CachedKoodistoClient]
+  val koodistoService     = mock[KoodistoService]
   val organisaatioService = mock[OrganisaatioService]
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
@@ -226,7 +225,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   override val validator =
     new ToteutusServiceValidation(
-      koodistoClient,
+      koodistoService,
       organisaatioService,
       koulutusDao,
       hakukohdeDao,
@@ -252,16 +251,16 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Seq(OtherOid), Koulutustyyppi.values)
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LonelyOid)).thenAnswer(Seq(LonelyOid), Seq())
     when(organisaatioService.getAllChildOidsFlat(ChildOid)).thenAnswer(Seq(ChildOid, GrandChildOid, GrandGrandChildOid))
-    when(koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1"))
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_4#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_4#1"))
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpetusaikaKoodisto, "opetusaikakk_1#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(OpetusaikaKoodisto, "opetusaikakk_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1"))
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
 
     // tietokantakyselyt
     when(koulutusDao.get(KoulutusOid("1.2.246.562.13.123"))).thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu)))
@@ -317,50 +316,50 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenAnswer(Seq(MinHakukohdeListItem.copy(toteutusOid = toteutusOid2)))
 
     // ammatillinen
-    when(koodistoClient.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
     // lukio
-    when(koodistoClient.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(LukioPainotuksetKoodisto, "lukiopainotukset_1#1"))
       .thenAnswer(itemFound)
     when(
-      koodistoClient.koodiUriExistsInKoodisto(
+      koodistoService.koodiUriExistsInKoodisto(
         LukioErityinenKoulutustehtavaKoodisto,
         "lukiolinjaterityinenkoulutustehtava_1#1"
       )
     ).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1"))
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1"))
       .thenAnswer(itemFound)
     when(
-      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         validKoulutuksetKoodiUri
       )
     ).thenAnswer(itemFound)
     when(
-      koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         invalidKoulutuksetKoodiUri
       )
     ).thenAnswer(itemNotFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_EN#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_DE#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FR#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ES#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ET#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_EN#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_DE#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_SV#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FR#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ES#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_FI#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KieliKoodisto, "kieli_ET#1")).thenAnswer(itemFound)
 
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(ChildOid)).thenAnswer((Seq(ChildOid), Seq(Amk)))
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(PohjoiskalotinKoulutussaatio))
       .thenAnswer((Seq(PohjoiskalotinKoulutussaatio), Seq(Muu)))
     when(organisaatioService.withoutOppilaitostyypit(anySeq[OrganisaatioOid], anySeq[String])).thenReturn(Seq())
 
-    when(koodistoClient.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
+    when(koodistoService.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
       .thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
+    when(koodistoService.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
       .thenAnswer(itemFound)
-    when(koodistoClient.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
+    when(koodistoService.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
       .thenReturn(Right(Seq(TestKoodistoElement("koulutus_655101", 2, defaultName), TestKoodistoElement("koulutus_755101", 2, defaultName), TestKoodistoElement("koulutus_855101", 2, defaultName))))
   }
 
@@ -1068,7 +1067,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail with error message if koodistoservice is down" in {
-    when(koodistoClient.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
+    when(koodistoService.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
       .thenReturn(Left(new RuntimeException()))
     failsValidation(
       yoToteutusWithOpetusParameters(

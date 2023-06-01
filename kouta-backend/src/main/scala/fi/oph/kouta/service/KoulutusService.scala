@@ -30,7 +30,7 @@ object KoulutusService
       OrganisaatioServiceImpl,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      CachedKoodistoClient,
+      KoodistoService,
       KoulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
@@ -43,7 +43,7 @@ object KoulutusService
       organisaatioService: OrganisaatioService,
       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
       kayttooikeusClient: KayttooikeusClient,
-      koodistoClient: CachedKoodistoClient,
+      koodistoService: KoodistoService,
       koulutusServiceValidation: KoulutusServiceValidation
   ): KoulutusService = {
     new KoulutusService(
@@ -53,7 +53,7 @@ object KoulutusService
       organisaatioService,
       oppijanumerorekisteriClient,
       kayttooikeusClient,
-      koodistoClient,
+      koodistoService,
       koulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
@@ -69,7 +69,7 @@ class KoulutusService(
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
@@ -100,7 +100,7 @@ class KoulutusService(
     } else { None }
 
   private def getKoodiUriVersion(koodiUriAsString: String): KoodistoElement =
-    koodistoClient.getKoodistoElementVersionOrLatestFromCache(koodiUriAsString) match {
+    koodistoService.getKoodistoElementVersionOrLatest(koodiUriAsString) match {
       case Left(exp)  => throw exp
       case Right(uri) => uri
     }

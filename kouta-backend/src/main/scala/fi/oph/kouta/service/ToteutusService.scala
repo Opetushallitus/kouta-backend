@@ -28,7 +28,7 @@ object ToteutusService
       OrganisaatioServiceImpl,
       KoulutusService,
       LokalisointiClient,
-      CachedKoodistoClient,
+      KoodistoService,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ToteutusServiceValidation,
@@ -61,7 +61,7 @@ class ToteutusService(
     val organisaatioService: OrganisaatioService,
     koulutusService: KoulutusService,
     lokalisointiClient: LokalisointiClient,
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation,
@@ -92,9 +92,9 @@ class ToteutusService(
                   "toteutuslomake.lukionYleislinjaNimiOsa"
                 )
               )
-              val painotuksetKaannokset = koodistoClient.getKoodistoKaannoksetFromCache("lukiopainotukset")
+              val painotuksetKaannokset = koodistoService.getKoodistoKaannoksetFromCache("lukiopainotukset")
               val koulutustehtavatKaannokset =
-                koodistoClient.getKoodistoKaannoksetFromCache("lukiolinjaterityinenkoulutustehtava")
+                koodistoService.getKoodistoKaannoksetFromCache("lukiolinjaterityinenkoulutustehtava")
               val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
               NameHelper.generateLukioToteutusDisplayName(
                 lukioToteutusMetadata,

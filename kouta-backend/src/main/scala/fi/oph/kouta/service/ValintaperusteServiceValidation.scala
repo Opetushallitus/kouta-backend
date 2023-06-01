@@ -1,17 +1,16 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, NoErrors, ValidationContext, ValintaperusteDiffResolver}
+import fi.oph.kouta.validation.{IsValid, ValidationContext, ValintaperusteDiffResolver}
 
 object ValintaperusteServiceValidation
-    extends ValintaperusteServiceValidation(CachedKoodistoClient, HakukohdeDAO)
+    extends ValintaperusteServiceValidation(KoodistoService, HakukohdeDAO)
 
 class ValintaperusteServiceValidation(
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     hakukohdeDAO: HakukohdeDAO
 ) extends ValidatingService[Valintaperuste] {
   override def validateEntity(vp: Valintaperuste, oldVp: Option[Valintaperuste]): IsValid = {
@@ -38,7 +37,7 @@ class ValintaperusteServiceValidation(
         koodiUri =>
             assertKoodistoQueryResult(
             koodiUri,
-            koodistoClient.koodiUriExistsInKoodisto(HakutapaKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, _),
               "hakutapaKoodiUri",
               vCtx,
               invalidHakutapaKoodiUri(koodiUri)
@@ -49,7 +48,7 @@ class ValintaperusteServiceValidation(
         koodiUri =>
             assertKoodistoQueryResult(
               koodiUri,
-              koodistoClient.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, _),
+              koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, _),
               "kohdejoukkoKoodiUri",
               vCtx,
               invalidHaunKohdejoukkoKoodiUri(koodiUri)
@@ -65,8 +64,8 @@ class ValintaperusteServiceValidation(
             newValintakoe,
             vCtx,
             existingValintakoeIds,
-            koodistoClient.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+            koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
           )
       ),
       validateIfDefined[ValintaperusteMetadata](vp.metadata, validateMetadata(vp.koulutustyyppi, _, vCtx, vpDiffResolver)),
@@ -92,7 +91,7 @@ class ValintaperusteServiceValidation(
       vpDiffResolver.newValintatavat(),
       "metadata.valintatavat",
       (valintatapa, newValintatapa, path) =>
-        valintatapa.validate(path, newValintatapa, vCtx, koodistoClient.koodiUriExistsInKoodisto(ValintatapaKoodisto, _))
+        valintatapa.validate(path, newValintatapa, vCtx, koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, _))
     ),
     validateIfNonEmpty[Sisalto](m.sisalto, "metadata.sisalto", _.validate(vCtx, _)),
     validateIfJulkaistu(
