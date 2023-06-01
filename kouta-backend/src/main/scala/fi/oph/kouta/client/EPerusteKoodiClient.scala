@@ -6,10 +6,15 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
+import fi.vm.sade.utils.slf4j.Logging
+import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration.DurationInt
 import scala.util.{Failure, Right, Success, Try}
+
+case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
+case class KoodistoNotFoundException(message: String)                        extends RuntimeException(message)
 
 case class KoodiUri(koodiUri: String, versio: Int, nimi: Kielistetty = Map())
 object KoodiUri {
@@ -98,7 +103,10 @@ case class OsaamisalaTopItem(osaamisala: Option[OsaamisalaItem])
 
 object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory.configuration.urlProperties)
 
-class EPerusteKoodiClient(urlProperties: OphProperties) extends KoodistoClient(urlProperties) {
+class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with CallerId with Logging {
+
+  implicit val formats = DefaultFormats
+
   val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
 
   implicit val cacheTTL = 15.minutes

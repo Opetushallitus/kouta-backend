@@ -14,9 +14,6 @@ import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.DurationInt
 
-case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
-case class KoodistoNotFoundException(message: String)                        extends RuntimeException(message)
-
 case class KoodistoError(url: String, status: Option[Int], message: String) extends RuntimeException(message)
 
 case class KoodistoSubElement(koodistoUri: String)
