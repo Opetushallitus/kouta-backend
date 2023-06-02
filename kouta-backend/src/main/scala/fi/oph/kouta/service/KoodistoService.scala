@@ -60,11 +60,9 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  def koulutusKoodiUriOfKoulutustyypitExist(koulutustyypit: Seq[String], koodiUri: String): ExternalQueryResult = {
-    for (koulutusTyyppi <- koulutustyypit) {
-      koodistoClient.getYlakoodit(koulutusTyyppi).map(result => result.view
-        .filter(isKoodiVoimassa)
-        .filter(element => element.koodisto.isDefined && element.koodisto.get.koodistoUri == "koulutus")) match {
+  def isInLisattavatKoulutukset(ylakoodit: Seq[String], koodiUri: String): ExternalQueryResult = {
+    for (koulutusTyyppi <- ylakoodit) {
+      getLisattavatKoulutukset(koulutusTyyppi) match {
         case Right(koulutusTyyppiKoodiUrit) => if (contains(koodiUri, koulutusTyyppiKoodiUrit)) return itemFound
         case Left(_) => return queryFailed
       }
@@ -72,13 +70,27 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     itemNotFound
   }
 
+  def getLisattavatKoulutukset(ylakoodi: String): Either[KoodistoError, Seq[KoodistoElement]] = {
+    koodistoClient.getYlakoodit(ylakoodi) match {
+      case Right(result) => Right(result.view
+        .filter(isKoodiVoimassa)
+        .filter(element => element.koodisto.exists(_.koodistoUri == "koulutus"))
+        .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)))
+      case Left(err) if err.status.exists(_ == 404) =>
+        logger.warn(s"No koulutukset were found for yläkoodi ${ylakoodi}")
+        Right(Seq.empty)
+      case Left(err) => Left(err)
+    }
+  }
+
   // Oletus: sallitutKoodiUrit eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata sallituissa koodiUreissa
   // mahdollisesti annettuihin versioihin.
-  def koulutusKoodiUriExists(sallitutKoodiUrit: Seq[String], koodiUri: String): ExternalQueryResult = {
+  def isLisattavaKoulutus(sallitutKoodiUrit: Seq[String], koodiUri: String): ExternalQueryResult = {
     koodistoClient.getKoodistoKoodit("koulutus") match {
       case Right(elements) =>
         val koulutusKoodiUrit = elements.view
           .filter(isKoodiVoimassa)
+          .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo))
           .filter(koodistoElement => sallitutKoodiUrit.exists(sallittuKoodiUri => koodistoElement.koodiUri == sallittuKoodiUri)
           )
         fromBoolean(contains(koodiUri, koulutusKoodiUrit))
@@ -94,17 +106,8 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  def getLisattavatKoulutukset(ylakoodi: String): Either[KoodistoError, Seq[KoodistoElement]] = {
-    koodistoClient.getYlakoodit(ylakoodi) match {
-      case Right(result) => Right(result.view
-        .filter(isKoodiVoimassa)
-        .filter(element => element.koodisto.isDefined && element.koodisto.get.koodistoUri == "koulutus")
-        .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)))
-      case Left(err) if err.status.isDefined && err.status.get == 404 =>
-        logger.warn(s"No koulutukset were found for yläkoodi ${ylakoodi}")
-        Right(Seq.empty)
-      case Left(err) => Left(err)
-    }
+  def isKoulutusValiotsikkoKoodiUri(koodiArvo: String): Boolean = {
+    koodiArvo.endsWith("00");
   }
 
   protected def isKoodiVoimassa(koodistoElement: KoodistoElement) = {
@@ -124,10 +127,6 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     } else {
       true
     }
-  }
-
-  def isKoulutusValiotsikkoKoodiUri(koodiArvo: String): Boolean = {
-    koodiArvo.endsWith("00");
   }
 
   def invalidateCaches() = koodistoClient.invalidateCaches()

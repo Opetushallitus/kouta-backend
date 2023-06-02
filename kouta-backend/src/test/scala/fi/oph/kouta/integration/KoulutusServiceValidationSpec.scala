@@ -191,11 +191,11 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit = {
     if (filter.filterType() == koulutusTyyppi)
       when(
-        koodistoService.koulutusKoodiUriOfKoulutustyypitExist(filter.koulutusTyypit, koodiUri)
+        koodistoService.isInLisattavatKoulutukset(filter.koulutusTyypit, koodiUri)
       ).thenAnswer(itemFound)
     else
       when(
-        koodistoService.koulutusKoodiUriExists(filter.koulutusKoodiUrit, koodiUri)
+        koodistoService.isLisattavaKoulutus(filter.koulutusKoodiUrit, koodiUri)
       ).thenAnswer(itemFound)
   }
 
@@ -254,10 +254,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
     // korkeakoulu
     acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_371101#1")
-    acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_201000#1")
+    acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_201001#1")
     acceptKoulutusKoodiUri(YoKoulutusKoodit, "koulutus_201111#1")
     acceptKoulutusKoodiUri(AmkKoulutusKoodit, "koulutus_371101#1")
-    acceptKoulutusKoodiUri(AmkKoulutusKoodit, "koulutus_201000#1")
+    acceptKoulutusKoodiUri(AmkKoulutusKoodit, "koulutus_201001#1")
     acceptKoulutusKoodiUri(AmmOpeErityisopeJaOpoKoulutusKoodit, "koulutus_000002#12")
     // lukio
     acceptKoulutusKoodiUri(LukioKoulutusKoodit, "koulutus_301101#1")

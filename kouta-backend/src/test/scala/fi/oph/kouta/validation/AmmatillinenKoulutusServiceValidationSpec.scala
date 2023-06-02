@@ -78,7 +78,7 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
   private def acceptKoulutusKoodiUri(filter: KoulutusKoodiFilter, koodiUri: String): Unit =
     when(
-      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(filter.koulutusTyypit, koodiUri)
+      koodistoService.isInLisattavatKoulutukset(filter.koulutusTyypit, koodiUri)
     ).thenAnswer(itemFound)
 
   private def ammTkWithTutkinnonOsaParams(

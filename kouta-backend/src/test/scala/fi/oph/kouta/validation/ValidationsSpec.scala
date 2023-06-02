@@ -209,19 +209,19 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     )
 
   "Koulutustyyppi-koodisto validation" should "succeed when valid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for koulutustyyppi-list" in {
-    when(koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutustyyppiKoodistoQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_371101#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutustyyppiKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -229,7 +229,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+    when(koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
@@ -249,19 +249,19 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     )
 
   "KoulutusKoodiUri-validation" should "succeed when valid koulutusKoodiUri for filter-list" in {
-    when(koodistoService.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(koodistoService.isLisattavaKoulutus(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     doAssertKoulutusKoodiUriQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koulutusKoodiUri for filter-list" in {
-    when(koodistoService.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(koodistoService.isLisattavaKoulutus(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemNotFound)
     doAssertKoulutusKoodiUriQuery() should equal(error("path", invalidKoulutuskoodiuri("koulutus_301104#1")))
   }
 
   it should "fail when koodisto-query failed" in {
-    when(koodistoService.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(koodistoService.isLisattavaKoulutus(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoulutusKoodiUriQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -269,7 +269,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koodistoService.koulutusKoodiUriExists(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
+    when(koodistoService.isLisattavaKoulutus(LukioKoulutusKoodit.koulutusKoodiUrit, "koulutus_301104#1"))
       .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)

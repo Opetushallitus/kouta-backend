@@ -331,13 +331,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koodistoService.koodiUriExistsInKoodisto(LukioDiplomiKoodisto, "moduulikoodistolops2021_kald3#1"))
       .thenAnswer(itemFound)
     when(
-      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
+      koodistoService.isInLisattavatKoulutukset(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         validKoulutuksetKoodiUri
       )
     ).thenAnswer(itemFound)
     when(
-      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
+      koodistoService.isInLisattavatKoulutukset(
         AmmatillisetPerustutkintoKoodit.koulutusTyypit,
         invalidKoulutuksetKoodiUri
       )

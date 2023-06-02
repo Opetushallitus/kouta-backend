@@ -3,6 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
+import fi.oph.kouta.service.KoodistoService.isKoulutusValiotsikkoKoodiUri
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 import scalaz.syntax.std.boolean._
@@ -173,23 +174,24 @@ trait KoodistoValidator {
       maxNbrOfKoodit: Option[Int],
       vCtx: ValidationContext
   ): IsValid =
-    validateIfJulkaistu(
-      vCtx.tila,
-      validateIfSuccessful(
-        assertKoulutusKoodiuriAmount(koulutusKoodiUrit, maxNbrOfKoodit),
-        validateIfNonEmpty[String](
-          newKoulutusKoodiUrit,
-          "koulutuksetKoodiUri",
-          (koodiUri, path) =>
-            assertKoulutuskoodiQueryResult(
-              koodiUri,
-              koodiUriFilter,
-              koodistoService,
-              path,
-              vCtx,
-              invalidKoulutuskoodiuri(koodiUri)
-            )
-        )
+    validateIfSuccessful(
+      validateIfJulkaistu(
+        vCtx.tila,
+        assertKoulutusKoodiuriAmount(koulutusKoodiUrit, maxNbrOfKoodit)
+      ),
+      validateIfNonEmpty[String](
+        newKoulutusKoodiUrit,
+        "koulutuksetKoodiUri",
+        (koodiUri, path) => {
+          assertKoulutuskoodiQueryResult(
+            koodiUri,
+            koodiUriFilter,
+            koodistoService,
+            path,
+            vCtx,
+            invalidKoulutuskoodiuri(koodiUri)
+          )
+        }
       )
     )
 

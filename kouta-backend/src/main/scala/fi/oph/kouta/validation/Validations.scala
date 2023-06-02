@@ -652,12 +652,12 @@ object Validations {
     val queryResult =
       if (validationContext.isKoodistoServiceOk()) {
         if (koulutusKoodiFilter.filterType() == koulutusTyyppi) {
-          koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
+          koodistoService.isInLisattavatKoulutukset(
             koulutusKoodiFilter.koulutusTyypit,
             koulutusKoodiUri
           )
         } else
-          koodistoService.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
+          koodistoService.isLisattavaKoulutus(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
       } else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(

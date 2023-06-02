@@ -251,13 +251,13 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       .thenAnswer(Some((haku.copy(hakutapaKoodiUri = Some("hakutapa_01#1")), ZonedDateTime.now().toInstant)))
 
     when(
-      koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
+      koodistoService.isInLisattavatKoulutukset(
         AmmatillisetKoulutuskooditAllowedForKaksoistutkinto.koulutusTyypit,
         "koulutus_371101#1"
       )
     ).thenAnswer(itemFound)
     when(
-      koodistoService.koulutusKoodiUriExists(
+      koodistoService.isLisattavaKoulutus(
         LukioKoulutusKooditAllowedForKaksoistutkinto.koulutusKoodiUrit,
         "koulutus_301101#1"
       )

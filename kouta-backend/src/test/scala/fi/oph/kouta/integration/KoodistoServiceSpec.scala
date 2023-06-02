@@ -82,19 +82,19 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
       Seq(("koulutus_371101", 12, None), ("koulutus_371102", 10, None), ("koulutus_371103", 1, Some(dayInPast))),
       AmmatillisetKoulutusKoodit.koulutusTyypit.init
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#12") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#12") should equal(
       itemFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#9") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#9") should equal(
       itemFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371103") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371103") should equal(
       itemNotFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#11") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#11") should equal(
       itemNotFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371104#1") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371104#1") should equal(
       itemNotFound
     )
     clearServiceMocks()
@@ -104,19 +104,19 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
       AmmatillisetKoulutusKoodit.koulutusTyypit.tail
     )
     // Should still use values from cache
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#12") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#12") should equal(
       itemFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#9") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#9") should equal(
       itemFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371103") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371103") should equal(
       itemNotFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#11") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371102#11") should equal(
       itemNotFound
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371104#1") should equal(
+    koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371104#1") should equal(
       itemNotFound
     )
   }
@@ -132,17 +132,17 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
         ("koulutus_111111", 1, Some(dayInPast))
       )
     )
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_309902") should equal(itemFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_301102#2") should equal(itemFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_111111") should equal(itemNotFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_222222") should equal(itemNotFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_309902") should equal(itemFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_301102#2") should equal(itemFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_111111") should equal(itemNotFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_222222") should equal(itemNotFound)
     clearServiceMocks()
     mockKoodistoResponse("koulutus", Seq(("koulutus_222222", 12, None), ("koulutus_111111", 1, None)))
     // Should still use values from cache
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_309902") should equal(itemFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_301102#2") should equal(itemFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_111111") should equal(itemNotFound)
-    koodistoService.koulutusKoodiUriExists(filter, "koulutus_222222") should equal(itemNotFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_309902") should equal(itemFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_301102#2") should equal(itemFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_111111") should equal(itemNotFound)
+    koodistoService.isLisattavaKoulutus(filter, "koulutus_222222") should equal(itemNotFound)
   }
 
   "Finding lisatiedotOtsikkoKoodiUri" should "return true when koodiUri exists" in {
@@ -301,7 +301,7 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     mockLatestKoodiUriResponse("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2)
     mockKoulutustyyppiResponse(
       YoKoulutusKoodit.koulutusTyypit.last,
-      Seq(("koulutus_201000", 12, None), ("koulutus_371101", 12, None)),
+      Seq(("koulutus_201001", 12, None), ("koulutus_371101", 12, None)),
       YoKoulutusKoodit.koulutusTyypit.init
     )
     // Tutkintonimikkeiden tarkistus testataan tässä yhteydessä (ei omassa casessaan), tällöin sitä ei löydy cachesta
@@ -318,8 +318,8 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     koodistoService.getKoodistoElementVersionOrLatest("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       Right(TestKoodistoElement("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2, defaultNimi))
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemFound)
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemNotFound)
+    koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_201001#12") should equal(itemFound)
+    koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemNotFound)
     koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto, "tutkintonimikekk_110") should equal(itemFound)
     koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_111#2") should equal(itemFound)
     koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_112") should equal(itemNotFound)
@@ -339,8 +339,8 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     koodistoService.getKoodistoElementVersionOrLatest("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
       Right(TestKoodistoElement("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10, defaultNimi))
     )
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(YoKoulutusKoodit.koulutusTyypit, "koulutus_201000#12") should equal(itemNotFound)
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemFound)
+    koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_201001#12") should equal(itemNotFound)
+    koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemFound)
     koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_110") should equal(itemNotFound)
     koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto,"tutkintonimikekk_120") should equal(itemFound)
   }
@@ -365,7 +365,7 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "When koodisto-query failed in koulutuskoodiUri by koulutustyyppi " should "return error status" in {
     mockKoulutustyyppiFailure(AmmatillisetKoulutusKoodit.koulutusTyypit.last)
-    koodistoService.koulutusKoodiUriOfKoulutustyypitExist(
+    koodistoService.isInLisattavatKoulutukset(
       Seq(AmmatillisetKoulutusKoodit.koulutusTyypit.last),
       "koulutus_371101#12"
     ) should equal(queryFailed)
