@@ -615,4 +615,32 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
       s"Failed to get koulutusKoodiUris for koulutustyyppi tutkintotyyppi_16 from koodisto."
     )
   }
+
+  "Finding lisättävät koulutukset by koulutustyyppi" should "return valid koulutukset" in {
+    mockKoulutusByTutkintotyyppiResponse("tutkintotyyppi_12345",
+      Seq(("koulutus_371101", 12, None))
+    )
+    koodistoService.getLisattavatKoulutukset("tutkintotyyppi_12345").right.get.map(element => (element.koodiUri, element.versio)) should equal(
+      Seq(("koulutus_371101", 12)),
+    )
+  }
+
+  "Finding lisättävät koulutukset by koulutustyyppi" should "filter out koulutukset that are invalid" in {
+    mockKoulutusByTutkintotyyppiResponse("koulutus",
+      Seq(("koulutus_371101", 12, None), ("koulutus_371102", 1, Some(dayInPast)))
+    )
+    koodistoService.getLisattavatKoulutukset("tutkintotyyppi_12345").right.get.map(element => (element.koodiUri, element.versio)) should equal(
+      Seq(("koulutus_371101", 12)),
+    )
+  }
+
+  "Finding lisättävät koulutukset by koulutustyyppi" should "filter out koulutukset that are väliotsikko" in {
+    mockKoulutusByTutkintotyyppiResponse("koulutus",
+      Seq(("koulutus_371100", 10, None), // valiotsikko as ends with "00"
+        ("koulutus_371101", 12, None))
+    )
+    koodistoService.getLisattavatKoulutukset("tutkintotyyppi_12345").right.get.map(element => (element.koodiUri, element.versio)) should equal(
+      Seq(("koulutus_371101", 12)),
+    )
+  }
 }
