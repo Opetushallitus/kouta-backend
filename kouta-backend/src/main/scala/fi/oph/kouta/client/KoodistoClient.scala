@@ -87,22 +87,21 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
 
   implicit val formats = DefaultFormats
 
-  private def getWithRetry[A](url: String, followRedirects: Boolean = false)(parse: String => A): Either[KoodistoError, A] = {
-    val maxRetries = 1;
-    var retry = 0;
-    while (true) {
-      Try[A] {
-        get(url, (url, status, response) => throw KoodistoError(url, Some(status), response), followRedirects)(parse)
-      } match {
-        case Success(result) => return Right(result)
-        case Failure(exp: KoodistoError) if retry < maxRetries && exp.status.isDefined && retryStatusCodes.contains(exp.status.get) =>
-          retry += 1
-          logger.warn(s"Failed to get data from koodisto url ${url}, retrying ($retry) ...")
-        case Failure(exp: KoodistoError) => return Left(exp)
-        case Failure(exp: Throwable) => Left(KoodistoError(url, None, exp.getMessage)) // parse feilaa
-      }
+  private def getWithRetry[A](url: String, followRedirects: Boolean = false, retries: Int = 1)(parse: String => A): Either[KoodistoError, A] = {
+    Try[A] {
+      get(url, (url, status, response) => throw KoodistoError(url, Some(status), response), followRedirects)(parse)
+    } match {
+      case Success(result) => Right(result)
+      case Failure(exp: KoodistoError) if retries > 0 && exp.status.exists(retryStatusCodes.contains(_)) =>
+        logger.warn(s"Failed to get data from koodisto url $url, retrying...")
+        getWithRetry(url, followRedirects, retries - 1)(parse)
+      case Failure(exp: KoodistoError) =>
+        logger.error(s"Error when getting data from koodisto url $url: $exp")
+        Left(exp)
+      case Failure(exp: Throwable) =>
+        logger.error(s"Error when parsing data from koodisto url $url: $exp")
+        Left(KoodistoError(url, None, exp.getMessage))
     }
-    throw new RuntimeException() // tänne ei tulla koskaan mutta kääntäjä vaatii
   }
 
   val getKoodistoKoodit = new CachedMethod[String, Seq[KoodistoElement]](

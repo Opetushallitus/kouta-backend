@@ -30,7 +30,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
       case Right(result) => result.view
         .filter(element => element.belongsToKoodisto(koodisto))
         .filter(isKoodiVoimassa)
-      case Left(exp) if exp.status.isDefined && exp.status == 404 => Seq.empty
+      case Left(exp) if exp.status.exists(_ == 404) => Seq.empty
       case Left(exp) => {
         logger.error("Rinnasteisten koodien haku epäonnistui: ", exp)
         throw exp
@@ -55,7 +55,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
   def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult = {
     koodistoClient.getKoodistoKoodit(koodisto.toString) match {
       case Right(elements: Seq[KoodistoElement]) => fromBoolean(contains(koodiUri, elements.filter(isKoodiVoimassa)))
-      case Left(exp) if exp.status.isDefined && exp.status.get == 404 => itemNotFound
+      case Left(exp) if exp.status.exists(_ == 404) => itemNotFound
       case Left(_) => queryFailed
     }
   }
