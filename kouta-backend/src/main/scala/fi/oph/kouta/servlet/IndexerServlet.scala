@@ -602,6 +602,35 @@ class IndexerServlet(
   }
 
   registerPath(
+    "/indexer/list-koulutus-oids-by-tarjoajat",
+    """    post:
+      |      summary: Hakee tarjoajaa (oppilaitos tai toimipiste) vastaavat koulutukset
+      |      operationId: indexerListKoulutusOidsByTarjoajat
+      |      description: Hakee kaikkien niiden koulutusten oidit, joissa annettu oppilaitos/toimipiste on sen tarjoajana suoraan tai oppilaitoksen kautta (jos toimipiste). Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista tarjoajien organisaatio-oideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.10.56753942459
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
+  )
+  post("/list-koulutus-oids-by-tarjoajat") {
+
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(KoulutusService.getOidsByTarjoajat(parsedBody.extract[Seq[OrganisaatioOid]], TilaFilter.all()))
+  }
+
+  registerPath(
     "/indexer/list-hakukohde-oids-by-jarjestyspaikat",
     """    post:
       |      summary: Hakee järjestyspaikkaa (oppilaitos tai toimipiste) vastaavat hakukohteet
