@@ -536,6 +536,7 @@ class HakukohdeSpec
     val muokattuHakukohde2 = eiJulkaistuWithOid.copy(
       hakuajat = List()
     )
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     update(muokattuHakukohde2, lastModified, expectUpdate = true, ophSession)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }
@@ -683,7 +684,7 @@ class HakukohdeSpec
         metadata = Some(hakukohdeWithTwoValintakokeet.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
       )
     )
-    val lastModified = get(oid, hakukohdeWithTwoValintakokeetWithIds)
+    var lastModified = get(oid, hakukohdeWithTwoValintakokeetWithIds)
     // delete one valintakoe
     val hakukohdeWithOneValintakokeet = hakukohdeWithTwoValintakokeetWithIds.copy(
       valintakokeet = List(hakukohdeWithTwoValintakokeetWithIds.valintakokeet.head))
@@ -692,6 +693,7 @@ class HakukohdeSpec
     val hakukohdeWithNoValintakokeet = hakukohdeWithOneValintakokeet.copy(
       valintakokeet = List()
     )
+    lastModified = get(oid, hakukohdeWithOneValintakokeet.copy(muokkaaja = OphUserOid2))
     update(hakukohdeWithNoValintakokeet, lastModified, expectUpdate = true, ophSession)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }
