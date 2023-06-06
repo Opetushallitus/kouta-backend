@@ -29,7 +29,8 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
       tilaFilter: TilaFilter
   ): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem]
-  def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
+  def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusWithTarjoajat]
+
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
 }
@@ -148,20 +149,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem] =
     listWithTarjoajat(selectByHakuOid(hakuOid))
 
-  override def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus] = {
+  override def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusWithTarjoajat] = {
     KoutaDatabase
-      .runBlockingTransactionally(for {
-        koulutukset <- findJulkaistutKoulutuksetByTarjoajat(organisaatioOids).as[Koulutus]
-        tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (koulutukset, tarjoajat))
-      .map {
-        case (koulutukset, tarjoajat) => {
-          koulutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList)
-          )
-        }
-      }
-      .get
+      .runBlocking(
+        findJulkaistutKoulutuksetByTarjoajat(organisaatioOids).as[KoulutusWithTarjoajat])
   }
 
   override def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String] = {
@@ -264,6 +255,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                           k.tyyppi,
                           k.koulutukset_koodi_uri,
                           k.tila,
+                          array_agg(kt.tarjoaja_oid) as tarjoajat,
                           k.nimi,
                           k.sorakuvaus_id,
                           k.metadata,
@@ -278,7 +270,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           from koulutukset k
           inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
           where k.tila = 'julkaistu'::julkaisutila
-          and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})"""
+          and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
+          group by k.oid"""
   }
 
   def selectKoulutuksenTarjoajat(oid: KoulutusOid) = {

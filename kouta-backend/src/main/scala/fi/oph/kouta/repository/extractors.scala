@@ -90,6 +90,26 @@ trait KoulutusExtractors extends ExtractorBase {
     ePerusteId = r.nextLongOption(),
     modified = Some(timeStampToModified(r.nextTimestamp()))))
 
+  implicit val getKoulutusWithTarjoajatResult: GetResult[KoulutusWithTarjoajat] = GetResult(r => KoulutusWithTarjoajat(
+    oid = r.nextStringOption().map(KoulutusOid),
+    externalId = r.nextStringOption(),
+    johtaaTutkintoon = r.nextBoolean(),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+    nimi = extractKielistetty(r.nextStringOption()),
+    sorakuvausId = r.nextStringOption().map(UUID.fromString),
+    metadata = r.nextStringOption().map(read[KoulutusMetadata]),
+    julkinen = r.nextBoolean(),
+    muokkaaja = UserOid(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    esikatselu = r.nextBoolean(),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    teemakuva = r.nextStringOption(),
+    ePerusteId = r.nextLongOption(),
+    modified = Some(timeStampToModified(r.nextTimestamp()))))
+
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
     oid = KoulutusOid(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),

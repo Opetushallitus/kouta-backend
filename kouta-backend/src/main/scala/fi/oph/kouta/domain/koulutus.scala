@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid,  UserOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
@@ -187,26 +187,29 @@ package object koulutus {
   def models = List(KoulutusModel, KoulutusListItemModel)
 }
 
-case class Koulutus(oid: Option[KoulutusOid] = None,
-                    externalId: Option[String] = None,
-                    johtaaTutkintoon: Boolean,
-                    koulutustyyppi: Koulutustyyppi,
-                    koulutuksetKoodiUri: Seq[String] = Seq(),
-                    tila: Julkaisutila = Tallennettu,
-                    esikatselu: Boolean = false,
-                    tarjoajat: List[OrganisaatioOid] = List(),
-                    nimi: Kielistetty = Map(),
-                    sorakuvausId: Option[UUID] = None,
-                    metadata: Option[KoulutusMetadata] = None,
-                    julkinen: Boolean = false,
-                    muokkaaja: UserOid,
-                    organisaatioOid: OrganisaatioOid,
-                    kielivalinta: Seq[Kieli] = Seq(),
-                    teemakuva: Option[String] = None,
-                    ePerusteId: Option[Long] = None,
-                    modified: Option[Modified],
-                    _enrichedData: Option[KoulutusEnrichedData] = None)
-  extends PerustiedotWithOid[KoulutusOid, Koulutus] with HasTeemakuva[Koulutus] with AuthorizableMaybeJulkinen[Koulutus] {
+case class Koulutus(
+    oid: Option[KoulutusOid] = None,
+    externalId: Option[String] = None,
+    johtaaTutkintoon: Boolean,
+    koulutustyyppi: Koulutustyyppi,
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    tila: Julkaisutila = Tallennettu,
+    esikatselu: Boolean = false,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    sorakuvausId: Option[UUID] = None,
+    metadata: Option[KoulutusMetadata] = None,
+    julkinen: Boolean = false,
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    ePerusteId: Option[Long] = None,
+    modified: Option[Modified],
+    _enrichedData: Option[KoulutusEnrichedData] = None
+) extends PerustiedotWithOid[KoulutusOid, Koulutus]
+    with HasTeemakuva[Koulutus]
+    with AuthorizableMaybeJulkinen[Koulutus] {
 
   override def validate(): IsValid =
     super.validate()
@@ -228,21 +231,49 @@ case class Koulutus(oid: Option[KoulutusOid] = None,
   }).getOrElse(false)
 
   def isAmmTutkintoWithoutEPeruste(): Boolean = koulutuksetKoodiUri.headOption match {
-    case Some(koodiUri) => koulutustyyppi == Amm && AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit.contains(withoutKoodiVersion(koodiUri))
-    case _              => false
+    case Some(koodiUri) =>
+      koulutustyyppi == Amm && AmmKoulutusKooditWithoutEperuste.koulutusKoodiUrit.contains(
+        withoutKoodiVersion(koodiUri)
+      )
+    case _ => false
   }
 
-  def isSavingAllowedOnlyForOPH(): Boolean = Koulutustyyppi.onlyOphCanSaveKoulutus.contains(koulutustyyppi) || (koulutustyyppi == Amm && !isAmmTutkintoWithoutEPeruste())
+  def isSavingAllowedOnlyForOPH(): Boolean = Koulutustyyppi.onlyOphCanSaveKoulutus.contains(
+    koulutustyyppi
+  ) || (koulutustyyppi == Amm && !isAmmTutkintoWithoutEPeruste())
 }
 
-case class KoulutusListItem(oid: KoulutusOid,
-                            nimi: Kielistetty,
-                            tila: Julkaisutila,
-                            tarjoajat: List[OrganisaatioOid],
-                            organisaatioOid: OrganisaatioOid,
-                            muokkaaja: UserOid,
-                            modified: Modified) extends OidListItem
+case class KoulutusListItem(
+    oid: KoulutusOid,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    tarjoajat: List[OrganisaatioOid],
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified
+) extends OidListItem
 
 case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)
 
 case class ExternalKoulutusRequest(authenticated: Authenticated, koulutus: Koulutus) extends ExternalRequest
+
+case class KoulutusWithTarjoajat(
+    oid: Option[KoulutusOid] = None,
+    externalId: Option[String] = None,
+    johtaaTutkintoon: Boolean,
+    koulutustyyppi: Koulutustyyppi,
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    tila: Julkaisutila = Tallennettu,
+    esikatselu: Boolean = false,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    sorakuvausId: Option[UUID] = None,
+    metadata: Option[KoulutusMetadata] = None,
+    julkinen: Boolean = false,
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    ePerusteId: Option[Long] = None,
+    modified: Option[Modified],
+)
