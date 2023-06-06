@@ -311,6 +311,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
       from toteutukset t, toteutusten_tarjoajat tt
       where t.oid = tt.toteutus_oid
       and t.tila = 'julkaistu'
+      and tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
       group by t.oid) as toteutus
     using (koulutus_oid);"""
   }
