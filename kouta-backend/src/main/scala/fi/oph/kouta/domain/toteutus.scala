@@ -213,25 +213,26 @@ package object toteutus {
   def models = List(ToteutusModel, ToteutusListItemModel)
 }
 
-case class Toteutus(oid: Option[ToteutusOid] = None,
-                    externalId: Option[String] = None,
-                    koulutusOid: KoulutusOid,
-                    tila: Julkaisutila = Tallennettu,
-                    esikatselu: Boolean = false,
-                    tarjoajat: List[OrganisaatioOid] = List(),
-                    nimi: Kielistetty = Map(),
-                    metadata: Option[ToteutusMetadata] = None,
-                    sorakuvausId: Option[UUID] = None,
-                    muokkaaja: UserOid,
-                    organisaatioOid: OrganisaatioOid,
-                    kielivalinta: Seq[Kieli] = Seq(),
-                    teemakuva: Option[String] = None,
-                    modified: Option[Modified] = None,
-                    koulutusMetadata: Option[KoulutusMetadata] = None,
-                    koulutuksetKoodiUri: Seq[String] = Seq(),
-                    _enrichedData: Option[ToteutusEnrichedData] = None
-                   )
-  extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus] with HasTeemakuva[Toteutus] {
+case class Toteutus(
+    oid: Option[ToteutusOid] = None,
+    externalId: Option[String] = None,
+    koulutusOid: KoulutusOid,
+    tila: Julkaisutila = Tallennettu,
+    esikatselu: Boolean = false,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    metadata: Option[ToteutusMetadata] = None,
+    sorakuvausId: Option[UUID] = None,
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    modified: Option[Modified] = None,
+    koulutusMetadata: Option[KoulutusMetadata] = None,
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    _enrichedData: Option[ToteutusEnrichedData] = None
+) extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus]
+    with HasTeemakuva[Toteutus] {
 
   override def validate(): IsValid = and(
     validateIfDefined[Oid](oid, assertValid(_, "oid")),
@@ -258,19 +259,53 @@ case class Toteutus(oid: Option[ToteutusOid] = None,
   }).getOrElse(false)
 }
 
-case class ToteutusListItem(oid: ToteutusOid,
-                            koulutusOid: KoulutusOid,
-                            nimi: Kielistetty,
-                            tila: Julkaisutila,
-                            tarjoajat: List[OrganisaatioOid],
-                            organisaatioOid: OrganisaatioOid,
-                            muokkaaja: UserOid,
-                            modified: Modified,
-                           ) extends OidListItem
+object Toteutus {
+
+  def apply(t: MaybeToteutus): Toteutus = {
+    new Toteutus(
+      t.oid,
+      t.externalId,
+      t.koulutusOid.get,
+      t.tila.get,
+      t.esikatselu,
+      t.tarjoajat,
+      t.nimi,
+      t.metadata,
+      t.sorakuvausId,
+      t.muokkaaja.get,
+      t.organisaatioOid.get,
+      t.kielivalinta,
+      t.teemakuva,
+      t.modified,
+      t.koulutusMetadata,
+      t.koulutuksetKoodiUri,
+    )
+  }
+}
+
+case class ToteutusListItem(
+    oid: ToteutusOid,
+    koulutusOid: KoulutusOid,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    tarjoajat: List[OrganisaatioOid],
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified
+) extends OidListItem
 
 object ToteutusListItem {
   def apply(t: Toteutus): ToteutusListItem = {
-    new ToteutusListItem(t.oid.get, t.koulutusOid, t.nimi, t.tila, t.tarjoajat, t.organisaatioOid, t.muokkaaja, t.modified.get)
+    new ToteutusListItem(
+      t.oid.get,
+      t.koulutusOid,
+      t.nimi,
+      t.tila,
+      t.tarjoajat,
+      t.organisaatioOid,
+      t.muokkaaja,
+      t.modified.get
+    )
   }
 }
 
@@ -279,3 +314,22 @@ case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi:
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest
 
 case class OidAndNimi(oid: ToteutusOid, nimi: Kielistetty)
+
+case class MaybeToteutus(
+    oid: Option[ToteutusOid] = None,
+    externalId: Option[String] = None,
+    koulutusOid: Option[KoulutusOid] = None,
+    tila: Option[Julkaisutila] = None,
+    esikatselu: Boolean = false,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    metadata: Option[ToteutusMetadata] = None,
+    sorakuvausId: Option[UUID] = None,
+    muokkaaja: Option[UserOid],
+    organisaatioOid: Option[OrganisaatioOid],
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    modified: Option[Modified] = None,
+    koulutusMetadata: Option[KoulutusMetadata] = None,
+    koulutuksetKoodiUri: Seq[String] = Seq()
+)

@@ -477,13 +477,30 @@ class KoulutusService(
       KoulutusDAO.listAllowedByOrganisaatiotAndKoulutustyyppi(oids, koulutustyyppi, tilaFilter)
     }
 
-  def getTarjoajanJulkaistutKoulutukset(
+  def getTarjoajanJulkaistutKoulutuksetJaToteutukset(
       organisaatioOid: OrganisaatioOid
-  )(implicit authenticated: Authenticated): Seq[KoulutusWithTarjoajat] =
+  )(implicit authenticated: Authenticated): Map[String, KoulutusWithToteutukset] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getJulkaistutByTarjoajaOids(
         organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
-      )
+      ).groupBy(_.oid).map(k => {
+        val (koulutusOid, koulutukset) = k
+        val toteutukset = koulutukset.flatMap(k => {
+          val maybeToteutus = k.toteutus
+          maybeToteutus.oid match {
+            case Some(_) =>
+              val toteutus = Toteutus(maybeToteutus)
+
+              Some(toteutus
+                .withEnrichedData(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(toteutus)))
+                .withoutRelatedData())
+            case None => None
+          }
+        })
+
+        val koulutus = koulutukset.head
+        koulutusOid.toString -> KoulutusWithToteutukset(koulutus, toteutukset = toteutukset)
+      })
     }
 
   def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[Toteutus] =
