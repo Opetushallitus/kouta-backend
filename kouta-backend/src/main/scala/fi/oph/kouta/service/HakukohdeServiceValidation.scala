@@ -336,12 +336,12 @@ class HakukohdeServiceValidation(
           hakukohdeDiffResolver.newNimi().isDefined,
           validateIfTrueOrElse(
             hkLinja.linja.isDefined,
-            koodistoService.getKoodistoElementVersionOrLatest(hkLinja.linja.get) match {
+            koodistoService.getKaannokset(hkLinja.linja.get) match {
               case Left(_) => error("metadata.hakukohteenLinja.linja", koodistoServiceFailureMsg)
-              case Right(koodistoElement) =>
+              case Right(kaannokset) =>
                 assertNimiMatchExternal(
                   nimi,
-                  koodistoElement.asKielistetty,
+                  kaannokset,
                   "nimi",
                   "hakukohteen linjalla"
                 )

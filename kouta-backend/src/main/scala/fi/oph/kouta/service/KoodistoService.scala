@@ -16,12 +16,20 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
 
   val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-  def getKoodistoKaannoksetFromCache(koodisto: String): Map[String, Kielistetty] = {
+  def getKoodistoKaannokset(koodisto: String): Map[String, Kielistetty] = {
     koodistoClient.getKoodistoKoodit(koodisto).map(elements => elements.view
       .filter(isKoodiVoimassa)
       .map(element => (element.koodiUri, element.asKielistetty()))
       .toMap)
       .getOrElse(Map.empty);
+  }
+
+  def getKaannokset(koodiUri: String): Either[Throwable, Kielistetty] = {
+    val result = getVersio(koodiUri) match {
+      case Some(_) => koodistoClient.getKoodistoElementVersion(koodiUri)
+      case None => koodistoClient.getKoodistoElementLatestVersion(koodiUri)
+    }
+    result.map(element => element.asKielistetty())
   }
 
   def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodistoElement] = {
@@ -38,11 +46,8 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  def getKoodistoElementVersionOrLatest(koodiUri: String): Either[Throwable, KoodistoElement] = {
-    getVersio(koodiUri) match {
-      case Some(_) => koodistoClient.getKoodistoElementVersion(koodiUri)
-      case None => koodistoClient.getKoodistoElementLatestVersion(koodiUri)
-    }
+  def getLatestVersion(koodiUri: String): Either[Throwable, KoodistoElement] = {
+    koodistoClient.getKoodistoElementLatestVersion(removeVersio(koodiUri))
   }
 
   def getKoulutuksetByTutkintotyyppi(tutkintotyyppi: String): Either[Throwable, Seq[KoodistoElement]] = {

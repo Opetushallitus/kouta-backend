@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.client.{KoodiUri, KoodiUriUtils, KoodistoClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
-import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks, TestKoodistoElement}
+import fi.oph.kouta.mocks.{KoodistoServiceMock, SpecWithMocks}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
 
@@ -62,17 +62,17 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Getting latest version of koodiUri" should "return version from cache" in {
     mockLatestKoodiUriResponse("koulutus_201101", 12)
-    koodistoService.getKoodistoElementVersionOrLatest("koulutus_201101") should equal(Right(TestKoodistoElement("koulutus_201101", 12, defaultNimi)))
+    koodistoService.getKaannokset("koulutus_201101") should equal(Right(defaultNimi))
     clearServiceMocks()
     mockLatestKoodiUriResponse("koulutus_201101", 10)
     // Should still use value from cache
-    koodistoService.getKoodistoElementVersionOrLatest("koulutus_201101") should equal(Right(TestKoodistoElement("koulutus_201101", 12, defaultNimi)))
+    koodistoService.getKaannokset("koulutus_201101") should equal(Right(defaultNimi))
   }
 
   "Getting certain version of koodiUri" should "return version from cache" in {
     mockKoodiUriVersionResponse("koulutus_201102", 11)
-    koodistoService.getKoodistoElementVersionOrLatest("koulutus_201102#11") should equal(
-      Right(TestKoodistoElement("koulutus_201102", 11, defaultNimi))
+    koodistoService.getKaannokset("koulutus_201102#11") should equal(
+      Right(defaultNimi)
     )
   }
 
@@ -315,8 +315,8 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
       )
     )
 
-    koodistoService.getKoodistoElementVersionOrLatest("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
-      Right(TestKoodistoElement("kansallinenkoulutusluokitus2016koulutusalataso1_01", 2, defaultNimi))
+    koodistoService.getKaannokset("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
+      Right(defaultNimi)
     )
     koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_201001#12") should equal(itemFound)
     koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemNotFound)
@@ -336,8 +336,8 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     )
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_120", 1, None)))
 
-    koodistoService.getKoodistoElementVersionOrLatest("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
-      Right(TestKoodistoElement("kansallinenkoulutusluokitus2016koulutusalataso1_01", 10, defaultNimi))
+    koodistoService.getKaannokset("kansallinenkoulutusluokitus2016koulutusalataso1_01") should equal(
+      Right(defaultNimi)
     )
     koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_201001#12") should equal(itemNotFound)
     koodistoService.isInLisattavatKoulutukset(YoKoulutusKoodit.koulutusTyypit, "koulutus_111111#1") should equal(itemFound)
@@ -358,7 +358,7 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "When getting latest version of koodiUri" should "throw error" in {
     mockLatestKoodiUriFailure("koulutus_201101")
-    koodistoService.getKoodistoElementVersionOrLatest("koulutus_201101").left.get.getMessage should equal(
+    koodistoService.getKaannokset("koulutus_201101").left.get.getMessage should equal(
       "Failure in koodisto-service for koodiuri-base koulutus_201101"
     )
   }

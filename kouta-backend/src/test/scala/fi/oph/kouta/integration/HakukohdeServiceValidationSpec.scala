@@ -17,7 +17,6 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.must.Matchers.contain
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 import org.scalatest.{Assertion, BeforeAndAfterEach}
-import fi.oph.kouta.mocks.{TestKoodistoElement}
 
 import java.net.InetAddress
 import java.time.ZonedDateTime
@@ -234,14 +233,14 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
     when(lokalisointiClient.getKaannoksetWithKeyFromCache("hakukohdelomake.lukionYleislinja"))
       .thenAnswer(Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje", En -> "Yleislinja"))
-    when(koodistoService.getKoodistoElementVersionOrLatest("lukiopainotukset_1#1"))
-      .thenAnswer(Right(TestKoodistoElement("lukiopainotukset_1", 1, Map(Fi -> "painotus", Sv -> "painotus sv"))))
-    when(koodistoService.getKoodistoElementVersionOrLatest("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
+    when(koodistoService.getKaannokset("lukiopainotukset_1#1"))
+      .thenAnswer(Right(Map(Fi -> "painotus", Sv -> "painotus sv")))
+    when(koodistoService.getKaannokset("lukiolinjaterityinenkoulutustehtava_1#1")).thenAnswer(
       Right(
-        TestKoodistoElement("lukiolinjaterityinenkoulutustehtava_1", 1, Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv"))
+        Map(Fi -> "erityistehtävä", Sv -> "erityistehtävä sv")
       )
     )
-    when(koodistoService.getKoodistoElementVersionOrLatest("failure")).thenAnswer(Left(new RuntimeException()))
+    when(koodistoService.getKaannokset("failure")).thenAnswer(Left(new RuntimeException()))
 
     when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
     when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))

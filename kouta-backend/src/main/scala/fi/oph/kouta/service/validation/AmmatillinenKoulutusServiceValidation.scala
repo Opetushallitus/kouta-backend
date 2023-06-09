@@ -43,12 +43,12 @@ class AmmatillinenKoulutusServiceValidation(
               ),
               validateIfTrue(
                 ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-                koodistoService.getKoodistoElementVersionOrLatest(koulutus.koulutuksetKoodiUri.head) match {
+                koodistoService.getKaannokset(koulutus.koulutuksetKoodiUri.head) match {
                   case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
-                  case Right(koodistoElement) =>
+                  case Right(kaannokset) =>
                     assertNimiMatchExternal(
                       koulutus.nimi,
-                      koodistoElement.asKielistetty,
+                      kaannokset,
                       "nimi",
                       s"koulutuksessa ${koulutus.koulutuksetKoodiUri.head}"
                     )

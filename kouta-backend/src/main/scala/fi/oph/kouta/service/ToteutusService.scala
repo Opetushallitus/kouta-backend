@@ -92,9 +92,9 @@ class ToteutusService(
                   "toteutuslomake.lukionYleislinjaNimiOsa"
                 )
               )
-              val painotuksetKaannokset = koodistoService.getKoodistoKaannoksetFromCache("lukiopainotukset")
+              val painotuksetKaannokset = koodistoService.getKoodistoKaannokset("lukiopainotukset")
               val koulutustehtavatKaannokset =
-                koodistoService.getKoodistoKaannoksetFromCache("lukiolinjaterityinenkoulutustehtava")
+                koodistoService.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
               val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
               NameHelper.generateLukioToteutusDisplayName(
                 lukioToteutusMetadata,
