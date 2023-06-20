@@ -136,6 +136,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -169,6 +170,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -204,6 +206,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -236,6 +239,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -268,6 +272,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -300,6 +305,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -342,6 +348,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -364,6 +371,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -391,6 +399,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -421,6 +430,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -451,6 +461,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -481,6 +492,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -524,6 +536,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -555,6 +568,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -585,6 +599,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -615,6 +630,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -646,6 +662,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -690,6 +707,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
@@ -717,6 +735,7 @@ object TestData {
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
+        esitysnimi =  Map(Fi -> "nimi", Sv -> "nimi sv"),
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )

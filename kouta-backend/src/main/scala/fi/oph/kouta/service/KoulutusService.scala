@@ -15,6 +15,7 @@ import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParam
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
 import fi.vm.sade.utils.slf4j.Logging
+import org.joda.time.LocalDate
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -34,7 +35,8 @@ object KoulutusService
       KoulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
-      KoutaIndeksoijaClient
+      KoutaIndeksoijaClient,
+      LokalisointiClient
     ) {
   def apply(
       sqsInTransactionService: SqsInTransactionService,
@@ -44,7 +46,8 @@ object KoulutusService
       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
       kayttooikeusClient: KayttooikeusClient,
       koodistoClient: CachedKoodistoClient,
-      koulutusServiceValidation: KoulutusServiceValidation
+      koulutusServiceValidation: KoulutusServiceValidation,
+      lokalisointiClient: LokalisointiClient,
   ): KoulutusService = {
     new KoulutusService(
       sqsInTransactionService,
@@ -57,7 +60,8 @@ object KoulutusService
       koulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
-      KoutaIndeksoijaClient
+      KoutaIndeksoijaClient,
+      lokalisointiClient
     )
   }
 }
@@ -73,7 +77,8 @@ class KoulutusService(
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
-    koutaIndeksoijaClient: KoutaIndeksoijaClient
+    koutaIndeksoijaClient: KoutaIndeksoijaClient,
+    lokalisointiClient: LokalisointiClient
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -357,17 +362,33 @@ class KoulutusService(
     enrichedKoulutus.copy(metadata = enrichedMetadata)
   }
 
+  def enrichKoulutusNimiWithEPerusteVoimaantulo(nimiBase: Kielistetty, ep: Option[EPeruste]): Kielistetty = {
+    ep match {
+      case Some(peruste: EPeruste) if peruste.voimassaoloAlkaa.exists(alku => alku > System.currentTimeMillis()) =>
+        val voimaantuloDate: LocalDate = new LocalDate(peruste.voimassaoloAlkaa.get)
+        val voimaantuloTranslations = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.voimaantulo")
+        val res = nimiBase.map(lang => {
+          val suffix = s" (${voimaantuloTranslations.getOrElse(lang._1, "voimaantulo")} ${voimaantuloDate.getDayOfMonth}.${voimaantuloDate.getMonthOfYear}.${voimaantuloDate.getYear})"
+          (lang._1, lang._2 + suffix)
+        })
+        logger.info(s"Enrichment result: $res")
+        res
+      case _ => nimiBase
+    }
+  }
+
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
 
     val enrichedKoulutus = koulutusWithTime match {
-      case Some((k, i)) => {
+      case Some((k, i)) =>
+        val peruste = k.ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
+        val enrichedNimi = enrichKoulutusNimiWithEPerusteVoimaantulo(k.nimi, peruste)
         val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
-      }
+        Some(k.copy(_enrichedData = Some(KoulutusEnrichedData(esitysnimi = enrichedNimi, muokkaajanNimi = Some(muokkaajanNimi)))), i)
       case None => None
     }
 

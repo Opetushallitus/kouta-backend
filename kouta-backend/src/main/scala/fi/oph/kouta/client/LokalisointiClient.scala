@@ -37,3 +37,8 @@ class LokalisointiClient(urlProperties: OphProperties)
     LokalisointiCache.get(key, key => getKaannoksetWithKey(key))
   }
 }
+
+class MockLokalisointiClient(urlProperties: OphProperties) extends LokalisointiClient(urlProperties: OphProperties) {
+  override def getKaannoksetWithKeyFromCache(key: String): Map[Kieli, String] = Map.empty
+
+}

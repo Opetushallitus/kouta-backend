@@ -29,9 +29,16 @@ trait KoodistoServiceMock extends ServiceMockBase {
   def koodiUriResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) =
     "[" + koodiUrit.map(uri => singleKoodiuriResponse(koodisto, uri)).mkString(",") + "]"
 
-  def ePerusteResponse(voimassaoloLoppuu: Option[Long], koodiUrit: Seq[String]): String = s"""{
-    "voimassaoloLoppuu": ${voimassaoloLoppuu.getOrElse(System.currentTimeMillis() + (5 * 60 * 1000))},
-    "koulutukset": [""" + koodiUrit.map(uri => s"""{"koulutuskoodiUri": "$uri"}""").mkString(",") + "]}"
+  def ePerusteResponse(voimassaoloAlkaa: Option[Long], voimassaoloLoppuu: Option[Long], koodiUrit: Seq[String], epId: String): String = {
+    val alkaa = voimassaoloAlkaa.getOrElse(System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30))
+    val loppuu = voimassaoloLoppuu.getOrElse(System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 90))
+    s"""{
+        "id": $epId,
+        "diaarinumero": "$epId-OPH-2021",
+        "voimassaoloAlkaa": $alkaa,
+        "voimassaoloLoppuu": $loppuu,
+        "koulutukset": [""" + koodiUrit.map(uri => s"""{"koulutuskoodiUri": "$uri"}""").mkString(",") + "]}"
+  }
 
   def osaamisalaResponse(osaamisalaKoodiUrit: Seq[String]): String = s"""{"reformi" : {""" +
     osaamisalaKoodiUrit
@@ -131,11 +138,12 @@ trait KoodistoServiceMock extends ServiceMockBase {
 
   def mockKoulutusKoodiUritForEPerusteResponse(
       ePerusteId: Long,
+      voimassaoloAlkaa: Option[Long],
       voimassaoloLoppuu: Option[Long],
       koodiUrit: Seq[String] = Seq()
   ) = {
     val path = getMockPath("eperusteet-service.peruste-by-id", Some(ePerusteId.toString))
-    mockGet(path, Map.empty, ePerusteResponse(voimassaoloLoppuu, koodiUrit))
+    mockGet(path, Map.empty, ePerusteResponse(voimassaoloAlkaa, voimassaoloLoppuu, koodiUrit, ePerusteId.toString))
   }
 
   def mockKoulutusKoodiUritForEPerusteFailure(ePerusteId: Long) = {
