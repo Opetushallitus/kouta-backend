@@ -14,16 +14,24 @@ import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
   override def beforeAll() = {
     super.beforeAll()
     koodiClient = new EPerusteKoodiClient(urlProperties.get)
+    clearClientCachesAndServiceMocks()
+  }
+
+  private def clearClientCachesAndServiceMocks(): Unit = {
+    koodiClient.ePerusteToOsaamisalaCache.invalidateAll()
+    koodiClient.ePerusteToKoodiuritCache.invalidateAll()
+    koodiClient.ePerusteToTutkinnonosaCache.invalidateAll()
+    clearServiceMocks()
   }
 
   "Querying koulutusKoodiUrit for ePeruste" should "return koodiurit if ePeruste was valid" in {
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101", "koulutus_371102"))
-    mockKoulutusKoodiUritForEPerusteResponse(123L, Some(System.currentTimeMillis() - (5 * 60 * 1000)), Seq("koulutus_371105", "koulutus_371106"))
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, None, Seq("koulutus_371101", "koulutus_371102"))
+    mockKoulutusKoodiUritForEPerusteResponse(123L, None, Some(System.currentTimeMillis() - (5 * 60 * 1000)), Seq("koulutus_371105", "koulutus_371106"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(123L) should equal(Right(Seq[KoodiUri]()))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(100L) should equal(Right(Seq[KoodiUri]()))
     clearServiceMocks()
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371107", "koulutus_371108"))
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, None, Seq("koulutus_371107", "koulutus_371108"))
     // Should still use values from cache
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
   }
@@ -55,19 +63,15 @@ import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
   }
 
   "When cache data is expired or removed" should "data fetched to cache again" in {
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101", "koulutus_371102"))
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, None, Seq("koulutus_371101", "koulutus_371102"))
     mockTutkinnonOsatByEPeruste(123L, Seq((122L, 1234L)))
     mockOsaamisalaKoodiUritByEPeruste(11L, Seq("osaamisala_01", "osaamisala_02"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("koulutus_371101", 1), KoodiUri("koulutus_371102", 1))))
     koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123)) should equal(Right(Map(123 -> Seq(TutkinnonOsaServiceItem(1234, 122, defaultNimi)))))
     koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(11L) should equal(Right(Seq(KoodiUri("osaamisala_01", 1, defaultNimi), KoodiUri("osaamisala_02", 1, defaultNimi))))
 
-    koodiClient.ePerusteToOsaamisalaCache.invalidateAll()
-    koodiClient.ePerusteToKoodiuritCache.invalidateAll()
-    koodiClient.ePerusteToTutkinnonosaCache.invalidateAll()
-
-    clearServiceMocks()
-    mockKoulutusKoodiUritForEPerusteResponse(11, None, Seq("koulutus_371107", "koulutus_371108"))
+    clearClientCachesAndServiceMocks()
+    mockKoulutusKoodiUritForEPerusteResponse(11, None, None, Seq("koulutus_371107", "koulutus_371108"))
     mockTutkinnonOsatByEPeruste(123, Seq((125, 1235)))
     mockOsaamisalaKoodiUritByEPeruste(11, Seq("osaamisala_03", "osaamisala_04"))
     koodiClient.getKoulutusKoodiUritForEPerusteFromCache(11) should equal(Right(Seq(KoodiUri("koulutus_371107", 1), KoodiUri("koulutus_371108", 1))))

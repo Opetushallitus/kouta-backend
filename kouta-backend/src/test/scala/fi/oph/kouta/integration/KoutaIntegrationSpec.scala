@@ -182,8 +182,8 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockKoulutustyyppiResponse(YoKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201001", 12, None),("koulutus_371101", 12, None)), YoKoulutusKoodit.koulutusTyypit.init)
     mockKoulutustyyppiResponse(AmkKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201001", 12, None),("koulutus_371101", 12, None)), AmkKoulutusKoodit.koulutusTyypit.init)
     mockKoodistoResponse("koulutus", Seq(("koulutus_000002", 12, None), ("koulutus_301101", 1, None), ("koulutus_371101", 1, None), ("koulutus_775101", 1, None), ("koulutus_301104", 1, None)))
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
-    mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, None, Seq("koulutus_371101"))
+    mockKoulutusKoodiUritForEPerusteResponse(123L, None, None, Seq("koulutus_371101"))
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
     mockKoodistoResponse("opintojenlaajuusyksikko", Seq(
       ("opintojenlaajuusyksikko_2", 1, None), ("opintojenlaajuusyksikko_6", 1, None), ("opintojenlaajuusyksikko_8", 1, None)))

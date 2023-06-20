@@ -36,11 +36,12 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
     val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
     val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
 
     val koulutusServiceValidation =
       new KoulutusServiceValidation(koodistoService, organisaatioService, ToteutusDAO, SorakuvausDAO, ammKoulutusServiceValidation)
 
-    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoService, koulutusServiceValidation, mockKoutaSearchClient, ePerusteKoodiClient, koutaIndeksoijaClient)
+    new KoulutusService(SqsInTransactionService, MockS3ImageService, new AuditLog(MockAuditLogger), organisaatioService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoService, koulutusServiceValidation, mockKoutaSearchClient, ePerusteKoodiClient, koutaIndeksoijaClient, lokalisointiClient)
   }
 }
 
