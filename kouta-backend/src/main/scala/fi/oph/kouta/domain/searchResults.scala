@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.client.KoulutusKoodiUri
+
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
 import fi.vm.sade.utils.slf4j.Logging
@@ -379,10 +381,12 @@ trait KoulutusItemCommon extends HasTila {
   val modified: Modified
   val eperuste: Option[EPeruste]
 }
-
+//case class EPeruste(voimassaoloAlkaa: Option[Long], voimassaoloLoppuu: Option[Long], koulutukset: List[KoulutusKoodiUri] = List())
 case class EPeruste(id: String,
                     diaarinumero: String,
-                    voimassaoloLoppuu: Option[String])
+                    voimassaoloAlkaa: Option[Long],
+                    voimassaoloLoppuu: Option[Long],
+                    koulutukset: List[KoulutusKoodiUri] = List())
 
 case class KoulutusSearchItemToteutus(oid: ToteutusOid,
                                       nimi: Kielistetty,

@@ -8,12 +8,15 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant, renderHttpDate}
+import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization.read
+import org.json4s.jackson.JsonMethods.parse
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
@@ -34,6 +37,7 @@ class KoulutusSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    ePerusteKoodiClient.ePerusteCache.invalidateAll()
     mockKoodiUriVersionFailure("koulutus_111111", 11)
     mockTutkinnonOsatFailure(111111)
     mockOsaamisalaKoodiUritFailure(111111)
@@ -110,6 +114,31 @@ class KoulutusSpec
   it should "return ok when getting deleted koulutus with myosPoistetut = true" in {
     val oid = put(koulutus.copy(tila = Poistettu), ophSession)
     get(s"$KoulutusPath/$oid?myosPoistetut=true", ophSession, 200)
+  }
+
+  it should "not enrich name with voimaantulo date if eperuste voimaantulo is in the past" in {
+    val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
+    mockKoulutusKoodiUritForEPerusteResponse(555, voimassaoloAlkaa = Some(pastMillis),
+      None, Seq("koulutus_371107", "koulutus_371108"))
+
+    val savedKoulutus: (Koulutus, Instant) = insertKoulutus(koulutus.copy(ePerusteId = Some(555)))
+    get(s"$KoulutusPath/${savedKoulutus._1.oid.get}", headers = defaultHeaders) {
+      status should equal(200)
+      assert(!body.contains("voimaantulo"))
+    }
+  }
+
+  it should "enrich name with voimaantulo date if eperuste voimaantulo is in the future" in {
+    val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
+    val futureDate = new LocalDate(futureMillis)
+    mockKoulutusKoodiUritForEPerusteResponse(556, voimassaoloAlkaa = Some(futureMillis),
+      None, Seq("koulutus_371107", "koulutus_371108"))
+
+    val foo: (Koulutus, Instant) = insertKoulutus(koulutus.copy(ePerusteId = Some(556)))
+    get(s"$KoulutusPath/${foo._1.oid.get}", headers = defaultHeaders) {
+      status should equal(200)
+      assert(body.contains(s"(voimaantulo ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
+    }
   }
 
   "Create koulutus" should "store koulutus" in {
@@ -407,7 +436,7 @@ class KoulutusSpec
     val createdKoulutus = yoKoulutus.copy(oid = Some(KoulutusOid(oid)), tarjoajat = List())
     val metadata        = createdKoulutus.metadata.get.asInstanceOf[YliopistoKoulutusMetadata]
     val lastModified    = get(oid, createdKoulutus)
-    val uusiKoulutus = createdKoulutus.copy(
+    val uusiKoulutus: Koulutus = createdKoulutus.copy(
       kielivalinta = Seq(Fi, Sv, En),
       nimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name"),
       tarjoajat = List(YoOid, HkiYoOid),
@@ -418,7 +447,8 @@ class KoulutusSpec
           ),
           kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
         )
-      )
+      ),
+      _enrichedData = createdKoulutus._enrichedData.map(_.copy(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name")))
     )
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus)
@@ -608,6 +638,7 @@ class KoulutusSpec
       nimi = Map(Fi -> "koulutus"),
       _enrichedData = Some(
         KoulutusEnrichedData(
+          esitysnimi = Map(Fi -> "koulutus"),
           muokkaajanNimi = Some("Testi Muokkaaja")
         )
       )

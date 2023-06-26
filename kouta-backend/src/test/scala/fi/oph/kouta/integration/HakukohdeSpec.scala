@@ -522,7 +522,7 @@ class HakukohdeSpec
     )
     val oid                = put(eiJulkaistuHakukohde, ophSession)
     val eiJulkaistuWithOid = eiJulkaistuHakukohde.copy(oid = Some(HakukohdeOid(oid)), muokkaaja = OphUserOid)
-    val lastModified       = get(oid, eiJulkaistuWithOid)
+    var lastModified       = get(oid, eiJulkaistuWithOid)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     // poistetaan yksi hakuaika
     val muokattuHakukohde = eiJulkaistuWithOid.copy(
@@ -530,6 +530,8 @@ class HakukohdeSpec
     )
     update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession2)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid2.toString)
+
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     // poistetaan kaikki hakuajat
     val muokattuHakukohde2 = eiJulkaistuWithOid.copy(
       hakuajat = List()
