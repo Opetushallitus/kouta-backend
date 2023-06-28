@@ -381,7 +381,7 @@ trait KoulutusItemCommon extends HasTila {
   val modified: Modified
   val eperuste: Option[EPeruste]
 }
-//case class EPeruste(voimassaoloAlkaa: Option[Long], voimassaoloLoppuu: Option[Long], koulutukset: List[KoulutusKoodiUri] = List())
+
 case class EPeruste(id: String,
                     diaarinumero: String,
                     voimassaoloAlkaa: Option[Long],

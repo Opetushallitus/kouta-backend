@@ -367,15 +367,13 @@ class KoulutusService(
 
   def enrichKoulutusNimiWithEPerusteVoimaantulo(nimiBase: Kielistetty, ep: Option[EPeruste]): Kielistetty = {
     ep match {
-      case Some(peruste: EPeruste) if peruste.voimassaoloAlkaa.exists(alku => alku > System.currentTimeMillis()) =>
-        val voimaantuloDate: LocalDate = new LocalDate(peruste.voimassaoloAlkaa.get)
+      case Some(ep: EPeruste) if ep.voimassaoloAlkaa.exists(alku => alku > System.currentTimeMillis()) =>
+        val voimaantuloDate: LocalDate = new LocalDate(ep.voimassaoloAlkaa.get)
         val voimaantuloTranslations = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.eperusteVoimaantulo")
-        val res = nimiBase.map(lang => {
+        nimiBase.map(lang => {
           val suffix = s" (${voimaantuloTranslations.getOrElse(lang._1, "voimaantulo")} ${voimaantuloDate.getDayOfMonth}.${voimaantuloDate.getMonthOfYear}.${voimaantuloDate.getYear})"
           (lang._1, lang._2 + suffix)
         })
-        logger.info(s"Enrichment result: $res")
-        res
       case _ => nimiBase
     }
   }
