@@ -10,6 +10,7 @@ import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, isToi
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -32,7 +33,7 @@ class HakukohdeServiceValidation(
     lokalisointiClient: LokalisointiClient,
     hakukohdeDAO: HakukohdeDAO,
     hakuDAO: HakuDAO
-) extends ValidatingService[Hakukohde] {
+) extends ValidatingService[Hakukohde] with Logging {
   def withValidation[R](hakukohde: Hakukohde, oldHakukohde: Option[Hakukohde], authenticated: Authenticated)(
       f: Hakukohde => R
   ): R = {
@@ -229,6 +230,7 @@ class HakukohdeServiceValidation(
     val hakukohteenHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(newHakukohde.hakuajat)
     val haunHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(haku.map(_.hakuajat).getOrElse(Seq()))
     val hakuaikaEiOleMenossa: Boolean = haunHakuaikaEiOleMenossa && hakukohteenHakuaikaEiOleMenossa
+    logger.info(s"isAllowedToRemoveArchived: Hakukohde ${newHakukohde.oid}, hakukohteessaEiOleHakijoita ${hakukohteessaEiOleHakijoita}, hakukohteenHakuaikaEiOleMenossa ${hakukohteenHakuaikaEiOleMenossa}, haunHakuaikaEiOleMenossa ${haunHakuaikaEiOleMenossa}")
     hakuaikaEiOleMenossa && hakukohteessaEiOleHakijoita
   }
 

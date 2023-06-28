@@ -298,7 +298,8 @@ class HakukohdeService(
         true
       };
     } catch {
-      case _: KoutaValidationException => {
+      case e: KoutaValidationException => {
+        logger.warn(s"Temp: Error when checking is tilaChangeAllowed ${e}")
         false
       }
     }
