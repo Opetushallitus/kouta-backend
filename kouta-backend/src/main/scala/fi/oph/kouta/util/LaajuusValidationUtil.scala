@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.client.KoodistoUtils
+import fi.oph.kouta.client.KoodiUriUtils
 
 object LaajuusValidationUtil {
   def isValidOpintojenLaajuus(
@@ -32,7 +32,7 @@ object LaajuusValidationUtil {
   ) = {
     (koulutusOpintojenLaajuusYksikko, toteutusOpintojenLaajuusYksikko) match {
       case (Some(koulutusLaajuusyksikko), Some(toteutusLaajuusyksikko)) =>
-        KoodistoUtils.koodiUriStringsMatch(koulutusLaajuusyksikko, toteutusLaajuusyksikko)
+        KoodiUriUtils.koodiUriStringsMatch(koulutusLaajuusyksikko, toteutusLaajuusyksikko)
       case _ => true
     }
   }

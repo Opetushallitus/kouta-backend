@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.Koulutustyyppi.isAmmatillinen
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
@@ -13,7 +12,7 @@ import fi.oph.kouta.validation._
 
 object KoulutusServiceValidation
     extends KoulutusServiceValidation(
-      CachedKoodistoClient,
+      KoodistoService,
       OrganisaatioServiceImpl,
       ToteutusDAO,
       SorakuvausDAO,
@@ -21,7 +20,7 @@ object KoulutusServiceValidation
     )
 
 class KoulutusServiceValidation(
-    val koodistoClient: CachedKoodistoClient,
+    val koodistoService: KoodistoService,
     val organisaatioService: OrganisaatioService,
     toteutusDAO: ToteutusDAO,
     val sorakuvausDAO: SorakuvausDAO,
@@ -284,7 +283,7 @@ class KoulutusServiceValidation(
                 path,
                 newLisatieto,
                 validationContext,
-                koodistoClient.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
+                koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
               )
         )
       ),
@@ -423,7 +422,7 @@ class KoulutusServiceValidation(
             uri =>
               assertKoodistoQueryResult(
                 uri,
-                koodistoClient.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
+                koodistoService.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, _),
                 "metadata.erikoistumiskoulutusKoodiUri",
                 validationContext,
                 invalidErikoistumiskoulutusKoodiuri(uri)
@@ -744,7 +743,7 @@ class KoulutusServiceValidation(
       uri =>
         assertKoodistoQueryResult(
           uri,
-          koodistoClient.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
+          koodistoService.koodiUriExistsInKoodisto(OpinnonTyyppiKoodisto, _),
           "metadata.opinnonTyyppiKoodiUri",
           validationContext,
           invalidOpinnonTyyppiKoodiuri(uri)

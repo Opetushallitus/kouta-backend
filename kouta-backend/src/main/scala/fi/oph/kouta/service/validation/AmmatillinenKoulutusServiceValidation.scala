@@ -1,18 +1,18 @@
 package fi.oph.kouta.service.validation
 
-import fi.oph.kouta.client.KoodistoUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{CachedKoodistoClient, EPerusteKoodiClient}
+import fi.oph.kouta.client.KoodiUriUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
+import fi.oph.kouta.client.{EPerusteKoodiClient}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.service.{KoodistoValidator, ValidatingSubService}
+import fi.oph.kouta.service.{KoodistoService, KoodistoValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
 object AmmatillinenKoulutusServiceValidation
-    extends AmmatillinenKoulutusServiceValidation(CachedKoodistoClient, EPerusteKoodiClient)
+    extends AmmatillinenKoulutusServiceValidation(KoodistoService, EPerusteKoodiClient)
 
 class AmmatillinenKoulutusServiceValidation(
-    val koodistoClient: CachedKoodistoClient,
-    ePerusteKoodiClient: EPerusteKoodiClient
+                                             val koodistoService: KoodistoService,
+                                             ePerusteKoodiClient: EPerusteKoodiClient
 ) extends KoodistoValidator
     with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
@@ -43,12 +43,12 @@ class AmmatillinenKoulutusServiceValidation(
               ),
               validateIfTrue(
                 ammKoulutusNimiShouldBeValidated(koulutus, koulutusDiffResolver),
-                koodistoClient.getKoodiUriVersionOrLatestFromCache(koulutus.koulutuksetKoodiUri.head) match {
+                koodistoService.getKaannokset(koulutus.koulutuksetKoodiUri.head) match {
                   case Left(_) => error("koulutuksetKoodiUri", koodistoServiceFailureMsg)
-                  case Right(uri) =>
+                  case Right(kaannokset) =>
                     assertNimiMatchExternal(
                       koulutus.nimi,
-                      uri.nimi,
+                      kaannokset,
                       "nimi",
                       s"koulutuksessa ${koulutus.koulutuksetKoodiUri.head}"
                     )
