@@ -167,6 +167,44 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
     }
   }
 
+  registerPath("/hakukohde/:oid/tila/{tila}",
+    """    get:
+      |      summary: Onko tilamuutos hakukohteelle sallittu
+      |      operationId: Onko tilamuutos sallittu hakukohteelle
+      |      description: Muuttaa annettavien hakukohdeoidien tilat. Tila annetaan parametrina.
+      |        Rajapinta palauttaa true/false sen perusteella onko tilamuutos sallittu.
+      |      tags:
+      |        - Hakukohde
+      |      parameters:
+      |        - in: path
+      |          name: oid
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: Hakukohde-oid
+      |          example: 1.2.246.562.20.00000000000000000009
+      |        - in: path
+      |          name: tila
+      |          required: true
+      |          schema:
+      |            type: string
+      |          description: Tila jolle kysytään
+      |          example: poistettu
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: boolean
+      |""".stripMargin)
+
+  get("/:oid/tila/:tila") {
+    implicit val authenticated: Authenticated = authenticate()
+    val result: Boolean = hakukohdeService.tilaChangeAllowed(HakukohdeOid(params("oid")), params("tila"))
+    Ok(result)
+  }
+
   registerPath("/hakukohde/tila/{tila}",
     """    post:
       |      summary: Muuttaa usean hakukohteen tilat

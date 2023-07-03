@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient, HakukohdeInfo}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -36,7 +36,13 @@ class HakukohdeServiceValidation(
   def withValidation[R](hakukohde: Hakukohde, oldHakukohde: Option[Hakukohde], authenticated: Authenticated)(
       f: Hakukohde => R
   ): R = {
-    var errors = super.validate(hakukohde, oldHakukohde)
+    val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+
+    var errors = super.validateWithStateChangeValidationResults(
+      hakukohde,
+      oldHakukohde,
+      validateHakukohdeStateChange(oldHakukohde, hakukohde, haku)
+    )
     if (errors.isEmpty)
       errors = validateDependencyIntegrity(
         hakukohde,
@@ -202,6 +208,59 @@ class HakukohdeServiceValidation(
             hk.kaytetaanHaunHakulomaketta.contains(false),
             assertNotOptional(hk.hakulomaketyyppi, "hakulomaketyyppi")
           )
+        )
+      )
+    )
+  }
+
+  private def isHakuaikaMenossa(hakuaika: Ajanjakso): Boolean = {
+    val now = LocalDateTime.now();
+    hakuaika.alkaa.isBefore(now) && !hakuaika.paattyy.exists(ha => ha.isBefore(now))
+  }
+
+  private def isHakuaikaMenossa(hakuajat: Seq[Ajanjakso]): Boolean = {
+    hakuajat.exists(isHakuaikaMenossa)
+  }
+
+  private def isAllowedToRemoveArchived(newHakukohde: Hakukohde, haku: Option[Haku]): Boolean = {
+    val hakukohdeInfo: Option[HakukohdeInfo] = newHakukohde.oid.map(oid => hakemusPalveluClient.getHakukohdeInfo(oid))
+    val hakukohteessaEiOleHakijoita: Boolean = hakukohdeInfo.exists(_.applicationCount == 0)
+
+    val hakukohteenHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(newHakukohde.hakuajat)
+    val haunHakuaikaEiOleMenossa: Boolean = !isHakuaikaMenossa(haku.map(_.hakuajat).getOrElse(Seq()))
+    val hakuaikaEiOleMenossa: Boolean = haunHakuaikaEiOleMenossa && hakukohteenHakuaikaEiOleMenossa
+    hakuaikaEiOleMenossa && hakukohteessaEiOleHakijoita
+  }
+
+  private def getValidStatesForNewHakukohde(
+      oldHakukohde: Option[Hakukohde],
+      newHakukohde: Hakukohde,
+      haku: Option[Haku]
+  ): Seq[Julkaisutila] = {
+    if (oldHakukohde.isEmpty) {
+      Seq()
+    } else {
+      val validStates = validStateChanges.getOrElse(oldHakukohde.get.tila, Seq())
+      validStates ++ (if (oldHakukohde.get.tila == Arkistoitu && isAllowedToRemoveArchived(newHakukohde, haku))
+                        Seq(Poistettu)
+                      else Seq())
+    }
+  }
+
+  private def validateHakukohdeStateChange(
+      oldHakukohde: Option[Hakukohde],
+      newHakukohde: Hakukohde,
+      haku: Option[Haku]
+  ): IsValid = {
+    val validStatesForNewHakukohde = getValidStatesForNewHakukohde(oldHakukohde, newHakukohde, haku)
+    validateIfDefinedAndTrue(
+      oldHakukohde.map(_.tila != newHakukohde.tila),
+      validateIfTrue(
+        validStatesForNewHakukohde.nonEmpty,
+        assertTrue(
+          validStatesForNewHakukohde.contains(newHakukohde.tila),
+          "tila",
+          illegalStateChange(newHakukohde.getEntityDescriptionAllative(), oldHakukohde.get.tila, newHakukohde.tila)
         )
       )
     )
@@ -415,14 +474,15 @@ class HakukohdeServiceValidation(
 
     val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
-    val hakuOid                                           = hakukohde.hakuOid.s
-    val toteutusOid                                       = hakukohde.toteutusOid.s
-    val koulutustyyppi                                    = dependencyInfo.map(_.toteutus.koulutustyyppi)
-    val haunJulkaisutila                                  = haku.map(_.tila)
-    val koulutuksetKoodiUri                               = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
-    val tarjoajat                                         = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
-    val vCtx                                              = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
-    val jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta   = dependencyInfo.flatMap(di => di.jarjestyspaikka.flatMap(j => j.jarjestaaUrheilijanAmmKoulutusta))
+    val hakuOid             = hakukohde.hakuOid.s
+    val toteutusOid         = hakukohde.toteutusOid.s
+    val koulutustyyppi      = dependencyInfo.map(_.toteutus.koulutustyyppi)
+    val haunJulkaisutila    = haku.map(_.tila)
+    val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
+    val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
+    val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+    val jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta =
+      dependencyInfo.flatMap(di => di.jarjestyspaikka.flatMap(j => j.jarjestaaUrheilijanAmmKoulutusta))
 
     and(
       validateIfSuccessful(
@@ -437,7 +497,8 @@ class HakukohdeServiceValidation(
           hakukohde.jarjestyspaikkaOid,
           jarjestysPaikkaOid =>
             assertTrue(
-              tarjoajat.flatMap(org => organisaatioService.getAllChildOidsFlat(org))
+              tarjoajat
+                .flatMap(org => organisaatioService.getAllChildOidsFlat(org))
                 .distinct
                 .contains(jarjestysPaikkaOid),
               "jarjestyspaikkaOid",
@@ -456,9 +517,12 @@ class HakukohdeServiceValidation(
       validateIfDefinedAndTrue(
         hakukohde.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta),
         assertTrue(
-          jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.contains(true) || !hakukohdeDiffResolver.jarjestaaUrheilijanAmmatillistakoulutustaChanged(),
+          jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.contains(true) || !hakukohdeDiffResolver
+            .jarjestaaUrheilijanAmmatillistakoulutustaChanged(),
           "metadata.jarjestaaUrheilijanAmmKoulutusta",
-          invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.getOrElse(false))
+          invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
+            jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.getOrElse(false)
+          )
         )
       ),
       validateDependencyExistence(haunJulkaisutila, hakuOid, "Hakua", "hakuOid"),

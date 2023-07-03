@@ -2,6 +2,8 @@ package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.oid.HakukohdeOid
+import fi.oph.kouta.service.HakemuspalveluHakukohdeInfo
 import fi.oph.kouta.util.{KoutaJsonFormats, MiscUtils}
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
@@ -27,11 +29,21 @@ case class AtaruForm(key: String, deleted: Option[Boolean], properties: Option[A
   def formAllowsOnlyYhteisHaut: Boolean = properties.exists(_.allowsOnlyYhteisHaut);
 }
 
+case class HakukohdeInfo(applicationCount: Int) {
+  def toHakemuspalveluHakukohdeInfo: HakemuspalveluHakukohdeInfo = {
+    HakemuspalveluHakukohdeInfo(
+      hakemustenMaara = applicationCount
+    )
+  }
+}
+
 case class AtaruQueryException(message: String, status: Int) extends RuntimeException(message)
 
 trait HakemusPalveluClient extends KoutaJsonFormats {
   def isExistingAtaruIdFromCache(ataruId: UUID): ExternalQueryResult
   def isFormAllowedForHakutapa(ataruId: UUID, hakutapaKoodiUri: Option[String]): ExternalQueryResult
+
+  def getHakukohdeInfo(hakukohdeOid: HakukohdeOid): HakukohdeInfo
 }
 
 object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with CallerId with Logging {
@@ -116,4 +128,42 @@ object HakemusPalveluClient extends HakemusPalveluClient with HttpClient with Ca
 
   def parseForms(responseAsString: String): Seq[AtaruForm] =
     (parse(responseAsString) \\ "forms").extract[List[AtaruForm]].filter(_.isActive)
+
+  private def getHakukohdeInfoFromAtaruService(hakukohdeOid: HakukohdeOid): HakukohdeInfo = {
+    Uri.fromString(urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid))
+      .fold(Task.fail, url => {
+        client.fetch(Request(method = GET, uri = url)) {
+          case r if r.status.code == 200 =>
+            r.bodyAsText
+              .runLog
+              .map(_.mkString)
+              .map(responseBody => {
+                parse(responseBody).extract[HakukohdeInfo]
+              })
+          case r =>
+            r.bodyAsText
+              .runLog
+              .map(_.mkString)
+              .flatMap(_ => Task.fail(AtaruQueryException(s"Failed to fetch hakukohde information from Hakemuspalvelu", r.status.code)))
+        }
+      }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+  }
+
+  override def getHakukohdeInfo(hakukohdeOid: HakukohdeOid): HakukohdeInfo = {
+    try {
+      getHakukohdeInfoFromAtaruService(hakukohdeOid)
+    } catch {
+      case error: AtaruQueryException if retryStatusCodes.contains(error.status) =>
+        logger.warn(s"Failed to fetch hakukohde informationfrom Hakemuspalvelu, retrying once...")
+        try {
+          getHakukohdeInfoFromAtaruService(hakukohdeOid)
+        } catch {
+          case error: AtaruQueryException => throw new AtaruQueryException(s"Failed to fetch hakukohde informationfrom Hakemuspalvelu after retry, ${error.message}", error.status)
+          case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
+        }
+      case error: AtaruQueryException => throw error
+      case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
+    }
+  }
+
 }
