@@ -291,7 +291,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
              k.teemakuva
       from koulutukset k, koulutusten_tarjoajat kt
       where oid = kt.koulutus_oid
-      and k.tila = 'julkaistu'
+      #${tilaConditions(TilaFilter.onlyJulkaistut(), "k.tila")}
       and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
       group by k.oid) as koulutus
     left join (
@@ -310,7 +310,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
              t.sorakuvaus_id
       from toteutukset t, toteutusten_tarjoajat tt
       where t.oid = tt.toteutus_oid
-      and t.tila = 'julkaistu'
+      #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "t.tila")}
       and tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
       group by t.oid) as toteutus
     using (koulutus_oid);"""
