@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
+import fi.oph.kouta.client.KoodistoUtils.{getVersio}
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -11,6 +12,7 @@ import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.KoodistoService.getKaannokset
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
@@ -30,7 +32,7 @@ object KoulutusService
       OrganisaatioServiceImpl,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      CachedKoodistoClient,
+      KoodistoService,
       KoulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
@@ -43,7 +45,7 @@ object KoulutusService
       organisaatioService: OrganisaatioService,
       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
       kayttooikeusClient: KayttooikeusClient,
-      koodistoClient: CachedKoodistoClient,
+      koodistoService: KoodistoService,
       koulutusServiceValidation: KoulutusServiceValidation
   ): KoulutusService = {
     new KoulutusService(
@@ -53,7 +55,7 @@ object KoulutusService
       organisaatioService,
       oppijanumerorekisteriClient,
       kayttooikeusClient,
-      koodistoClient,
+      koodistoService,
       koulutusServiceValidation,
       KoutaSearchClient,
       EPerusteKoodiClient,
@@ -69,7 +71,7 @@ class KoulutusService(
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     koulutusServiceValidation: KoulutusServiceValidation,
     koutaSearchClient: KoutaSearchClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
@@ -99,17 +101,16 @@ class KoulutusService(
       )
     } else { None }
 
-  private def getKoodiUriVersion(koodiUriAsString: String): KoodiUri =
-    koodistoClient.getKoodiUriVersionOrLatestFromCache(koodiUriAsString) match {
-      case Left(exp)  => throw exp
-      case Right(uri) => uri
-    }
-
   private def getKoodiUriVersionIfEmpty(currentValue: Option[String], koodiUriAsString: String): Option[String] =
     if (currentValue.isDefined) currentValue
     else {
-      val koodiUri = getKoodiUriVersion(koodiUriAsString)
-      Some(s"${koodiUri.koodiUri}#${koodiUri.versio}")
+      getVersio(koodiUriAsString) match {
+        case Some(_) => Some(koodiUriAsString)
+        case None => koodistoService.getLatestVersion(koodiUriAsString) match {
+          case Right(element) => Some(s"${element.koodiUri}#${element.versio}")
+          case Left(exp) => throw exp
+        }
+      }
     }
 
   private def getKoodiUriVersionAsStrSeqIfEmpty(currentValue: Seq[String], koodiUriAsString: String): Seq[String] =
@@ -295,10 +296,12 @@ class KoulutusService(
     val enrichedMetadata: Option[KoulutusMetadata] = enrichKoulutusMetadata(koulutus)
     val enrichedKoulutus = koulutus.koulutustyyppi match {
       case Amm if koulutus.nimi.isEmpty && koulutus.koulutuksetKoodiUri.nonEmpty =>
-        val koodiUri = getKoodiUriVersion(koulutus.koulutuksetKoodiUri.head)
-        koulutus.copy(
-          nimi = NameHelper.mergeNames(koodiUri.nimi, koulutus.nimi, koulutus.kielivalinta)
-        )
+        getKaannokset(koulutus.koulutuksetKoodiUri.head) match {
+          case Right(kaannokset) => koulutus.copy(
+            nimi = NameHelper.mergeNames(kaannokset, koulutus.nimi, koulutus.kielivalinta)
+          )
+          case Left(exp) => throw exp
+        }
       case AmmTutkinnonOsa if notFullyPopulated(koulutus.nimi, koulutus.kielivalinta) && koulutus.metadata.isDefined =>
         koulutus.metadata match {
           case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata)

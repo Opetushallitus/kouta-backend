@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.TestData.LukioHakukohteenLinja
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -12,16 +12,7 @@ import fi.oph.kouta.indexing.indexing.{IndexType, IndexTypeHakukohde, IndexTypeK
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{
-  HakukohdeCopyResultObject,
-  HakukohdeService,
-  HakukohdeServiceValidation,
-  HakukohdeTilaChangeResultObject,
-  KeywordService,
-  OrganisaatioServiceImpl,
-  ToteutusService,
-  ToteutusServiceValidation
-}
+import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, HakukohdeTilaChangeResultObject, KeywordService, KoodistoService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.junit.Assert
@@ -57,10 +48,10 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   def hakukohdeService: HakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoClient      = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService     = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val toteutusServiceValidation = new ToteutusServiceValidation(
-      koodistoClient,
+      koodistoService,
       organisaatioService,
       KoulutusDAO,
       HakukohdeDAO,
@@ -68,7 +59,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       ToteutusDAO
     )
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(
-      koodistoClient,
+      koodistoService,
       mockHakemusPalveluClient,
       organisaatioService,
       lokalisointiClient,
@@ -83,7 +74,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       lokalisointiClient,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      koodistoClient,
+      koodistoService,
       new ToteutusService(
         SqsInTransactionServiceCheckingRowExistsWhenIndexing,
         MockS3ImageService,
@@ -92,7 +83,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
         organisaatioService,
         koulutusService,
         lokalisointiClient,
-        koodistoClient,
+        koodistoService,
         mockOppijanumerorekisteriClient,
         mockKayttooikeusClient,
         toteutusServiceValidation,

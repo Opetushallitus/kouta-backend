@@ -1,9 +1,9 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
+import fi.oph.kouta.service.KoodistoService.isKoulutusValiotsikkoKoodiUri
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 import scalaz.syntax.std.boolean._
@@ -23,13 +23,13 @@ trait ValidatingService[E <: Validatable] {
     }
   }
 
-  def validate(e: E, oldE: Option[E]): IsValid = {
+  def validateWithStateChangeValidationResults(e: E, oldE: Option[E], validateStateChangeResults: IsValid): IsValid = {
     var errors = if (oldE.isDefined) {
       if (oldE.get.tila == Tallennettu && e.tila == Julkaistu) {
-        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila) ++
+        validateEntity(e, oldE) ++ validateStateChangeResults ++
           validateEntityOnJulkaisu(e)
       } else {
-        validateEntity(e, oldE) ++ validateStateChange(e.getEntityDescriptionAllative(), oldE.get.tila, e.tila)
+        validateEntity(e, oldE) ++ validateStateChangeResults
       }
     } else {
       if (e.tila == Julkaistu) {
@@ -47,6 +47,10 @@ trait ValidatingService[E <: Validatable] {
     }
 
     errors
+  }
+
+  def validate(e: E, oldE: Option[E]): IsValid = {
+    validateWithStateChangeValidationResults(e, oldE, validateStateChange(e.getEntityDescriptionAllative(), oldE.map(_.tila), e.tila))
   }
 
   def koodiUriTipText(koodiUri: String): Option[String] =
@@ -165,7 +169,7 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
 }
 
 trait KoodistoValidator {
-  def koodistoClient: CachedKoodistoClient
+  def koodistoService: KoodistoService
 
   def validateKoulutusKoodiUrit(
       koodiUriFilter: KoulutusKoodiFilter,
@@ -174,23 +178,24 @@ trait KoodistoValidator {
       maxNbrOfKoodit: Option[Int],
       vCtx: ValidationContext
   ): IsValid =
-    validateIfJulkaistu(
-      vCtx.tila,
-      validateIfSuccessful(
-        assertKoulutusKoodiuriAmount(koulutusKoodiUrit, maxNbrOfKoodit),
-        validateIfNonEmpty[String](
-          newKoulutusKoodiUrit,
-          "koulutuksetKoodiUri",
-          (koodiUri, path) =>
-            assertKoulutuskoodiQueryResult(
-              koodiUri,
-              koodiUriFilter,
-              koodistoClient,
-              path,
-              vCtx,
-              invalidKoulutuskoodiuri(koodiUri)
-            )
-        )
+    validateIfSuccessful(
+      validateIfJulkaistu(
+        vCtx.tila,
+        assertKoulutusKoodiuriAmount(koulutusKoodiUrit, maxNbrOfKoodit)
+      ),
+      validateIfNonEmpty[String](
+        newKoulutusKoodiUrit,
+        "koulutuksetKoodiUri",
+        (koodiUri, path) => {
+          assertKoulutuskoodiQueryResult(
+            koodiUri,
+            koodiUriFilter,
+            koodistoService,
+            path,
+            vCtx,
+            invalidKoulutuskoodiuri(koodiUri)
+          )
+        }
       )
     )
 
@@ -207,7 +212,7 @@ trait KoodistoValidator {
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(koodisto, _),
+          koodistoService.koodiUriExistsInKoodisto(koodisto, _),
           path,
           vCtx,
           getValidationError(koodiUri)
@@ -227,7 +232,7 @@ trait KoodistoValidator {
       koodiUri =>
         assertKoodistoQueryResult(
           koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(koodisto, _),
+          koodistoService.koodiUriExistsInKoodisto(koodisto, _),
           path,
           vCtx,
           getValidationError(koodiUri)
@@ -307,7 +312,7 @@ trait KoodistoValidator {
       (koodiUri, path) =>
         assertKoodistoQueryResult(
           koodiUri,
-          koodistoClient.koodiUriExistsInKoodisto(koodistoNimi, _),
+          koodistoService.koodiUriExistsInKoodisto(koodistoNimi, _),
           path,
           validationContext,
           invalidTutkintoNimikeKoodiuri(koodiUri)

@@ -2,20 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, ToteutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{
-  KeywordService,
-  OrganisaatioServiceImpl,
-  ToteutusCopyResultObject,
-  ToteutusService,
-  ToteutusServiceValidation,
-  ToteutusTilaChangeResultObject
-}
+import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO, ToteutusExtractors}
+import fi.oph.kouta.service.{KeywordService, KoodistoService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation, ToteutusTilaChangeResultObject}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -37,9 +30,9 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val koodistoClient      = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
     val toteutusServiceValidation = new ToteutusServiceValidation(
-      koodistoClient,
+      koodistoService,
       organisaatioService,
       KoulutusDAO,
       HakukohdeDAO,
@@ -54,7 +47,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
       organisaatioService,
       koulutusService,
       lokalisointiClient,
-      koodistoClient,
+      koodistoService,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       toteutusServiceValidation,

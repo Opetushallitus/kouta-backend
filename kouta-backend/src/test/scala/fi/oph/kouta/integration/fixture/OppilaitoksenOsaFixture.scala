@@ -2,19 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Julkaisutila, Modified, OppilaitoksenOsa, OppilaitoksenOsaListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{OppilaitoksenOsaDAO, OppilaitosDAO}
-import fi.oph.kouta.service.{
-  OppilaitoksenOsaService,
-  OppilaitoksenOsaServiceValidation,
-  OppilaitosServiceValidation,
-  OrganisaatioServiceImpl,
-  PistehistoriaService
-}
+import fi.oph.kouta.service.{KoodistoService, OppilaitoksenOsaService, OppilaitoksenOsaServiceValidation, OppilaitosServiceValidation, OrganisaatioServiceImpl, PistehistoriaService}
 import fi.oph.kouta.servlet.OppilaitoksenOsaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
@@ -26,9 +20,9 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
 
   def oppilaitoksenOsaService: OppilaitoksenOsaService = {
     val organisaatioService               = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient                   = new CachedKoodistoClient(urlProperties.get)
-    val oppilaitosServiceValidation       = new OppilaitosServiceValidation(koodistoClient)
-    val oppilaitoksenOsaServiceValidation = new OppilaitoksenOsaServiceValidation(koodistoClient, OppilaitosDAO)
+    val koodistoService                   = new KoodistoService(new KoodistoClient(urlProperties.get))
+    val oppilaitosServiceValidation       = new OppilaitosServiceValidation(koodistoService)
+    val oppilaitoksenOsaServiceValidation = new OppilaitoksenOsaServiceValidation(koodistoService, OppilaitosDAO)
     new OppilaitoksenOsaService(
       SqsInTransactionServiceIgnoringIndexing,
       MockS3ImageService,

@@ -1,6 +1,15 @@
 package fi.oph.kouta.mocks
 
+import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
+import fi.oph.kouta.domain.Kielistetty
 import org.mockserver.model.HttpRequest
+
+object TestKoodistoElement {
+  def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodistoElement = {
+    KoodistoElement(koodiUri, koodiUri.split("_")(1), version, Some(KoodistoSubElement("notUsedInThisCase")), None, nimi
+      .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList)
+  }
+}
 
 trait KoodistoServiceMock extends ServiceMockBase {
   def optionalVoimassaOloString(str: Option[String]): String =
@@ -13,6 +22,7 @@ trait KoodistoServiceMock extends ServiceMockBase {
     s"""{
         "koodiUri": "${uri._1}",
         "versio": ${uri._2},
+        "koodiArvo": "${uri._1.split("_")(1)}",
         "metadata": [
           {
             "nimi": "nimi",
@@ -65,7 +75,7 @@ trait KoodistoServiceMock extends ServiceMockBase {
 
   def mockKoulutusByTutkintotyyppiResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
     val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
-    mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
+    mockGet(path, Map.empty, koodiUriResponse("koulutus", koodiUrit))
   }
 
   def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {

@@ -1,9 +1,10 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{CachedKoodistoClient, HakemusPalveluClient}
+import fi.oph.kouta.client.{HakemusPalveluClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
@@ -642,7 +643,7 @@ object Validations {
   def assertKoulutuskoodiQueryResult(
       koulutusKoodiUri: String,
       koulutusKoodiFilter: KoulutusKoodiFilter,
-      koodistoClient: CachedKoodistoClient,
+      koodistoService: KoodistoService,
       path: String,
       validationContext: ValidationContext,
       errorMessage: ErrorMessage,
@@ -651,12 +652,12 @@ object Validations {
     val queryResult =
       if (validationContext.isKoodistoServiceOk()) {
         if (koulutusKoodiFilter.filterType() == koulutusTyyppi) {
-          koodistoClient.koulutusKoodiUriOfKoulutustyypitExistFromCache(
+          koodistoService.isInLisattavatKoulutukset(
             koulutusKoodiFilter.koulutusTyypit,
             koulutusKoodiUri
           )
         } else
-          koodistoClient.koulutusKoodiUriExists(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
+          koodistoService.isLisattavaKoulutus(koulutusKoodiFilter.koulutusKoodiUrit, koulutusKoodiUri)
       } else queryFailed
     validationContext.updateKoodistoServiceStatusByQueryStatus(queryResult)
     assertExternalQueryResult(
@@ -875,13 +876,13 @@ object Validations {
     }.getOrElse(error(dependencyIdPath, nonExistent(dependencyName, dependencyId)))
   }
 
-  def validateStateChange(entityDesc: String, oldState: Julkaisutila, newState: Julkaisutila): IsValid = {
-    validateIfTrue(
-      oldState != newState,
+  def validateStateChange(entityDesc: String, oldState: Option[Julkaisutila], newState: Julkaisutila): IsValid = {
+    validateIfDefinedAndTrue(
+      oldState.map(_ != newState),
       validateIfDefined[Seq[Julkaisutila]](
-        validStateChanges.get(oldState),
+        oldState.flatMap(validStateChanges.get(_)),
         validStates =>
-          assertTrue(validStates.contains(newState), "tila", illegalStateChange(entityDesc, oldState, newState))
+          assertTrue(validStates.contains(newState), "tila", illegalStateChange(entityDesc, oldState.get, newState))
       )
     )
   }

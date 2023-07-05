@@ -3,11 +3,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.Osoite1
 import fi.oph.kouta.TestOids.{ChildOid, OphOid}
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.{KoutaValidationException, OppilaitosServiceValidation}
+import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OppilaitosServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
@@ -23,7 +22,7 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
-  val koodistoClient     = mock[CachedKoodistoClient]
+  val koodistoService     = mock[KoodistoService]
 
   val min         = TestData.MinOppilaitos
   val max         = TestData.JulkaistuOppilaitos
@@ -54,12 +53,12 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     InetAddress.getByName("127.0.0.1")
   )
 
-  val validator = new OppilaitosServiceValidation(koodistoClient)
+  val validator = new OppilaitosServiceValidation(koodistoService)
   override def beforeEach(): Unit = {
     super.beforeEach()
-    when(koodistoClient.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, "organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
-    when(koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, "organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
   }
 
   def passesValidation(

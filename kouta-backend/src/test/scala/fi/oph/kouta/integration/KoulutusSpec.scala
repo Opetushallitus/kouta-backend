@@ -504,7 +504,7 @@ class KoulutusSpec
       val muokkaaja = koulutus.muokkaaja
       muokkaaja.shouldEqual(TestUserOid)
     }
-    val lastModified = get(oid, muokattavaKoulutus)
+    var lastModified = get(oid, muokattavaKoulutus)
     // delete one tarjoaja
     val updatedKoulutus =
       muokattavaKoulutus.copy(tarjoajat = List(HkiYoOid))
@@ -521,6 +521,7 @@ class KoulutusSpec
     // delete all tarjoajas
     val koulutusWithNoTarjoajas =
       updatedKoulutus.copy(tarjoajat = List())
+    lastModified = get(oid, updatedKoulutus.copy(muokkaaja = userOidForTestSessionId(yliopistotSession)))
     update(koulutusWithNoTarjoajas, lastModified, expectUpdate = true)
     assert(getKoulutusMuokkaaja(muokattavaKoulutus) == TestUserOid.toString)
     get(s"$KoulutusPath/$oid", headers = defaultHeaders) {

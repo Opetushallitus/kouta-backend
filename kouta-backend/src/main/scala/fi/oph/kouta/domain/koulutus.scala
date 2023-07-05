@@ -54,7 +54,7 @@ package object koulutus {
       |            type: string
       |          example:
       |            - koulutus_371101#1
-      |            - koulutus_201000#1
+      |            - koulutus_201001#1
       |        tila:
       |          $ref: '#/components/schemas/Julkaisutila'
       |          description: Koulutuksen julkaisutila. Jos koulutus on julkaistu, se näkyy oppijalle Opintopolussa.

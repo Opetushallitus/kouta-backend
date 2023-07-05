@@ -2,13 +2,13 @@ package fi.oph.kouta.integration.fixture
 
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{CachedKoodistoClient, MockKoutaIndeksoijaClient}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
+import fi.oph.kouta.client.{KoodistoClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid}
 import fi.oph.kouta.domain.{Julkaisutila, Modified, Sorakuvaus, SorakuvausListItem}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.{KoulutusDAO, SorakuvausDAO}
-import fi.oph.kouta.service.{OrganisaatioServiceImpl, SorakuvausService, SorakuvausServiceValidation}
+import fi.oph.kouta.service.{KoodistoService, OrganisaatioServiceImpl, SorakuvausService, SorakuvausServiceValidation}
 import fi.oph.kouta.servlet.SorakuvausServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData, TestOids}
@@ -20,10 +20,10 @@ trait SorakuvausFixture extends AccessControlSpec {
 
   def sorakuvausService: SorakuvausService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoClient = new CachedKoodistoClient(urlProperties.get)
+    val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val sorakuvausServiceValidation =
-      new SorakuvausServiceValidation(koodistoClient, KoulutusDAO)
+      new SorakuvausServiceValidation(koodistoService, KoulutusDAO)
     new SorakuvausService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),

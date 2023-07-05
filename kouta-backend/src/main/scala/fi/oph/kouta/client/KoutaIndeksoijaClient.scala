@@ -47,7 +47,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
       val result = Await.result(resultF, Duration(quickIndexTimeout, TimeUnit.SECONDS))
       if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
-      case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin ($tyyppi $oid)")
+      case e: TimeoutException => logger.warn(s"Pikaindeksointi aikakatkaistiin ($tyyppi $oid)")
         List("varoitukset.indeksointiAikakatkaisu")
       case e: Exception => logger.error(s"Virhe pikaindeksoinnissa ($tyyppi $oid): $e")
         List("varoitukset.indeksointiEpaonnistui")
@@ -69,7 +69,7 @@ class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
       val result = Await.result(resultF, Duration(quickIndexTimeout, TimeUnit.SECONDS))
       if (!result) List("varoitukset.indeksointiEpaonnistui") else List.empty
     } catch {
-      case e: TimeoutException => logger.error(s"Pikaindeksointi aikakatkaistiin! (Valintaperuste $id)", e)
+      case e: TimeoutException => logger.warn(s"Pikaindeksointi aikakatkaistiin! (Valintaperuste $id)", e)
         List("varoitukset.indeksointiAikakatkaisu")
       case e: Exception => logger.error(s"Virhe valintaperusteen $id pikaindeksoinnissa: $e")
         List("varoitukset.indeksointiEpaonnistui")

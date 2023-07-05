@@ -1,16 +1,15 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.CachedKoodistoClient
 import fi.oph.kouta.domain.{KoulutusKoodisto, KoulutusalaKoodisto, Sorakuvaus, SorakuvausMetadata, TilaFilter}
 import fi.oph.kouta.repository.KoulutusDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotDefined, assertNotOptional, assertTrue, integrityViolationMsg, invalidKoulutusAlaKoodiuri, invalidKoulutuskoodiuri, notModifiableMsg, validateIfDefined, validateIfJulkaistu, validateIfNonEmpty, validateIfTrueOrElse, validateKielistetty}
-import fi.oph.kouta.validation.{IsValid, NoErrors, SorakuvausDiffResolver, ValidationContext}
+import fi.oph.kouta.validation.{IsValid, SorakuvausDiffResolver, ValidationContext}
 
 object SorakuvausServiceValidation
-    extends SorakuvausServiceValidation(CachedKoodistoClient, KoulutusDAO)
+    extends SorakuvausServiceValidation(KoodistoService, KoulutusDAO)
 class SorakuvausServiceValidation(
-    koodistoClient: CachedKoodistoClient,
+    koodistoService: KoodistoService,
     koulutusDAO: KoulutusDAO
 ) extends ValidatingService[Sorakuvaus] {
   override def validateEntity(sk: Sorakuvaus, oldSk: Option[Sorakuvaus]): IsValid = {
@@ -57,7 +56,7 @@ class SorakuvausServiceValidation(
         (koodiUri, path) =>
           assertKoodistoQueryResult(
             koodiUri,
-            koodistoClient.koodiUriExistsInKoodisto(KoulutusKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(KoulutusKoodisto, _),
             path,
             vCtx,
             invalidKoulutuskoodiuri(koodiUri)
@@ -68,7 +67,7 @@ class SorakuvausServiceValidation(
         koodiUri =>
           assertKoodistoQueryResult(
             koodiUri,
-            koodistoClient.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
+            koodistoService.koodiUriExistsInKoodisto(KoulutusalaKoodisto, _),
             "metadata.koulutusalaKoodiUri",
             vCtx,
             invalidKoulutusAlaKoodiuri(koodiUri)

@@ -115,7 +115,7 @@ class ToteutusSpec
       TestData.JulkaistuYoToteutus.copy(
         oid = Some(ToteutusOid(oid)),
         koulutusOid = KoulutusOid(koulutusOid),
-        koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")
+        koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201001#1")
       )
     )
   }
@@ -462,7 +462,7 @@ class ToteutusSpec
     val createdToteutus = newToteutus.copy(
       oid = Some(ToteutusOid(oid)),
       muokkaaja = OphUserOid,
-      koulutuksetKoodiUri = List("koulutus_371101#1", "koulutus_201000#1")
+      koulutuksetKoodiUri = List("koulutus_371101#1", "koulutus_201001#1")
     )
     val lastModified = get(
       oid,
@@ -590,7 +590,7 @@ class ToteutusSpec
     toteutus = toteutus.copy(
       oid = Some(ToteutusOid(oid)),
       organisaatioOid = HkiYoOid,
-      koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1")
+      koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201001#1")
     )
     val lastModified = get(oid, toteutus)
     update(toteutus.copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
@@ -600,7 +600,7 @@ class ToteutusSpec
     var toteutus = JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(put(YoKoulutus)))
     val oid      = put(toteutus)
     toteutus =
-      toteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201000#1"))
+      toteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_371101#1", "koulutus_201001#1"))
     val lastModified = get(oid, toteutus)
     update(toteutus.copy(organisaatioOid = YoOid), lastModified, 403, crudSessions(YoOid))
   }
