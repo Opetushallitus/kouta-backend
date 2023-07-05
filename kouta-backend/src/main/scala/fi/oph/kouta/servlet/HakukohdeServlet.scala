@@ -1,8 +1,8 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.{CreateResult, Hakukohde, TilaFilter, UpdateResult}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid}
-import fi.oph.kouta.domain.{Hakukohde, TilaFilter}
 import fi.oph.kouta.service.HakukohdeService
 import org.scalatra.{NotFound, Ok}
 
@@ -84,7 +84,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
     implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
-      case oid => Ok("oid" -> oid)
+      case res: CreateResult => Ok(res)
     }
   }
   registerPath( "/hakukohde/copy/{hakuOid}",
@@ -163,7 +163,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
     implicit val authenticated: Authenticated = authenticate()
 
     hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
-      case updated => Ok("updated" -> updated)
+      case res: UpdateResult => Ok(res)
     }
   }
 

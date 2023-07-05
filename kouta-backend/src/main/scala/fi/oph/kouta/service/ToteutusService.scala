@@ -4,7 +4,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain.searchResults.ToteutusSearchResultFromIndex
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -31,7 +31,8 @@ object ToteutusService
       CachedKoodistoClient,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      ToteutusServiceValidation
+      ToteutusServiceValidation,
+      KoutaIndeksoijaClient
     )
 
 case class ToteutusCopyOids(
@@ -42,6 +43,14 @@ case class ToteutusCopyResultObject(
     oid: ToteutusOid,
     status: String,
     created: ToteutusCopyOids
+)
+
+case class ToteutusTilaChangeResultObject(
+  oid: ToteutusOid,
+  status: String,
+  errorPaths: List[String] = List(),
+  errorMessages: List[String] = List(),
+  errorTypes: List[String] = List()
 )
 
 class ToteutusService(
@@ -55,7 +64,8 @@ class ToteutusService(
     koodistoClient: CachedKoodistoClient,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    toteutusServiceValidation: ToteutusServiceValidation
+    toteutusServiceValidation: ToteutusServiceValidation,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Toteutus]
     with TeemakuvaService[ToteutusOid, Toteutus] {
 
@@ -225,7 +235,7 @@ class ToteutusService(
     )
   }
 
-  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): ToteutusOid = {
+  def put(toteutus: Toteutus)(implicit authenticated: Authenticated): CreateResult = {
     authorizePut(
       toteutus,
       AuthorizationRules(
@@ -247,7 +257,7 @@ class ToteutusService(
           )
         )
       }
-    }.oid.get
+    }
   }
 
   def copy(toteutusOids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusCopyResultObject] = {
@@ -255,7 +265,7 @@ class ToteutusService(
     toteutukset.map(toteutus => {
       try {
         val toteutusCopyAsLuonnos = toteutus.copy(oid = None, tila = Tallennettu)
-        val createdToteutusOid    = put(toteutusCopyAsLuonnos)
+        val createdToteutusOid    = put(toteutusCopyAsLuonnos).oid.asInstanceOf[ToteutusOid]
         ToteutusCopyResultObject(
           oid = toteutus.oid.get,
           status = "success",
@@ -269,7 +279,7 @@ class ToteutusService(
     })
   }
 
-  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): Boolean = {
+  def update(toteutus: Toteutus, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
     val toteutusWithTime = ToteutusDAO.get(toteutus.oid.get, TilaFilter.onlyOlemassaolevat())
     val rules            = getAuthorizationRulesForUpdate(toteutusWithTime, toteutus)
 
@@ -291,7 +301,7 @@ class ToteutusService(
         )
       }
     }
-  }.nonEmpty
+  }
 
   private def getAuthorizationRulesForUpdate(
       toteutusWithTime: Option[(Toteutus, Instant)],
@@ -415,7 +425,7 @@ class ToteutusService(
 
   private def doPut(toteutus: Toteutus, koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])])(implicit
       authenticated: Authenticated
-  ): Toteutus =
+  ): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         (oldK, k)  <- koulutusAddTarjoajaActions
@@ -425,14 +435,13 @@ class ToteutusService(
         t          <- ToteutusDAO.getPutActions(t)
         t          <- maybeCopyTeemakuva(teema, t)
         t          <- teema.map(_ => ToteutusDAO.updateJustToteutus(t)).getOrElse(DBIO.successful(t))
-        _          <- koulutusService.index(k)
-        _          <- index(Some(t))
         _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logCreate(t)
-      } yield (teema, t)
-    }.map { case (teema, t) =>
+      } yield (teema, t, k)
+    }.map { case (teema, t, k) =>
       maybeDeleteTempImage(teema)
-      t
+      val warnings = quickIndex(t.oid) ++ koulutusService.index(k) ++ index(Some(t))
+      CreateResult(t.oid.get, warnings)
     }.get
 
   private def doUpdate(
@@ -440,7 +449,7 @@ class ToteutusService(
       notModifiedSince: Instant,
       before: Toteutus,
       koulutusAddTarjoajaActions: DBIO[(Koulutus, Option[Koulutus])]
-  )(implicit authenticated: Authenticated): Option[Toteutus] =
+  )(implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- ToteutusDAO.checkNotModified(toteutus.oid.get, notModifiedSince)
@@ -449,18 +458,24 @@ class ToteutusService(
         _          <- insertAsiasanat(t)
         _          <- insertAmmattinimikkeet(t)
         t          <- ToteutusDAO.getUpdateActions(t)
-        _          <- koulutusService.index(k)
-        _          <- index(t)
         _          <- auditLog.logUpdate(oldK, k)
         _          <- auditLog.logUpdate(before, t)
-      } yield (teema, t)
-    }.map { case (teema, t) =>
+      } yield (teema, t, k)
+    }.map { case (teema, t, k) =>
       maybeDeleteTempImage(teema)
-      t
+      val warnings = quickIndex(t.flatMap(_.oid)) ++ koulutusService.index(k) ++ index(t)
+      UpdateResult(t.isDefined, warnings)
     }.get
 
-  private def index(toteutus: Option[Toteutus]): DBIO[_] =
+  private def index(toteutus: Option[Toteutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeToteutus, toteutus.map(_.oid.get.toString))
+
+  private def quickIndex(toteutusOid: Option[ToteutusOid]): List[String] = {
+    toteutusOid match {
+      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("toteutus", oid.toString)
+      case None => List.empty
+    }
+  }
 
   private def insertAsiasanat(toteutus: Toteutus)(implicit authenticated: Authenticated) =
     keywordService.insert(Asiasana, toteutus.metadata.map(_.asiasanat).getOrElse(Seq()))
@@ -484,4 +499,93 @@ class ToteutusService(
     withRootAccess(indexerRoles) {
       ToteutusDAO.getOpintokokonaisuudet(oids)
     }
+
+  def changeTila(toteutusOids: Seq[ToteutusOid], tila: String, unModifiedSince: Instant)(implicit
+                                                                                           authenticated: Authenticated
+  ): List[ToteutusTilaChangeResultObject] = {
+    val toteutukset: Seq[Toteutus] = toteutusOids.map(oid => {
+      ToteutusDAO.get(oid, TilaFilter.all())
+    }).collect {
+      case Some(result) => result._1
+    }
+
+    val updatedToteutusOids = scala.collection.mutable.Set[ToteutusOid]()
+
+    val tilaChangeResults = toteutukset.toList.map(toteutus => {
+      try {
+        val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
+        update(toteutusWithNewTila, unModifiedSince) match {
+          case UpdateResult(true, _) =>
+            updatedToteutusOids += toteutus.oid.get
+            ToteutusTilaChangeResultObject(
+              oid = toteutus.oid.get,
+              status = "success"
+            )
+          case UpdateResult(false, _) =>
+            updatedToteutusOids += toteutus.oid.get
+            ToteutusTilaChangeResultObject(
+              oid = toteutus.oid.get,
+              status = "error",
+              errorPaths = List("toteutus"),
+              errorMessages = List("Toteutuksen tilaa ei voitu päivittää"),
+              errorTypes = List("possible transaction error")
+            )
+        }
+      } catch {
+        case error: KoutaValidationException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = error.getPaths,
+            errorMessages =  error.getMsgs,
+            errorTypes = error.getErrorTypes
+          )
+        case error: OrganizationAuthorizationFailedException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("organizationauthorization")
+          )
+        case error: RoleAuthorizationFailedException =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("roleAuthorization")
+          )
+        case error: Exception =>
+          logger.error(s"Changing of tila of toteutus: ${toteutus.oid.get} failed: $error")
+          updatedToteutusOids += toteutus.oid.get
+          ToteutusTilaChangeResultObject(
+            oid = toteutus.oid.get,
+            status = "error",
+            errorPaths = List("toteutus"),
+            errorMessages = List(error.getMessage),
+            errorTypes = List("internalServerError")
+          )
+      }
+    })
+
+    val notFound =
+      for {
+        totOid <- toteutusOids.filterNot(toteutusOid => updatedToteutusOids.contains(toteutusOid))
+      } yield ToteutusTilaChangeResultObject(
+        oid = totOid,
+        status = "error",
+        errorPaths = List("toteutus"),
+        errorMessages = List("Toteutusta ei löytynyt"),
+        errorTypes = List("not found")
+      )
+
+    tilaChangeResults ++ notFound
+  }
 }

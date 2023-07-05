@@ -84,7 +84,7 @@ sealed trait HakutietoSQL extends HakutietoExtractors with SQLHelpers {
                    inner join koulutukset o on o.oid = t.koulutus_oid and
                         o.tila != 'poistettu'::julkaisutila and o.tila != 'arkistoitu'::julkaisutila
           where o.oid = ${koulutusOid.toString}
-            and h.tila != 'poistettu'::julkaisutila and h.tila != 'arkistoitu'::julkaisutila
+            and h.tila != 'poistettu'::julkaisutila
             """.as[(ToteutusOid, HakutietoHaku)]
   }
 

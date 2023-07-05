@@ -77,6 +77,9 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     Try(config.getString("kouta-backend.sqs.region")).filter(_.trim.nonEmpty).toOption
   )
 
+  val quickIndexTimeoutSeconds: Int = Try(config.getInt("kouta-backend.quick-index-timeout-seconds")).getOrElse(10)
+  val isTestEnvironment: Boolean = Try(config.getBoolean("kouta-backend.test-environment")).getOrElse(false)
+
   val s3Configuration: S3Configuration = S3Configuration(
     config.getString("kouta-backend.s3.imageBucket"),
     config.getString("kouta-backend.s3.imageBucketPublicUrl"),

@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.CachedKoodistoClient
+import fi.oph.kouta.client.{CachedKoodistoClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -24,6 +24,7 @@ trait ValintaperusteFixture extends AccessControlSpec {
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService             = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoClient                  = new CachedKoodistoClient(urlProperties.get)
+    val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoClient, HakukohdeDAO)
     new ValintaperusteService(
       SqsInTransactionServiceIgnoringIndexing,
@@ -31,7 +32,8 @@ trait ValintaperusteFixture extends AccessControlSpec {
       organisaatioService,
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
-      valintaperusteServiceValidation
+      valintaperusteServiceValidation,
+      koutaIndeksoijaClient
     )
   }
 

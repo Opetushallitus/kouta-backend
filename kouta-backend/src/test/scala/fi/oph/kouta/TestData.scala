@@ -1109,6 +1109,15 @@ object TestData {
         teksti = Map(Fi -> "Sisältö kuvaus", Sv -> "Sisältö kuvaus sv")
       )
     ),
+    apuraha = None,
+    suunniteltuKestoVuodet = Some(3),
+    suunniteltuKestoKuukaudet = Some(10),
+    suunniteltuKestoKuvaus = Map(Fi -> "Keston kuvaus fi", Sv -> "Keston kuvaus sv")
+  )
+
+  val ToteutuksenOpetusWithApuraha: Opetus = ToteutuksenOpetus.copy(
+    opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+    maksullisuustyyppi = Some(Lukuvuosimaksu),
     onkoApuraha = true,
     apuraha = Some(
       Apuraha(
@@ -1117,10 +1126,7 @@ object TestData {
         yksikko = Some(Euro),
         kuvaus = Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv")
       )
-    ),
-    suunniteltuKestoVuodet = Some(3),
-    suunniteltuKestoKuukaudet = Some(10),
-    suunniteltuKestoKuvaus = Map(Fi -> "Keston kuvaus fi", Sv -> "Keston kuvaus sv")
+    )
   )
 
   val AmmToteutuksenMetatieto: AmmatillinenToteutusMetadata = AmmatillinenToteutusMetadata(
@@ -1181,7 +1187,7 @@ object TestData {
 
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(
     kuvaus = Map(),
-    opetus = Some(ToteutuksenOpetus),
+    opetus = Some(ToteutuksenOpetusWithApuraha),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
     yhteyshenkilot = Seq(Yhteystieto1),

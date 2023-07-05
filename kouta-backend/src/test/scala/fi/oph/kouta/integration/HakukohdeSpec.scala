@@ -530,6 +530,8 @@ class HakukohdeSpec
     )
     update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession2)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid2.toString)
+
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     // poistetaan kaikki hakuajat
     val muokattuHakukohde2 = eiJulkaistuWithOid.copy(
       hakuajat = List()

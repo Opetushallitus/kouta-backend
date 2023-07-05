@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, KoutaSearchClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndeksoijaClient, KoutaSearchClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.searchResults.ValintaperusteSearchResult
 import fi.oph.kouta.domain._
@@ -26,7 +26,8 @@ object ValintaperusteService
       OrganisaatioServiceImpl,
       OppijanumerorekisteriClient,
       KayttooikeusClient,
-      ValintaperusteServiceValidation
+      ValintaperusteServiceValidation,
+      KoutaIndeksoijaClient
     )
 
 class ValintaperusteService(
@@ -35,7 +36,8 @@ class ValintaperusteService(
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
-    valintaperusteServiceValidation: ValintaperusteServiceValidation
+    valintaperusteServiceValidation: ValintaperusteServiceValidation,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
@@ -79,7 +81,7 @@ class ValintaperusteService(
     }
   }
 
-  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): UUID = {
+  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): ValintaperusteCreateResult = {
     authorizePut(
       valintaperuste,
       AuthorizationRules(
@@ -92,12 +94,12 @@ class ValintaperusteService(
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, None) { valpe =>
         doPut(valpe)
       }
-    }.id.get
+    }
   }
 
   def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)(implicit
       authenticated: Authenticated
-  ): Boolean = {
+  ): UpdateResult = {
     val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(oldValintaPerusteWithTime, valintaperuste)
 
@@ -107,7 +109,7 @@ class ValintaperusteService(
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
         doUpdate(v, notModifiedSince, oldValintaperuste)
       }
-    }.nonEmpty
+    }
   }
 
   private def getAuthorizationRulesForUpdate(
@@ -157,27 +159,38 @@ class ValintaperusteService(
       case valintaperusteIds => KoutaSearchClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): Valintaperuste =
+  private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): ValintaperusteCreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         v <- ValintaperusteDAO.getPutActions(valintaperuste)
-        _ <- index(Some(v))
         _ <- auditLog.logCreate(v)
       } yield v
+    }.map { v: Valintaperuste =>
+      val warnings = quickIndex(v.id) ++ index(Some(v))
+      ValintaperusteCreateResult(v.id, created = v.id.isDefined, warnings)
     }.get
 
   private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit
       authenticated: Authenticated
-  ): Option[Valintaperuste] =
+  ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- ValintaperusteDAO.checkNotModified(valintaperuste.id.get, notModifiedSince)
         v <- ValintaperusteDAO.getUpdateActions(valintaperuste)
-        _ <- index(v)
         _ <- auditLog.logUpdate(before, v)
       } yield v
+    }.map { v: Option[Valintaperuste] =>
+      val warnings = quickIndex(v.flatMap(_.id)) ++ index(v)
+      UpdateResult(v.isDefined, warnings)
     }.get
 
-  private def index(valintaperuste: Option[Valintaperuste]): DBIO[_] =
+  private def index(valintaperuste: Option[Valintaperuste]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
+
+  private def quickIndex(valintaperusteId: Option[UUID]): List[String] = {
+    valintaperusteId match {
+      case Some(id) => koutaIndeksoijaClient.quickIndexValintaperuste(id.toString)
+      case None => List.empty
+    }
+  }
 }

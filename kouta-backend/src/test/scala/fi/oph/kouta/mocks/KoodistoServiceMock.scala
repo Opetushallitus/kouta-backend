@@ -63,6 +63,16 @@ trait KoodistoServiceMock extends ServiceMockBase {
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
   }
 
+  def mockKoulutusByTutkintotyyppiResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
+    val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
+    mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
+  }
+
+  def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {
+    val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
+    mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
+  }
+
   def mockKoulutustyyppiResponse(
       matchingKoulutustyyppi: String,
       matchingKoodiUrit: Seq[(String, Int, Option[String])],

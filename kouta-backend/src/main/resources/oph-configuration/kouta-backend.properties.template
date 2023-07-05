@@ -3,6 +3,9 @@ kouta-backend.cas.service={{kouta_backend_cas_service}}
 kouta-backend.cas.username={{kouta_backend_cas_username}}
 kouta-backend.cas.password={{kouta_backend_cas_password}}
 
+kouta-backend.quick-index-timeout-seconds={{kouta_backend_quick_index_timeout_seconds | default('5')}}
+kouta-backend.test-environment={{kouta_backend_test_environment | default('false')}}
+
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.port={{host_postgresql_kouta_port}}
 kouta-backend.db.user={{postgres_app_user}}
@@ -26,6 +29,7 @@ kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
 kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
 
 host.virkailija={{host_virkailija}}
+host.alb.virkailija={{host_alb_virkailija}}
 
 kayttooikeus-service=https://{{host_virkailija}}/kayttooikeus-service
 kayttooikeus-service.organisaatiohenkilo=https://{{host_virkailija}}/kayttooikeus-service/henkilo/$1/organisaatiohenkilo
@@ -68,6 +72,12 @@ valinta-tulos-service.haku.alimmatpisteet=https://{{host_virkailija}}/valinta-tu
 
 legacy-tarjonta-service.hakukohde.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1
 legacy-tarjonta-service.haku.oid=http://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
+
+kouta-indeksoija.koulutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/koulutus/quick?oid=$1
+kouta-indeksoija.toteutus.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/toteutus/quick?oid=$1
+kouta-indeksoija.hakukohde.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/hakukohde/quick?oid=$1
+kouta-indeksoija.haku.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/haku/quick?oid=$1
+kouta-indeksoija.valintaperuste.quick=http://{{host_alb_virkailija}}/kouta-indeksoija/api/kouta/valintaperuste/quick?oid=$1
 
 tarjonta-service.haku.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/haku/$1
 tarjonta-service.hakukohde.oid=https://{{host_virkailija}}/tarjonta-service/rest/v1/hakukohde/$1

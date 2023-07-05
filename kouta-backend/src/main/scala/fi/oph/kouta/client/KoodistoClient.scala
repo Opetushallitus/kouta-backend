@@ -132,8 +132,12 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
     .expireAfterWrite(10.minutes)
     .build()
 
+  implicit val koulutuksetByTutkintotyyppiCache: Cache[String, Seq[KoodiUri]] = Scaffeine()
+    .expireAfterWrite(10.minutes)
+    .build()
+
   def getKoodistoKaannoksetFromCache(koodisto: String): Map[String, Kielistetty] = {
-    val res: KoodistoQueryResponse = getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache)
+    val res: KoodistoQueryResponse = getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache, getKoodistoKoodit)
 
     if (res.success) {
       res.koodiUritInKoodisto.map(koodi => (koodi.koodiUri, koodi.nimi)).toMap
@@ -155,18 +159,30 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
     }
   }
 
+  def getKoulutuksetByTutkintotyyppiCached(tutkintotyyppi: String): Either[Throwable, Seq[KoodiUri]] = {
+    val res: KoodistoQueryResponse = getAndUpdateFromKoodiUriCache(
+      tutkintotyyppi,
+      koulutuksetByTutkintotyyppiCache,
+      getVoimassaOlevatYlakoodit)
+
+    if (res.success) {
+      Right(res.koodiUritInKoodisto)
+    } else {
+      Left(new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyyppi $tutkintotyyppi from koodisto."))
+    }
+  }
+
   def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult =
     koodiUriExistsInKoodisto(koodisto.toString, koodiUri)
 
   protected def koodiUriExistsInKoodisto(koodisto: String, koodiUri: String): ExternalQueryResult =
-    getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache) match {
+    getAndUpdateFromKoodiUriCache(koodisto, koodiUriCache, getKoodistoKoodit) match {
       case resp if resp.success =>
         fromBoolean(koodiUriWithEqualOrHigherVersioNbrInList(koodiUri, resp.koodiUritInKoodisto))
       case _ => queryFailed
     }
 
   private def getKoulutuskoodiUriOfKoulutusTyypitFromKoodistoService(tyyppi: String): Seq[KoodiUri] = {
-    val now = ZonedDateTime.now().toLocalDateTime
     getYlakoodit(
       tyyppi,
       koodi =>
@@ -228,7 +244,7 @@ class CachedKoodistoClient(urlProperties: OphProperties) extends KoodistoClient(
   def koulutusKoodiUriExists(koodiUriFilter: Seq[String], koodiUri: String): ExternalQueryResult = {
     val filterSeq = koodiUriFilter.map(koodiUriFromString)
 
-    val queryResponse = getAndUpdateFromKoodiUriCache("koulutus", koodiUriCache)
+    val queryResponse = getAndUpdateFromKoodiUriCache("koulutus", koodiUriCache, getKoodistoKoodit)
     if (queryResponse.success) {
       val koulutusKoodiUrit = queryResponse.koodiUritInKoodisto.filter(fromCache =>
         filterSeq.exists(filterItem => fromCache.koodiUri == filterItem.koodiUri)
@@ -287,6 +303,17 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     }
   }
 
+  protected def getVoimassaOlevatYlakoodit(koodi: String): List[KoodiUri] = {
+    get(urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodi), errorHandler, followRedirects = true) {
+      response => {
+        parse(response)
+          .extract[List[KoodistoElement]]
+          .filter(isKoodiVoimassa)
+          .map(element => KoodiUri(element.koodiUri, element.versio))
+      }
+    }
+  }
+
   def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiUri] = {
     logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
     try {
@@ -313,16 +340,16 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
     }
   }
 
-  private def getAndUpdateFromKoodiUri(koodisto: String): Seq[KoodiUri] = {
+  private def getAndUpdateFromKoodiUri(koodisto: String, getFromKoodistoFunction: String => Seq[KoodiUri] = getKoodistoKoodit): Seq[KoodiUri] = {
     val contentDesc = s"koodiuris from koodisto $koodisto"
     Try[Seq[KoodiUri]] {
-      getKoodistoKoodit(koodisto)
+      getFromKoodistoFunction(koodisto)
     } match {
       case Success(koodiUrit) => koodiUrit
       case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
         logger.warn(s"Failed to get koodiuris from koodisto $koodisto, retrying once...")
         Try[Seq[KoodiUri]] {
-          getKoodistoKoodit(koodisto)
+          getFromKoodistoFunction(koodisto)
         } match {
           case Success(koodiUrit)    => koodiUrit
           case Failure(t: Throwable) => throw exception(t, contentDesc, true)
@@ -332,11 +359,12 @@ abstract class KoodistoClient(urlProperties: OphProperties) extends HttpClient w
   }
 
   protected def getAndUpdateFromKoodiUriCache(
-      koodisto: String,
-      koodiUriCache: Cache[String, Seq[KoodiUri]]
-  ): KoodistoQueryResponse = {
+                                               koodisto: String,
+                                               koodiUriCache: Cache[String, Seq[KoodiUri]],
+                                               getFromKoodistoFunction: String => Seq[KoodiUri]
+                                             ): KoodistoQueryResponse = {
     try {
-      val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto))
+      val koodiUritFromCache = koodiUriCache.get(koodisto, koodisto => getAndUpdateFromKoodiUri(koodisto, getFromKoodistoFunction))
       KoodistoQueryResponse(success = true, koodiUritFromCache)
     } catch {
       case _: KoodistoNotFoundException => KoodistoQueryResponse(success = true, Seq())

@@ -4,7 +4,7 @@ import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.{CallerId, HttpClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Haku, Hakukohde, Koulutus, PerustiedotWithOid, TilaFilter, Toteutus}
+import fi.oph.kouta.domain.{CreateResult, Haku, Hakukohde, Koulutus, PerustiedotWithOid, TilaFilter, Toteutus, UpdateResult}
 import fi.oph.kouta.repository.{KoutaDatabase, MigrationDAO}
 import fi.oph.kouta.service._
 import fi.vm.sade.properties.OphProperties
@@ -126,12 +126,12 @@ class MigrationServlet(koulutusService: KoulutusService,
     db.updateAllowed(oldOid.toString).getOrElse(true)
   }
 
-  def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant) => Boolean): String = {
+  def tryPutAndPost[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => CreateResult, post: (A, Instant) => UpdateResult): String = {
 
     //if(!originalOid.toString.equals(obj.oid.get.toString)) {
     if(obj.oid.isDefined) {
       Try(post(obj, Instant.now())) match {
-        case Success(_) =>
+        case Success(res) if res.updated=>
           logger.info(s"Oid $originalOid migrated overriding old!")
           obj.oid.get.toString
         case Failure(ex) => {
@@ -140,19 +140,19 @@ class MigrationServlet(koulutusService: KoulutusService,
         }
       }
     } else {
-      Try(put(obj)) match {
-        case Success(value) =>
+      Try(put(obj).oid) match {
+        case Success(createdOid) =>
           db.findMappedOid(originalOid.toString) match {
             case Some(existing) =>
-              if(existing.equals(value.toString)) {
-                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${value.toString}")
+              if(existing.equals(createdOid.toString)) {
+                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${createdOid.toString}")
               } else {
-                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${value.toString}!")
+                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${createdOid.toString}!")
               }
             case None =>
-              db.insertOidMapping(originalOid.toString, value.toString)
+              db.insertOidMapping(originalOid.toString, createdOid.toString)
           }
-          value.toString
+          createdOid.toString
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
           throw e
@@ -160,7 +160,7 @@ class MigrationServlet(koulutusService: KoulutusService,
     }
   }
 
-  def tryPutAndPostForKoulutus[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => Oid, post: (A, Instant, Boolean) => Boolean): String = {
+  def tryPutAndPostForKoulutus[A <: PerustiedotWithOid[_ <: Oid, _]](originalOid: Oid, obj: A, put: A => CreateResult, post: (A, Instant, Boolean) => UpdateResult): String = {
 
     if (obj.oid.isDefined) {
       Try(post(obj, Instant.now(), false)) match {
@@ -173,19 +173,19 @@ class MigrationServlet(koulutusService: KoulutusService,
         }
       }
     } else {
-      Try(put(obj)) match {
-        case Success(value) =>
+      Try(put(obj).oid) match {
+        case Success(createdOid) =>
           db.findMappedOid(originalOid.toString) match {
             case Some(existing) =>
-              if (existing.equals(value.toString)) {
-                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${value.toString}")
+              if (existing.equals(createdOid.toString)) {
+                logger.debug(s"Mapping already existed! ${originalOid.toString} -> ${createdOid.toString}")
               } else {
-                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${value.toString}!")
+                throw new RuntimeException(s"Mapping ${originalOid.toString} -> ${existing} exists, but tried to add mapping ${originalOid.toString} -> ${createdOid.toString}!")
               }
             case None =>
-              db.insertOidMapping(originalOid.toString, value.toString)
+              db.insertOidMapping(originalOid.toString, createdOid.toString)
           }
-          value.toString
+          createdOid.toString
         case Failure(e) =>
           logger.error(s"Exception migrating $originalOid!", e)
           throw e
