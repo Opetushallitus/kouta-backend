@@ -1,13 +1,13 @@
 package fi.oph.kouta.mocks
 
 import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
-import fi.oph.kouta.domain.Kielistetty
+import fi.oph.kouta.domain.{Kielistetty, ValintakoeTyyppiKoodisto}
 import org.mockserver.model.HttpRequest
 
 object TestKoodistoElement {
   def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodistoElement = {
     KoodistoElement(koodiUri, koodiUri.split("_")(1), version, Some(KoodistoSubElement("notUsedInThisCase")), None, nimi
-      .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList)
+      .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList, Seq.empty)
   }
 }
 
@@ -88,6 +88,16 @@ trait KoodistoServiceMock extends ServiceMockBase {
   def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {
     val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
+  }
+
+  def mockValintakoeKoodit() = {
+    val path1 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_1"))
+    val path2 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_2"))
+    val path3 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_3"))
+    mockGet(path1, Map.empty, koodiUriResponse("koulutus", Seq(("koulutus_11", 1, None))))
+    mockGet(path2, Map.empty, koodiUriResponse("hakutapa", Seq(("hakutapa_01", 1, None))))
+    mockGet(path3, Map.empty, koodiUriResponse("haunkohdejoukko", Seq(("haunkohdejoukko_12", 1, None))))
+    mockKoodistoResponse("valintakokeentyyppi", Seq(("valintakokeentyyppi_1", 1, None), ("valintakokeentyyppi_2", 1, None), ("valintakokeentyyppi_3", 1, None)))
   }
 
   def mockKoulutustyyppiResponse(

@@ -29,7 +29,8 @@ case class KoodistoElement(
     versio: Int = 1,
     koodisto: Option[KoodistoSubElement] = None,
     voimassaLoppuPvm: Option[String] = None,
-    metadata: List[KoodistoMetadataElement] = List.empty
+    metadata: List[KoodistoMetadataElement] = List.empty,
+    ylaRelaatiot: Seq[KoodistoElement] = Seq.empty
 ) {
 
   def belongsToKoodisto(koodistoUri: String): Boolean = {
@@ -38,6 +39,18 @@ case class KoodistoElement(
 
   def asKielistetty(): Kielistetty = {
     metadata.map(element => Kieli.withName(element.kieli.toLowerCase) -> element.nimi).toMap
+  }
+
+  def withYlaRelaatiot(relaatiot: Seq[KoodistoElement]): KoodistoElement = {
+    KoodistoElement(koodiUri, koodiArvo, versio, koodisto, voimassaLoppuPvm, metadata, relaatiot)
+  }
+
+  def containsYlaKoodiWithKoodisto(ylaKoodiUri: String, ylaKoodistoUri: String): Boolean = {
+    ylaRelaatiot.exists(koodi => koodi.koodiUri == ylaKoodiUri && koodi.belongsToKoodisto(ylaKoodistoUri))
+  }
+
+  def hasYlakoodiWithinKoodisto(ylaKoodistoUri: String): Boolean = {
+    ylaRelaatiot.exists(koodi => koodi.belongsToKoodisto(ylaKoodistoUri))
   }
 }
 

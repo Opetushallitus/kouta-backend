@@ -88,4 +88,94 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       case None => BadRequest(s"parameter $ylakoodi is not a valid non-versioned yläkoodi")
     }
   }
+
+  registerPath("/koulutukset/valintakokeentyypit/",
+    """    get:
+      |      summary: Hakee valintakokeentyypit, kaikki tai suodattaa niitä koodirelaatioiden kautta annetuilla parametreilla
+      |      operationId: Hae valintakokeentyypit
+      |      description: Hakee voimassa olevat valintakokeentyypit ja niiden metadatat. Suodatetaan yläkoodirelaatioden kautta annetuilla parametreilla. Jos valintakokeentyyppikoodilla ei ole ollenkaan relaatiota yläkoodiston koodiin, niin silloin se on mukana palautettavassa listassa.
+      |      tags:
+      |        - Koodisto
+      |      parameters:
+      |        - in: query
+      |          name: koulutuskoodi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: koulutuskoodi, millä rajataan valintakokeentyyppejä
+      |          example: koulutus_354345
+      |        - in: query
+      |          name: hakutapakoodi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: hakutapakoodi, millä rajataan valintakokeentyyppejä
+      |          example: hakutapa_03
+      |        - in: query
+      |          name: haunkohdejoukkokoodi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: haunkohdejoukkokoodi, millä rajataan valintakokeentyyppejä
+      |          example: haunkohdejoukko_23
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: object
+      |                  properties:
+      |                    koodiUri:
+      |                      type: string
+      |                      description: koodiUri.
+      |                      example: "koulutusTyyppi_25"
+      |                    koodiArvo:
+      |                      type: string
+      |                      description: Koodiurin numeerinen tunniste
+      |                    versio:
+      |                      type: number
+      |                      description: Koodin versio
+      |                      example: 1
+      |                    koodisto:
+      |                      type: object
+      |                      description: Koodisto johon koodi kuuluu
+      |                      properties:
+      |                        koodistoUri:
+      |                          type: string
+      |                          description: Koodiston uri, tässä tapauksessa "koulutus"
+      |                    voimassaLoppuPvm:
+      |                      type: string
+      |                      description: Päivämäärä johon asti koodi on voimassa
+      |                      example: "2015-04-24"
+      |                    metadata:
+      |                      type: array
+      |                      description: Koodin metadata
+      |                      items:
+      |                        type: object
+      |                        properties:
+      |                          nimi:
+      |                            type: string
+      |                            description: Koodin nimi
+      |                            example: "Insinööri (AMK), bio- ja elintarviketekniikka"
+      |                          kieli:
+      |                            type: string
+      |                            description: Metadataelementin kielitunniste
+      |                            example: "FI"
+      |""".stripMargin)
+  get("/koulutukset/valintakokeentyypit/") {
+    authenticate()
+
+    val koulutuskoodi = params.get("koulutuskoodi")
+    val hakutapakoodi = params.get("hakutapakoodi")
+    val haunkohdejoukkokoodi = params.get("haunkohdejoukkokoodi")
+    koodistoService.getValintakokeenTyypit(koulutuskoodi, hakutapakoodi, haunkohdejoukkokoodi) match {
+      case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
+      case Left(error: Throwable) =>
+        logger.error(s"Error fetching valintakokeentyypit", error)
+        InternalServerError("500 Internal Server Error")
+    }
+  }
 }

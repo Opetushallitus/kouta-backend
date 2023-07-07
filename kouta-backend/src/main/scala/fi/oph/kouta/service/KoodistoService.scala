@@ -88,6 +88,32 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
+  private def withYlaRelaatiot(koodi: KoodistoElement): KoodistoElement = {
+    koodistoClient.getYlakoodit(koodi.koodiUri) match {
+      case Right(result) => koodi.withYlaRelaatiot(result)
+      case Left(_) => koodi
+    }
+  }
+
+  def getValintakokeenTyypit(koulutusKoodi: Option[String],
+                             hakutapaKoodi: Option[String],
+                             haunkohdejoukkoKoodi: Option[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
+    koodistoClient.getKoodistoKoodit(ValintakoeTyyppiKoodisto.name) match {
+      case Right(result) => Right(result.view
+      .filter(isKoodiVoimassa)
+      .map(withYlaRelaatiot)
+      .filter(koodi => koulutusKoodi.map(k =>
+        koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name))
+            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name))
+        && hakutapaKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
+            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) )
+        && haunkohdejoukkoKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
+            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name))
+      ))
+      case Left(err) => Left(err)
+    }
+  }
+
   // Oletus: sallitutKoodiUrit eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata sallituissa koodiUreissa
   // mahdollisesti annettuihin versioihin.
   def isLisattavaKoulutus(sallitutKoodiUrit: Seq[String], koodiUri: String): ExternalQueryResult = {
