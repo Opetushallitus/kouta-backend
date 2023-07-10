@@ -72,7 +72,6 @@ object KoodiUriUtils {
 }
 
 case class KoulutusKoodiUri(koulutuskoodiUri: String)
-case class EPeruste(voimassaoloLoppuu: Option[Long], koulutukset: List[KoulutusKoodiUri] = List())
 case class TutkinnonOsaNimi(fi: Option[String], sv: Option[String], en: Option[String])
 case class Tutkinnonosa(id: Long, nimi: Option[TutkinnonOsaNimi])
 case class TutkinnonosaViite(id: Long, tutkinnonOsa: Option[Tutkinnonosa])
@@ -120,6 +119,22 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
   implicit val ePerusteToOsaamisalaCache: Cache[Long, Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(cacheTTL)
     .build()
+  implicit val ePerusteCache: Cache[Long, EPeruste] = Scaffeine()
+    .expireAfterWrite(cacheTTL)
+    .build()
+
+  private def getEPeruste(ePerusteId: Long): EPeruste = {
+    get(
+      urlProperties.url("eperusteet-service.peruste-by-id", ePerusteId.toString),
+      errorHandler,
+      followRedirects = true
+    ) { response =>
+      parse(response).extract[EPeruste]}
+  }
+
+  def getEPerusteCached(ePerusteId: Long): EPeruste = {
+    ePerusteCache.get(ePerusteId, id => getEPeruste(id))
+  }
 
   private def getKoulutusKoodiUritForEPerusteFromEPerusteetService(ePerusteId: Long): Seq[KoodiUri] = {
     get(
