@@ -658,26 +658,26 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
         ("valintakokeentyyppi_3", 1, None)
       )
     )
-    koodistoService.getValintakokeenTyypit(None, None, None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3"))
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3"))
   }
 
   "Fetching valintakoetyypit " should "returns none if they all contain some specific ylakoodisto" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(None, None, None).right.get.map(e => e.koodiUri) should equal(Seq.empty)
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, None).right.get.map(e => e.koodiUri) should equal(Seq.empty)
   }
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific koulutus" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(Some("koulutus_11"), None, None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1"))
+    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), None, None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1"))
   }
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific hakutapa" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(None, Some("hakutapa_01"), None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_2"))
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_01"), None).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_2"))
   }
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific haun kohdejoukko" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(None, None, Some("haunkohdejoukko_12")).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_3"))
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, Some("haunkohdejoukko_12")).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_3"))
   }
 }

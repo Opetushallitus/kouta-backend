@@ -95,16 +95,16 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  def getValintakokeenTyypit(koulutusKoodi: Option[String],
+  def getValintakokeenTyypit(koulutusKoodit: Seq[String],
                              hakutapaKoodi: Option[String],
                              haunkohdejoukkoKoodi: Option[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
     koodistoClient.getKoodistoKoodit(ValintakoeTyyppiKoodisto.name) match {
       case Right(result) => Right(result.view
       .filter(isKoodiVoimassa)
       .map(withYlaRelaatiot)
-      .filter(koodi => koulutusKoodi.map(k =>
-        koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name))
-            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name))
+      .filter(koodi => ((koulutusKoodit.nonEmpty && koulutusKoodit.forall(k =>
+        koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name)))
+          || !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name))
         && hakutapaKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
             .getOrElse(!koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) )
         && haunkohdejoukkoKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))

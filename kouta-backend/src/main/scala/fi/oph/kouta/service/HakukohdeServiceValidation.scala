@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient, HakukohdeInfo}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -146,8 +146,7 @@ class HakukohdeServiceValidation(
             vCtx,
             existingValintakoeIds,
             koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
-          )
+            koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _))
       ),
       validateIfDefined[HakukohdeMetadata](
         hk.metadata,
@@ -211,6 +210,17 @@ class HakukohdeServiceValidation(
         )
       )
     )
+  }
+
+  private def valintakoeTyyppiKoodiIsAllowed(valintakoeTyyppiKoodi : Option[String],
+                                             koulutusKoodit : Seq[String],
+                                             hakutapaKoodi : Option[String],
+                                             haunkohdejoukkoKoodi : Option[String] ): Boolean = {
+    valintakoeTyyppiKoodi.forall(valintakoe =>
+      koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
+        case Right(elements: Seq[KoodistoElement]) => elements.map(koodi => koodi.koodiUri).contains(valintakoe)
+        case Left(_) => false
+      })
   }
 
   private def isHakuaikaMenossa(hakuaika: Ajanjakso): Boolean = {
@@ -642,6 +652,17 @@ class HakukohdeServiceValidation(
             case _ => error("toinenAsteOnkoKaksoistutkinto", toinenAsteOnkoKaksoistutkintoNotAllowed)
           }
         }
+      ),
+      validateIfFalse(hakukohde.valintakokeet.isEmpty, {
+        assertTrue(hakukohde.valintakokeet.forall(valintakoe => {
+          valintakoeTyyppiKoodiIsAllowed(
+            valintakoe.tyyppiKoodiUri,
+            koulutuksetKoodiUri,
+            haku.flatMap(h => h.hakutapaKoodiUri),
+            haku.flatMap(h => h.kohdejoukkoKoodiUri))
+        }),
+        "valintakokeet", valintakoeIsNotFoundFromAllowedRelations)
+      }
       )
     )
   }

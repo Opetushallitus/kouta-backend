@@ -100,10 +100,12 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |        - in: query
       |          name: koulutuskoodi
       |          schema:
-      |            type: string
+      |            type: array
+      |            items:
+      |              type: string
       |          required: false
-      |          description: koulutuskoodi, millä rajataan valintakokeentyyppejä
-      |          example: koulutus_354345
+      |          description: koulutuskoodit, millä rajataan valintakokeentyyppejä
+      |          example: ["koulutus_354345"]
       |        - in: query
       |          name: hakutapakoodi
       |          schema:
@@ -112,12 +114,12 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |          description: hakutapakoodi, millä rajataan valintakokeentyyppejä
       |          example: hakutapa_03
       |        - in: query
-      |          name: haunkohdejoukkokoodi
+      |          name: "haunkohdejoukkokoodi"
       |          schema:
       |            type: string
       |          required: false
       |          description: haunkohdejoukkokoodi, millä rajataan valintakokeentyyppejä
-      |          example: haunkohdejoukko_23
+      |          example: "haunkohdejoukko_23"
       |      responses:
       |        '200':
       |          description: Ok
@@ -168,10 +170,10 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
   get("/koulutukset/valintakokeentyypit/") {
     authenticate()
 
-    val koulutuskoodi = params.get("koulutuskoodi")
+    val koulutuskoodit = multiParams.get("koulutuskoodi")
     val hakutapakoodi = params.get("hakutapakoodi")
     val haunkohdejoukkokoodi = params.get("haunkohdejoukkokoodi")
-    koodistoService.getValintakokeenTyypit(koulutuskoodi, hakutapakoodi, haunkohdejoukkokoodi) match {
+    koodistoService.getValintakokeenTyypit(koulutuskoodit.getOrElse(Seq.empty), hakutapakoodi, haunkohdejoukkokoodi) match {
       case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
       case Left(error: Throwable) =>
         logger.error(s"Error fetching valintakokeentyypit", error)
