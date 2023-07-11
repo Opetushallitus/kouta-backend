@@ -89,7 +89,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
     }
   }
 
-  registerPath("/koulutukset/valintakokeentyypit/",
+  registerPath("/valintakokeentyypit/",
     """    get:
       |      summary: Hakee valintakokeentyypit, kaikki tai suodattaa niitä koodirelaatioiden kautta annetuilla parametreilla
       |      operationId: Hae valintakokeentyypit
