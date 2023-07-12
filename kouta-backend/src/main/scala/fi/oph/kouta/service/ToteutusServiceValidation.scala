@@ -138,6 +138,8 @@ class ToteutusServiceValidation(
                   validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri", vCtx)
                 )
               )
+              // TODO jatkossa näiden koulutustyyppien toteutuksille ei voi tallentaa aloituspaikkatietoa
+            // vaan käytössä aina hakukohteet ja määritellään hakukohteella
             case m: AmmOpeErityisopeJaOpoToteutusMetadata =>
               validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
             case m: OpePedagOpinnotToteutusMetadata =>
@@ -454,8 +456,13 @@ class ToteutusServiceValidation(
         assertNotDefined(m.aloituspaikat, "metadata.aloituspaikat"),
         validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
       ),
-      validateIfJulkaistu(
-        vCtx.tila,
+      validateIfTrueOrElse(
+        koulutustyypitWoAloituspaikat.contains(m.tyyppi),
+        assertEmptyKielistetty(m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus"),
+        validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
+      ),
+      validateIfTrue(
+        vCtx.tila == Julkaistu && !m.isHakukohteetKaytossa.getOrElse(false),
         and(
           assertNotOptional(m.hakutermi, "metadata.hakutermi"),
           assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
