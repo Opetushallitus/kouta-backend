@@ -462,7 +462,7 @@ class ToteutusServiceValidation(
         validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
       ),
       validateIfTrue(
-        vCtx.tila == Julkaistu && !m.isHakukohteetKaytossa.getOrElse(false),
+        vCtx.tila == Julkaistu && !(m.isHakukohteetKaytossa.exists(_ == true)),
         and(
           assertNotOptional(m.hakutermi, "metadata.hakutermi"),
           assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
