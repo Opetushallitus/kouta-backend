@@ -216,11 +216,15 @@ class HakukohdeServiceValidation(
                                              koulutusKoodit : Seq[String],
                                              hakutapaKoodi : Option[String],
                                              haunkohdejoukkoKoodi : Option[String] ): Boolean = {
-    valintakoeTyyppiKoodi.forall(valintakoe =>
-      koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
-        case Right(elements: Seq[KoodistoElement]) => elements.map(koodi => koodi.koodiUri).contains(valintakoe)
-        case Left(_) => false
-      })
+    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
+      case Right(elements: Seq[KoodistoElement]) => println(elements.map(koodi => koodi.koodiUri))
+      case Left(_) => Seq.empty}
+    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
+      case Right(elements: Seq[KoodistoElement]) =>
+        val koodiUrit: Seq[String] = elements.map(koodi => koodi.koodiUri + "#" + koodi.versio)
+        valintakoeTyyppiKoodi.exists(valintakoe => koodiUrit.contains(valintakoe))
+      case Left(_) => false
+    }
   }
 
   private def isHakuaikaMenossa(hakuaika: Ajanjakso): Boolean = {
@@ -654,16 +658,15 @@ class HakukohdeServiceValidation(
         }
       ),
       validateIfFalse(hakukohde.valintakokeet.isEmpty, {
-        assertTrue(hakukohde.valintakokeet.forall(valintakoe => {
-          valintakoeTyyppiKoodiIsAllowed(
+        hakukohde.valintakokeet.flatMap(valintakoe => {
+          assertTrue(valintakoeTyyppiKoodiIsAllowed(
             valintakoe.tyyppiKoodiUri,
             koulutuksetKoodiUri,
             haku.flatMap(h => h.hakutapaKoodiUri),
-            haku.flatMap(h => h.kohdejoukkoKoodiUri))
-        }),
-        "valintakokeet", valintakoeIsNotFoundFromAllowedRelations)
-      }
-      )
+            haku.flatMap(h => h.kohdejoukkoKoodiUri)),
+            "valintakokeet", valintakoeIsNotFoundFromAllowedRelations(valintakoe.tyyppiKoodiUri.getOrElse("")))
+        })
+      })
     )
   }
 

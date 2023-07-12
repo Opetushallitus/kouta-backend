@@ -97,7 +97,17 @@ trait KoodistoServiceMock extends ServiceMockBase {
     mockGet(path1, Map.empty, koodiUriResponse("koulutus", Seq(("koulutus_11", 1, None))))
     mockGet(path2, Map.empty, koodiUriResponse("hakutapa", Seq(("hakutapa_01", 1, None))))
     mockGet(path3, Map.empty, koodiUriResponse("haunkohdejoukko", Seq(("haunkohdejoukko_12", 1, None))))
-    mockKoodistoResponse("valintakokeentyyppi", Seq(("valintakokeentyyppi_1", 1, None), ("valintakokeentyyppi_2", 1, None), ("valintakokeentyyppi_3", 1, None)))
+    val koetyypitReponse = Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3")
+      .map(tyyppi => (tyyppi, 1, None))
+    mockKoodistoResponse("valintakokeentyyppi", koetyypitReponse)
+  }
+
+  def mockValintakoeKooditWithEmptyRelations(valintaKokeenTyypit: Seq[(String, Int, Option[String])] = Seq.empty) = {
+    valintaKokeenTyypit.foreach(koe => {
+      val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koe._1))
+
+      mockGet(path, Map.empty, "[]")
+    })
   }
 
   def mockKoulutustyyppiResponse(

@@ -245,16 +245,18 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
       Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None))
     )
     mockKoodistoResponse("posti", Seq(("posti_04230", 2, None), ("posti_61100", 2, None)))
+    val valintakokeenTyypit = Seq(
+      ("valintakokeentyyppi_1", 1, None),
+      ("valintakokeentyyppi_11", 1, None),
+      ("valintakokeentyyppi_42", 2, None),
+      ("valintakokeentyyppi_57", 2, None),
+      ("valintakokeentyyppi_66", 6, None)
+    )
     mockKoodistoResponse(
       "valintakokeentyyppi",
-      Seq(
-        ("valintakokeentyyppi_1", 1, None),
-        ("valintakokeentyyppi_11", 1, None),
-        ("valintakokeentyyppi_42", 2, None),
-        ("valintakokeentyyppi_57", 2, None),
-        ("valintakokeentyyppi_66", 6, None)
-      )
+      valintakokeenTyypit
     )
+    mockValintakoeKooditWithEmptyRelations(valintakokeenTyypit)
     mockKoodistoResponse(
       "hakukohteetperusopetuksenjalkeinenyhteishaku",
       Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None))

@@ -102,14 +102,15 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
       case Right(result) => Right(result.view
       .filter(isKoodiVoimassa)
       .map(withYlaRelaatiot)
-      .filter(koodi => ((koulutusKoodit.nonEmpty && koulutusKoodit.forall(k =>
-        koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name)))
-          || !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name))
-        && hakutapaKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
-            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) )
-        && haunkohdejoukkoKoodi.map(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
-            .getOrElse(!koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name))
-      ))
+      .filter(koodi => {
+        val koulutuksetValid = !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name) ||
+          (koulutusKoodit.nonEmpty && koulutusKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name)))
+        val hakutapaValid = !koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) ||
+          hakutapaKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
+        val kohdejoukkoValid = !koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name) ||
+          haunkohdejoukkoKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
+        koulutuksetValid && hakutapaValid && kohdejoukkoValid
+      }))
       case Left(err) => Left(err)
     }
   }
