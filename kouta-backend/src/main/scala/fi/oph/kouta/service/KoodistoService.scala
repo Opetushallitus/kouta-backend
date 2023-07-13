@@ -110,7 +110,8 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
         val kohdejoukkoValid = !koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name) ||
           haunkohdejoukkoKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
         koulutuksetValid && hakutapaValid && kohdejoukkoValid
-      }))
+      })
+      .map(koodi => koodi.withYlaRelaatiot(Seq.empty)))
       case Left(err) => Left(err)
     }
   }

@@ -46,7 +46,7 @@ case class KoodistoElement(
   }
 
   def containsYlaKoodiWithKoodisto(ylaKoodiUri: String, ylaKoodistoUri: String): Boolean = {
-    ylaRelaatiot.exists(koodi => koodi.koodiUri == ylaKoodiUri && koodi.belongsToKoodisto(ylaKoodistoUri))
+    ylaRelaatiot.exists(koodi => koodi.koodiUri == removeVersio(ylaKoodiUri) && koodi.belongsToKoodisto(ylaKoodistoUri))
   }
 
   def hasYlakoodiWithinKoodisto(ylaKoodistoUri: String): Boolean = {

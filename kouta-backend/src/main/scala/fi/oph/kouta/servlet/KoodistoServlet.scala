@@ -89,7 +89,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
     }
   }
 
-  registerPath("/valintakokeentyypit/",
+  registerPath("/koodisto/valintakokeentyypit",
     """    get:
       |      summary: Hakee valintakokeentyypit, kaikki tai suodattaa niitä koodirelaatioiden kautta annetuilla parametreilla
       |      operationId: Hae valintakokeentyypit
@@ -167,7 +167,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |                            description: Metadataelementin kielitunniste
       |                            example: "FI"
       |""".stripMargin)
-  get("/koulutukset/valintakokeentyypit/") {
+  get("/valintakokeentyypit") {
     authenticate()
 
     val koulutuskoodit = multiParams.get("koulutuskoodi")
