@@ -215,11 +215,9 @@ class HakukohdeServiceValidation(
   private def valintakoeTyyppiKoodiIsAllowed(valintakoeTyyppiKoodi : Option[String],
                                              koulutusKoodit : Seq[String],
                                              hakutapaKoodi : Option[String],
-                                             haunkohdejoukkoKoodi : Option[String] ): Boolean = {
-    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
-      case Right(elements: Seq[KoodistoElement]) => println(elements.map(koodi => koodi.koodiUri))
-      case Left(_) => Seq.empty}
-    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi) match {
+                                             haunkohdejoukkoKoodi : Option[String],
+                                             osaamisalaKoodit: Seq[String]): Boolean = {
+    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi, osaamisalaKoodit) match {
       case Right(elements: Seq[KoodistoElement]) =>
         val koodiUrit: Seq[String] = elements.map(koodi => koodi.koodiUri + "#" + koodi.versio)
         valintakoeTyyppiKoodi.exists(valintakoe => koodiUrit.contains(valintakoe))
@@ -495,6 +493,12 @@ class HakukohdeServiceValidation(
     val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
     val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
     val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+    val osaamisalaKoodit: Seq[String] = dependencyInfo
+      .flatMap(_.toteutus.metadata)
+      .filter(_.isInstanceOf[AmmatillinenToteutusMetadata])
+      .map(metadata => (metadata.asInstanceOf[AmmatillinenToteutusMetadata]).osaamisalat)
+      .map(osaamisalat => osaamisalat.map(_.koodiUri))
+      .getOrElse(Seq.empty)
     val jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta =
       dependencyInfo.flatMap(di => di.jarjestyspaikka.flatMap(j => j.jarjestaaUrheilijanAmmKoulutusta))
 
@@ -663,7 +667,8 @@ class HakukohdeServiceValidation(
             valintakoe.tyyppiKoodiUri,
             koulutuksetKoodiUri,
             haku.flatMap(h => h.hakutapaKoodiUri),
-            haku.flatMap(h => h.kohdejoukkoKoodiUri)),
+            haku.flatMap(h => h.kohdejoukkoKoodiUri),
+            osaamisalaKoodit),
             "valintakokeet", valintakoeIsNotFoundFromAllowedRelations(valintakoe.tyyppiKoodiUri.getOrElse("")))
         })
       })
@@ -792,6 +797,7 @@ class HakukohdeServiceValidation(
       assertNotDefined[String](hakukohde.hakukohdeKoodiUri, "hakukohdeKoodiUri"),
       validateKielistetty(hakukohde.kielivalinta, hakukohde.nimi, "nimi")
     )
+
   private def validateValintaperusteenValintakokeidenLisatilaisuudet(
       tilaisuudet: Seq[ValintakokeenLisatilaisuudet],
       newTilaisuudet: Seq[ValintakokeenLisatilaisuudet],

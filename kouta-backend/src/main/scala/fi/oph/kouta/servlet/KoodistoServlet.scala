@@ -105,21 +105,30 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |              type: string
       |          required: false
       |          description: koulutuskoodit, millä rajataan valintakokeentyyppejä
-      |          example: ["koulutus_354345"]
+      |          example: ["koulutus_354345#12"]
+      |        - in: query
+      |          name: osaamisalakoodi
+      |          schema:
+      |            type: array
+      |            items:
+      |              type: string
+      |          required: false
+      |          description: osaamisalat, millä rajataan valintakokeentyyppejä
+      |          example: ["osaamisala_1791#1"]
       |        - in: query
       |          name: hakutapakoodi
       |          schema:
       |            type: string
       |          required: false
       |          description: hakutapakoodi, millä rajataan valintakokeentyyppejä
-      |          example: hakutapa_03
+      |          example: "hakutapa_03#1"
       |        - in: query
       |          name: "haunkohdejoukkokoodi"
       |          schema:
       |            type: string
       |          required: false
       |          description: haunkohdejoukkokoodi, millä rajataan valintakokeentyyppejä
-      |          example: "haunkohdejoukko_23"
+      |          example: "haunkohdejoukko_23#1"
       |      responses:
       |        '200':
       |          description: Ok
@@ -171,9 +180,14 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
     authenticate()
 
     val koulutuskoodit = multiParams.get("koulutuskoodi")
+    val osaamisalakoodit = multiParams.get("osaamisalakoodi")
     val hakutapakoodi = params.get("hakutapakoodi")
     val haunkohdejoukkokoodi = params.get("haunkohdejoukkokoodi")
-    koodistoService.getValintakokeenTyypit(koulutuskoodit.getOrElse(Seq.empty), hakutapakoodi, haunkohdejoukkokoodi) match {
+    koodistoService.getValintakokeenTyypit(
+        koulutuskoodit.getOrElse(Seq.empty),
+        hakutapakoodi,
+        haunkohdejoukkokoodi,
+        osaamisalakoodit.getOrElse(Seq.empty)) match {
       case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
       case Left(error: Throwable) =>
         logger.error(s"Error fetching valintakokeentyypit", error)

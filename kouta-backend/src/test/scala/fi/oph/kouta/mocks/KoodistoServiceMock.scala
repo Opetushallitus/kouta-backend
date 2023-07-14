@@ -1,7 +1,7 @@
 package fi.oph.kouta.mocks
 
 import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
-import fi.oph.kouta.domain.{Kielistetty, ValintakoeTyyppiKoodisto}
+import fi.oph.kouta.domain.{HakutapaKoodisto, HaunKohdejoukkoKoodisto, Kielistetty, KoulutusKoodisto, OsaamisalaKoodisto, ValintakoeTyyppiKoodisto}
 import org.mockserver.model.HttpRequest
 
 object TestKoodistoElement {
@@ -94,10 +94,12 @@ trait KoodistoServiceMock extends ServiceMockBase {
     val path1 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_1"))
     val path2 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_2"))
     val path3 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_3"))
-    mockGet(path1, Map.empty, koodiUriResponse("koulutus", Seq(("koulutus_11", 1, None))))
-    mockGet(path2, Map.empty, koodiUriResponse("hakutapa", Seq(("hakutapa_01", 1, None))))
-    mockGet(path3, Map.empty, koodiUriResponse("haunkohdejoukko", Seq(("haunkohdejoukko_12", 1, None))))
-    val koetyypitReponse = Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3")
+    val path4 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_4"))
+    mockGet(path1, Map.empty, koodiUriResponse(KoulutusKoodisto.name, Seq(("koulutus_11", 1, None))))
+    mockGet(path2, Map.empty, koodiUriResponse(HakutapaKoodisto.name, Seq(("hakutapa_01", 1, None))))
+    mockGet(path3, Map.empty, koodiUriResponse(HaunKohdejoukkoKoodisto.name, Seq(("haunkohdejoukko_12", 1, None))))
+    mockGet(path4, Map.empty, koodiUriResponse(OsaamisalaKoodisto.name, Seq(("osaamisala_1791", 1, None))))
+    val koetyypitReponse = Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3", "valintakokeentyyppi_4")
       .map(tyyppi => (tyyppi, 1, None))
     mockKoodistoResponse("valintakokeentyyppi", koetyypitReponse)
   }

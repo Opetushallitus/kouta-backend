@@ -97,7 +97,8 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
 
   def getValintakokeenTyypit(koulutusKoodit: Seq[String],
                              hakutapaKoodi: Option[String],
-                             haunkohdejoukkoKoodi: Option[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
+                             haunkohdejoukkoKoodi: Option[String],
+                             osaamisalaKoodit: Seq[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
     koodistoClient.getKoodistoKoodit(ValintakoeTyyppiKoodisto.name) match {
       case Right(result) => Right(result.view
       .filter(isKoodiVoimassa)
@@ -109,7 +110,9 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
           hakutapaKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
         val kohdejoukkoValid = !koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name) ||
           haunkohdejoukkoKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
-        koulutuksetValid && hakutapaValid && kohdejoukkoValid
+        val osaamisalatValid = !koodi.hasYlakoodiWithinKoodisto(OsaamisalaKoodisto.name) ||
+          (osaamisalaKoodit.nonEmpty && osaamisalaKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, OsaamisalaKoodisto.name)))
+        koulutuksetValid && hakutapaValid && kohdejoukkoValid && osaamisalatValid
       })
       .map(koodi => koodi.withYlaRelaatiot(Seq.empty)))
       case Left(err) => Left(err)
