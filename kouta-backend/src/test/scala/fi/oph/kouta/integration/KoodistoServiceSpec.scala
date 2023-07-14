@@ -668,7 +668,7 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific koulutus" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), None, None, Seq.empty).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1"))
+    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), None, None, Seq.empty).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_4"))
   }
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific hakutapa" in {
@@ -683,6 +683,6 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
 
   "Fetching valintakoetyypit " should "return koodi with relation to specific osaamisala" in {
     mockValintakoeKoodit()
-    koodistoService.getValintakokeenTyypit(Seq.empty, None, None, Seq("osaamisala_1791")).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_4"))
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, None, Seq("osaamisala_1791")).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_4"))
   }
 }

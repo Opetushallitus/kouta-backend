@@ -104,13 +104,13 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
       .filter(isKoodiVoimassa)
       .map(withYlaRelaatiot)
       .filter(koodi => {
-        val koulutuksetValid = !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name) ||
+        val koulutuksetValid = (osaamisalaKoodit.nonEmpty && koulutusKoodit.isEmpty) || !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name) ||
           (koulutusKoodit.nonEmpty && koulutusKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name)))
         val hakutapaValid = !koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) ||
           hakutapaKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
         val kohdejoukkoValid = !koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name) ||
           haunkohdejoukkoKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
-        val osaamisalatValid = !koodi.hasYlakoodiWithinKoodisto(OsaamisalaKoodisto.name) ||
+        val osaamisalatValid = (osaamisalaKoodit.isEmpty && koulutusKoodit.nonEmpty) || !koodi.hasYlakoodiWithinKoodisto(OsaamisalaKoodisto.name) ||
           (osaamisalaKoodit.nonEmpty && osaamisalaKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, OsaamisalaKoodisto.name)))
         koulutuksetValid && hakutapaValid && kohdejoukkoValid && osaamisalatValid
       })
