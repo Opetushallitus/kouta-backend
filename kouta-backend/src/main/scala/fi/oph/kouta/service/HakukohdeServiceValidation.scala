@@ -661,17 +661,20 @@ class HakukohdeServiceValidation(
           }
         }
       ),
-      validateIfFalse(hakukohde.valintakokeet.isEmpty, {
-        hakukohde.valintakokeet.flatMap(valintakoe => {
-          assertTrue(valintakoeTyyppiKoodiIsAllowed(
-            valintakoe.tyyppiKoodiUri,
-            koulutuksetKoodiUri,
-            haku.flatMap(h => h.hakutapaKoodiUri),
-            haku.flatMap(h => h.kohdejoukkoKoodiUri),
-            osaamisalaKoodit),
-            "valintakokeet", valintakoeIsNotFoundFromAllowedRelations(valintakoe.tyyppiKoodiUri.getOrElse("")))
+      validateIfJulkaistu(
+        hakukohde.tila,
+        validateIfFalse(hakukohde.valintakokeet.isEmpty, {
+          hakukohde.valintakokeet.flatMap(valintakoe => {
+            assertTrue(valintakoeTyyppiKoodiIsAllowed(
+              valintakoe.tyyppiKoodiUri,
+              koulutuksetKoodiUri,
+              haku.flatMap(h => h.hakutapaKoodiUri),
+              haku.flatMap(h => h.kohdejoukkoKoodiUri),
+              osaamisalaKoodit),
+              "valintakokeet", valintakoeIsNotFoundFromAllowedRelations(valintakoe.tyyppiKoodiUri.getOrElse("")))
+          })
         })
-      })
+      )
     )
   }
 
