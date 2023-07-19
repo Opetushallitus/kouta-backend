@@ -15,6 +15,7 @@ import fi.oph.kouta.util.TimeUtils.instantToModified
 import org.json4s.jackson.{JsonMethods, Serialization}
 
 import java.time.LocalDateTime
+import scala.collection.Seq
 
 class ToteutusSpec
     extends KoutaIntegrationSpec
@@ -1199,5 +1200,52 @@ class ToteutusSpec
     response.head.status shouldBe "success"
     response.last.oid.toString shouldBe julkaistuToteutusOid2
     response.last.status shouldBe "success"
+  }
+
+  it should "create, get and update tutkintoon johtamaton toteutus with hakukohteet kaytossa" in {
+    val aiPeToKoulutusOid = put(TestData.AikuistenPerusopetusKoulutus.copy(tila = Julkaistu), ophSession)
+    val aiPeToToteutus =
+      TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu,
+        metadata = Some(AikuistenPerusopetusToteutusMetatieto.copy(
+          isHakukohteetKaytossa = Some(true),
+          hakulomaketyyppi = None,
+          hakulomakeLinkki = Map(),
+          lisatietoaHakeutumisesta = Map(),
+          lisatietoaValintaperusteista = Map(),
+          hakuaika = None,
+          aloituspaikat = None,
+          aloituspaikkakuvaus = Map())))
+    val oid = put(aiPeToToteutus)
+    val lastModified =
+      get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    update(aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(
+      oid,
+      aiPeToToteutus.copy(
+        oid = Some(ToteutusOid(oid)),
+        tila = Julkaistu,
+        koulutuksetKoodiUri = Seq("koulutus_201101#12")
+      )
+    )
+  }
+
+  it should "create, get and update tutkintoon johtamaton toteutus with hakeutumistiedot" in {
+    val aiPeToKoulutusOid = put(TestData.AikuistenPerusopetusKoulutus.copy(tila = Julkaistu), ophSession)
+    val aiPeToToteutus =
+      TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu,
+        metadata = Some(AikuistenPerusopetusToteutusMetatieto.copy(
+          isHakukohteetKaytossa = Some(false))))
+    val oid = put(aiPeToToteutus)
+    val lastModified =
+      get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
+    update(aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(
+      oid,
+      aiPeToToteutus.copy(
+        oid = Some(ToteutusOid(oid)),
+        tila = Julkaistu,
+        koulutuksetKoodiUri = Seq("koulutus_201101#12")
+      )
+    )
   }
 }
