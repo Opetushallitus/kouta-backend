@@ -1249,7 +1249,7 @@ object TestData {
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       yhteyshenkilot = Seq(Yhteystieto1),
-      aloituspaikat = None,
+      aloituspaikat = Some(23),
       aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false)
