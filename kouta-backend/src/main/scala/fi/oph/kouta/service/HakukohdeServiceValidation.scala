@@ -729,31 +729,31 @@ class HakukohdeServiceValidation(
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertNimiNotHakukohdeKoodiuri(hk),
-                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
               case m: AmmatillinenOsaamisalaToteutusMetadata =>
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertNimiNotHakukohdeKoodiuri(hk),
-                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
               case m: VapaaSivistystyoMuuToteutusMetadata =>
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertNimiNotHakukohdeKoodiuri(hk),
-                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
               case m: AmmatillinenMuuToteutusMetadata =>
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertNimiNotHakukohdeKoodiuri(hk),
-                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
               case m: AikuistenPerusopetusToteutusMetadata =>
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
                   assertNimiNotHakukohdeKoodiuri(hk),
-                  assertHakulomaketyyppiAtaru(m.hakulomaketyyppi, toteutusOid)
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
               case m: LukioToteutusMetadata =>
                 and(
@@ -846,9 +846,9 @@ class HakukohdeServiceValidation(
       )
     )
 
-  private def assertHakulomaketyyppiAtaru(hakulomaketyyppi: Option[Hakulomaketyyppi], toteutusOid: String): IsValid =
+  private def assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(hakulomaketyyppi: Option[Hakulomaketyyppi], isHakukohteetKaytossa: Option[Boolean], toteutusOid: String): IsValid =
     assertTrue(
-      hakulomaketyyppi.exists(_ == Ataru),
+      hakulomaketyyppi.exists(_ == Ataru) || isHakukohteetKaytossa.exists(_ == true),
       "toteutusOid",
       cannotLinkToHakukohde(toteutusOid)
     )

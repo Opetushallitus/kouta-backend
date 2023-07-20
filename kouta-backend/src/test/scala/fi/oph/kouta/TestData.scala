@@ -1219,6 +1219,7 @@ object TestData {
     opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    isHakukohteetKaytossa = None,
     hakutermi = Some(Hakeutuminen),
     hakulomaketyyppi = Some(MuuHakulomake),
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1227,6 +1228,7 @@ object TestData {
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
+    aloituspaikkakuvaus = Map(),
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false),
     isAvoinKorkeakoulutus = Some(false)
@@ -1239,6 +1241,7 @@ object TestData {
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(MuuHakulomake),
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1246,7 +1249,8 @@ object TestData {
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       yhteyshenkilot = Seq(Yhteystieto1),
-      aloituspaikat = None,
+      aloituspaikat = Some(23),
+      aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false)
     )
@@ -1258,6 +1262,7 @@ object TestData {
     opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    isHakukohteetKaytossa = Some(false),
     hakutermi = Some(Hakeutuminen),
     hakulomaketyyppi = Some(MuuHakulomake),
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1274,6 +1279,7 @@ object TestData {
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(MuuHakulomake),
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1282,6 +1288,7 @@ object TestData {
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       yhteyshenkilot = Seq(Yhteystieto1),
       aloituspaikat = None,
+      aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false)
     )
@@ -1332,7 +1339,6 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     yhteyshenkilot = Seq(Yhteystieto1),
-    aloituspaikat = Some(23),
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false)
   )
@@ -1352,7 +1358,6 @@ object TestData {
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     jarjestetaanErityisopetuksena = true,
     yhteyshenkilot = Seq(Yhteystieto1),
-    aloituspaikat = Some(23),
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false)
   )
@@ -1365,7 +1370,6 @@ object TestData {
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     yhteyshenkilot = Seq(Yhteystieto1),
-    aloituspaikat = Some(23),
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false)
   )
@@ -1391,6 +1395,7 @@ object TestData {
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    isHakukohteetKaytossa = Some(false),
     hakutermi = Some(Hakeutuminen),
     hakulomaketyyppi = Some(MuuHakulomake),
     hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1399,6 +1404,7 @@ object TestData {
     hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
     yhteyshenkilot = Seq(Yhteystieto1),
     aloituspaikat = None,
+    aloituspaikkakuvaus = Map(),
     hasJotpaRahoitus = Some(false)
   )
 
@@ -1422,6 +1428,7 @@ object TestData {
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       yhteyshenkilot = Seq(Yhteystieto1),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(MuuHakulomake),
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1429,6 +1436,7 @@ object TestData {
       lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
       aloituspaikat = Some(100),
+      aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       isMuokkaajaOphVirkailija = Some(false),
       hasJotpaRahoitus = Some(false)
     )
@@ -1484,6 +1492,7 @@ object TestData {
         asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
         ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
         yhteyshenkilot = Seq(Yhteystieto1),
+        isHakukohteetKaytossa = Some(false),
         hakutermi = Some(Hakeutuminen),
         hakulomaketyyppi = Some(MuuHakulomake),
         hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1491,6 +1500,7 @@ object TestData {
         lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         aloituspaikat = Some(23),
+        aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)
       )
@@ -1525,13 +1535,15 @@ object TestData {
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
       yhteyshenkilot = Seq(Yhteystieto1),
-      hakutermi = Some(Hakeutuminen),
-      hakulomaketyyppi = Some(Ataru),
+      isHakukohteetKaytossa = Some(true),
+      hakutermi = None,
+      hakulomaketyyppi = None,
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
       hakuaika = None,
-      aloituspaikat = Some(23),
+      aloituspaikat = None,
+      aloituspaikkakuvaus = Map(),
       hasJotpaRahoitus = Some(false)
     )
 
@@ -1543,6 +1555,7 @@ object TestData {
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
       yhteyshenkilot = Seq(Yhteystieto1),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(EiSähköistä),
       hakulomakeLinkki = Map(),
@@ -1550,6 +1563,7 @@ object TestData {
       lisatietoaValintaperusteista = Map(),
       hakuaika = None,
       aloituspaikat = Some(23),
+      aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hasJotpaRahoitus = Some(false)
     )
 
@@ -1562,6 +1576,7 @@ object TestData {
         asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
         ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
         yhteyshenkilot = Seq(Yhteystieto1),
+        isHakukohteetKaytossa = Some(false),
         hakutermi = Some(Hakeutuminen),
         hakulomaketyyppi = Some(MuuHakulomake),
         hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
@@ -1569,6 +1584,7 @@ object TestData {
         lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         aloituspaikat = Some(22),
+        aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
         isMuokkaajaOphVirkailija = Some(false),
         hasJotpaRahoitus = Some(false)
       )
@@ -1583,13 +1599,15 @@ object TestData {
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
       yhteyshenkilot = Seq(Yhteystieto1),
+      isHakukohteetKaytossa = Some(true),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(Ataru),
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
       hakuaika = None,
-      aloituspaikat = Some(23),
+      aloituspaikat = None,
+      aloituspaikkakuvaus = Map(),
       hasJotpaRahoitus = Some(false)
     )
 
@@ -1601,6 +1619,7 @@ object TestData {
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
       yhteyshenkilot = Seq(Yhteystieto1),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(EiSähköistä),
       hakulomakeLinkki = Map(),
@@ -1608,6 +1627,7 @@ object TestData {
       lisatietoaValintaperusteista = Map(),
       hakuaika = None,
       aloituspaikat = Some(23),
+      aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
       hasJotpaRahoitus = Some(false)
     )
 
@@ -1616,6 +1636,7 @@ object TestData {
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+      isHakukohteetKaytossa = Some(false),
       hakutermi = Some(Hakeutuminen),
       hakulomaketyyppi = Some(MuuHakulomake),
       hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
