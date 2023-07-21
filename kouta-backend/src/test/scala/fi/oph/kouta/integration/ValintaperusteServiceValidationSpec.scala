@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{MinHakukohdeListItem, MinYoValintaperuste, Valintakoe1, Valintatapa1, YoValintaperuste, inPast}
-import fi.oph.kouta.client.KoodistoElement
+import fi.oph.kouta.client.KoodiElement
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Ajanjakso, Amm, Arkistoitu, Column, Fi, GenericValintaperusteMetadata, HakukohdeListItem, HakutapaKoodisto, HaunKohdejoukkoKoodisto, Julkaistu, Julkaisutila, Poistettu, PostiosoiteKoodisto, Row, SisaltoTeksti, Sv, Tallennettu, Taulukko, TilaFilter, ValintakoeTyyppiKoodisto, Valintaperuste, Valintatapa, ValintatapaKoodisto}
 import fi.oph.kouta.repository.HakukohdeDAO
@@ -43,8 +43,8 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
     when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_av#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#1")).thenAnswer(itemFound)
     when(koodistoService.getValintakokeenTyypit(any, any, any, any))
-      .thenAnswer(Right(Seq(KoodistoElement("valintakokeentyyppi_1", "1", 1, None),
-        KoodistoElement("valintakokeentyyppi_9", "9", 1, None))))
+      .thenAnswer(Right(Seq(KoodiElement("valintakokeentyyppi_1", "1", 1, None),
+        KoodiElement("valintakokeentyyppi_9", "9", 1, None))))
     when(hakukohdeDao.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Seq[HakukohdeListItem]())
   }

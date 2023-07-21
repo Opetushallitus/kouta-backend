@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.client.KoodistoElement
+import fi.oph.kouta.client.KoodiElement
 import fi.oph.kouta.service.KoodistoService
 import org.scalatra.{BadRequest, InternalServerError, Ok}
 import scala.util.matching.Regex
@@ -80,7 +80,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
     val ylakoodi = params.get("ylakoodi").get
     tyyppiPattern.findFirstIn(ylakoodi) match {
       case Some(tutkintoTyyppi) => koodistoService.getLisattavatKoulutukset(tutkintoTyyppi) match {
-        case Right(koulutukset: Seq[KoodistoElement]) => Ok(koulutukset)
+        case Right(koulutukset: Seq[KoodiElement]) => Ok(koulutukset)
         case Left(error: Throwable) =>
           logger.error(s"Error fetching koulutukset for yläkoodi $tutkintoTyyppi", error)
           InternalServerError("500 Internal Server Error")
@@ -188,7 +188,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
         hakutapakoodi,
         haunkohdejoukkokoodi,
         osaamisalakoodit.getOrElse(Seq.empty)) match {
-      case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
+      case Right(valintakokeenTyypit: Seq[KoodiElement]) => Ok(valintakokeenTyypit)
       case Left(error: Throwable) =>
         logger.error(s"Error fetching valintakokeentyypit", error)
         InternalServerError("500 Internal Server Error")

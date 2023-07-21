@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.{contains, getVersio, removeVersio}
-import fi.oph.kouta.client.{KoodistoClient, KoodistoElement, KoodistoError}
+import fi.oph.kouta.client.{KoodistoClient, KoodiElement, KoodistoError}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
 
@@ -32,12 +32,14 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     result.map(element => element.asKielistetty())
   }
 
-  def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodistoElement] = {
+  def getRinnasteisetKooditInKoodisto(koodiUri: String, koodisto: String): Seq[KoodiElement] = {
     logger.info(s"Haetaan rinnasteiset koodit koodiUrille $koodiUri")
-    koodistoClient.getRinnasteisetKoodit(removeVersio(koodiUri)) match {
+    koodistoClient.getKoodistoKoodit(koodiUri) match {
       case Right(result) => result.view
-        .filter(element => element.belongsToKoodisto(koodisto))
-        .filter(isKoodiVoimassa)
+        .flatMap(k => k.levelsWithCodeElements)
+        .filter(element => element.koodisto().koodistoUri == koodisto)
+        .filter(element => !element.passive)
+        .map(element => element.toKoodiElement)
       case Left(exp) if exp.status.exists(_ == 404) => Seq.empty
       case Left(exp) => {
         logger.error("Rinnasteisten koodien haku epäonnistui: ", exp)
@@ -46,20 +48,23 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  def getLatestVersion(koodiUri: String): Either[Throwable, KoodistoElement] = {
+  def getLatestVersion(koodiUri: String): Either[Throwable, KoodiElement] = {
     koodistoClient.getKoodistoElementLatestVersion(removeVersio(koodiUri))
   }
 
-  def getKoulutuksetByTutkintotyyppi(tutkintotyyppi: String): Either[Throwable, Seq[KoodistoElement]] = {
-    koodistoClient.getYlakoodit(tutkintotyyppi) match {
-      case Right(result) => Right(result.filter(isKoodiVoimassa))
+  def getKoulutuksetByTutkintotyyppi(tutkintotyyppi: String): Either[Throwable, Seq[KoodiElement]] = {
+    koodistoClient.getKoodistoKoodit(tutkintotyyppi) match {
+      case Right(result) => Right(result
+        .flatMap(k => k.withinCodeElements)
+        .filter(k => !k.passive)
+        .map(k => k.toKoodiElement))
       case Left(_) => Left(new RuntimeException(s"Failed to get koulutusKoodiUris for koulutustyyppi $tutkintotyyppi from koodisto."))
     }
   }
 
   def koodiUriExistsInKoodisto(koodisto: KoodistoNimi, koodiUri: String): ExternalQueryResult = {
     koodistoClient.getKoodistoKoodit(koodisto.toString) match {
-      case Right(elements: Seq[KoodistoElement]) => fromBoolean(contains(koodiUri, elements.filter(isKoodiVoimassa)))
+      case Right(elements: Seq[KoodiElement]) => fromBoolean(contains(koodiUri, elements.filter(isKoodiVoimassa)))
       case Left(exp) if exp.status.exists(_ == 404) => itemNotFound
       case Left(_) => queryFailed
     }
@@ -75,11 +80,13 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     itemNotFound
   }
 
-  def getLisattavatKoulutukset(ylakoodi: String): Either[KoodistoError, Seq[KoodistoElement]] = {
-    koodistoClient.getYlakoodit(ylakoodi) match {
+  def getLisattavatKoulutukset(ylakoodi: String): Either[KoodistoError, Seq[KoodiElement]] = {
+    koodistoClient.getKoodistoKoodit(ylakoodi) match {
       case Right(result) => Right(result.view
-        .filter(isKoodiVoimassa)
-        .filter(element => element.koodisto.exists(_.koodistoUri == "koulutus"))
+        .flatMap(k => k.withinCodeElements)
+        .filter(k => !k.passive)
+        .filter(element => element.koodisto().koodistoUri == "koulutus")
+        .map(element => element.toKoodiElement)
         .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)))
       case Left(err) if err.status.exists(_ == 404) =>
         logger.warn(s"No koulutukset were found for yläkoodi ${ylakoodi}")
@@ -88,21 +95,13 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
-  private def withYlaRelaatiot(koodi: KoodistoElement): KoodistoElement = {
-    koodistoClient.getYlakoodit(koodi.koodiUri) match {
-      case Right(result) => koodi.withYlaRelaatiot(result)
-      case Left(_) => koodi
-    }
-  }
-
   def getValintakokeenTyypit(koulutusKoodit: Seq[String],
                              hakutapaKoodi: Option[String],
                              haunkohdejoukkoKoodi: Option[String],
-                             osaamisalaKoodit: Seq[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
+                             osaamisalaKoodit: Seq[String]): Either[KoodistoError, Seq[KoodiElement]] = {
     koodistoClient.getKoodistoKoodit(ValintakoeTyyppiKoodisto.name) match {
       case Right(result) => Right(result.view
       .filter(isKoodiVoimassa)
-      .map(withYlaRelaatiot)
       .filter(koodi => {
         val noYlaKoodiWithKoulutuksetAndOsaamisAla = !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name) &&
           !koodi.hasYlakoodiWithinKoodisto(OsaamisalaKoodisto.name)
@@ -116,8 +115,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
           (osaamisalaKoodit.nonEmpty && osaamisalaKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, OsaamisalaKoodisto.name)))
         val koulutusOrOsaamisalaValid = koulutuksetValid || osaamisalatValid
         koulutusOrOsaamisalaValid && hakutapaValid && kohdejoukkoValid
-      })
-      .map(koodi => koodi.withYlaRelaatiot(Seq.empty)))
+      }))
       case Left(err) => Left(err)
     }
   }
@@ -149,7 +147,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     koodiArvo.endsWith("00");
   }
 
-  protected def isKoodiVoimassa(koodistoElement: KoodistoElement) = {
+  protected def isKoodiVoimassa(koodistoElement: KoodiElement) = {
     val dateToCompare = koodistoElement.voimassaLoppuPvm
     val currentDate = ZonedDateTime.now().toLocalDateTime
     if (koodistoElement.voimassaLoppuPvm.isDefined) {

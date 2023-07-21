@@ -23,14 +23,36 @@ case class KoodistoMetadataElement(
     kieli: String = ""
 )
 
-case class KoodistoElement(
+case class KoodiElementLite(
+  codeElementUri: String,
+  codeElementVersion: Int = 1,
+  passive: Boolean
+) {
+  def koodisto(): KoodistoSubElement = {
+    KoodistoSubElement(codeElementUri.split("_")(0))
+  }
+
+  // This might cause issues as koodiArvo might not be same as what is in uri
+  def koodiArvo(): String = {
+    codeElementUri.split("_")(1)
+  }
+
+  def toKoodiElement: KoodiElement = {
+    KoodiElement(codeElementUri, koodiArvo(), codeElementVersion, Some(koodisto())
+    )
+  }
+}
+
+case class KoodiElement(
     koodiUri: String,
     koodiArvo: String,
     versio: Int = 1,
     koodisto: Option[KoodistoSubElement] = None,
     voimassaLoppuPvm: Option[String] = None,
     metadata: List[KoodistoMetadataElement] = List.empty,
-    ylaRelaatiot: Seq[KoodistoElement] = Seq.empty
+    withinCodeElements: Seq[KoodiElementLite] = Seq.empty,
+    includesCodeElements: Seq[KoodiElementLite] = Seq.empty,
+    levelsWithCodeElements: Seq[KoodiElementLite] = Seq.empty
 ) {
 
   def belongsToKoodisto(koodistoUri: String): Boolean = {
@@ -41,16 +63,13 @@ case class KoodistoElement(
     metadata.map(element => Kieli.withName(element.kieli.toLowerCase) -> element.nimi).toMap
   }
 
-  def withYlaRelaatiot(relaatiot: Seq[KoodistoElement]): KoodistoElement = {
-    KoodistoElement(koodiUri, koodiArvo, versio, koodisto, voimassaLoppuPvm, metadata, relaatiot)
-  }
-
   def containsYlaKoodiWithKoodisto(ylaKoodiUri: String, ylaKoodistoUri: String): Boolean = {
-    ylaRelaatiot.exists(koodi => koodi.koodiUri == removeVersio(ylaKoodiUri) && koodi.belongsToKoodisto(ylaKoodistoUri))
+    withinCodeElements.exists(koodi => koodi.codeElementUri == removeVersio(ylaKoodiUri) &&
+      koodi.koodisto().koodistoUri == ylaKoodistoUri)
   }
 
   def hasYlakoodiWithinKoodisto(ylaKoodistoUri: String): Boolean = {
-    ylaRelaatiot.exists(koodi => koodi.belongsToKoodisto(ylaKoodistoUri))
+    withinCodeElements.exists(koodi => koodi.koodisto().koodistoUri == ylaKoodistoUri)
   }
 }
 
@@ -67,7 +86,7 @@ object KoodistoUtils {
     }
   }
 
-  def contains(koodiUri: String, koodistoElements: Seq[KoodistoElement]): Boolean = {
+  def contains(koodiUri: String, koodistoElements: Seq[KoodiElement]): Boolean = {
     val versio = getVersio(koodiUri).getOrElse(Int.MinValue);
     val base = removeVersio(koodiUri);
     koodistoElements.exists(element => element.koodiUri.equals(base) && element.versio>=versio);
@@ -117,44 +136,31 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
     }
   }
 
-  val getKoodistoKoodit = new CachedMethod[String, Seq[KoodistoElement]](
+  val getKoodistoKoodit = new CachedMethod[String, Seq[KoodiElement]](
     Scaffeine().expireAfterWrite(10.minutes).build(),
     koodisto => getWithRetry(
-      urlProperties.url("koodisto-service.koodisto-koodit",
-        koodisto), followRedirects = true
-    ) { response => parse(response).extract[List[KoodistoElement]] })
-
-  val getYlakoodit = new CachedMethod[String, Seq[KoodistoElement]](
-    Scaffeine().expireAfterWrite(10.minutes).build(),
-    koodiUri => getWithRetry(
-      urlProperties.url("koodisto-service.sisaltyy-ylakoodit", koodiUri),
+      urlProperties.url("koodisto-service.koodisto-koodit-relaatioineen",
+        removeVersio(koodisto),
+        getVersio(koodisto).map(Integer.valueOf).getOrElse(Integer.valueOf(1))),
       followRedirects = true
-    ) { response => parse(response).extract[List[KoodistoElement]] })
+    ) { response => parse(response).extract[List[KoodiElement]] })
 
-  val getRinnasteisetKoodit = new CachedMethod[String, Seq[KoodistoElement]](
-    Scaffeine().expireAfterWrite(10.minutes).build(),
-    koodiUri => getWithRetry(
-      urlProperties.url("koodisto-service.koodisto-koodit.rinnasteiset", koodiUri),
-      followRedirects = true) { response => parse(response).extract[List[KoodistoElement]] })
-
-  val getKoodistoElementVersion = new CachedMethod[String, KoodistoElement](
+  val getKoodistoElementVersion = new CachedMethod[String, KoodiElement](
     Scaffeine().expireAfterWrite(10.minutes).build(),
     koodiUri => getWithRetry(
       urlProperties.url("koodisto-service.koodiuri-version", removeVersio(koodiUri), getVersio(koodiUri).get.toString),
       followRedirects = true
-    ) { response => parse(response).extract[KoodistoElement] })
+    ) { response => parse(response).extract[KoodiElement] })
 
-  val getKoodistoElementLatestVersion = new CachedMethod[String, KoodistoElement](
+  val getKoodistoElementLatestVersion = new CachedMethod[String, KoodiElement](
     Scaffeine().expireAfterWrite(10.minutes).build(),
     koodiUri => getWithRetry(
       urlProperties.url("koodisto-service.latest-koodiuri", removeVersio(koodiUri)),
       followRedirects = true
-    ) { response => parse(response).extract[KoodistoElement] })
+    ) { response => parse(response).extract[KoodiElement] })
 
   def invalidateCaches() = {
     getKoodistoKoodit.clearCache()
-    getYlakoodit.clearCache()
-    getRinnasteisetKoodit.clearCache()
     getKoodistoElementVersion.clearCache()
     getKoodistoElementLatestVersion.clearCache()
   }

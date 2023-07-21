@@ -1,12 +1,12 @@
 package fi.oph.kouta.mocks
 
-import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
+import fi.oph.kouta.client.{KoodiElement, KoodistoMetadataElement, KoodistoSubElement}
 import fi.oph.kouta.domain.{HakutapaKoodisto, HaunKohdejoukkoKoodisto, Kielistetty, KoulutusKoodisto, OsaamisalaKoodisto, ValintakoeTyyppiKoodisto}
 import org.mockserver.model.HttpRequest
 
 object TestKoodistoElement {
-  def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodistoElement = {
-    KoodistoElement(koodiUri, koodiUri.split("_")(1), version, Some(KoodistoSubElement("notUsedInThisCase")), None, nimi
+  def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodiElement = {
+    KoodiElement(koodiUri, koodiUri.split("_")(1), version, Some(KoodistoSubElement("notUsedInThisCase")), None, nimi
       .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList, Seq.empty)
   }
 }
@@ -69,27 +69,27 @@ trait KoodistoServiceMock extends ServiceMockBase {
   lazy val DefaultKoodistoResponse = "[]"
 
   def mockKoodistoResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
-    val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
+    val path = getMockPath("koodisto-service.koodisto-koodit-relaatioineen", Seq(koodisto, "1"))
     mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
   }
 
   def mockKoodistoNotFound(koodisto: String): HttpRequest = {
-    val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
+    val path = getMockPath("koodisto-service.koodisto-koodit-relaatioineen", Seq(koodisto, "1"))
     mockGet(path, Map.empty, s"Koodisto $koodisto not found", 404)
   }
 
   def mockKoodistoFailure(koodisto: String): HttpRequest = {
-    val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
+    val path = getMockPath("koodisto-service.koodisto-koodit-relaatioineen", Seq(koodisto, "1"))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
   }
 
   def mockKoulutusByTutkintotyyppiResponse(koodisto: String, koodiUrit: Seq[(String, Int, Option[String])]) = {
-    val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
+    val path = getMockPath("koodisto-service.koodisto-koodit-relaatioineen", Seq(koodisto, "1"))
     mockGet(path, Map.empty, koodiUriResponse("koulutus", koodiUrit))
   }
 
   def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {
-    val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
+    val path = getMockPath("koodisto-service.koodisto-koodit-relaatioineen", Seq(koodisto, "1"))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
   }
 

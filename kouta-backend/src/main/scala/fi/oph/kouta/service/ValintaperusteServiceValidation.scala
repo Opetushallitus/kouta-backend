@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoodistoElement
+import fi.oph.kouta.client.KoodiElement
 import fi.oph.kouta.domain._
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
@@ -96,7 +96,7 @@ class ValintaperusteServiceValidation(
                                              hakutapaKoodi: Option[String],
                                              haunkohdejoukkoKoodi: Option[String]): Boolean = {
     koodistoService.getValintakokeenTyypit(Seq.empty, hakutapaKoodi, haunkohdejoukkoKoodi, Seq.empty) match {
-      case Right(elements: Seq[KoodistoElement]) =>
+      case Right(elements: Seq[KoodiElement]) =>
         val koodiUrit: Seq[String] = elements.map(koodi => koodi.koodiUri + "#" + koodi.versio)
         valintakoeTyyppiKoodi.exists(valintakoe => koodiUrit.contains(valintakoe))
       case Left(_) => false

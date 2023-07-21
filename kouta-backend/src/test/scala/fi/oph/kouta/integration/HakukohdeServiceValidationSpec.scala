@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodiElement, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -226,8 +226,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_8#1")).thenAnswer(itemFound)
     when(koodistoService.getValintakokeenTyypit(any, any, any, any))
-      .thenAnswer(Right(Seq(KoodistoElement("valintakokeentyyppi_1", "1", 1, None),
-        KoodistoElement("valintakokeentyyppi_9", "9", 1, None))))
+      .thenAnswer(Right(Seq(KoodiElement("valintakokeentyyppi_1", "1", 1, None),
+        KoodiElement("valintakokeentyyppi_9", "9", 1, None))))
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
     when(hakemusPalveluClient.getHakukohdeInfo(maxWithIds.oid.get)).thenAnswer(HakukohdeInfo(applicationCount = 0))
 

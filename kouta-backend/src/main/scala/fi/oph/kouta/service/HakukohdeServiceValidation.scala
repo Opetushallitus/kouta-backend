@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodiElement, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -218,7 +218,7 @@ class HakukohdeServiceValidation(
                                              haunkohdejoukkoKoodi : Option[String],
                                              osaamisalaKoodit: Seq[String]): Boolean = {
     koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi, osaamisalaKoodit) match {
-      case Right(elements: Seq[KoodistoElement]) =>
+      case Right(elements: Seq[KoodiElement]) =>
         val koodiUrit: Seq[String] = elements.map(koodi => koodi.koodiUri + "#" + koodi.versio)
         valintakoeTyyppiKoodi.exists(valintakoe => koodiUrit.contains(valintakoe))
       case Left(_) => false
