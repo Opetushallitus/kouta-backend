@@ -446,23 +446,13 @@ class ToteutusServiceValidation(
       vCtx: ValidationContext,
       m: TutkintoonJohtamatonToteutusMetadata
   ) = {
-    //TODO Lisää tähän kaikki koulutustyypit joille ei aseteta aloituspaikka-tietoa
-    val koulutustyypitWoAloituspaikat: Set[Koulutustyyppi] = Set(TaiteenPerusopetus)
     and(
       validateIfNonEmpty(m.hakulomakeLinkki, "metadata.hakulomakeLinkki", assertValidUrl _),
       validateIfDefined[Ajanjakso](m.hakuaika, _.validate(vCtx, "metadata.hakuaika")),
-      validateIfTrueOrElse(
-        koulutustyypitWoAloituspaikat.contains(m.tyyppi),
-        assertNotDefined(m.aloituspaikat, "metadata.aloituspaikat"),
-        validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat"))
-      ),
-      validateIfTrueOrElse(
-        koulutustyypitWoAloituspaikat.contains(m.tyyppi),
-        assertEmptyKielistetty(m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus"),
-        validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus")
-      ),
+      validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
+      validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus"),
       validateIfTrue(
-        vCtx.tila == Julkaistu && !(m.isHakukohteetKaytossa.exists(_ == true)),
+        vCtx.tila == Julkaistu && !m.isHakukohteetKaytossa.exists(_ == true),
         and(
           assertNotOptional(m.hakutermi, "metadata.hakutermi"),
           assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
