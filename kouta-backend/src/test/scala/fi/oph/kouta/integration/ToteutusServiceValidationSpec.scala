@@ -1091,28 +1091,14 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  private def failValidationWhenAloituspaikatGiven(
-      metadataWithAloituspaikat: TutkintoonJohtamatonToteutusMetadata
-  ): Assertion = {
-    val koulutusOid = KoulutusOid("1.2.246.562.13.600")
-    when(koulutusDao.get(koulutusOid))
-      .thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu, koulutustyyppi = metadataWithAloituspaikat.tyyppi)))
-    val testedToteutus =
-      tpoToteutus.copy(koulutusOid = koulutusOid, sorakuvausId = None, metadata = Some(metadataWithAloituspaikat))
-    val validationErrors = List(
-      { ValidationError("metadata.aloituspaikat", notMissingMsg(metadataWithAloituspaikat.aloituspaikat)) },
-      { ValidationError("metadata.aloituspaikkakuvaus", notEmptyMsg) }
-    )
-    failsValidation(testedToteutus, validationErrors)
-  }
 
-  it should "fail if aloituspaikat given for koulutustyyppi not using aloituspaikat" in {
-    failValidationWhenAloituspaikatGiven(
-      TaiteenPerusopetusToteutusMetatieto.copy(
-        aloituspaikat = Some(10),
-        aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")
-      )
-    )
+  it should "allow aloituspaikat for Taiteen perusopetus" in {
+    passesValidation(tpoToteutus.copy(metadata =
+      Some(
+        TaiteenPerusopetusToteutusMetatieto.copy(
+          aloituspaikat = Some(10),
+          aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus", Sv -> "aloituspaikkakuvaus sv")
+        ))))
   }
 
   "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {
