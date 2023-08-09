@@ -1,13 +1,14 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{MinHakukohdeListItem, MinYoValintaperuste, Valintakoe1, Valintatapa1, YoValintaperuste, inPast}
+import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Ajanjakso, Amm, Arkistoitu, Column, Fi, GenericValintaperusteMetadata, HakukohdeListItem, HakutapaKoodisto, HaunKohdejoukkoKoodisto, Julkaistu, Julkaisutila, Poistettu, PostiosoiteKoodisto, Row, SisaltoTeksti, Sv, Tallennettu, Taulukko, TilaFilter, ValintakoeTyyppiKoodisto, Valintaperuste, Valintatapa, ValintatapaKoodisto}
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.service.{KoodistoService, ValintaperusteServiceValidation}
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
-import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty, invalidValintakoeTyyppiKoodiuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg}
+import fi.oph.kouta.validation.Validations.{InvalidMetadataTyyppi, illegalStateChange, integrityViolationMsg, invalidHakutapaKoodiUri, invalidHaunKohdejoukkoKoodiUri, invalidKielistetty, invalidValintakoeTyyppiKoodiuri, invalidValintatapaKoodiUri, minmaxMsg, missingMsg, notMissingMsg, notModifiableMsg, notNegativeMsg, pastDateMsg, validationMsg, valintakoeIsNotFoundFromAllowedRelations}
 import org.scalatest.Assertion
 
 import java.util.UUID
@@ -41,7 +42,9 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
     when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_av#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#1")).thenAnswer(itemFound)
-
+    when(koodistoService.getValintakokeenTyypit(any, any, any, any))
+      .thenAnswer(Right(Seq(KoodistoElement("valintakokeentyyppi_1", "1", 1, None),
+        KoodistoElement("valintakokeentyyppi_9", "9", 1, None))))
     when(hakukohdeDao.listByValintaperusteId(valintaperusteId, TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Seq[HakukohdeListItem]())
   }
@@ -104,7 +107,9 @@ class ValintaperusteServiceValidationSpec extends BaseServiceValidationSpec[Vali
       ),
       Seq(
         ValidationError("valintakokeet[0].tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("puppu")),
-        ValidationError("valintakokeet[1].tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#99"))
+        ValidationError("valintakokeet[1].tyyppiKoodiUri", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#99")),
+        ValidationError("valintakokeet", valintakoeIsNotFoundFromAllowedRelations("puppu")),
+        ValidationError("valintakokeet", valintakoeIsNotFoundFromAllowedRelations("valintakokeentyyppi_99#99"))
       )
     )
   }

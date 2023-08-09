@@ -1,13 +1,13 @@
 package fi.oph.kouta.mocks
 
 import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
-import fi.oph.kouta.domain.Kielistetty
+import fi.oph.kouta.domain.{HakutapaKoodisto, HaunKohdejoukkoKoodisto, Kielistetty, KoulutusKoodisto, OsaamisalaKoodisto, ValintakoeTyyppiKoodisto}
 import org.mockserver.model.HttpRequest
 
 object TestKoodistoElement {
   def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodistoElement = {
     KoodistoElement(koodiUri, koodiUri.split("_")(1), version, Some(KoodistoSubElement("notUsedInThisCase")), None, nimi
-      .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList)
+      .map(tuple => KoodistoMetadataElement(tuple._2, tuple._1.toString.toUpperCase)).toList, Seq.empty)
   }
 }
 
@@ -50,6 +50,9 @@ trait KoodistoServiceMock extends ServiceMockBase {
         "koulutukset": [""" + koodiUrit.map(uri => s"""{"koulutuskoodiUri": "$uri"}""").mkString(",") + "]}"
   }
 
+  def koodiUriResponseWithMultipleKoodisto(koodiUritWithKoodisto: Seq[(String, String, Int, Option[String])]) =
+    "[" + koodiUritWithKoodisto.map(uri => singleKoodiuriResponse(uri._1, (uri._2, uri._3, uri._4))).mkString(",") + "]"
+
   def osaamisalaResponse(osaamisalaKoodiUrit: Seq[String]): String = s"""{"reformi" : {""" +
     osaamisalaKoodiUrit
       .map(uri =>
@@ -88,6 +91,36 @@ trait KoodistoServiceMock extends ServiceMockBase {
   def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {
     val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
+  }
+
+  def mockValintakoeKoodit() = {
+    val path1 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_1"))
+    val path2 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_2"))
+    val path3 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_3"))
+    val path4 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_4"))
+    val path5 = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some("valintakokeentyyppi_always-in"))
+    mockGet(path1, Map.empty, koodiUriResponseWithMultipleKoodisto(Seq(
+      (KoulutusKoodisto.name, "koulutus_11", 1, None),
+      (HakutapaKoodisto.name, "hakutapa_02", 1, None),
+      (HaunKohdejoukkoKoodisto.name, "haunkohdejoukko_13", 1, None))))
+    mockGet(path2, Map.empty, koodiUriResponseWithMultipleKoodisto(Seq((HakutapaKoodisto.name, "hakutapa_01", 1, None))))
+    mockGet(path3, Map.empty, koodiUriResponseWithMultipleKoodisto(Seq((HaunKohdejoukkoKoodisto.name, "haunkohdejoukko_12", 1, None))))
+    mockGet(path4, Map.empty, koodiUriResponseWithMultipleKoodisto(Seq(
+      (OsaamisalaKoodisto.name, "osaamisala_1791", 1, None),
+      (HakutapaKoodisto.name, "hakutapa_04", 1, None),
+      (HaunKohdejoukkoKoodisto.name, "haunkohdejoukko_14", 1, None))))
+    mockGet(path5, Map.empty, "[]")
+    val koetyypitReponse = Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3", "valintakokeentyyppi_4", "valintakokeentyyppi_always-in")
+      .map(tyyppi => (tyyppi, 1, None))
+    mockKoodistoResponse("valintakokeentyyppi", koetyypitReponse)
+  }
+
+  def mockValintakoeKooditWithEmptyRelations(valintaKokeenTyypit: Seq[(String, Int, Option[String])] = Seq.empty) = {
+    valintaKokeenTyypit.foreach(koe => {
+      val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koe._1))
+
+      mockGet(path, Map.empty, "[]")
+    })
   }
 
   def mockKoulutustyyppiResponse(

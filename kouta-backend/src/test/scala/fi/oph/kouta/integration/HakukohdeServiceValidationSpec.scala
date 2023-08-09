@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient, HakukohdeInfo}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -224,6 +224,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     when(koodistoService.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_2#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_8#1")).thenAnswer(itemFound)
+    when(koodistoService.getValintakokeenTyypit(any, any, any, any))
+      .thenAnswer(Right(Seq(KoodistoElement("valintakokeentyyppi_1", "1", 1, None),
+        KoodistoElement("valintakokeentyyppi_9", "9", 1, None))))
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
     when(hakemusPalveluClient.getHakukohdeInfo(maxWithIds.oid.get)).thenAnswer(HakukohdeInfo(applicationCount = 0))
 
@@ -930,6 +934,16 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_99#1")))),
       "valintakokeet[0].tyyppiKoodiUri",
       invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_99#1")
+    )
+  }
+
+  it should "fail when valintakokeentyyppi is not found due to relation" in {
+    val copyWithDifferentKoe = max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"))))
+    when(hakukohdeDao.getDependencyInformation(copyWithDifferentKoe)).thenAnswer(Some(dependencies))
+    failsValidation(
+      copyWithDifferentKoe,
+      "valintakokeet",
+      valintakoeIsNotFoundFromAllowedRelations("valintakokeentyyppi_8#1")
     )
   }
 

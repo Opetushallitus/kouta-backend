@@ -63,7 +63,8 @@ class ExternalSpec extends KoutaIntegrationSpec with ExternalFixture with Create
   executeCreateTests[Hakukohde](
     "hakukohde",
     ExternalHakukohdePath,
-    (authenticated: Authenticated) => ExternalHakukohdeRequest(authenticated, createHakukohde()),
+    (authenticated: Authenticated) =>
+      ExternalHakukohdeRequest(authenticated, createHakukohde()),
     (oid: String, muokkaaja: Option[UserOid]) => createHakukohde(oid, muokkaaja, isMuokkaajaOphVirkailija = Some(false))
   )
   executeModifyTests[Hakukohde](
