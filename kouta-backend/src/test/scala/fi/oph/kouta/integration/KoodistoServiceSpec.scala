@@ -719,4 +719,31 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_04"), Some("haunkohdejoukko_24"), Seq("osaamisala_1791"))
       .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
   }
+
+  "Getting koodisto koodit without version" should "return koodit" in {
+    mockKoodistoResponse(
+      "some",
+      Seq(
+        ("some_twitter", 2, None),
+        ("some_facebook", 2, None)
+      )
+    )
+    koodistoService.getKoodistoKoodit("some", None).right.get.map(element => (element.koodiUri, element.versio)) should equal(
+      Seq(("some_twitter", 2), ("some_facebook", 2))
+    )
+  }
+
+  "Getting koodisto koodit with version" should "return koodit" in {
+    mockKoodistoResponseWithVersion(
+      "some",
+      1,
+      Seq(
+        ("some_twitter", 1, None),
+        ("some_facebook", 1, None)
+      )
+    )
+    koodistoService.getKoodistoKoodit("some", Some(1)).right.get.map(element => (element.koodiUri, element.versio)) should equal(
+      Seq(("some_twitter", 1), ("some_facebook", 1))
+    )
+  }
 }
