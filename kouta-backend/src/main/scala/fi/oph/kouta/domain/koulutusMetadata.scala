@@ -146,6 +146,15 @@ package object koulutusMetadata {
       |              type: string
       |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
       |              example: opinnontyyppi_1#1
+      |            korkeakoulutusTyypit:
+      |              type: array
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              items:
+      |                type: string
+      |                example: amk
+      |                enum:
+      |                  - amk
+      |                  - yo
       |""".stripMargin
 
   val KkOpintokokonaisuusKoulutusMetadataModel: String =
@@ -189,6 +198,15 @@ package object koulutusMetadata {
       |              type: string
       |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
       |              example: opinnontyyppi_1#1
+      |            korkeakoulutusTyypit:
+      |              type: array
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              items:
+      |                type: string
+      |                example: amk
+      |                enum:
+      |                  - amk
+      |                  - yo
       |""".stripMargin
 
   val AmmTutkintoWithoutEperusteFieldDescription =
@@ -493,6 +511,15 @@ package object koulutusMetadata {
       |              type: string
       |              description: Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)
       |              example: opintojenlaajuusyksikko_2#1
+      |            korkeakoulutusTyypit:
+      |              type: array
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              items:
+      |                type: string
+      |                example: amk
+      |                enum:
+      |                  - amk
+      |                  - yo
       |            opintojenLaajuusNumeroMin:
       |              type: integer
       |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
@@ -602,6 +629,10 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata with LaajuusSingle
   val koulutusalaKoodiUrit: Seq[String]
 }
 
+trait KorkeakoulutusRelatedKoulutusMetadata extends KoulutusMetadata with LaajuusMinMax {
+  val korkeakoulutusTyypit: Seq[Koulutustyyppi]
+}
+
 case class AmmatillinenKoulutusMetadata(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
@@ -696,9 +727,9 @@ case class KkOpintojaksoKoulutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
-    opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata
-    with LaajuusMinMax
+    opinnonTyyppiKoodiUri: Option[String] = None,
+    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
@@ -711,9 +742,9 @@ case class KkOpintokokonaisuusKoulutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
-    opinnonTyyppiKoodiUri: Option[String] = None
-) extends KoulutusMetadata
-    with LaajuusMinMax
+    opinnonTyyppiKoodiUri: Option[String] = None,
+    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class LukioKoulutusMetadata(
     tyyppi: Koulutustyyppi = Lk,
@@ -806,9 +837,9 @@ case class ErikoistumiskoulutusMetadata(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
-    isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadata
-    with LaajuusMinMax
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class TaiteenPerusopetusKoulutusMetadata(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
