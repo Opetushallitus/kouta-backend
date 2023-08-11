@@ -363,7 +363,7 @@ object TestData {
     metadata = Some(
       KkOpintojaksoKoulutuksenMetatieto
     ),
-    tarjoajat = List(YoOid, HkiYoOid),
+    tarjoajat = List(AmkOid),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
@@ -453,7 +453,7 @@ object TestData {
     tila = Julkaistu,
     nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
     metadata = Some(ErikoistumisKoulutuksenMetatieto),
-    tarjoajat = List(YoOid, HkiYoOid),
+    tarjoajat = List(YoOid, HkiYoOid, AmkOid),
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),

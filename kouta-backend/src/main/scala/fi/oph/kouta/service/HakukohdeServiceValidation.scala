@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient, LokalisointiClient, HakukohdeInfo}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -146,8 +146,7 @@ class HakukohdeServiceValidation(
             vCtx,
             existingValintakoeIds,
             koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, _),
-            koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
-          )
+            koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _))
       ),
       validateIfDefined[HakukohdeMetadata](
         hk.metadata,
@@ -211,6 +210,19 @@ class HakukohdeServiceValidation(
         )
       )
     )
+  }
+
+  private def valintakoeTyyppiKoodiIsAllowed(valintakoeTyyppiKoodi : Option[String],
+                                             koulutusKoodit : Seq[String],
+                                             hakutapaKoodi : Option[String],
+                                             haunkohdejoukkoKoodi : Option[String],
+                                             osaamisalaKoodit: Seq[String]): Boolean = {
+    koodistoService.getValintakokeenTyypit(koulutusKoodit, hakutapaKoodi, haunkohdejoukkoKoodi, osaamisalaKoodit) match {
+      case Right(elements: Seq[KoodistoElement]) =>
+        val koodiUrit: Seq[String] = elements.map(koodi => koodi.koodiUri + "#" + koodi.versio)
+        valintakoeTyyppiKoodi.exists(valintakoe => koodiUrit.contains(valintakoe))
+      case Left(_) => false
+    }
   }
 
   private def isHakuaikaMenossa(hakuaika: Ajanjakso): Boolean = {
@@ -481,6 +493,12 @@ class HakukohdeServiceValidation(
     val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
     val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
     val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+    val osaamisalaKoodit: Seq[String] = dependencyInfo
+      .flatMap(_.toteutus.metadata)
+      .filter(_.isInstanceOf[AmmatillinenToteutusMetadata])
+      .map(metadata => (metadata.asInstanceOf[AmmatillinenToteutusMetadata]).osaamisalat)
+      .map(osaamisalat => osaamisalat.map(_.koodiUri))
+      .getOrElse(Seq.empty)
     val jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta =
       dependencyInfo.flatMap(di => di.jarjestyspaikka.flatMap(j => j.jarjestaaUrheilijanAmmKoulutusta))
 
@@ -642,6 +660,20 @@ class HakukohdeServiceValidation(
             case _ => error("toinenAsteOnkoKaksoistutkinto", toinenAsteOnkoKaksoistutkintoNotAllowed)
           }
         }
+      ),
+      validateIfJulkaistu(
+        hakukohde.tila,
+        validateIfFalse(hakukohde.valintakokeet.isEmpty, {
+          hakukohde.valintakokeet.flatMap(valintakoe => {
+            assertTrue(valintakoeTyyppiKoodiIsAllowed(
+              valintakoe.tyyppiKoodiUri,
+              koulutuksetKoodiUri,
+              haku.flatMap(h => h.hakutapaKoodiUri),
+              haku.flatMap(h => h.kohdejoukkoKoodiUri),
+              osaamisalaKoodit),
+              "valintakokeet", valintakoeIsNotFoundFromAllowedRelations(valintakoe.tyyppiKoodiUri.getOrElse("")))
+          })
+        })
       )
     )
   }
@@ -768,6 +800,7 @@ class HakukohdeServiceValidation(
       assertNotDefined[String](hakukohde.hakukohdeKoodiUri, "hakukohdeKoodiUri"),
       validateKielistetty(hakukohde.kielivalinta, hakukohde.nimi, "nimi")
     )
+
   private def validateValintaperusteenValintakokeidenLisatilaisuudet(
       tilaisuudet: Seq[ValintakokeenLisatilaisuudet],
       newTilaisuudet: Seq[ValintakokeenLisatilaisuudet],

@@ -23,6 +23,11 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
     koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
   }
 
+  override def afterEach() = {
+    koodistoService.invalidateCaches()
+    clearServiceMocks()
+  }
+
   "Creating KoodiUri object from string" should "work according to validity rules" in {
     KoodiUriUtils.koodiUriFromString("some_1111#12") should equal(KoodiUri("some_1111", 12))
     KoodiUriUtils.koodiUriFromString("some_1111") should equal(KoodiUri("some_1111", 1))
@@ -626,7 +631,7 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
   }
 
   "Finding lisättävät koulutukset by koulutustyyppi" should "filter out koulutukset that are invalid" in {
-    mockKoulutusByTutkintotyyppiResponse("koulutus",
+    mockKoulutusByTutkintotyyppiResponse("tutkintotyyppi_12345",
       Seq(("koulutus_371101", 12, None), ("koulutus_371102", 1, Some(dayInPast)))
     )
     koodistoService.getLisattavatKoulutukset("tutkintotyyppi_12345").right.get.map(element => (element.koodiUri, element.versio)) should equal(
@@ -635,12 +640,83 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
   }
 
   "Finding lisättävät koulutukset by koulutustyyppi" should "filter out koulutukset that are väliotsikko" in {
-    mockKoulutusByTutkintotyyppiResponse("koulutus",
+    mockKoulutusByTutkintotyyppiResponse("tutkintotyyppi_12345",
       Seq(("koulutus_371100", 10, None), // valiotsikko as ends with "00"
         ("koulutus_371101", 12, None))
     )
     koodistoService.getLisattavatKoulutukset("tutkintotyyppi_12345").right.get.map(element => (element.koodiUri, element.versio)) should equal(
       Seq(("koulutus_371101", 12)),
     )
+  }
+
+  "Fetching valintakoetyypit " should "return list of koodis" in {
+    mockKoodistoResponse(
+      "valintakokeentyyppi",
+      Seq(
+        ("valintakokeentyyppi_1", 1, None),
+        ("valintakokeentyyppi_2", 1, None),
+        ("valintakokeentyyppi_3", 1, None)
+      )
+    )
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, None, Seq.empty).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_2", "valintakokeentyyppi_3"))
+  }
+
+  "Fetching valintakoetyypit " should "without parameters should return only tyypit without relations to specific ylakoodisto" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, None, Seq.empty).right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "return koodi with relation to specific koulutus" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), Some("hakutapa_02"), Some("haunkohdejoukko_13"), Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_1", "valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "not return koodi with relation to specific koulutus when hakutapa does not match" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), Some("hakutapa_08"), Some("haunkohdejoukko_13"), Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "not return koodi with relation to specific koulutus when kohdejoukko does not match" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq("koulutus_11"), Some("hakutapa_02"), Some("haunkohdejoukko_19"), Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "return koodi with relation to specific hakutapa" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_01"), None, Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_2", "valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "return koodi with relation to specific haun kohdejoukko" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, None, Some("haunkohdejoukko_12"), Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_3", "valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "return koodi with relations to specific haun kohdejoukko and hakutapa" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_01"), Some("haunkohdejoukko_12"), Seq.empty)
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_2", "valintakokeentyyppi_3", "valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "return koodi with relation to specific osaamisala" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_04"), Some("haunkohdejoukko_14"), Seq("osaamisala_1791"))
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_4", "valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "not return koodi with relation to specific osaamisala when hakutapa does not match" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_08"), Some("haunkohdejoukko_14"), Seq("osaamisala_1791"))
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
+  }
+
+  "Fetching valintakoetyypit " should "not return koodi with relation to specific osaamisala when kohdejoukko does not match" in {
+    mockValintakoeKoodit()
+    koodistoService.getValintakokeenTyypit(Seq.empty, Some("hakutapa_04"), Some("haunkohdejoukko_24"), Seq("osaamisala_1791"))
+      .right.get.map(e => e.koodiUri) should equal(Seq("valintakokeentyyppi_always-in"))
   }
 }
