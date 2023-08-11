@@ -220,6 +220,19 @@ class KoulutusServiceValidation(
           ),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
+      case KkOpintojakso | KkOpintokokonaisuus | Erikoistumiskoulutus =>
+        and(
+          validateIfJulkaistu(
+            koulutus.tila,
+            validateIfFalse(
+              koulutus.julkinen,
+              assertFalse(koulutus.tarjoajat.isEmpty, "tarjoajat", missingTarjoajatForNonJulkinenKoulutus)
+            )
+          ),
+          validateSorakuvaus(koulutus),
+          assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       case _ =>
         and(
           validateSorakuvaus(koulutus),
@@ -612,9 +625,17 @@ class KoulutusServiceValidation(
             errorKey,
             errorKey match {
               case "metadata.opintojenLaajuusNumeroMin" =>
-                invalidKoulutusOpintojenLaajuusNumeroIntegrity(km.opintojenLaajuusNumeroMin, km.opintojenLaajuusNumeroMax, toteutukset)
+                invalidKoulutusOpintojenLaajuusNumeroIntegrity(
+                  km.opintojenLaajuusNumeroMin,
+                  km.opintojenLaajuusNumeroMax,
+                  toteutukset
+                )
               case "metadata.opintojenLaajuusNumeroMax" =>
-                invalidKoulutusOpintojenLaajuusNumeroIntegrity(km.opintojenLaajuusNumeroMin, km.opintojenLaajuusNumeroMax, toteutukset)
+                invalidKoulutusOpintojenLaajuusNumeroIntegrity(
+                  km.opintojenLaajuusNumeroMin,
+                  km.opintojenLaajuusNumeroMax,
+                  toteutukset
+                )
               case "metadata.opintojenLaajuusyksikkoKoodiUri" =>
                 invalidKoulutusOpintojenLaajuusyksikkoIntegrity(km.opintojenLaajuusyksikkoKoodiUri.get, toteutukset)
             }
