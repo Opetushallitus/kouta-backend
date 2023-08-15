@@ -532,7 +532,7 @@ object Validations {
     )
   val missingTarjoajatForNonJulkinenKoulutus: ErrorMessage =
     ErrorMessage(
-      msg = "Tämän tyyppiselle koulutukselle täytyy valita vähintään yksi järjestäjä, mikäli koulutus ei ole julkinen",
+      msg = "Tämän tyyppiselle koulutukselle täytyy valita vähintään yksi järjestäjä, ellei koulutus ole julkinen",
       id = "missingTarjoajatForNonJulkinenKoulutus"
     )
   def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
