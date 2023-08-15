@@ -41,8 +41,8 @@ class V119__update_korkeakoulutustyypit extends BaseJavaMigration with Logging {
           if (korkeakoulutusTyypit.size == 1)
             Seq(KorkeakoulutusTyyppi(korkeakoulutusTyypit.head.koulutustyyppi, Seq()))
           else korkeakoulutusTyypit
-        val korkeakoulutusTyypitJson = korkeakoulutusTyypit.map(tyyppi => (tyyppi.koulutustyyppi.toString(), tyyppi.tarjoajat.map(_.s).asJson))
-        val convertedMetadata = metadata.add("korkeakoulutusTyypit", Json.fromFields(korkeakoulutusTyypitJson))
+        val korkeakoulutusTyypitJson = korkeakoulutusTyypit.map(tyyppi => Json.fromFields(List((tyyppi.koulutustyyppi.toString(), tyyppi.tarjoajat.map(_.s).asJson))))
+        val convertedMetadata = metadata.add("korkeakoulutusTyypit", korkeakoulutusTyypitJson.asJson)
         Json.fromJsonObject(convertedMetadata).toString()
       }
       case Failure(exception) => throw exception
