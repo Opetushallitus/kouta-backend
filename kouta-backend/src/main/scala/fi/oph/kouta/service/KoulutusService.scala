@@ -22,6 +22,7 @@ import slick.dbio.DBIO
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
 case class ExternalModifyAuthorizationFailedException(message: String) extends RuntimeException(message)
@@ -135,12 +136,26 @@ class KoulutusService(
     else
       currentKoodiUri
 
-  private def getKorkeakoulutusTyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[Koulutustyyppi] = {
-    Try[Seq[Koulutustyyppi]] {
-      tarjoajat.flatMap(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(_)._2)
+  private def getKorkeakoulutusTyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[KorkeakoulutusTyyppi] = {
+    Try[Map[OrganisaatioOid, Set[Koulutustyyppi]]] {
+      tarjoajat map (tarjoaja =>
+        tarjoaja -> organisaatioService.getAllChildOidsAndKoulutustyypitFlat(tarjoaja)._2.intersect(Seq(Amk, Yo)).toSet
+      ) toMap
     } match {
-      case Success(allKoulutustyypit) => allKoulutustyypit.intersect(Seq(Amk, Yo))
-      case Failure(exception)         => throw exception
+      case Success(allKoulutustyypit) => {
+        val korkeakoulutusTyypit = allKoulutustyypit
+          .foldLeft(Map[Koulutustyyppi, Seq[OrganisaatioOid]]().withDefaultValue(Seq())) {
+            case (initialMap, (tarjoaja, koulutustyypit)) =>
+              koulutustyypit.foldLeft(initialMap)((subMap, koulutustyyppi) =>
+                subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ tarjoaja)
+              )
+          }
+          .map(entry => KorkeakoulutusTyyppi(entry._1, entry._2))
+          .toSeq
+        if (korkeakoulutusTyypit.size == 1) Seq(KorkeakoulutusTyyppi(korkeakoulutusTyypit.head.koulutustyyppi, Seq()))
+        else korkeakoulutusTyypit
+      }
+      case Failure(exception) => throw exception
     }
   }
 

@@ -148,13 +148,9 @@ package object koulutusMetadata {
       |              example: opinnontyyppi_1#1
       |            korkeakoulutusTyypit:
       |              type: array
-      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään. Jos tyyppejä on useita, listataan jokaiselle tyypille tarjoajat erikseen.
       |              items:
-      |                type: string
-      |                example: amk
-      |                enum:
-      |                  - amk
-      |                  - yo
+      |                $ref: '#/components/schemas/Korkeakoulutustyyppi'
       |""".stripMargin
 
   val KkOpintokokonaisuusKoulutusMetadataModel: String =
@@ -200,13 +196,9 @@ package object koulutusMetadata {
       |              example: opinnontyyppi_1#1
       |            korkeakoulutusTyypit:
       |              type: array
-      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään. Jos tyyppejä on useita, listataan jokaiselle tyypille tarjoajat erikseen.
       |              items:
-      |                type: string
-      |                example: amk
-      |                enum:
-      |                  - amk
-      |                  - yo
+      |                $ref: '#/components/schemas/Korkeakoulutustyyppi'
       |""".stripMargin
 
   val AmmTutkintoWithoutEperusteFieldDescription =
@@ -513,13 +505,9 @@ package object koulutusMetadata {
       |              example: opintojenlaajuusyksikko_2#1
       |            korkeakoulutusTyypit:
       |              type: array
-      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään
+      |              description: Lista korkeakoulutustyypeistä (amk, yo) minkä tyyppisenä ko. koulutus käytännössä järjestetään. Jos tyyppejä on useita, listataan jokaiselle tyypille tarjoajat erikseen.
       |              items:
-      |                type: string
-      |                example: amk
-      |                enum:
-      |                  - amk
-      |                  - yo
+      |                $ref: '#/components/schemas/Korkeakoulutustyyppi'
       |            opintojenLaajuusNumeroMin:
       |              type: integer
       |              description: Opintojen laajuuden vähimmäismäärä numeroarvona
@@ -630,7 +618,7 @@ trait KorkeakoulutusKoulutusMetadata extends KoulutusMetadata with LaajuusSingle
 }
 
 trait KorkeakoulutusRelatedKoulutusMetadata extends KoulutusMetadata with LaajuusMinMax {
-  val korkeakoulutusTyypit: Seq[Koulutustyyppi]
+  val korkeakoulutusTyypit: Seq[KorkeakoulutusTyyppi]
 }
 
 case class AmmatillinenKoulutusMetadata(
@@ -728,7 +716,7 @@ case class KkOpintojaksoKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None,
-    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+    korkeakoulutusTyypit: Seq[KorkeakoulutusTyyppi] = Seq()
 ) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class KkOpintokokonaisuusKoulutusMetadata(
@@ -743,7 +731,7 @@ case class KkOpintokokonaisuusKoulutusMetadata(
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None,
-    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+    korkeakoulutusTyypit: Seq[KorkeakoulutusTyyppi] = Seq()
 ) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class LukioKoulutusMetadata(
@@ -838,7 +826,7 @@ case class ErikoistumiskoulutusMetadata(
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-    korkeakoulutusTyypit: Seq[Koulutustyyppi] = Seq()
+    korkeakoulutusTyypit: Seq[KorkeakoulutusTyyppi] = Seq()
 ) extends KorkeakoulutusRelatedKoulutusMetadata
 
 case class TaiteenPerusopetusKoulutusMetadata(
