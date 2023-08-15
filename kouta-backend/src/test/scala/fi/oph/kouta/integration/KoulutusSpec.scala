@@ -385,7 +385,7 @@ class KoulutusSpec
   }
 
   it should "allow access for adding any tarjoaja of correct oppilaitos-tyyppi for avoin korkeakoulutus" in {
-    val metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(Yo)))
+    val metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq()))))
     var theKoulutus = KkOpintokokonaisuusKoulutus.copy(
       metadata = metadata,
       organisaatioOid = YoOid,
@@ -488,7 +488,7 @@ class KoulutusSpec
 
   it should "update muokkaaja of the koulutus when tarjoaja is added" in {
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(Yo))),
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid)
     )
@@ -522,7 +522,7 @@ class KoulutusSpec
   it should "update muokkaaja of the koulutus when tarjoaja is deleted" in {
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
       julkinen = true,
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(Yo))),
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid, HkiYoOid)
     )
@@ -750,7 +750,7 @@ class KoulutusSpec
   }
 
   it should "create, get and update kk-opintojakso -koulutus" in {
-    val metadata = KkOpintojaksoKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(Amk))
+    val metadata = KkOpintojaksoKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Amk, Seq())))
     val kkOpintojaksoKoulutus = TestData.KkOpintojaksoKoulutus.copy(tila = Tallennettu, metadata = Some(metadata))
     val oid                   = put(kkOpintojaksoKoulutus)
     val lastModified          = get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid))))
@@ -759,7 +759,7 @@ class KoulutusSpec
   }
 
   it should "create, get and update kk-opintokokonaisuus-koulutus" in {
-    val metadata = KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(Yo))
+    val metadata = KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))
     val kkOpintokokonaisuusKoulutus = TestData.KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(metadata))
     val oid                         = put(kkOpintokokonaisuusKoulutus)
     val lastModified                = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
@@ -882,7 +882,7 @@ class KoulutusSpec
           opintojenLaajuusNumeroMin = Some(10),
           opintojenLaajuusNumeroMax = Some(10),
           opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-          korkeakoulutusTyypit = Seq(Amk),
+          korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Amk, Seq())),
           isMuokkaajaOphVirkailija = Some(false)
         )
       )
@@ -898,7 +898,7 @@ class KoulutusSpec
     val oid = put(kkOpintokokonaisuus)
     val expectedKoulutus = kkOpintokokonaisuus.copy(
       oid = Some(KoulutusOid(oid)),
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(Yo)))
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq()))))
     )
     get(oid, expectedKoulutus)
   }
@@ -911,7 +911,7 @@ class KoulutusSpec
     val oid = put(erikoistumisKoulutus)
     val expectedKoulutus = erikoistumisKoulutus.copy(
       oid = Some(KoulutusOid(oid)),
-      metadata = Some(ErikoistumisKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(Yo, Amk)))
+      metadata = Some(ErikoistumisKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq(YoOid, HkiYoOid)), KorkeakoulutusTyyppi(Amk, Seq(AmkOid)))))
     )
     get(oid, expectedKoulutus)
   }
