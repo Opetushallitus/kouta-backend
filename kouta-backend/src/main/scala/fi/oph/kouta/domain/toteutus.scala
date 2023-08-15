@@ -259,8 +259,26 @@ case class Toteutus(
   }).getOrElse(false)
 }
 
-object Toteutus {
+case class MaybeToteutus(
+    oid: Option[ToteutusOid] = None,
+    externalId: Option[String] = None,
+    koulutusOid: Option[KoulutusOid] = None,
+    tila: Option[Julkaisutila] = None,
+    esikatselu: Boolean = false,
+    tarjoajat: List[OrganisaatioOid] = List(),
+    nimi: Kielistetty = Map(),
+    metadata: Option[ToteutusMetadata] = None,
+    sorakuvausId: Option[UUID] = None,
+    muokkaaja: Option[UserOid],
+    organisaatioOid: Option[OrganisaatioOid],
+    kielivalinta: Seq[Kieli] = Seq(),
+    teemakuva: Option[String] = None,
+    modified: Option[Modified] = None,
+    koulutusMetadata: Option[KoulutusMetadata] = None,
+    koulutuksetKoodiUri: Seq[String] = Seq()
+)
 
+object MaybeToteutus {
   def apply(t: MaybeToteutus): Toteutus = {
     new Toteutus(
       t.oid,
@@ -314,22 +332,3 @@ case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi:
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest
 
 case class OidAndNimi(oid: ToteutusOid, nimi: Kielistetty)
-
-case class MaybeToteutus(
-    oid: Option[ToteutusOid] = None,
-    externalId: Option[String] = None,
-    koulutusOid: Option[KoulutusOid] = None,
-    tila: Option[Julkaisutila] = None,
-    esikatselu: Boolean = false,
-    tarjoajat: List[OrganisaatioOid] = List(),
-    nimi: Kielistetty = Map(),
-    metadata: Option[ToteutusMetadata] = None,
-    sorakuvausId: Option[UUID] = None,
-    muokkaaja: Option[UserOid],
-    organisaatioOid: Option[OrganisaatioOid],
-    kielivalinta: Seq[Kieli] = Seq(),
-    teemakuva: Option[String] = None,
-    modified: Option[Modified] = None,
-    koulutusMetadata: Option[KoulutusMetadata] = None,
-    koulutuksetKoodiUri: Seq[String] = Seq()
-)
