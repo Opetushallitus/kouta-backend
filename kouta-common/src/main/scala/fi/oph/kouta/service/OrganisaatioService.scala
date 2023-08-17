@@ -14,7 +14,7 @@ trait OrganisaatioService {
 
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
-  def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
+  def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = true): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
     case _                   => children(getPartialHierarkia(oid, lakkautetut))
   }
@@ -151,10 +151,10 @@ trait OrganisaatioService {
     }
   }
 
-  private def getPartialHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] =
+  private def getPartialHierarkia(oid: OrganisaatioOid, lakkautetut: Boolean = true): Option[OidAndChildren] =
     find(_.oid == oid, getHierarkiaFromCache(oid, lakkautetut).toSet)
 
-  private def getHierarkiaFromCache(oid: OrganisaatioOid, lakkautetut: Boolean = false): Option[OidAndChildren] = {
+  private def getHierarkiaFromCache(oid: OrganisaatioOid, lakkautetut: Boolean = true): Option[OidAndChildren] = {
     val hierarkia: Option[OidAndChildren] = hierarkiaCache.get(oid, oid => findHierarkia(oid))
 
     if (lakkautetut) {
