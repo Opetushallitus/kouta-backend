@@ -46,6 +46,11 @@ object Validations {
     id = "invalidKoulutuskoodiuri"
   )
 
+  def valintakoeIsNotFoundFromAllowedRelations(valintakoetyypinKoodiUri: String) = ErrorMessage(
+    msg = s"Hakukohteella on valintakokeen tyyppi $valintakoetyypinKoodiUri, mitä ei saa hakukohteen haun (kohdejoukko tai hakutapa) tai koulutuksen (koulutuskoodi) tietojen mukaan valita",
+    id = "valintakoeIsNotFoundFromAllowedRelations"
+  )
+
   def invalidKoulutustyyppiKoodiForAmmatillinenPerustutkintoErityisopetuksena(
       koulutustyyppiKoodi: String
   ): ErrorMessage = ErrorMessage(

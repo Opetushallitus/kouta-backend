@@ -88,6 +88,40 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
+  private def withYlaRelaatiot(koodi: KoodistoElement): KoodistoElement = {
+    koodistoClient.getYlakoodit(koodi.koodiUri) match {
+      case Right(result) => koodi.withYlaRelaatiot(result)
+      case Left(_) => koodi
+    }
+  }
+
+  def getValintakokeenTyypit(koulutusKoodit: Seq[String],
+                             hakutapaKoodi: Option[String],
+                             haunkohdejoukkoKoodi: Option[String],
+                             osaamisalaKoodit: Seq[String]): Either[KoodistoError, Seq[KoodistoElement]] = {
+    koodistoClient.getKoodistoKoodit(ValintakoeTyyppiKoodisto.name) match {
+      case Right(result) => Right(result.view
+      .filter(isKoodiVoimassa)
+      .map(withYlaRelaatiot)
+      .filter(koodi => {
+        val noYlaKoodiWithKoulutuksetAndOsaamisAla = !koodi.hasYlakoodiWithinKoodisto(KoulutusKoodisto.name) &&
+          !koodi.hasYlakoodiWithinKoodisto(OsaamisalaKoodisto.name)
+        val koulutuksetValid = noYlaKoodiWithKoulutuksetAndOsaamisAla ||
+          (koulutusKoodit.nonEmpty && koulutusKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, KoulutusKoodisto.name)))
+        val hakutapaValid = !koodi.hasYlakoodiWithinKoodisto(HakutapaKoodisto.name) ||
+          hakutapaKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HakutapaKoodisto.name))
+        val kohdejoukkoValid = !koodi.hasYlakoodiWithinKoodisto(HaunKohdejoukkoKoodisto.name) ||
+          haunkohdejoukkoKoodi.exists(k => koodi.containsYlaKoodiWithKoodisto(k, HaunKohdejoukkoKoodisto.name))
+        val osaamisalatValid = noYlaKoodiWithKoulutuksetAndOsaamisAla ||
+          (osaamisalaKoodit.nonEmpty && osaamisalaKoodit.forall(k => koodi.containsYlaKoodiWithKoodisto(k, OsaamisalaKoodisto.name)))
+        val koulutusOrOsaamisalaValid = koulutuksetValid || osaamisalatValid
+        koulutusOrOsaamisalaValid && hakutapaValid && kohdejoukkoValid
+      })
+      .map(koodi => koodi.withYlaRelaatiot(Seq.empty)))
+      case Left(err) => Left(err)
+    }
+  }
+
   // Oletus: sallitutKoodiUrit eivät sisällä versiotietoa; tarkistetun koodiUrin versiota ei verrata sallituissa koodiUreissa
   // mahdollisesti annettuihin versioihin.
   def isLisattavaKoulutus(sallitutKoodiUrit: Seq[String], koodiUri: String): ExternalQueryResult = {

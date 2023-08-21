@@ -182,8 +182,8 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockKoulutustyyppiResponse(YoKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201001", 12, None),("koulutus_371101", 12, None)), YoKoulutusKoodit.koulutusTyypit.init)
     mockKoulutustyyppiResponse(AmkKoulutusKoodit.koulutusTyypit.last, Seq(("koulutus_201001", 12, None),("koulutus_371101", 12, None)), AmkKoulutusKoodit.koulutusTyypit.init)
     mockKoodistoResponse("koulutus", Seq(("koulutus_000002", 12, None), ("koulutus_301101", 1, None), ("koulutus_371101", 1, None), ("koulutus_775101", 1, None), ("koulutus_301104", 1, None)))
-    mockKoulutusKoodiUritForEPerusteResponse(11L, None, Seq("koulutus_371101"))
-    mockKoulutusKoodiUritForEPerusteResponse(123L, None, Seq("koulutus_371101"))
+    mockKoulutusKoodiUritForEPerusteResponse(11L, None, None, Seq("koulutus_371101"))
+    mockKoulutusKoodiUritForEPerusteResponse(123L, None, None, Seq("koulutus_371101"))
     mockKoodistoResponse("tutkintonimikekk", Seq(("tutkintonimikekk_110", 3, None)))
     mockKoodistoResponse("opintojenlaajuusyksikko", Seq(
       ("opintojenlaajuusyksikko_2", 1, None), ("opintojenlaajuusyksikko_6", 1, None), ("opintojenlaajuusyksikko_8", 1, None)))
@@ -245,16 +245,18 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
       Seq(("liitetyypitamm_1", 1, None), ("liitetyypitamm_2", 1, None), ("liitetyypitamm_10", 1, None))
     )
     mockKoodistoResponse("posti", Seq(("posti_04230", 2, None), ("posti_61100", 2, None)))
+    val valintakokeenTyypit = Seq(
+      ("valintakokeentyyppi_1", 1, None),
+      ("valintakokeentyyppi_11", 1, None),
+      ("valintakokeentyyppi_42", 2, None),
+      ("valintakokeentyyppi_57", 2, None),
+      ("valintakokeentyyppi_66", 6, None)
+    )
     mockKoodistoResponse(
       "valintakokeentyyppi",
-      Seq(
-        ("valintakokeentyyppi_1", 1, None),
-        ("valintakokeentyyppi_11", 1, None),
-        ("valintakokeentyyppi_42", 2, None),
-        ("valintakokeentyyppi_57", 2, None),
-        ("valintakokeentyyppi_66", 6, None)
-      )
+      valintakokeenTyypit
     )
+    mockValintakoeKooditWithEmptyRelations(valintakokeenTyypit)
     mockKoodistoResponse(
       "hakukohteetperusopetuksenjalkeinenyhteishaku",
       Seq(("hakukohteetperusopetuksenjalkeinenyhteishaku_101", 1, None))

@@ -253,7 +253,7 @@ case class KoulutusListItem(
     modified: Modified
 ) extends OidListItem
 
-case class KoulutusEnrichedData(muokkaajanNimi: Option[String] = None)
+case class KoulutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
 case class ExternalKoulutusRequest(authenticated: Authenticated, koulutus: Koulutus) extends ExternalRequest
 
