@@ -432,10 +432,11 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
       metadata= Some(haku.metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
     // delete one hakuaika, one left
-    val lastModified = get(oid, thisHaku)
+    var lastModified = get(oid, thisHaku)
     update(thisHaku.copy(hakuajat = List(hakuajat.head)), lastModified, expectUpdate = true, ophSession2)
     assert(readHakuMuokkaaja(oid) == OphUserOid2.toString)
     // delete hakuaika, no hakuaika left
+    lastModified = get(oid, thisHaku.copy(hakuajat = List(hakuajat.head), muokkaaja = OphUserOid2))
     update(thisHaku.copy(hakuajat = List()), lastModified, expectUpdate = true, ophSession)
     assert(readHakuMuokkaaja(oid) == OphUserOid.toString)
   }
