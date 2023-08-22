@@ -299,6 +299,10 @@ object Validations {
     msg = s"Postiosoite-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidPostiosoiteKoodiUri"
   )
+  def invalidSomeKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Sosiaalinenmedi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = "invalidSomeKoodiUri"
+  )
   def unknownAtaruId(ataruId: UUID): ErrorMessage = ErrorMessage(
     msg = s"Hakulomaketta ID:llä $ataruId ei löydy, tai se on poistettu tai lukittu",
     id = "invalidAtaruId"

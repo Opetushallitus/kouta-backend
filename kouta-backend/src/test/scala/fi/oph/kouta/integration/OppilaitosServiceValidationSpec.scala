@@ -8,7 +8,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
 import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OppilaitosServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.validation.ExternalQueryResults.itemFound
+import fi.oph.kouta.validation.ExternalQueryResults.{ itemFound, itemNotFound }
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
 import org.mockito.scalatest.MockitoSugar
@@ -59,6 +59,8 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     when(koodistoService.koodiUriExistsInKoodisto(TietoaOpiskelustaKoodisto, "organisaationkuvaustiedot_03#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_61100#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(SosiaalinenMedia, "eiloydy")).thenAnswer(itemNotFound)
+    when(koodistoService.koodiUriExistsInKoodisto(SosiaalinenMedia, "sosiaalinenmedia_1")).thenAnswer(itemFound)
   }
 
   def passesValidation(
@@ -174,6 +176,32 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  "Some validation " should "succeed when koodiuri exists and url is correct" in {
+    passesValidation(max.copy(metadata = Some(maxMetadata.copy(some = Map("sosiaalinenmedia_1" -> Some("http://testi.fi"))))))
+  }
+
+  it should "fail when some does not exist in koodisto" in {
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(some = Map("eiloydy" -> Some("http://testi.fi"))))),
+      "metadata.some.eiloydy",
+      ErrorMessage(
+        msg = "Sosiaalinenmedi-koodiuria eiloydy ei löydy, tai ei ole voimassa",
+        id = "invalidSomeKoodiUri"
+      )
+    )
+  }
+
+  it should "fail when some link is incorrect" in {
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(some = Map("sosiaalinenmedia_1" -> Some("test"))))),
+      "metadata.some.sosiaalinenmedia_1",
+      ErrorMessage(
+        msg = "'test' ei ole validi URL",
+        id = "invalidUrl"
+      )
+    )
+  }
+
   "Yhteystieto validation" should "succeed when postiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
     val oppilaitos = minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite))
     passesValidation(oppilaitos, Some(oppilaitos))
@@ -247,7 +275,6 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
       Some(max)
     )
   }
-
 
   val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
 }

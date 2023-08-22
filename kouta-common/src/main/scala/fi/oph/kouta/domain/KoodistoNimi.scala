@@ -33,7 +33,8 @@ object KoodistoNimi extends Enum[KoodistoNimi] {
     HaunKohdejoukkoKoodisto,
     HaunKohdejoukonTarkenneKoodisto,
     ValintatapaKoodisto,
-    TietoaOpiskelustaKoodisto
+    TietoaOpiskelustaKoodisto,
+    SosiaalinenMedia
   )
 
   override def name: String = "koodisto"
@@ -76,3 +77,5 @@ case object HaunKohdejoukkoKoodisto         extends KoodistoNimi { val name = "h
 case object HaunKohdejoukonTarkenneKoodisto extends KoodistoNimi { val name = "haunkohdejoukontarkenne"         }
 case object ValintatapaKoodisto             extends KoodistoNimi { val name = "valintatapajono"                 }
 case object TietoaOpiskelustaKoodisto       extends KoodistoNimi { val name = "organisaationkuvaustiedot"       }
+
+case object SosiaalinenMedia                extends KoodistoNimi { val name = "sosiaalinenmedia"                }
