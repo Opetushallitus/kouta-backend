@@ -69,6 +69,9 @@ kouta-backend.elasticsearch.auth-enabled={{kouta_backend_elasticsearch_auth_enab
 kouta-backend.elasticsearch.username={{kouta_backend_elasticsearch_username}}
 kouta-backend.elasticsearch.password={{kouta_backend_elasticsearch_password}}
 
+valintaperusteet-service=https://${{host.virkailija}}/valintaperusteet-service
+valintaperusteet-service.valintatapajono.oid=${{host.virkailija}}/valintaperusteet-service/resources/valintatapajono/$1
+
 valinta-tulos-service=https://{{host_virkailija}}/valinta-tulos-service
 valinta-tulos-service.haku.alimmatpisteet=https://{{host_virkailija}}/valinta-tulos-service/auth/sijoittelu/$1/sijoitteluajo/latest/alimmatPisteet
 

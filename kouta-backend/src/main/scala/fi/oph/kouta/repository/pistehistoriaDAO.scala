@@ -36,7 +36,7 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
       case koodi => "'"+koodi+"'"
     }
 
-    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid from pistehistoria
+    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, valintatapajono_tyyppi, hakukohde_oid, haku_oid from pistehistoria
           where tarjoaja_oid = #${"'"+tarjoaja.toString+"'"}
             and hakukohdekoodi in (#$hakukohdekoodiInParam)""".as[Pistetieto]
   }
@@ -44,17 +44,19 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
   def persistPistehistoria(pisteet: Seq[Pistetieto]) = {
     DBIO.sequence(
       pisteet.map((pistetieto: Pistetieto) => {
-        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid)
+        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, valintatapajono_tyyppi, hakukohde_oid, haku_oid)
               values (
                       ${pistetieto.tarjoaja},
                       ${pistetieto.hakukohdekoodi.split('#').head},
                       ${pistetieto.vuosi},
                       ${pistetieto.pisteet},
                       ${pistetieto.valintatapajonoOid},
+                      ${pistetieto.valintatapajonoTyyppi},
                       ${pistetieto.hakukohdeOid},
                       ${pistetieto.hakuOid}
                 ) on conflict (tarjoaja_oid, hakukohdekoodi, vuosi) do update set pisteet = excluded.pisteet,
                                                                                  valintatapajono_oid = excluded.valintatapajono_oid,
+                                                                                 valintatapajono_tyyppi = excluded.valintatapajono_tyyppi,
                                                                                  hakukohde_oid = excluded.hakukohde_oid,
                                                                                  haku_oid = excluded.haku_oid,
                                                                                  updated = now()"""
