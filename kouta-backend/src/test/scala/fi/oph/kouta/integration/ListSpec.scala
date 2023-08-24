@@ -3,6 +3,7 @@ import com.softwaremill.diffx.{ObjectMatcher, _}
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.{KkOpintojaksoKoulutuksenMetatieto, KkOpintojaksoToteutuksenMetatieto}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
@@ -21,8 +22,8 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 
-  var k1, k2, k3, k4, k5, k6, k7, k8, k9, k10       :KoulutusListItem = _
-  var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11  :ToteutusListItem = _
+  var k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22       :KoulutusListItem = _
+  var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23  :ToteutusListItem = _
   var h1, h2, h3, h4, h5                            :HakuListItem = _
   var v1, v2, v3, v4, v5                            :ValintaperusteListItem = _
   var s1, s2, s3, s4, s5                            :SorakuvausListItem = _
@@ -54,6 +55,19 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k9 = addToList(vapaaSivistystyoMuuKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k10 = addToList(koulutus.copy(tila = Poistettu))
+    k11 = addToList(TestData.VapaaSivistystyoOpistovuosiKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k12 = addToList(TestData.TelmaKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k13 = addToList(TestData.TuvaKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k14 = addToList(TestData.AmmMuuKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k15 = addToList(TestData.AikuistenPerusopetusKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k16 = addToList(TestData.TaiteenPerusopetusKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
+    k17 = addToList(TestData.KkOpintokokonaisuusKoulutus.copy(organisaatioOid = HkiYoOid, tila = Julkaistu, tarjoajat = List(HkiYoOid)))
+    k18 = addToList(TestData.KkOpintojaksoKoulutus.copy(organisaatioOid = HkiYoOid, tila = Julkaistu, tarjoajat = List(HkiYoOid)))
+    k19 = addToList(TestData.ErikoistumisKoulutus.copy(organisaatioOid = HkiYoOid, tila = Julkaistu, tarjoajat = List(HkiYoOid)))
+    k20 = addToList(TestData.YoOpettajaKoulutus.copy(organisaatioOid = HkiYoOid, tila = Julkaistu, tarjoajat = List(HkiYoOid)))
+    k21 = addToList(TestData.AmmOpettajaKoulutus.copy(organisaatioOid = AmkOid, tila = Julkaistu, tarjoajat = List(AmkOid)))
+    k22 = addToList(TestData.MuuKoulutus.copy(organisaatioOid = PohjoiskalotinKoulutussaatio, tila = Julkaistu, tarjoajat = List(PohjoiskalotinKoulutussaatio)))
+
     t1 = addToList(toteutus(k1.oid.toString, Julkaistu, ParentOid))
     t2 = addToList(toteutus(k1.oid.toString, Arkistoitu, ChildOid))
     t3 = addToList(toteutus(k1.oid.toString, Tallennettu, GrandChildOid))
@@ -65,6 +79,20 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     t9 = addToList(vapaaSivistystyoMuuToteutus.copy(koulutusOid = k9.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
     t10 = addToList(vapaaSivistystyoMuuToteutusAtaru.copy(koulutusOid = k9.oid, organisaatioOid = LonelyOid, tila = Julkaistu))
     t11 = addToList(toteutus(k1.oid.s, Poistettu, OphOid))
+    t12 = addToList(TestData.VapaaSivistystyoOpistovuosiToteutus.copy(koulutusOid = k11.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t13 = addToList(TestData.TelmaToteutus.copy(koulutusOid = k12.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t14 = addToList(TestData.TuvaToteutus.copy(koulutusOid = k13.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t15 = addToList(TestData.AmmMuuToteutus.copy(koulutusOid = k14.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t16 = addToList(TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = k15.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t17 = addToList(TestData.TaiteenPerusopetusToteutus.copy(koulutusOid = k16.oid, organisaatioOid = AmmOid, tila = Julkaistu))
+    t18 = addToList(TestData.JulkaistuKkOpintokokonaisuusToteutus.copy(koulutusOid = k17.oid, organisaatioOid = HkiYoOid, tila = Julkaistu))
+    t19 = addToList(TestData.JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = k18.oid, organisaatioOid = HkiYoOid, tila = Julkaistu, metadata =
+      Some(KkOpintojaksoToteutuksenMetatieto.copy(isHakukohteetKaytossa = Some(true)))))
+    t20 = addToList(TestData.JulkaistuErikoistumisKoulutusToteutus.copy(koulutusOid = k19.oid, organisaatioOid = HkiYoOid, tila = Julkaistu))
+    t21 = addToList(TestData.JulkaistuYoOpettajaToteutus.copy(koulutusOid = k20.oid, organisaatioOid = HkiYoOid, tila = Julkaistu))
+    t22 = addToList(TestData.JulkaistuAmmOpettajaToteutus.copy(koulutusOid = k21.oid, organisaatioOid = AmkOid, tila = Julkaistu))
+    t23 = addToList(TestData.JulkaistuMuuToteutus.copy(koulutusOid = k22.oid, organisaatioOid = PohjoiskalotinKoulutussaatio, tila = Julkaistu))
+
     h1 = addToList(haku(Julkaistu, ParentOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
@@ -156,7 +184,12 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
   it should "list only those toteutukset that can be linked to hakukohde" in {
     list(ToteutusPath, Map("organisaatioOid" -> LonelyOid.s, "vainHakukohteeseenLiitettavat" -> "true"), List(t4, t7, t8, t10, ophT1))
+    list(ToteutusPath, Map("organisaatioOid" -> AmmOid.s, "vainHakukohteeseenLiitettavat" -> "true"), List(t1, t2, t3, t4, t7, t8, t10, t12, t13, t14, ophT1, ophT2))
+    list(ToteutusPath, Map("organisaatioOid" -> HkiYoOid.s, "vainHakukohteeseenLiitettavat" -> "true"), List(t19, t21))
+    list(ToteutusPath, Map("organisaatioOid" -> AmkOid.s, "vainHakukohteeseenLiitettavat" -> "true"), List(t22))
+    list(ToteutusPath, Map("organisaatioOid" -> PohjoiskalotinKoulutussaatio.s, "vainHakukohteeseenLiitettavat" -> "true"), List())
   }
+
   it should "return forbidden if oid is unknown" in {
     list(ToteutusPath, Map("organisaatioOid" -> UnknownOid.s), 403)
   }
