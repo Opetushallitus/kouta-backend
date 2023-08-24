@@ -228,6 +228,7 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     mockKoulutusByTutkintotyyppiResponse(
       "tutkintotyyppi_16",
       Seq(("koulutus_655101", 2, None), ("koulutus_755101", 2, None), ("koulutus_855101", 2, None)))
+    mockKoodistoResponse("taiteenperusopetustaiteenala", Seq(("taiteenperusopetustaiteenala_kuvataide", 1, None)))
   }
 
   def addDefaultKoodistoMockResponsesForHakukohde(): Unit = {
