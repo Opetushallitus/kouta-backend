@@ -26,9 +26,9 @@ case class Pistetieto(
     pisteet: Double,
     vuosi: String,
     valintatapajonoOid: String,
-    valintatapajonoTyyppi: String,
     hakukohdeOid: HakukohdeOid,
-    hakuOid: HakuOid
+    hakuOid: HakuOid,
+    valintatapajonoTyyppi: String
 )
 
 class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient, valintaperusteetServiceClient: ValintaperusteetServiceClient) extends Logging {
@@ -103,9 +103,9 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
               pt.alinHyvaksyttyPistemaara,
               vuosi = alkamisvuosi,
               valintatapajonoOid = pt.valintatapajonoOid,
-              valintatapajonoTyyppi = valintatapajono.tyyppi,
               hakuOid = hakuOid,
-              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid)
+              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
+              valintatapajonoTyyppi = valintatapajono.tyyppi,
             )
           }
         case None =>
@@ -151,9 +151,9 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
             pt.alinHyvaksyttyPistemaara,
             vuosi = haku.hakukausiVuosi.get,
             valintatapajonoOid = pt.valintatapajonoOid,
-            valintatapajonoTyyppi = valintatapajono.tyyppi,
             hakuOid = hakuOid,
-            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid)
+            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
+            valintatapajonoTyyppi = valintatapajono.tyyppi,
           )
         })
       })
