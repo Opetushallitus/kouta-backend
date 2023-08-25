@@ -36,7 +36,7 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
       case koodi => "'"+koodi+"'"
     }
 
-    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, valintatapajono_tyyppi, hakukohde_oid, haku_oid from pistehistoria
+    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi from pistehistoria
           where tarjoaja_oid = #${"'"+tarjoaja.toString+"'"}
             and hakukohdekoodi in (#$hakukohdekoodiInParam)""".as[Pistetieto]
   }
@@ -44,7 +44,7 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
   def persistPistehistoria(pisteet: Seq[Pistetieto]) = {
     DBIO.sequence(
       pisteet.map((pistetieto: Pistetieto) => {
-        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, valintatapajono_tyyppi, hakukohde_oid, haku_oid)
+        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi)
               values (
                       ${pistetieto.tarjoaja},
                       ${pistetieto.hakukohdekoodi.split('#').head},
