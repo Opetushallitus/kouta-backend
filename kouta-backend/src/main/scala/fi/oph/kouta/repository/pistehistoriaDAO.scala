@@ -51,14 +51,14 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
                       ${pistetieto.vuosi},
                       ${pistetieto.pisteet},
                       ${pistetieto.valintatapajonoOid},
-                      ${pistetieto.valintatapajonoTyyppi},
                       ${pistetieto.hakukohdeOid},
-                      ${pistetieto.hakuOid}
+                      ${pistetieto.hakuOid},
+                      ${pistetieto.valintatapajonoTyyppi}
                 ) on conflict (tarjoaja_oid, hakukohdekoodi, vuosi) do update set pisteet = excluded.pisteet,
                                                                                  valintatapajono_oid = excluded.valintatapajono_oid,
-                                                                                 valintatapajono_tyyppi = excluded.valintatapajono_tyyppi,
                                                                                  hakukohde_oid = excluded.hakukohde_oid,
                                                                                  haku_oid = excluded.haku_oid,
+                                                                                 valintatapajono_tyyppi = excluded.valintatapajono_tyyppi,
                                                                                  updated = now()"""
       }))
   }
