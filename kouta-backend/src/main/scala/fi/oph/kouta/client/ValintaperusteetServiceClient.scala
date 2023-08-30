@@ -76,7 +76,7 @@ object ValintaperusteetServiceClient extends ValintaperusteetServiceClient with 
             r.bodyAsText
               .runLog
               .map(_.mkString)
-              .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch valintajono from valintaperusteet-service for hakukohde $valintatapajonoOid, status ${r.status.code}")))
+              .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch valintatapajono from valintaperusteet-service for valintatapajono-oid $valintatapajonoOid, status ${r.status.code}")))
         }
       }).unsafePerformSyncAttemptFor(60 * 1000).fold(throw _, x => x)
   }
