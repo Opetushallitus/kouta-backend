@@ -185,7 +185,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
       max.copy(metadata = Some(maxMetadata.copy(some = Map("eiloydy" -> Some("http://testi.fi"))))),
       "metadata.some.eiloydy",
       ErrorMessage(
-        msg = "Sosiaalinenmedi-koodiuria eiloydy ei löydy, tai ei ole voimassa",
+        msg = "Sosiaalinenmedia-koodiuria eiloydy ei löydy, tai ei ole voimassa",
         id = "invalidSomeKoodiUri"
       )
     )

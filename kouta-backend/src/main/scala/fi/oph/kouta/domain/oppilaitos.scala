@@ -70,7 +70,7 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/NimettyLinkki'
       |        some:
       |         type: object
-      |         description: Opintopolussa näytettävien sosiaalisenmedian kanavien osoitteita. Koodiurit toimivat avaimena.
+      |         description: Opintopolussa näytettävien sosiaalisen median kanavien osoitteita. Koodiurit toimivat avaimena.
       |        tietoaOpiskelusta:
       |          type: array
       |          description: Oppilaitokseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa

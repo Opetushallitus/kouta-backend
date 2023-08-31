@@ -300,7 +300,7 @@ object Validations {
     id = "invalidPostiosoiteKoodiUri"
   )
   def invalidSomeKoodiUri(koodiUri: String): ErrorMessage = ErrorMessage(
-    msg = s"Sosiaalinenmedi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    msg = s"Sosiaalinenmedia-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidSomeKoodiUri"
   )
   def unknownAtaruId(ataruId: UUID): ErrorMessage = ErrorMessage(
