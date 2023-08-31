@@ -755,6 +755,16 @@ class HakukohdeServiceValidation(
                   assertNimiNotHakukohdeKoodiuri(hk),
                   assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
+              case m: KkOpintojaksoToteutusMetadata =>
+                assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
+              case m: KkOpintokokonaisuusToteutusMetadata =>
+                assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
+              case m: ErikoistumiskoulutusToteutusMetadata =>
+                assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
+              case m: MuuToteutusMetadata =>
+                assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
+              case m: TaiteenPerusopetusToteutusMetadata =>
+                assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
               case m: LukioToteutusMetadata =>
                 and(
                   assertNimiNotHakukohdeKoodiuri(hk),

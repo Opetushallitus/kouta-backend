@@ -1324,12 +1324,14 @@ object TestData {
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
-  val JulkaistuKkOpintokokonaisuusToteutus: Toteutus =
+  val JulkaistuKkOpintokokonaisuusToteutus: Toteutus = {
     JulkaistuAmmToteutus.copy(
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto),
       tarjoajat = List(YoOid, HkiYoOid),
       koulutuksetKoodiUri = Seq()
     )
+  }
+  val JulkaistuErikoistumisKoulutusToteutus: Toteutus = JulkaistuAmmToteutus.copy(metadata = Some(ErikoistumiskoulutusToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
   val JulkaistuAmkToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(YoToteutuksenMetatieto.copy(tyyppi = Amk)), tarjoajat = List(AmkOid))
 
