@@ -136,24 +136,24 @@ class KoulutusService(
     else
       currentKoodiUri
 
-  private def getKorkeakoulutusTyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[KorkeakoulutusTyyppi] = {
+  private def getKorkeakoulutustyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[Korkeakoulutustyyppi] = {
     Try[Map[OrganisaatioOid, Set[Koulutustyyppi]]] {
       tarjoajat map (tarjoaja =>
         tarjoaja -> organisaatioService.getAllChildOidsAndKoulutustyypitFlat(tarjoaja)._2.intersect(Seq(Amk, Yo)).toSet
       ) toMap
     } match {
       case Success(allKoulutustyypit) => {
-        val korkeakoulutusTyypit = allKoulutustyypit
+        val korkeakoulutustyypit = allKoulutustyypit
           .foldLeft(Map[Koulutustyyppi, Seq[OrganisaatioOid]]().withDefaultValue(Seq())) {
             case (initialMap, (tarjoaja, koulutustyypit)) =>
               koulutustyypit.foldLeft(initialMap)((subMap, koulutustyyppi) =>
                 subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ tarjoaja)
               )
           }
-          .map(entry => KorkeakoulutusTyyppi(entry._1, entry._2))
+          .map(entry => Korkeakoulutustyyppi(entry._1, entry._2))
           .toSeq
-        if (korkeakoulutusTyypit.size == 1) Seq(KorkeakoulutusTyyppi(korkeakoulutusTyypit.head.koulutustyyppi, Seq()))
-        else korkeakoulutusTyypit
+        if (korkeakoulutustyypit.size == 1) Seq(Korkeakoulutustyyppi(korkeakoulutustyypit.head.koulutustyyppi, Seq()))
+        else korkeakoulutustyypit
       }
       case Failure(exception) => throw exception
     }
@@ -291,7 +291,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
@@ -303,7 +303,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
@@ -315,7 +315,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
@@ -539,13 +539,30 @@ class KoulutusService(
       KoulutusDAO.listAllowedByOrganisaatiotAndKoulutustyyppi(oids, koulutustyyppi, tilaFilter)
     }
 
-  def getTarjoajanJulkaistutKoulutukset(
+  def getTarjoajanJulkaistutKoulutuksetJaToteutukset(
       organisaatioOid: OrganisaatioOid
-  )(implicit authenticated: Authenticated): Seq[Koulutus] =
+  )(implicit authenticated: Authenticated): Map[String, KoulutusWithToteutukset] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getJulkaistutByTarjoajaOids(
         organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
-      )
+      ).groupBy(_.oid).map(k => {
+        val (koulutusOid, koulutukset) = k
+        val toteutukset = koulutukset.flatMap(k => {
+          val maybeToteutus = k.toteutus
+          maybeToteutus.oid match {
+            case Some(_) =>
+              val toteutus = MaybeToteutus(maybeToteutus)
+
+              Some(toteutus
+                .withEnrichedData(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(toteutus)))
+                .withoutRelatedData())
+            case None => None
+          }
+        })
+
+        val koulutus = koulutukset.head
+        koulutusOid.toString -> KoulutusWithToteutukset(koulutus, toteutukset = toteutukset)
+      })
     }
 
   def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[Toteutus] =
@@ -719,4 +736,10 @@ class KoulutusService(
 
     KoulutustyyppiToOppilaitostyyppiResult(koulutustyyppi2oppilaitostyyppi)
   }
+
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated
+  ): Seq[KoulutusOid] =
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.getOidsByTarjoajat(tarjoajaOids, tilaFilter)
+    }
 }

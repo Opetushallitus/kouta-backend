@@ -1020,7 +1020,7 @@ package object domain {
     )
   }
 
-  case class KorkeakoulutusTyyppi(koulutustyyppi: Koulutustyyppi, tarjoajat: Seq[OrganisaatioOid])
+  case class Korkeakoulutustyyppi(koulutustyyppi: Koulutustyyppi, tarjoajat: Seq[OrganisaatioOid])
 
   trait HasTeemakuva[T] {
     val teemakuva: Option[String]

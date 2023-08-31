@@ -208,11 +208,6 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""#$selectToteutusSql
           where t.oid = $oid #${tilaConditions(tilaFilter, "t.tila")}"""
 
-  def selectToteutukset(oids: Seq[ToteutusOid]) =
-    sql"""#$selectToteutusSql
-          where oid in (#${createOidInParams(oids)})
-       """
-
   def selectToteutuksetByKoulutusOid(oid: KoulutusOid, tilaFilter: TilaFilter) =
     sql"""#$selectToteutusSql
           where t.koulutus_oid = $oid
