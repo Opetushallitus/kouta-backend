@@ -90,6 +90,35 @@ trait KoulutusExtractors extends ExtractorBase {
     ePerusteId = r.nextLongOption(),
     modified = Some(timeStampToModified(r.nextTimestamp()))))
 
+  implicit val getKoulutusWithMaybeToteutusResult: GetResult[KoulutusWithMaybeToteutus] = GetResult(r => KoulutusWithMaybeToteutus(
+    oid = KoulutusOid(r.nextString()),
+    johtaaTutkintoon = r.nextBoolean(),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+    nimi = extractKielistetty(r.nextStringOption()),
+    metadata = r.nextStringOption().map(read[KoulutusMetadata]),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    kielivalinta = extractKielivalinta(r.nextStringOption()),
+    teemakuva = r.nextStringOption(),
+    toteutus = MaybeToteutus(
+      oid = r.nextStringOption().map(oid => ToteutusOid(oid)),
+      externalId = r.nextStringOption(),
+      koulutusOid = r.nextStringOption().map(oid => KoulutusOid(oid)),
+      tila = r.nextStringOption().map(tila => Julkaisutila.withName(tila)),
+      tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+      nimi = extractKielistetty(r.nextStringOption()),
+      metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+      muokkaaja = r.nextStringOption().map(oid => UserOid(oid)),
+      esikatselu = r.nextBoolean(),
+      organisaatioOid = r.nextStringOption().map(oid => OrganisaatioOid(oid)),
+      kielivalinta = extractKielivalinta(r.nextStringOption()),
+      teemakuva = r.nextStringOption(),
+      sorakuvausId = r.nextStringOption().map(UUID.fromString)
+    )
+  ))
+
   implicit val getKoulutusListItem: GetResult[KoulutusListItem] = GetResult(r => KoulutusListItem(
     oid = KoulutusOid(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
@@ -562,7 +591,8 @@ trait PistehistoriaExtractors extends ExtractorBase {
     vuosi = r.nextString(),
     valintatapajonoOid = r.nextString,
     hakukohdeOid = HakukohdeOid(r.nextString()),
-    hakuOid = HakuOid(r.nextString()))
+    hakuOid = HakuOid(r.nextString()),
+    valintatapajonoTyyppi = r.nextString())
   )
 }
 

@@ -1,10 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{
-  JononAlimmatPisteet,
-  LegacyTarjontaClient,
-  ValintaTulosServiceClient
-}
+import fi.oph.kouta.client.{JononAlimmatPisteet, LegacyTarjontaClient, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
 import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, PistehistoriaDAO}
@@ -22,7 +18,7 @@ case class LegacyHakukohde(
     hakukausiVuosi: Option[String]
 )
 
-object PistehistoriaService extends PistehistoriaService
+object PistehistoriaService extends PistehistoriaService(ValintaTulosServiceClient, ValintaperusteetServiceClient)
 
 case class Pistetieto(
     tarjoaja: OrganisaatioOid,
@@ -31,10 +27,11 @@ case class Pistetieto(
     vuosi: String,
     valintatapajonoOid: String,
     hakukohdeOid: HakukohdeOid,
-    hakuOid: HakuOid
+    hakuOid: HakuOid,
+    valintatapajonoTyyppi: String
 )
 
-class PistehistoriaService extends Logging {
+class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient, valintaperusteetServiceClient: ValintaperusteetServiceClient) extends Logging {
   def getPistehistoria(tarjoaja: OrganisaatioOid, hakukohdeKoodi: String): Seq[Pistetieto] = {
     PistehistoriaDAO.getPistehistoria(tarjoaja, hakukohdeKoodi)
   }
@@ -80,7 +77,7 @@ class PistehistoriaService extends Logging {
   private def syncPistehistoriaForKoutaHaku(hakuOid: HakuOid): Int = {
     logger.info(s"Käsitellään kouta-haku ${hakuOid}")
 
-    val rawPistetiedot: Seq[JononAlimmatPisteet] = ValintaTulosServiceClient.fetchPisteet(hakuOid)
+    val rawPistetiedot: Seq[JononAlimmatPisteet] = valintaTulosServiceClient.fetchPisteet(hakuOid)
     logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
 
     val haku = HakuDAO
@@ -95,6 +92,7 @@ class PistehistoriaService extends Logging {
       val result: Seq[Pistetieto] = HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()) match {
         case Some((hakukohde, _)) =>
           logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohteen ${hakukohde.oid} pistetieto $pt")
+          val valintatapajono: ValintatapajonoDTO = valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)
           for {
             hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
             tarjoaja               <- hakukohde.jarjestyspaikkaOid
@@ -106,7 +104,8 @@ class PistehistoriaService extends Logging {
               vuosi = alkamisvuosi,
               valintatapajonoOid = pt.valintatapajonoOid,
               hakuOid = hakuOid,
-              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid)
+              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
+              valintatapajonoTyyppi = valintatapajono.tyyppi,
             )
           }
         case None =>
@@ -142,6 +141,7 @@ class PistehistoriaService extends Logging {
     val result = pistetiedot
       .flatMap(pt => {
         val hakukohde = LegacyTarjontaClient.getHakukohde(pt.hakukohdeOid)
+        val valintatapajono: ValintatapajonoDTO = valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)
         progress += 1
         if (progress % 100 == 0) logger.info(s"handled $progress/${pistetiedot.size} pistetietos")
         hakukohde.tarjoajaOids.map(tarjoaja => {
@@ -152,7 +152,8 @@ class PistehistoriaService extends Logging {
             vuosi = haku.hakukausiVuosi.get,
             valintatapajonoOid = pt.valintatapajonoOid,
             hakuOid = hakuOid,
-            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid)
+            hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
+            valintatapajonoTyyppi = valintatapajono.tyyppi,
           )
         })
       })
@@ -163,6 +164,7 @@ class PistehistoriaService extends Logging {
     changed
   }
 
+  //2023: 1.2.246.562.29.00000000000000021303
   //2022: 1.2.246.562.29.00000000000000005368
   //2021: 1.2.246.562.29.15658556293
   //2020: 1.2.246.562.29.54537554997
@@ -174,7 +176,8 @@ class PistehistoriaService extends Logging {
       HakuOid("1.2.246.562.29.676633696010"),
       HakuOid("1.2.246.562.29.54537554997"),
       HakuOid("1.2.246.562.29.15658556293"),
-      HakuOid("1.2.246.562.29.00000000000000005368")
+      HakuOid("1.2.246.562.29.00000000000000005368"),
+      HakuOid("1.2.246.562.29.00000000000000021303")
     )
     logger.info(s"Synkataan alimmat pisteet oletushauille: $hakuOids")
     hakuOids.map(oid => {

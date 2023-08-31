@@ -112,10 +112,32 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
 
   "List koulutukset by tarjoaja" should "list all koulutukset distinct" in {
-    val oid = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)), ophSession)
+    // tyhjennetään tietokanta tai muuten aiemmin lisätyt koulutukset vaikuttavat testitulokseen
+    db.clean()
+    db.migrate()
+    addTestSessions()
+    addDefaultSession()
+
+    val koulutusOid1 = put(koulutus.copy(tarjoajat = List(ChildOid, GrandChildOid)), ophSession)
+    val toteutusOid = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid1), tarjoajat = List(ChildOid, GrandChildOid)))
+
+    val koulutusOid2 = put(koulutus.copy(tarjoajat = List(ChildOid)), ophSession)
+    val toteutusOid2 = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid2), tarjoajat = List(ChildOid)))
+    val toteutusOid3 = put(toteutus.copy(koulutusOid = KoulutusOid(koulutusOid2), tarjoajat = List(ChildOid)))
+
     get(s"$IndexerPath/tarjoaja/$ChildOid/koulutukset", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[Koulutus]](body).count(_.oid.get.s == oid) should equal (1)
+      val resBody = read[Map[String, KoulutusWithToteutukset]](body)
+      val koulutus1 = resBody(koulutusOid1)
+      val koulutus2 = resBody(koulutusOid2)
+
+      resBody.keys.toList.length should equal (2)
+
+      koulutus1.toteutukset.length should equal (1)
+      koulutus1.toteutukset.head.oid.get should equal (ToteutusOid(toteutusOid))
+
+      koulutus2.toteutukset.length should equal(2)
+      koulutus2.toteutukset.map(t => t.oid.get) should equal (List(ToteutusOid(toteutusOid2), ToteutusOid(toteutusOid3)))
     }
   }
 

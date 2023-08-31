@@ -29,7 +29,8 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
       tilaFilter: TilaFilter
   ): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem]
-  def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus]
+  def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusWithMaybeToteutus]
+
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
 }
@@ -148,20 +149,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   override def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem] =
     listWithTarjoajat(selectByHakuOid(hakuOid))
 
-  override def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[Koulutus] = {
+  override def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusWithMaybeToteutus] = {
     KoutaDatabase
-      .runBlockingTransactionally(for {
-        koulutukset <- findJulkaistutKoulutuksetByTarjoajat(organisaatioOids).as[Koulutus]
-        tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid.get).toList).as[Tarjoaja]
-      } yield (koulutukset, tarjoajat))
-      .map {
-        case (koulutukset, tarjoajat) => {
-          koulutukset.map(t =>
-            t.copy(tarjoajat = tarjoajat.filter(_.oid.toString == t.oid.get.toString).map(_.tarjoajaOid).toList)
-          )
-        }
-      }
-      .get
+      .runBlocking(
+        findJulkaistutKoulutuksetJaToteutuksetByTarjoajat(organisaatioOids).as[KoulutusWithMaybeToteutus])
   }
 
   override def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String] = {
@@ -170,6 +161,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   override def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid] = {
     KoutaDatabase.runBlocking(selectKoulutuksenTarjoajat(oid).as[Tarjoaja]).map(_.tarjoajaOid)
+  }
+
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[KoulutusOid] = {
+    KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter))
   }
 }
 
@@ -257,28 +252,68 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           """
   }
 
-  def findJulkaistutKoulutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
-    sql"""select distinct k.oid,
-                          k.external_id,
-                          k.johtaa_tutkintoon,
-                          k.tyyppi,
-                          k.koulutukset_koodi_uri,
-                          k.tila,
-                          k.nimi,
-                          k.sorakuvaus_id,
-                          k.metadata,
-                          k.julkinen,
-                          k.muokkaaja,
-                          k.organisaatio_oid,
-                          k.esikatselu,
-                          k.kielivalinta,
-                          k.teemakuva,
-                          k.eperuste_id,
-                          k.last_modified
-          from koulutukset k
-          inner join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
-          where k.tila = 'julkaistu'::julkaisutila
-          and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})"""
+  def findJulkaistutKoulutuksetJaToteutuksetByTarjoajat(organisaatioOids: Seq[OrganisaatioOid]) = {
+    sql"""select koulutus.koulutus_oid,
+                 koulutus.johtaa_tutkintoon,
+                 koulutus.tyyppi,
+                 koulutus.koulutukset_koodi_uri,
+                 koulutus.tila,
+                 koulutus.koulutuksen_tarjoajat,
+                 koulutus.nimi,
+                 koulutus.metadata,
+                 koulutus.organisaatio_oid,
+                 koulutus.kielivalinta,
+                 koulutus.teemakuva,
+                 toteutus.oid,
+                 toteutus.external_id,
+                 toteutus.koulutus_oid,
+                 toteutus.tila,
+                 toteutus.toteutuksen_tarjoajat,
+                 toteutus.nimi,
+                 toteutus.metadata,
+                 toteutus.muokkaaja,
+                 toteutus.esikatselu,
+                 toteutus.organisaatio_oid,
+                 toteutus.kielivalinta,
+                 toteutus.teemakuva,
+                 toteutus.sorakuvaus_id
+    from (
+      select k.oid as koulutus_oid,
+             k.johtaa_tutkintoon,
+             k.tyyppi,
+             k.koulutukset_koodi_uri,
+             k.tila,
+             array_agg(distinct kt.tarjoaja_oid) as koulutuksen_tarjoajat,
+             k.nimi,
+             k.metadata,
+             k.organisaatio_oid,
+             k.kielivalinta,
+             k.teemakuva
+      from koulutukset k, koulutusten_tarjoajat kt
+      where oid = kt.koulutus_oid
+      #${tilaConditions(TilaFilter.onlyJulkaistut(), "k.tila")}
+      and kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
+      group by k.oid) as koulutus
+    left join (
+      select t.oid,
+             t.external_id,
+             t.koulutus_oid as koulutus_oid,
+             t.tila,
+             array_agg(distinct tt.tarjoaja_oid) as toteutuksen_tarjoajat,
+             t.nimi,
+             t.metadata,
+             t.muokkaaja,
+             t.esikatselu,
+             t.organisaatio_oid,
+             t.kielivalinta,
+             t.teemakuva,
+             t.sorakuvaus_id
+      from toteutukset t, toteutusten_tarjoajat tt
+      where t.oid = tt.toteutus_oid
+      #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "t.tila")}
+      and tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)})
+      group by t.oid) as toteutus
+    using (koulutus_oid);"""
   }
 
   def selectKoulutuksenTarjoajat(oid: KoulutusOid) = {
@@ -413,5 +448,16 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           where sorakuvaus_id = ${sorakuvausId.toString}::uuid
           #${tilaConditions(tilaFilter)}
       """.as[String]
+  }
+
+  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid],
+                                tilaFilter: TilaFilter
+                               ): DBIO[Vector[KoulutusOid]] = {
+    sql"""select distinct k.oid
+          from koulutukset k, koulutusten_tarjoajat kt
+          where k.oid = kt.koulutus_oid
+          and (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+             or kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
+              #${tilaConditions(tilaFilter, "k.tila")}""".as[KoulutusOid]
   }
 }
