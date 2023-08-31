@@ -1,7 +1,6 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.KkOpintokokonaisuusKoulutuksenMetatieto.korkeakoulutusTyypit
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
@@ -14,10 +13,9 @@ import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant, renderHttpDate}
+import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization.read
-import org.json4s.jackson.JsonMethods.parse
 
 import java.time.{Duration, Instant, LocalDateTime, ZoneId}
 import java.util.UUID
@@ -385,7 +383,7 @@ class KoulutusSpec
   }
 
   it should "allow access for adding any tarjoaja of correct oppilaitos-tyyppi for avoin korkeakoulutus" in {
-    val metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq()))))
+    val metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq()))))
     var theKoulutus = KkOpintokokonaisuusKoulutus.copy(
       metadata = metadata,
       organisaatioOid = YoOid,
@@ -488,7 +486,7 @@ class KoulutusSpec
 
   it should "update muokkaaja of the koulutus when tarjoaja is added" in {
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))),
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq())))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid)
     )
@@ -522,7 +520,7 @@ class KoulutusSpec
   it should "update muokkaaja of the koulutus when tarjoaja is deleted" in {
     var muokattavaKoulutus = KkOpintokokonaisuusKoulutus.copy(
       julkinen = true,
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))),
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(isAvoinKorkeakoulutus = Some(true), korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq())))),
       organisaatioOid = YoOid,
       tarjoajat = List(YoOid, HkiYoOid)
     )
@@ -750,7 +748,7 @@ class KoulutusSpec
   }
 
   it should "create, get and update kk-opintojakso -koulutus" in {
-    val metadata = KkOpintojaksoKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Amk, Seq())))
+    val metadata = KkOpintojaksoKoulutuksenMetatieto.copy(korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Amk, Seq())))
     val kkOpintojaksoKoulutus = TestData.KkOpintojaksoKoulutus.copy(tila = Tallennettu, metadata = Some(metadata))
     val oid                   = put(kkOpintojaksoKoulutus)
     val lastModified          = get(oid, kkOpintojaksoKoulutus.copy(oid = Some(KoulutusOid(oid))))
@@ -759,7 +757,7 @@ class KoulutusSpec
   }
 
   it should "create, get and update kk-opintokokonaisuus-koulutus" in {
-    val metadata = KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq())))
+    val metadata = KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq())))
     val kkOpintokokonaisuusKoulutus = TestData.KkOpintokokonaisuusKoulutus.copy(tila = Tallennettu, metadata = Some(metadata))
     val oid                         = put(kkOpintokokonaisuusKoulutus)
     val lastModified                = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
@@ -882,7 +880,7 @@ class KoulutusSpec
           opintojenLaajuusNumeroMin = Some(10),
           opintojenLaajuusNumeroMax = Some(10),
           opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-          korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Amk, Seq())),
+          korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Amk, Seq())),
           isMuokkaajaOphVirkailija = Some(false)
         )
       )
@@ -898,7 +896,7 @@ class KoulutusSpec
     val oid = put(kkOpintokokonaisuus)
     val expectedKoulutus = kkOpintokokonaisuus.copy(
       oid = Some(KoulutusOid(oid)),
-      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq()))))
+      metadata = Some(KkOpintokokonaisuusKoulutuksenMetatieto.copy(korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq()))))
     )
     get(oid, expectedKoulutus)
   }
@@ -911,7 +909,7 @@ class KoulutusSpec
     val oid = put(erikoistumisKoulutus)
     val expectedKoulutus = erikoistumisKoulutus.copy(
       oid = Some(KoulutusOid(oid)),
-      metadata = Some(ErikoistumisKoulutuksenMetatieto.copy(korkeakoulutusTyypit = Seq(KorkeakoulutusTyyppi(Yo, Seq(YoOid, HkiYoOid)), KorkeakoulutusTyyppi(Amk, Seq(AmkOid)))))
+      metadata = Some(ErikoistumisKoulutuksenMetatieto.copy(korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Yo, Seq(YoOid, HkiYoOid)), Korkeakoulutustyyppi(Amk, Seq(AmkOid)))))
     )
     get(oid, expectedKoulutus)
   }

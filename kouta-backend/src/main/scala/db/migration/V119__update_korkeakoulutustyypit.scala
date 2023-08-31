@@ -1,6 +1,6 @@
 package db.migration
 
-import fi.oph.kouta.domain.{Amk, KorkeakoulutusTyyppi, Koulutustyyppi, Yo}
+import fi.oph.kouta.domain.{Amk, Korkeakoulutustyyppi, Koulutustyyppi, Yo}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OrganisaatioService, OrganisaatioServiceImpl}
 import fi.vm.sade.utils.slf4j.Logging
@@ -28,21 +28,21 @@ class V119__update_korkeakoulutustyypit extends BaseJavaMigration with Logging {
       ) toMap
     } match {
       case Success(allKoulutustyypit) => {
-        var korkeakoulutusTyypit = allKoulutustyypit
+        var korkeakoulutustyypit = allKoulutustyypit
           .foldLeft(Map[Koulutustyyppi, Seq[OrganisaatioOid]]().withDefaultValue(Seq())) {
             case (initialMap, (tarjoaja, koulutustyypit)) =>
               koulutustyypit.foldLeft(initialMap)((subMap, koulutustyyppi) =>
                 subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ tarjoaja)
               )
           }
-          .map(entry => KorkeakoulutusTyyppi(entry._1, entry._2))
+          .map(entry => Korkeakoulutustyyppi(entry._1, entry._2))
           .toSeq
-        korkeakoulutusTyypit =
-          if (korkeakoulutusTyypit.size == 1)
-            Seq(KorkeakoulutusTyyppi(korkeakoulutusTyypit.head.koulutustyyppi, Seq()))
-          else korkeakoulutusTyypit
-        val korkeakoulutusTyypitJson = korkeakoulutusTyypit.map(tyyppi => Json.fromFields(List(("koulutustyyppi", Json.fromString(tyyppi.koulutustyyppi.toString())), ("tarjoajat", tyyppi.tarjoajat.map(_.s).asJson))))
-        val convertedMetadata = metadata.add("korkeakoulutusTyypit", korkeakoulutusTyypitJson.asJson)
+        korkeakoulutustyypit =
+          if (korkeakoulutustyypit.size == 1)
+            Seq(Korkeakoulutustyyppi(korkeakoulutustyypit.head.koulutustyyppi, Seq()))
+          else korkeakoulutustyypit
+        val korkeakoulutustyypitJson = korkeakoulutustyypit.map(tyyppi => Json.fromFields(List(("koulutustyyppi", Json.fromString(tyyppi.koulutustyyppi.toString())), ("tarjoajat", tyyppi.tarjoajat.map(_.s).asJson))))
+        val convertedMetadata = metadata.add("korkeakoulutustyypit", korkeakoulutustyypitJson.asJson)
         Json.fromJsonObject(convertedMetadata).toString()
       }
       case Failure(exception) => throw exception

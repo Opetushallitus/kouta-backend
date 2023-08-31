@@ -136,24 +136,24 @@ class KoulutusService(
     else
       currentKoodiUri
 
-  private def getKorkeakoulutusTyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[KorkeakoulutusTyyppi] = {
+  private def getKorkeakoulutustyypitByTarjoajat(tarjoajat: Seq[OrganisaatioOid]): Seq[Korkeakoulutustyyppi] = {
     Try[Map[OrganisaatioOid, Set[Koulutustyyppi]]] {
       tarjoajat map (tarjoaja =>
         tarjoaja -> organisaatioService.getAllChildOidsAndKoulutustyypitFlat(tarjoaja)._2.intersect(Seq(Amk, Yo)).toSet
       ) toMap
     } match {
       case Success(allKoulutustyypit) => {
-        val korkeakoulutusTyypit = allKoulutustyypit
+        val korkeakoulutustyypit = allKoulutustyypit
           .foldLeft(Map[Koulutustyyppi, Seq[OrganisaatioOid]]().withDefaultValue(Seq())) {
             case (initialMap, (tarjoaja, koulutustyypit)) =>
               koulutustyypit.foldLeft(initialMap)((subMap, koulutustyyppi) =>
                 subMap.updated(koulutustyyppi, initialMap(koulutustyyppi) :+ tarjoaja)
               )
           }
-          .map(entry => KorkeakoulutusTyyppi(entry._1, entry._2))
+          .map(entry => Korkeakoulutustyyppi(entry._1, entry._2))
           .toSeq
-        if (korkeakoulutusTyypit.size == 1) Seq(KorkeakoulutusTyyppi(korkeakoulutusTyypit.head.koulutustyyppi, Seq()))
-        else korkeakoulutusTyypit
+        if (korkeakoulutustyypit.size == 1) Seq(Korkeakoulutustyyppi(korkeakoulutustyypit.head.koulutustyyppi, Seq()))
+        else korkeakoulutustyypit
       }
       case Failure(exception) => throw exception
     }
@@ -291,7 +291,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
@@ -303,7 +303,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
@@ -315,7 +315,7 @@ class KoulutusService(
                       m.opintojenLaajuusyksikkoKoodiUri,
                       opintojenLaajuusOpintopiste
                     ),
-                    korkeakoulutusTyypit = getKorkeakoulutusTyypitByTarjoajat(koulutus.tarjoajat),
+                    korkeakoulutustyypit = getKorkeakoulutustyypitByTarjoajat(koulutus.tarjoajat),
                     isMuokkaajaOphVirkailija = Some(isOphVirkailija)
                   )
                 )
