@@ -1412,8 +1412,9 @@ object TestData {
 
   val VapaaSivistystyoMuuToteutusHakemuspalveluMetatieto: VapaaSivistystyoMuuToteutusMetadata =
     VapaaSivistystyoMuuToteutusMetatieto.copy(
-      hakutermi = Some(Hakeutuminen),
-      hakulomaketyyppi = Some(Ataru),
+      hakutermi = None,
+      isHakukohteetKaytossa = Some(true),
+      hakulomaketyyppi = None,
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
