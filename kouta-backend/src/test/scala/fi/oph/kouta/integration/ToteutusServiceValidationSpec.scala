@@ -858,7 +858,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(ammTutkinnonOsaToteutus.copy(nimi = nimiNotMatchingDefault))
   }
 
-  it should "fail if nimi not matching koulutusnimi" in {
+  it should "fail if nimi not matching koulutusnimi (tuva)" in {
     failsValidation(
       tuvaToteutus.copy(nimi = nimiNotMatchingDefault),
       Seq(
@@ -868,7 +868,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if nimi not matching koulutusnimi" in {
+  it should "fail if nimi not matching koulutusnimi (telma)" in {
     failsValidation(
       telmaToteutus.copy(nimi = nimiNotMatchingDefault),
       Seq(
