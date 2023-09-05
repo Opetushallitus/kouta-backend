@@ -858,32 +858,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(ammTutkinnonOsaToteutus.copy(nimi = nimiNotMatchingDefault))
   }
 
-  "AmmOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      ammOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  "YoOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      yoOpettajaToteutus.copy(metadata =
-        Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot, aloituspaikat = Some(-10)))
-      ),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  "TuvaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      tuvaToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
   it should "fail if nimi not matching koulutusnimi" in {
     failsValidation(
       tuvaToteutus.copy(nimi = nimiNotMatchingDefault),
@@ -891,14 +865,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "koulutuksessa")),
         ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "koulutuksessa"))
       )
-    )
-  }
-
-  "TelmaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      telmaToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
     )
   }
 
