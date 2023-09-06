@@ -539,6 +539,26 @@ package object domain {
       |            type: string
       |""".stripMargin
 
+  val KorkeakoulutustyyppiModel: String =
+    """    Korkeakoulutustyyppi:
+      |      type: object
+      |      properties:
+      |        koulutustyyppi:
+      |          type: string
+      |          description: "Korkeakoulutustyyppi, sallitut arvot:
+      |            'yo' (yliopisto),
+      |            'amk' (ammattikorkea)"
+      |          example: yo
+      |        tarjoajat:
+      |          type: array
+      |          description: Ko. korkeakoulutustyyppiä tarjoavien organisaatioiden yksilöivät organisaatio-oidit.
+      |          items:
+      |            type: string
+      |          example:
+      |            - 1.2.246.562.10.00101010101
+      |            - 1.2.246.562.10.00101010102
+      |""".stripMargin
+
   val models = List(
     KoulutustyyppiModel,
     KieliModel,
@@ -566,7 +586,8 @@ package object domain {
     HakutermiModel,
     CopyResultModel,
     PistetietoModel,
-    TilaChangeResultModel
+    TilaChangeResultModel,
+    KorkeakoulutustyyppiModel
   )
 
   type Kielistetty = Map[Kieli, String]
@@ -998,6 +1019,8 @@ package object domain {
       )
     )
   }
+
+  case class Korkeakoulutustyyppi(koulutustyyppi: Koulutustyyppi, tarjoajat: Seq[OrganisaatioOid])
 
   trait HasTeemakuva[T] {
     val teemakuva: Option[String]

@@ -530,6 +530,11 @@ object Validations {
       msg = s"Apurahan voi asettaa vain toteutuksille, joille on asetettu lukuvuosimaksu",
       id = "invalidMaksullisuustyyppiWithApuraha"
     )
+  val missingTarjoajatForNonJulkinenKoulutus: ErrorMessage =
+    ErrorMessage(
+      msg = "Tämän tyyppiselle koulutukselle täytyy valita vähintään yksi järjestäjä, ellei koulutus ole julkinen",
+      id = "missingTarjoajatForNonJulkinenKoulutus"
+    )
   def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
     ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
 
