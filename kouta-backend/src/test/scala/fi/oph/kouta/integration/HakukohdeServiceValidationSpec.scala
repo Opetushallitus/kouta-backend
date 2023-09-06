@@ -1238,50 +1238,50 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     assertFailuresForHakukohdeKoodiUriInsteadOfNimi(YoToteutuksenMetatieto)
   }
 
-  private def assertFailureForLomaketyyppiNotAtaru(toteutusMetadata: ToteutusMetadata): Assertion = {
+  private def assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(toteutusMetadata: ToteutusMetadata): Assertion = {
     val hk = max.copy(toteutusOid = ToteutusOid("1.2.246.562.17.456"))
     initMockDepsForKoulutustyyppi(hk, toteutusMetadata)
     failsValidation(hk, "toteutusOid", cannotLinkToHakukohde(hk.toteutusOid.s))
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for AmmatillinenTutkinnonOsa-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(AmmTutkinnonOsaToteutus.metadata.get)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(AmmTutkinnonOsaToteutus.metadata.get)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for AmmatillinenOsaamisala-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(AmmOsaamisalaToteutus.metadata.get)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(AmmOsaamisalaToteutus.metadata.get)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for AmmMuu-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(AmmMuuToteutusMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(AmmMuuToteutusMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for VapaaSivistystyoMuu-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(VapaaSivistystyoMuuToteutusMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(VapaaSivistystyoMuuToteutusMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for AikuistenPerusopetus-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(AikuistenPerusopetusToteutusMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(AikuistenPerusopetusToteutusMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for KkOpintojakso-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(KkOpintojaksoToteutuksenMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(KkOpintojaksoToteutuksenMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for KkOpintokokonaisuus-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(KkOpintokokonaisuusToteutuksenMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(KkOpintokokonaisuusToteutuksenMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for Erikoistumiskoulutus-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(ErikoistumiskoulutusToteutuksenMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(ErikoistumiskoulutusToteutuksenMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for Muukoulutus-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(MuuToteutuksenMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(MuuToteutuksenMetatieto)
   }
 
   it should "fail when hakulomaketyyppi not Ataru and not hakukohteetKaytossa for TaiteenPerusopetus-toteutus" in {
-    assertFailureForLomaketyyppiNotAtaru(TaiteenPerusopetusToteutusMetatieto)
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(TaiteenPerusopetusToteutusMetatieto)
   }
 
   it should "fail when valintaperusteId not defined for toisen asteen yhteishaku" in {
