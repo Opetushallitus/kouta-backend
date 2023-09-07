@@ -13,7 +13,7 @@ import scala.collection.mutable.ListBuffer
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 
-class V119__update_korkeakoulutustyypit extends BaseJavaMigration with Logging {
+class V120__update_korkeakoulutustyypit extends BaseJavaMigration with Logging {
   case class OidAndMeta(oid: String, meta: String)
 
   private def updateKorkeakoulutustyypitOnMetadata(metadata: JsonObject, tarjoajat: Array[String]): String = {
