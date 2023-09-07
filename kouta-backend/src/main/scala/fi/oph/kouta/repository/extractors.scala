@@ -591,7 +591,8 @@ trait PistehistoriaExtractors extends ExtractorBase {
     vuosi = r.nextString(),
     valintatapajonoOid = r.nextString,
     hakukohdeOid = HakukohdeOid(r.nextString()),
-    hakuOid = HakuOid(r.nextString()))
+    hakuOid = HakuOid(r.nextString()),
+    valintatapajonoTyyppi = r.nextString())
   )
 }
 

@@ -73,6 +73,11 @@ trait KoodistoServiceMock extends ServiceMockBase {
     mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
   }
 
+  def mockKoodistoResponseWithVersion(koodisto: String, versio: Int, koodiUrit: Seq[(String, Int, Option[String])]) = {
+    val path = getMockPath("koodisto-service.koodisto-koodit-with-version", Seq(koodisto, versio.toString))
+    mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
+  }
+
   def mockKoodistoNotFound(koodisto: String): HttpRequest = {
     val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
     mockGet(path, Map.empty, s"Koodisto $koodisto not found", 404)

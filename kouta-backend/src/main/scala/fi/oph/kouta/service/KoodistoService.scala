@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoUtils.{contains, getVersio, removeVersio}
-import fi.oph.kouta.client.{KoodistoClient, KoodistoElement, KoodistoError}
+import fi.oph.kouta.client.{KoodistoClient, KoodistoElement, KoodistoError, KoodistoWithVersio}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, itemNotFound, queryFailed}
 
@@ -15,6 +15,13 @@ object KoodistoService extends KoodistoService(KoodistoClient)
 class KoodistoService(koodistoClient: KoodistoClient) extends Object with Logging {
 
   val ISO_LOCAL_DATE_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+  def getKoodistoKoodit(koodisto: String, versio: Option[Int]): Either[Throwable, Seq[KoodistoElement]] = {
+    versio match {
+      case Some(v) => koodistoClient.getKoodistoKooditWithVersion(KoodistoWithVersio(koodisto, v))
+      case None => koodistoClient.getKoodistoKoodit(koodisto)
+    }
+  }
 
   def getKoodistoKaannokset(koodisto: String): Map[String, Kielistetty] = {
     koodistoClient.getKoodistoKoodit(koodisto).map(elements => elements.view

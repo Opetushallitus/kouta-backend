@@ -818,7 +818,7 @@ class IndexerServlet(
       |          schema:
       |            type: String
       |          example: 1.2.246.562.29.54537554997
-      |          description: Yksittäisen haun oid tai "defaults" viiden edellisen toisen asteen yhteishaun synkronoimiseksi (2022)
+      |          description: Yksittäisen haun oid tai "defaults" viiden edellisen toisen asteen yhteishaun synkronoimiseksi (2023)
       |      responses:
       |        '200':
       |          description: Ok
