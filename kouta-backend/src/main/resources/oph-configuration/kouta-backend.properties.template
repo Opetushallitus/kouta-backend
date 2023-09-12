@@ -42,6 +42,7 @@ organisaatio-service.organisaatiot.with.oids=https://{{host_virkailija}}/organis
 
 lokalisointi-service.localisation=https://{{host_virkailija}}/lokalisointi/cxf/rest/v1/localisation?category=kouta
 koodisto-service.koodisto-koodit=https://{{host_virkailija}}/koodisto-service/rest/json/$1/koodi?onlyValidKoodis=true
+koodisto-service.koodisto-koodit-with-version=https://{{host_virkailija}}/koodisto-service/rest/json/$1/koodi?onlyValidKoodis=false&koodistoVersio=$2
 koodisto-service.koodisto-koodit.rinnasteiset=https://{{host_virkailija}}/koodisto-service/rest/json/relaatio/rinnasteinen/$1?onlyValidKoodis=true
 koodisto-service.latest-koodiuri=https://{{host_virkailija}}/koodisto-service/rest/codeelement/latest/$1
 koodisto-service.koodiuri-version=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2

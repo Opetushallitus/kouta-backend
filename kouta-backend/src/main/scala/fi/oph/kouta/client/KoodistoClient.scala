@@ -74,6 +74,8 @@ object KoodistoUtils {
   }
 }
 
+case class KoodistoWithVersio(koodistoUri: String, versio: Integer)
+
 class CachedMethod[A, B](cache: Cache[A, B], method: A => Either[KoodistoError, B]) extends Function[A, Either[KoodistoError, B]] {
 
   def apply(key: A): Either[KoodistoError, B] = {
@@ -122,6 +124,13 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
     koodisto => getWithRetry(
       urlProperties.url("koodisto-service.koodisto-koodit",
         koodisto), followRedirects = true
+    ) { response => parse(response).extract[List[KoodistoElement]] })
+
+  val getKoodistoKooditWithVersion = new CachedMethod[KoodistoWithVersio, Seq[KoodistoElement]](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodistoWithVersio => getWithRetry(
+      urlProperties.url("koodisto-service.koodisto-koodit-with-version",
+        koodistoWithVersio.koodistoUri, koodistoWithVersio.versio), followRedirects = true
     ) { response => parse(response).extract[List[KoodistoElement]] })
 
   val getYlakoodit = new CachedMethod[String, Seq[KoodistoElement]](

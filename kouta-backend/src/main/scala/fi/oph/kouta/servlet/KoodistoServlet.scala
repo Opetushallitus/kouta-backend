@@ -129,6 +129,7 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |          required: false
       |          description: haunkohdejoukkokoodi, millä rajataan valintakokeentyyppejä
       |          example: "haunkohdejoukko_23#1"
+      |
       |      responses:
       |        '200':
       |          description: Ok
@@ -176,21 +177,102 @@ class KoodistoServlet(koodistoService: KoodistoService) extends KoutaServlet {
       |                            description: Metadataelementin kielitunniste
       |                            example: "FI"
       |""".stripMargin)
-  get("/valintakokeentyypit") {
+    get("/valintakokeentyypit") {
+      authenticate()
+
+      val koulutuskoodit = multiParams.get("koulutuskoodi")
+      val osaamisalakoodit = multiParams.get("osaamisalakoodi")
+      val hakutapakoodi = params.get("hakutapakoodi")
+      val haunkohdejoukkokoodi = params.get("haunkohdejoukkokoodi")
+      koodistoService.getValintakokeenTyypit(
+          koulutuskoodit.getOrElse(Seq.empty),
+          hakutapakoodi,
+          haunkohdejoukkokoodi,
+          osaamisalakoodit.getOrElse(Seq.empty)) match {
+        case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
+        case Left(error: Throwable) =>
+          logger.error(s"Error fetching valintakokeentyypit", error)
+      }
+    }
+
+  registerPath("/koodisto/{koodisto}/koodit",
+    """    get:
+      |      summary: Hakee koodiston koodit
+      |      operationId:
+      |      description: Hakee voimassa olevat koodiston koodit.
+      |      tags:
+      |        - Koodisto
+      |      parameters:
+      |        - in: path
+      |          name: koodisto
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: koodisto
+      |          example: koulutustyyppi
+      |        - in: query
+      |          name: versio
+      |          schema:
+      |            type: number
+      |          required: false
+      |          description: koodiston versio, jos ei annettu käytetään viimeisintä versiota koodistosta
+      |          example: 2
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: object
+      |                  properties:
+      |                    koodiUri:
+      |                      type: string
+      |                      description: koodiUri.
+      |                      example: "koulutusTyyppi_25"
+      |                    koodiArvo:
+      |                      type: string
+      |                      description: Koodiurin numeerinen tunniste
+      |                    versio:
+      |                      type: number
+      |                      description: Koodin versio
+      |                      example: 1
+      |                    koodisto:
+      |                      type: object
+      |                      description: Koodisto johon koodi kuuluu
+      |                      properties:
+      |                        koodistoUri:
+      |                          type: string
+      |                          description: Koodiston uri, tässä tapauksessa "koulutus"
+      |                    voimassaLoppuPvm:
+      |                      type: string
+      |                      description: Päivämäärä johon asti koodi on voimassa
+      |                      example: "2015-04-24"
+      |                    metadata:
+      |                      type: array
+      |                      description: Koodin metadata
+      |                      items:
+      |                        type: object
+      |                        properties:
+      |                          nimi:
+      |                            type: string
+      |                            description: Koodin nimi
+      |                            example: "Insinööri (AMK), bio- ja elintarviketekniikka"
+      |                          kieli:
+      |                            type: string
+      |                            description: Metadataelementin kielitunniste
+      |                            example: "FI"
+      |""".stripMargin)
+  get("/:koodisto/koodit") {
     authenticate()
 
-    val koulutuskoodit = multiParams.get("koulutuskoodi")
-    val osaamisalakoodit = multiParams.get("osaamisalakoodi")
-    val hakutapakoodi = params.get("hakutapakoodi")
-    val haunkohdejoukkokoodi = params.get("haunkohdejoukkokoodi")
-    koodistoService.getValintakokeenTyypit(
-        koulutuskoodit.getOrElse(Seq.empty),
-        hakutapakoodi,
-        haunkohdejoukkokoodi,
-        osaamisalakoodit.getOrElse(Seq.empty)) match {
-      case Right(valintakokeenTyypit: Seq[KoodistoElement]) => Ok(valintakokeenTyypit)
+    val koodisto = params.get("koodisto").get
+    val versio : Option[Int] = params.getAs[Int]("versio")
+    koodistoService.getKoodistoKoodit(koodisto, versio) match {
+      case Right(koodit: Seq[KoodistoElement]) => Ok(koodit)
       case Left(error: Throwable) =>
-        logger.error(s"Error fetching valintakokeentyypit", error)
+        logger.error(s"Error fetching koodiston $koodisto koodit versiolla $versio", error)
         InternalServerError("500 Internal Server Error")
     }
   }

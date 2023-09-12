@@ -1,11 +1,11 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
+import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, SosiaalinenMedia, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
@@ -77,6 +77,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
     validateIfDefined[Int](m.yksikoita, assertNotNegative(_, "metadata.yksikoita")),
     validateIfDefined[Int](m.toimipisteita, assertNotNegative(_, "metadata.toimipisteita")),
     validateIfDefined[Int](m.akatemioita, assertNotNegative(_, "metadata.akatemioita")),
+    validateSome(m.some, vCtx),
     validateIfJulkaistu(
       vCtx.tila,
       and(
@@ -85,6 +86,20 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
       )
     )
   )
+
+  private def validateSome(some: Map[String, Option[String]], vCtx: ValidationContext): IsValid = {
+    and(some.flatMap { t: (String, Option[String]) =>
+      and(
+        assertKoodistoQueryResult(
+          t._1,
+          k => koodistoClient.koodiUriExistsInKoodisto(SosiaalinenMedia, k),
+          "metadata.some." + t._1,
+          vCtx,
+          invalidSomeKoodiUri(t._1)
+        ),
+        validateIfDefined[String](t._2, assertValidUrl(_, "metadata.some." + t._1)))
+      }.to[collection.immutable.Seq])
+  }
 
   private def validateTietoaOpiskelusta(
       tietoaOpiskelusta: TietoaOpiskelusta,
