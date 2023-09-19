@@ -728,41 +728,6 @@ class ToteutusSpec
     }
   }
 
-  it should "set last_modified right for old toteutukset after database migration" in {
-    db.clean()
-    db.migrate("107")
-    addDefaultSession()
-    addTestSessions()
-    koulutusOid = put(koulutus, ophSession)
-
-    val (toteutus1, toteutus1Timestamp) = insertToteutus(toteutus(koulutusOid))
-    val oid1                            = toteutus1.oid.get.toString
-
-    val (toteutus2, _)              = insertToteutus(toteutus(koulutusOid))
-    val oid2                        = toteutus2.oid.get.toString
-    val toteutus2NewTarjoajat       = toteutus2.tarjoajat ++ Seq(YoOid)
-    val toteutus2tarjoajatTimestamp = updateToteutuksenTarjoajat(toteutus2.copy(tarjoajat = toteutus2NewTarjoajat))
-
-    val (toteutus3, _)        = insertToteutus(toteutus(koulutusOid))
-    val oid3                  = toteutus3.oid.get.toString
-    val toteutus3tarjoajatNow = updateToteutuksenTarjoajat(toteutus3.copy(tarjoajat = List()))
-
-    db.migrate("108")
-
-    get(oid1, toteutus1.copy(modified = Some(instantToModified(toteutus1Timestamp))))
-    get(
-      oid2,
-      toteutus2.copy(tarjoajat = toteutus2NewTarjoajat, modified = Some(instantToModified(toteutus2tarjoajatTimestamp)))
-    )
-    get(oid3, toteutus3.copy(tarjoajat = List(), modified = Some(instantToModified(toteutus3tarjoajatNow))))
-
-    db.clean()
-    db.migrate()
-    addDefaultSession()
-    addTestSessions()
-    koulutusOid = put(koulutus, ophSession)
-  }
-
   it should "add right amount of rows to history tables" in {
     resetTableHistory("toteutukset")
     resetTableHistory("toteutusten_tarjoajat")

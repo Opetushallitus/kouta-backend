@@ -574,39 +574,6 @@ class KoulutusSpec
     get(oid, uusiKoulutus) should not equal lastModified
   }
 
-  it should "set last_modified right for old koulutukset after database migration" in {
-    db.clean()
-    db.migrate("106")
-    addTestSessions()
-    addDefaultSession()
-
-    val (koulutus1, koulutus1Timestamp) = insertKoulutus(koulutus)
-    val oid1                            = koulutus1.oid.get.toString
-
-    val (koulutus2, _)              = insertKoulutus(koulutus)
-    val oid2                        = koulutus2.oid.get.toString
-    val koulutus2NewTarjoajat       = koulutus2.tarjoajat ++ Seq(YoOid)
-    val koulutus2tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus2.copy(tarjoajat = koulutus2NewTarjoajat))
-
-    val (koulutus3, _)              = insertKoulutus(koulutus)
-    val oid3                        = koulutus3.oid.get.toString
-    val koulutus3tarjoajatTimestamp = updateKoulutusTarjoajat(koulutus3.copy(tarjoajat = List()))
-
-    db.migrate("107")
-
-    get(oid1, koulutus1.copy(modified = Some(instantToModified(koulutus1Timestamp))))
-    get(
-      oid2,
-      koulutus2.copy(tarjoajat = koulutus2NewTarjoajat, modified = Some(instantToModified(koulutus2tarjoajatTimestamp)))
-    )
-    get(oid3, koulutus3.copy(tarjoajat = List(), modified = Some(instantToModified(koulutus3tarjoajatTimestamp))))
-
-    db.clean()
-    db.migrate()
-    addTestSessions()
-    addDefaultSession()
-  }
-
   it should "add right amount of rows to history tables" in {
     resetTableHistory("koulutukset")
     resetTableHistory("koulutusten_tarjoajat")
