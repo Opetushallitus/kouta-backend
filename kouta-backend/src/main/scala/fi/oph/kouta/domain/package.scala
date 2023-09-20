@@ -631,6 +631,10 @@ package object domain {
       )
     }
 
+    def validateOnJulkaisuForHakukohde(path: String): IsValid = {
+      validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy"))
+    }
+
     def validateOnJulkaisuForJatkuvaOrJoustavaHaku(path: String): IsValid =
       validateIfDefined[LocalDateTime](paattyy, assertInFuture(_, s"$path.paattyy"))
   }

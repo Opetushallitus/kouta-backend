@@ -855,7 +855,7 @@ class HakukohdeServiceValidation(
 
   override def validateEntityOnJulkaisu(hk: Hakukohde): IsValid = {
     and(
-      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisu(_)),
+      validateIfNonEmpty[Ajanjakso](hk.hakuajat, "hakuajat", _.validateOnJulkaisuForHakukohde(_)),
       validateIfDefined[LocalDateTime](hk.liitteidenToimitusaika, assertInFuture(_, "liitteidenToimitusaika")),
       validateIfNonEmpty[Liite](
         hk.liitteet,

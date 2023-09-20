@@ -1542,7 +1542,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     failsValidation(
       initMockSeq(max.copy(hakuajat = Seq(Ajanjakso(inFuture(1000), None), inPastJakso))),
       Seq(
-        ValidationError("hakuajat[0].paattyy", missingMsg),
         ValidationError("hakuajat[1].paattyy", pastDateMsg(inPastAikaleima))
       )
     )
