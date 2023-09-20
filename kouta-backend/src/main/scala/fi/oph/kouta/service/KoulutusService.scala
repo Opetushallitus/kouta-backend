@@ -551,7 +551,7 @@ class KoulutusService(
           val maybeToteutus = k.toteutus
           maybeToteutus.oid match {
             case Some(_) =>
-              val toteutus = MaybeToteutus(maybeToteutus)
+              val toteutus = MaybeToteutus(maybeToteutus).copy(koulutusMetadata = k.metadata)
 
               Some(toteutus
                 .withEnrichedData(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(toteutus)))
