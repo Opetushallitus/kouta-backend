@@ -25,7 +25,7 @@ import scala.util.Try
 
 object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient)
 
-class HakuService(sqsInTransactionService: SqsInTransactionService,
+  class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient,
                   val organisaatioService: OrganisaatioService,
