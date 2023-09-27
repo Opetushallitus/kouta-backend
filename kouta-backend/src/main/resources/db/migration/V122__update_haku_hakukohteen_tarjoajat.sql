@@ -1,8 +1,8 @@
 alter table haut
-    add column if not exists hakukohteen_liittaja_organisaatiot varchar(127) [] not null default '{}';
+    add column if not exists hakukohteen_liittaja_organisaatiot jsonb not null default '[]'::jsonb;
 
 alter table haut_history
-    add column if not exists hakukohteen_liittaja_organisaatiot varchar(127) [] not null default '{}';
+    add column if not exists hakukohteen_liittaja_organisaatiot jsonb not null default '[]'::jsonb;
 
 comment on column haut.hakukohteen_liittaja_organisaatiot is 'Organisaatiot jotka voivat liittää hakuun hakukohteita';
 
