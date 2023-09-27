@@ -54,6 +54,11 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     get(oid, crudSessions(GrandChildOid), haku(oid))
   }
 
+  it should "persist hakukohteen liittajaorganisaatiot" in {
+    val oid = put(haku.copy(hakukohteenLiittajaOrganisaatiot = Seq(OrganisaatioOid("1.2.246.562.10.000000000777"))))
+    get(oid, crudSessions(GrandChildOid), haku(oid).copy(hakukohteenLiittajaOrganisaatiot = Seq(OrganisaatioOid("1.2.246.562.10.000000000777"))))
+  }
+
   it should "deny a user with the wrong role" in {
     val oid = put(haku)
     get(s"$HakuPath/$oid", otherRoleSession, 403)
