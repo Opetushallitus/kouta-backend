@@ -46,6 +46,8 @@ package object haku {
       |        hakukohteenLiittajaOrganisaatiot:
       |          type: array
       |          description: Hakukohteen liittajaorganisaatioiden oidit
+      |          items:
+      |             type: string
       |          example: [1.2.246.562.10.00101010101, 1.2.246.562.10.00101010102] 
       |        ajastettuJulkaisu:
       |          type: string
