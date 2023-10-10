@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia}
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatiopalveluOrganisaatio}
 import fi.oph.kouta.servlet.SearchParams.commaSepStringValToSeq
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
@@ -131,7 +131,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     val url = urlProperties.url(s"organisaatio-service.organisaatio.with.oid", oid)
     get(url, followRedirects = true) { response =>
       {
-        parse(response).extract[Organisaatio]
+        parse(response).extract[OrganisaatiopalveluOrganisaatio].toOrganisaatio()
       }
     }
   }
@@ -144,7 +144,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     val url = urlProperties.url(s"organisaatio-service.organisaatiot.with.oids")
     post(url, oids, followRedirects = true) { response =>
       {
-        parse(response).extract[Seq[Organisaatio]]
+        parse(response).extract[Seq[OrganisaatiopalveluOrganisaatio]].map(_.toOrganisaatio())
       }
     }
   }
