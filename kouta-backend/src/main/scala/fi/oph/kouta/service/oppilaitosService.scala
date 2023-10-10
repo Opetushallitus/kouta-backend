@@ -41,7 +41,9 @@ class OppilaitosService(
       case Some((o, i)) => {
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+        val yhteystiedot = organisaatioService.getOrganisaatio(oid).yhteystiedot
+        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi),
+                                                                yhteystiedot = yhteystiedot))), i)
       }
       case None => None
     }
@@ -163,7 +165,7 @@ class OppilaitoksenOsaService(
   sqsInTransactionService: SqsInTransactionService,
   val s3ImageService: S3ImageService,
   auditLog: AuditLog,
-  val organisaatioService: OrganisaatioService,
+  val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
   oppilaitosServiceValidation: OppilaitosServiceValidation,
@@ -182,7 +184,9 @@ class OppilaitoksenOsaService(
       case Some((o, i)) => {
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+        val yhteystiedot = organisaatioService.getOrganisaatio(oid).yhteystiedot
+        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi),
+                                                                yhteystiedot = yhteystiedot))), i)
       }
       case None => None
     }

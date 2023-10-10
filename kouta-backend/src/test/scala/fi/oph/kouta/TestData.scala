@@ -1671,7 +1671,7 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     modified = None,
-    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi), yhteystiedot = Map()))
   )
 
   val MinOppilaitos: Oppilaitos = Oppilaitos(
@@ -1714,7 +1714,7 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     modified = None,
-    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi), yhteystiedot = Map()))
   )
 
   val MinOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(

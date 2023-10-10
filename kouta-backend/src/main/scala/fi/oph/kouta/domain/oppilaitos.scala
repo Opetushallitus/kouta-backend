@@ -186,7 +186,7 @@ package object oppilaitos {
       |          type: string
       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
-      |        jarjestaaUrheilijanAmmKoulutusta: 
+      |        jarjestaaUrheilijanAmmKoulutusta:
       |          type: boolean
       |          description: Järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta?
       |""".stripMargin
@@ -441,7 +441,8 @@ case class Yhteystieto(
     )
 }
 
-case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
+                                  yhteystiedot: Map[Kieli, OrganisaatioYhteystieto])
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
