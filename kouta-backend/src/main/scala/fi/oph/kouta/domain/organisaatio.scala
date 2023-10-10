@@ -115,7 +115,6 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
   }
 
   def toOrganisaatio(): Organisaatio = {
-    //val yhteystiedot = Kieli.values.map(kieli => kieli -> toYhteystieto(kieli, this.yhteystiedot)).to(Map[Kieli, OrganisaatioYhteystieto])
     val yhteystiedot = Kieli.values.map(kieli => kieli -> toYhteystieto(kieli, this.yhteystiedot)).toMap
     Organisaatio(
       oid = oid,
