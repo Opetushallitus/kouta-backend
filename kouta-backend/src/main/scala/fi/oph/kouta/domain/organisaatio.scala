@@ -66,17 +66,16 @@ case class Organisaatio(oid: String,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List(),
-                        yhteystiedot: List[OrganisaatioYhteystieto]) {
+                        yhteystiedot: Map[Kieli, OrganisaatioYhteystieto]) {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
   def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
 
-case class OrganisaatioYhteystieto(kieli: Kieli,
-                       email: Option[String],
-                       puhelinnumero: Option[String],
-                       www: Option[String],
-                       postiosoite: OrganisaatioOsoite,
-                       kayntiosoite: OrganisaatioOsoite)
+case class OrganisaatioYhteystieto(email: Option[String],
+                                   puhelinnumero: Option[String],
+                                   www: Option[String],
+                                   postiosoite: OrganisaatioOsoite,
+                                   kayntiosoite: OrganisaatioOsoite)
 
 case class OrganisaatioOsoite(osoite: Option[String],
                               postinumeroUri: Option[String],
@@ -107,7 +106,6 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
     val postiosoite = toOsoite(if(kieli.equals(En)) "ulkomainen_posti" else "posti", organisaatiopalveluYhteystiedotKielelle)
     val kayntiosoite = toOsoite(if(kieli.equals(En)) "ulkomainen_kaynti" else "kaynti", organisaatiopalveluYhteystiedotKielelle)
     OrganisaatioYhteystieto(
-      kieli = kieli,
       email = email,
       puhelinnumero = puhelinnumero,
       www = www,
@@ -117,7 +115,8 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
   }
 
   def toOrganisaatio(): Organisaatio = {
-    val yhteystiedot = Kieli.values.map(toYhteystieto(_, this.yhteystiedot))
+    //val yhteystiedot = Kieli.values.map(kieli => kieli -> toYhteystieto(kieli, this.yhteystiedot)).to(Map[Kieli, OrganisaatioYhteystieto])
+    val yhteystiedot = Kieli.values.map(kieli => kieli -> toYhteystieto(kieli, this.yhteystiedot)).toMap
     Organisaatio(
       oid = oid,
       parentOidPath = parentOidPath,

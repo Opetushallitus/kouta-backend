@@ -1735,7 +1735,7 @@ object TestData {
     status = "AKTIIVINEN",
     children = List(),
     organisaatiotyypit = List("organisaatiotyyppi_1"),
-    yhteystiedot = List()
+    yhteystiedot = Map()
   )
 
   val organisaatio: Organisaatio = Organisaatio(
@@ -1746,7 +1746,7 @@ object TestData {
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaationOsa),
-    yhteystiedot = List()
+    yhteystiedot = Map()
   )
 
   val parentOrganisaatio: Organisaatio = Organisaatio(
@@ -1757,7 +1757,7 @@ object TestData {
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaatio),
-    yhteystiedot = List()
+    yhteystiedot = Map()
   )
 
   val inPastAikaleima             = inPast(1000)

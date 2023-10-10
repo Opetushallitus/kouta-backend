@@ -28,7 +28,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         List(),
         List("organisaatiotyyppi_02"),
         List(),
-        List())))
+        Map())))
 
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
     get(s"$OppilaitosPath/${UUID.randomUUID()}", headers = defaultHeaders) {
