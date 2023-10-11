@@ -119,7 +119,7 @@ case class Organisaatio(oid: String,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List(),
-                        yhteystiedot: Map[Kieli, OrganisaatioYhteystieto]) {
+                        yhteystiedot: Map[Kieli, OrganisaatioYhteystieto] = Map()) {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
   def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
@@ -143,7 +143,7 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
                                            children: List[Organisaatio] = List(),
                                            organisaatiotyypit: List[String] = List(),
                                            tyypit: List[String] = List(),
-                                           yhteystiedot: List[OrganisaatiopalveluYhteystieto]) {
+                                           yhteystiedot: List[OrganisaatiopalveluYhteystieto] = List()) {
 
   def toOsoite(osoiteTyyppi: String, organisaatiopalveluYhteystiedotKielelle: List[OrganisaatiopalveluYhteystieto]): OrganisaatioOsoite = {
     val yhteystieto = organisaatiopalveluYhteystiedotKielelle.find(yt => yt.osoiteTyyppi.contains(osoiteTyyppi))
