@@ -42,6 +42,21 @@ package object organisaatio {
       |            example:
       |              - organisaatiotyyppi_1
       |              - organisaatiotyyppi_2
+      |        yhteystiedot:
+      |          type: object
+      |          properties:
+      |           fi:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation suomenkieliset yhteystiedot"
+      |           sv:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation ruotsinkieliset yhteystiedot"
+      |           en:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation englanninkieliset yhteystiedot"
       |""".stripMargin
 
   val OrganisaatioHierarkiaModel =
@@ -54,7 +69,45 @@ package object organisaatio {
       |            $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
-  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel)
+  val OrganisaatioYhteystietoModel =
+    """    OrganisaatioYhteystieto:
+      |      type: object
+      |      properties:
+      |        email:
+      |          type: string
+      |          description: "Organisaation sähköpostiosoite"
+      |        puhelinnumero:
+      |          type: string
+      |          description: "Organisaation puhelinnumero"
+      |        wwwOsoite:
+      |          type: string
+      |          description: "Organisaation www-sivujen osoite"
+      |        postiosoite:
+      |          type: object
+      |          $ref: '#/components/schemas/OrganisaatioOsoite'
+      |          description: "Organisaation postiosoite"
+      |        kayntiosoite:
+      |          type: object
+      |          $ref: '#/components/schemas/OrganisaatioOsoite'
+      |          description: "Organisaation kayntiosoite"
+      |""".stripMargin
+
+  val OrganisaatioOsoiteModel =
+    """    OrganisaatioOsoite:
+      |      type: object
+      |      properties:
+      |        osoite:
+      |          type: string
+      |          description: "Osoite"
+      |        postinumeroUri:
+      |          type: string
+      |          description: "Postinumeron koodiUri"
+      |        postitoimipaikka:
+      |          type: string
+      |          description: "Postitoimipaikka"
+      |""".stripMargin
+
+  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel, OrganisaatioYhteystietoModel, OrganisaatioOsoiteModel)
 }
 
 case class Organisaatio(oid: String,
@@ -73,7 +126,7 @@ case class Organisaatio(oid: String,
 
 case class OrganisaatioYhteystieto(email: Option[String],
                                    puhelinnumero: Option[String],
-                                   www: Option[String],
+                                   wwwOsoite: Option[String],
                                    postiosoite: OrganisaatioOsoite,
                                    kayntiosoite: OrganisaatioOsoite)
 
@@ -102,13 +155,13 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
     val organisaatiopalveluYhteystiedotKielelle = organisaatiopalveluYhteystiedot.filter(_.kieli.startsWith("kieli_" + kieli.toString))
     val email: Option[String] = organisaatiopalveluYhteystiedotKielelle.find(_.email.isDefined).flatMap(_.email)
     val puhelinnumero: Option[String] = organisaatiopalveluYhteystiedotKielelle.find(yt => yt.numero.isDefined && yt.tyyppi.exists("numero".equals(_))).flatMap(_.numero)
-    val www: Option[String] = organisaatiopalveluYhteystiedotKielelle.find(_.www.isDefined).flatMap(_.www)
+    val wwwOsoite: Option[String] = organisaatiopalveluYhteystiedotKielelle.find(_.www.isDefined).flatMap(_.www)
     val postiosoite = toOsoite(if(kieli.equals(En)) "ulkomainen_posti" else "posti", organisaatiopalveluYhteystiedotKielelle)
     val kayntiosoite = toOsoite(if(kieli.equals(En)) "ulkomainen_kaynti" else "kaynti", organisaatiopalveluYhteystiedotKielelle)
     OrganisaatioYhteystieto(
       email = email,
       puhelinnumero = puhelinnumero,
-      www = www,
+      wwwOsoite = wwwOsoite,
       postiosoite = postiosoite,
       kayntiosoite = kayntiosoite
     )

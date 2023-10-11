@@ -58,6 +58,9 @@ package object oppilaitos {
       |          type: array
       |          items:
       |            $ref: '#/components/schemas/OppilaitoksenOsa'
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -157,6 +160,9 @@ package object oppilaitos {
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -274,6 +280,30 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin
 
+  val OppilaitosEnrichedDataModel =
+    """    OppilaitosEnrichedData:
+      |      type: object
+      |      properties:
+      |        muokkaajanNimi:
+      |          type: string
+      |          description: "Muokkajan nimi"
+      |        yhteystiedot:
+      |          type: object
+      |          properties:
+      |           fi:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation suomenkieliset yhteystiedot"
+      |           sv:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation ruotsinkieliset yhteystiedot"
+      |           en:
+      |             type: object
+      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
+      |             description: "Organisaation englanninkieliset yhteystiedot"
+      |""".stripMargin
+
   def models = Seq(
     OppilaitosModel,
     OppilaitoksenOsaModel,
@@ -283,6 +313,7 @@ package object oppilaitos {
     YhteystietoModel,
     TietoaOpiskelustaModel,
     OppilaitoksetResponseModel,
+    OppilaitosEnrichedDataModel
   )
 }
 
