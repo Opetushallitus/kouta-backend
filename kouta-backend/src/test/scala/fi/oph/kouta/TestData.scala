@@ -1671,7 +1671,7 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     modified = None,
-    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi), yhteystiedot = Map()))
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
   )
 
   val MinOppilaitos: Oppilaitos = Oppilaitos(
@@ -1714,7 +1714,7 @@ object TestData {
     organisaatioOid = ChildOid,
     muokkaaja = TestUserOid,
     modified = None,
-    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi), yhteystiedot = Map()))
+    _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))
   )
 
   val MinOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
@@ -1734,8 +1734,7 @@ object TestData {
     kotipaikkaUri = Some("kunta_123"),
     status = "AKTIIVINEN",
     children = List(),
-    organisaatiotyypit = List("organisaatiotyyppi_1"),
-    yhteystiedot = Map()
+    organisaatiotyypit = List("organisaatiotyyppi_1")
   )
 
   val organisaatio: Organisaatio = Organisaatio(
@@ -1745,8 +1744,7 @@ object TestData {
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
-    children = List(organisaationOsa),
-    yhteystiedot = Map()
+    children = List(organisaationOsa)
   )
 
   val parentOrganisaatio: Organisaatio = Organisaatio(
@@ -1756,8 +1754,7 @@ object TestData {
     nimi = Map(Fi -> "Parent Organisaatio", Sv -> "Parent Organisation", En -> "Parent Organization"),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
-    children = List(organisaatio),
-    yhteystiedot = Map()
+    children = List(organisaatio)
   )
 
   val inPastAikaleima             = inPast(1000)

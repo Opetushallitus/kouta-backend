@@ -289,19 +289,7 @@ package object oppilaitos {
       |          description: "Muokkajan nimi"
       |        yhteystiedot:
       |          type: object
-      |          properties:
-      |           fi:
-      |             type: object
-      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
-      |             description: "Organisaation suomenkieliset yhteystiedot"
-      |           sv:
-      |             type: object
-      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
-      |             description: "Organisaation ruotsinkieliset yhteystiedot"
-      |           en:
-      |             type: object
-      |             $ref: '#/components/schemas/OrganisaatioYhteystieto'
-      |             description: "Organisaation englanninkieliset yhteystiedot"
+      |          $ref: '#/components/schemas/OrganisaatioYhteystiedot'
       |""".stripMargin
 
   def models = Seq(
@@ -473,7 +461,7 @@ case class Yhteystieto(
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
-                                  yhteystiedot: Map[Kieli, OrganisaatioYhteystieto] = Map())
+                                  yhteystiedot: Option[OrganisaatioYhteystiedot] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,

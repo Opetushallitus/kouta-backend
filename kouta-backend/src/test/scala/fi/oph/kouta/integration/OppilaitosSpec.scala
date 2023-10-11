@@ -30,8 +30,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       Some("kunta_837"),
       List(),
       List("organisaatiotyyppi_02"),
-      List(),
-      Map())
+      List())
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(any[OrganisaatioOid])).thenReturn(organisaatio)
   }
 
@@ -46,8 +45,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         Some("kunta_837"),
         List(),
         List("organisaatiotyyppi_02"),
-        List(),
-        Map())))
+        List())))
 
   "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
     get(s"$OppilaitosPath/${UUID.randomUUID()}", headers = defaultHeaders) {
@@ -287,10 +285,10 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "store and update unfinished oppilaitos" in {
     val unfinishedOppilaitos = TestData.MinOppilaitos
     val oid = put(unfinishedOppilaitos)
-    val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"), yhteystiedot = Map()))))
+    val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newUnfinishedOppilaitos = unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitos, lastModified)
-    get(oid, newUnfinishedOppilaitos.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"), yhteystiedot = Map()))))
+    get(oid, newUnfinishedOppilaitos.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
   }
 
   it should "validate updated oppilaitos" in {

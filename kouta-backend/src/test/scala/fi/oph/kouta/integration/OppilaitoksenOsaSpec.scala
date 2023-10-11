@@ -38,8 +38,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
       Some("kunta_837"),
       List(),
       List("organisaatiotyyppi_02"),
-      List(),
-      Map())
+      List())
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(any[OrganisaatioOid])).thenReturn(organisaatio)
   }
 
@@ -271,10 +270,10 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "store and update unfinished oppilaitoksen osa" in {
     val unfinishedOppilaitoksenOsa = TestData.MinOppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid))
     val oid = put(unfinishedOppilaitoksenOsa)
-    val lastModified = get(oid, unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"), yhteystiedot = Map()))))
+    val lastModified = get(oid, unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
     val newUnfinishedOppilaitoksenOsa = unfinishedOppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitoksenOsa, lastModified)
-    get(oid, newUnfinishedOppilaitoksenOsa.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja"), yhteystiedot = Map()))))
+    get(oid, newUnfinishedOppilaitoksenOsa.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
   }
 
   it should "validate updated oppilaitoksen osa" in {

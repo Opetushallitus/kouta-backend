@@ -11,8 +11,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     kotipaikkaUri = Some("kunta_179"),
     status = "AKTIIVINEN",
     children = List(),
-    organisaatiotyypit = List("organisaatiotyyppi_03"),
-    yhteystiedot = Map())
+    organisaatiotyypit = List("organisaatiotyyppi_03"))
 
   val organisaatio = Organisaatio(
     oid = TestOids.ChildOid.toString,
@@ -22,8 +21,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_179"),
     children = List(),
-    organisaatiotyypit = List("organisaatiotyyppi_03"),
-    yhteystiedot = Map())
+    organisaatiotyypit = List("organisaatiotyyppi_03"))
 
   "getOidsFromChildren" should "return one oid for one child org" in {
     assert(OppilaitosServiceUtil.getOidsFromChildren(List(organisaationOsa)) == List(TestOids.GrandChildOid))
