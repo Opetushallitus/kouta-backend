@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
@@ -15,6 +16,24 @@ import java.util.UUID
 
 class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture {
   override val roleEntities     = Seq(Role.Oppilaitos)
+
+  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+
+  override def beforeEach(): Unit = {
+    super.beforeEach()
+    val organisaatio = Organisaatio(
+      "1.2.246.562.10.47941294987",
+      s"""1.2.246.562.10.47941294987/1.2.246.562.10.47941294986/1.2.246.562.10.00000000001""",
+      Some("oppilaitostyyppi_63#1"),
+      Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
+      "AKTIIVINEN",
+      Some("kunta_837"),
+      List(),
+      List("organisaatiotyyppi_02"),
+      List(),
+      Map())
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(any[OrganisaatioOid])).thenReturn(organisaatio)
+  }
 
   def organisaatioHierarkia(oid: String) = OrganisaatioHierarkia(
     List(

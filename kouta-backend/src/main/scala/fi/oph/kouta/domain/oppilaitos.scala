@@ -473,7 +473,7 @@ case class Yhteystieto(
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
-                                  yhteystiedot: Map[Kieli, OrganisaatioYhteystieto])
+                                  yhteystiedot: Map[Kieli, OrganisaatioYhteystieto] = Map())
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
