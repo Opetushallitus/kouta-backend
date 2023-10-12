@@ -63,7 +63,7 @@ package object organisaatio {
     """    OrganisaatioYhteystiedot:
       |      type: object
       |      properties:
-      |        email:
+      |        sahkoposti:
       |          type: object
       |          properties:
       |           fi:
@@ -183,7 +183,7 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
   }
   def toYhteystiedot(organisaatiopalveluYhteystiedot: List[OrganisaatiopalveluYhteystieto]): OrganisaatioYhteystiedot = {
     val email: Kielistetty = organisaatiopalveluYhteystiedot.filter(_.email.isDefined).map(yt => toKieli(yt.kieli) -> yt.email.get).toMap
-    val puhelinnumero: Kielistetty = organisaatiopalveluYhteystiedot.filter(yt => yt.numero.isDefined && yt.tyyppi.exists("numero".equals(_))).map(yt => toKieli(yt.kieli) -> yt.numero.get).toMap
+    val puhelinnumero: Kielistetty = organisaatiopalveluYhteystiedot.filter(yt => yt.numero.isDefined).map(yt => toKieli(yt.kieli) -> yt.numero.get).toMap
     val wwwOsoite: Kielistetty = organisaatiopalveluYhteystiedot.filter(_.www.isDefined).map(yt => toKieli(yt.kieli) -> yt.www.get).toMap
     val postiosoite = toOsoite("posti", organisaatiopalveluYhteystiedot)
     val kayntiosoite = toOsoite("kaynti", organisaatiopalveluYhteystiedot)
@@ -196,7 +196,6 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
 
   def toOrganisaatio(): Organisaatio = {
     val yhteystiedot = toYhteystiedot(this.yhteystiedot)
-    println(yhteystiedot)
     Organisaatio(
       oid = oid,
       parentOidPath = parentOidPath,
