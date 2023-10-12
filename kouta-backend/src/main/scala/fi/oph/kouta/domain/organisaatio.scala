@@ -126,8 +126,17 @@ package object organisaatio {
       |              type: string
       |              description: "Organisaation englanninkielinen osoite"
       |        postinumeroUri:
-      |          type: string
-      |          description: "Postinumeron koodiUri"
+      |          type: object
+      |          properties:
+      |            fi:
+      |              type: string
+      |              description: "Organisaation suomenkielinen postinumeron koodiUri"
+      |            sv:
+      |              type: string
+      |              description: "Organisaation ruotsinkielinen postinumeron koodiUri"
+      |            en:
+      |              type: string
+      |              description: "Organisaation englanninkielinen postinumeron koodiUri"
       |""".stripMargin
 
   def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel, OrganisaatioYhteystiedotModel, OrganisaatioOsoiteModel)
@@ -153,7 +162,7 @@ case class OrganisaatioYhteystiedot(postiosoite: Option[OrganisaatioOsoite] = No
                                     sahkoposti: Kielistetty = Map(),
                                     wwwOsoite: Kielistetty = Map())
 
-case class OrganisaatioOsoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String])
+case class OrganisaatioOsoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Kielistetty = Map())
 
 case class OrganisaatiopalveluOrganisaatio(oid: String,
                                            parentOidPath: String,
@@ -169,7 +178,7 @@ case class OrganisaatiopalveluOrganisaatio(oid: String,
   def toOsoite(osoiteTyyppi: String, organisaatiopalveluYhteystiedot: List[OrganisaatiopalveluYhteystieto]): OrganisaatioOsoite = {
     val osoitetyypit: List[String] = List(osoiteTyyppi, "ulkomainen_".concat(osoiteTyyppi))
     val osoite: Kielistetty = organisaatiopalveluYhteystiedot.filter(yt => yt.osoite.isDefined && yt.osoiteTyyppi.isDefined && osoitetyypit.contains(yt.osoiteTyyppi.get)).map(yt => toKieli(yt.kieli) -> yt.osoite.get).toMap
-    val postinumero = organisaatiopalveluYhteystiedot.find(yt => yt.postinumeroUri.isDefined && yt.osoiteTyyppi.isDefined && osoitetyypit.contains(yt.osoiteTyyppi.get)).flatMap(_.postinumeroUri)
+    val postinumero: Kielistetty = organisaatiopalveluYhteystiedot.filter(yt => yt.postinumeroUri.isDefined && yt.osoiteTyyppi.isDefined && osoitetyypit.contains(yt.osoiteTyyppi.get)).map(yt => toKieli(yt.kieli) -> yt.postinumeroUri.get).toMap
     OrganisaatioOsoite(osoite = osoite,
                        postinumeroKoodiUri = postinumero)
   }
