@@ -7,6 +7,7 @@ import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
+import org.json4s.ext.JavaTypesSerializers
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Serialization}
 
@@ -22,7 +23,7 @@ trait GenericKoutaFormats {
   val ISO_MODIFIED_FORMATTER: DateTimeFormatter        = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
   def genericKoutaFormats: Formats = DefaultFormats.strict
-    .addKeySerializers(Seq(kieliKeySerializer)) ++
+    .addKeySerializers(Seq(kieliKeySerializer)) ++ JavaTypesSerializers.all ++
     Seq(
       localDateTimeSerializer,
       modifiedSerializer,
