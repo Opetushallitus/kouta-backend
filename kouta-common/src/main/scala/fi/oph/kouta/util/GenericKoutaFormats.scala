@@ -9,7 +9,9 @@ import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
 import org.json4s.ext.JavaTypesSerializers
 import org.json4s.jackson.Serialization.write
-import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, Serialization}
+import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, JNull, MappingException, Serialization}
+
+import scala.util.control.NonFatal
 
 trait GenericKoutaJsonFormats extends GenericKoutaFormats {
   implicit def jsonFormats: Formats = genericKoutaFormats
@@ -25,8 +27,8 @@ trait GenericKoutaFormats {
   def genericKoutaFormats: Formats = DefaultFormats.strict
     .addKeySerializers(Seq(kieliKeySerializer)) ++ JavaTypesSerializers.all ++
     Seq(
-      localDateTimeSerializer,
-      modifiedSerializer,
+      LocalDateTimeSerializer,
+      ModifiedSerializer,
       stringSerializer(Julkaisutila.withName),
       stringSerializer(Koulutustyyppi.withName),
       stringSerializer(Hakulomaketyyppi.withName),
@@ -47,14 +49,28 @@ trait GenericKoutaFormats {
       stringSerializer(InetAddress.getByName, (ip: InetAddress) => ip.getHostAddress),
     )
 
-  private def localDateTimeSerializer = new CustomSerializer[LocalDateTime](_ => ( {
+  case object LocalDateTimeSerializer extends CustomSerializer[LocalDateTime](_ => ( {
     case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
+      try {
+        LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
+      } catch {
+        case NonFatal(e) =>
+          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+      }
+    case JNull => null
   }, {
     case i: LocalDateTime => JString(ISO_LOCAL_DATE_TIME_FORMATTER.format(i))
   }))
 
-  private def modifiedSerializer = new CustomSerializer[Modified](_ => ({
+  case object ModifiedSerializer extends CustomSerializer[Modified](_ => ( {
     case JString(i) => Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
+      try {
+        Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
+      } catch {
+        case NonFatal(e) =>
+          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+      }
+    case JNull => null
   }, {
     case i: Modified => JString(ISO_MODIFIED_FORMATTER.format(i.value))
   }))
@@ -65,12 +81,19 @@ trait GenericKoutaFormats {
     case k: Kieli => k.toString
   }))
 
-  private def stringSerializer[A: Manifest](construct: String => A): CustomSerializer[A] =
+  private def stringSerializer[A>:Null: Manifest](construct: String => A): CustomSerializer[A] =
     stringSerializer(construct, (a: A) => a.toString)
 
-  private def stringSerializer[A: Manifest](construct: String => A, deconstruct: A => String) =
+  private def stringSerializer[A>:Null: Manifest](construct: String => A, deconstruct: A => String) =
     new CustomSerializer[A](_ => ( {
       case JString(s) => construct(s)
+        try {
+          construct(s)
+        } catch {
+          case NonFatal(e) =>
+            throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+        }
+      case JNull => null
     }, {
       case a: A => JString(deconstruct(a))
     }))
