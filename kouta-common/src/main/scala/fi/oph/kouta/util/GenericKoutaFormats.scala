@@ -50,7 +50,7 @@ trait GenericKoutaFormats {
     )
 
   case object LocalDateTimeSerializer extends CustomSerializer[LocalDateTime](_ => ( {
-    case JString(i) => LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
+    case JString(i) =>
       try {
         LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
       } catch {
@@ -63,7 +63,7 @@ trait GenericKoutaFormats {
   }))
 
   case object ModifiedSerializer extends CustomSerializer[Modified](_ => ( {
-    case JString(i) => Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
+    case JString(i) =>
       try {
         Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
       } catch {
@@ -86,7 +86,7 @@ trait GenericKoutaFormats {
 
   private def stringSerializer[A>:Null: Manifest](construct: String => A, deconstruct: A => String) =
     new CustomSerializer[A](_ => ( {
-      case JString(s) => construct(s)
+      case JString(s) => 
         try {
           construct(s)
         } catch {
