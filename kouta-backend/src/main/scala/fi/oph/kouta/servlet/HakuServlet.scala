@@ -80,6 +80,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
       |                    example: 1.2.246.562.29.00000000000000000009
       |""".stripMargin)
   put("/") {
+
     implicit val authenticated: Authenticated = authenticate()
 
     hakuService.put(parsedBody.extract[Haku]) match {
