@@ -155,6 +155,10 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
+            <artifactId>json4s-ext_2.12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.json4s</groupId>
             <artifactId>json4s-jackson_2.12</artifactId>
         </dependency>
         <dependency>
