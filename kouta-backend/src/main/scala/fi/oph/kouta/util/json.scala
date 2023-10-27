@@ -18,7 +18,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     toteutusMetadataSerializer,
     sisaltoSerializer,
     valintaperusteMetadataSerializer,
-    sessionSerializer
+    sessionSerializer,
+    organisaationYhteystietoSerializer
   )
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ =>
@@ -158,6 +159,28 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
 
         Extraction.decompose(j)
       }
+    )
+  )
+
+  private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
+    ( {
+      case s: JObject =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        s match {
+          case JObject(List(("osoiteTyyppi", JString(_)), ("kieli", JString(_)), ("postinumeroUri", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)), ("postitoimipaikka", JString(_)), ("osoite", JString(_)))) =>
+            s.extract[OrgOsoite]
+          case JObject(List(("kieli",JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)), ("email",JString(_)))) =>
+            s.extract[Email]
+          case JObject(List(("kieli", JString(_)), ("numero", JString(_)), ("tyyppi", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)))) => s.extract[Puhelin]
+          case JObject(List(("kieli", JString(_)), ("www", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)))) => s.extract[Www]
+        }
+    }, {
+      case j: OrganisaationYhteystieto =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        Extraction.decompose(j)
+    }
     )
   )
 }

@@ -1,13 +1,14 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.TestOids
-import fi.oph.kouta.domain.{En, Fi, Organisaatio, OrganisaatioHierarkia, Sv}
+import fi.oph.kouta.domain._
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
   val organisaationOsa = Organisaatio(
     oid = TestOids.GrandChildOid.toString,
     parentOidPath = s"${TestOids.GrandChildOid.toString}/${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
+    yhteystiedot = List(OrgOsoite(kieli = "kieli_fi#1", osoite = "Opistokatu 1", postinumeroUri = "posti_90500", postitoimipaikka = "Paimio", osoiteTyyppi = "kaynti")),
     kotipaikkaUri = Some("kunta_179"),
     status = "AKTIIVINEN",
     children = List(),
@@ -18,6 +19,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+    yhteystiedot = List(OrgOsoite(kieli = "kieli_fi#1", osoite = "Opistokatu 1", postinumeroUri = "posti_90500", postitoimipaikka = "Paimio", osoiteTyyppi = "kaynti")),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_179"),
     children = List(),

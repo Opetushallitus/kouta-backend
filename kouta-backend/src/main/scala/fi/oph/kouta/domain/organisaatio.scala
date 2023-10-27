@@ -57,10 +57,35 @@ package object organisaatio {
   def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel)
 }
 
+sealed trait OrganisaationYhteystieto {
+  val kieli: String
+}
+
+case class OrgOsoite(kieli: String,
+                     osoite: String,
+                     postinumeroUri: String,
+                     postitoimipaikka: String,
+                     osoiteTyyppi: String)
+  extends OrganisaationYhteystieto
+
+case class Email(kieli: String,
+                 email: String)
+  extends OrganisaationYhteystieto
+
+case class Puhelin(kieli: String,
+                   numero: String,
+                   tyyppi: String)
+  extends OrganisaationYhteystieto
+
+case class Www(kieli: String,
+               www: String)
+  extends OrganisaationYhteystieto
+
 case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
+                        yhteystiedot: List[OrganisaationYhteystieto] = List(),
                         status: String,
                         kotipaikkaUri: Option[String] = None,
                         children: List[Organisaatio] = List(),
