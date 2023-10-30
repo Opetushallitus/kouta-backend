@@ -58,28 +58,24 @@ package object organisaatio {
 }
 
 sealed trait OrganisaationYhteystieto {
-  val kieli: String
+  val kieli: Kieli
 }
 
-case class OrgOsoite(kieli: String,
-                     osoite: String,
-                     postinumeroUri: String,
-                     postitoimipaikka: String,
-                     osoiteTyyppi: String)
-  extends OrganisaationYhteystieto
+case class OrgYhteystieto(kieli: Kieli) extends OrganisaationYhteystieto
 
-case class Email(kieli: String,
-                 email: String)
-  extends OrganisaationYhteystieto
+case class Kayntiosoite(kieli: Kieli,
+                        osoite: String,
+                        postinumeroUri: String) extends OrganisaationYhteystieto
 
-case class Puhelin(kieli: String,
-                   numero: String,
-                   tyyppi: String)
-  extends OrganisaationYhteystieto
+case class Postiosoite(kieli: Kieli,
+                       osoite: String,
+                       postinumeroUri: String) extends OrganisaationYhteystieto
 
-case class Www(kieli: String,
-               www: String)
-  extends OrganisaationYhteystieto
+case class Email(kieli: Kieli, email: String) extends OrganisaationYhteystieto
+
+case class Puhelin(kieli: Kieli, numero: String) extends OrganisaationYhteystieto
+
+case class Www(kieli: Kieli, www: String) extends OrganisaationYhteystieto
 
 case class Organisaatio(oid: String,
                         parentOidPath: String,

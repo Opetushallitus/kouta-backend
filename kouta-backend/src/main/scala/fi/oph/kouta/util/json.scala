@@ -2,6 +2,8 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{ExternalSession, Session}
+import fi.oph.kouta.service.MigrationService.toKieli
+import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
@@ -162,25 +164,53 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     )
   )
 
-  private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
-    ( {
-      case s: JObject =>
-        implicit def formats: Formats = genericKoutaFormats
+private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
+  ( {
+    case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
 
-        s match {
-          case JObject(List(("osoiteTyyppi", JString(_)), ("kieli", JString(_)), ("postinumeroUri", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)), ("postitoimipaikka", JString(_)), ("osoite", JString(_)))) =>
-            s.extract[OrgOsoite]
-          case JObject(List(("kieli",JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)), ("email",JString(_)))) =>
-            s.extract[Email]
-          case JObject(List(("kieli", JString(_)), ("numero", JString(_)), ("tyyppi", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)))) => s.extract[Puhelin]
-          case JObject(List(("kieli", JString(_)), ("www", JString(_)), ("yhteystietoOid", JString(_)), ("id", JString(_)))) => s.extract[Www]
+      val kieli = toKieli(withoutKoodiVersion((s \ "kieli").extract[String])).get
+
+      s \ "osoiteTyyppi" match {
+        case JString("kaynti") =>
+          Kayntiosoite(
+            kieli = kieli,
+            osoite = (s \ "osoite").extract[String],
+            postinumeroUri = (s \ "postinumeroUri").extract[String]
+          )
+
+        case JString("posti") =>
+          Postiosoite(
+            kieli = kieli,
+            osoite = (s \ "osoite").extract[String],
+            postinumeroUri = (s \ "postinumeroUri").extract[String]
+          )
+
+        case _ => s \ "email" match {
+          case JString(email) =>
+            Email(
+              kieli = kieli,
+              email = email
+            )
+          case _ => s \ "tyyppi" match {
+            case JString("puhelin") => Puhelin(
+              kieli = kieli, numero = (s \ "numero").extract[String]
+            )
+            case _ => s \ "www" match {
+              case JString(www) =>
+                Www(
+                  kieli = kieli, www = www
+                )
+            }
+          }
         }
-    }, {
-      case j: OrganisaationYhteystieto =>
-        implicit def formats: Formats = genericKoutaFormats
+      }
+  }, {
+    case j: OrganisaationYhteystieto =>
+      implicit def formats: Formats = genericKoutaFormats
 
-        Extraction.decompose(j)
-    }
-    )
+      Extraction.decompose(j)
+  }
   )
+)
 }
