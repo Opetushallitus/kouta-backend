@@ -1,0 +1,1 @@
+SELECT cron.schedule('Delete old sessions', '0 * * * *', $$DELETE FROM sessions WHERE s.created < now() - interval '60 minutes')

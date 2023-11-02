@@ -41,9 +41,8 @@ object SessionDAO extends SessionDAO with SessionSQL {
     runBlockingTransactionally(deleteSession(ticket), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlockingTransactionally(getSession(id), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get.map {
-      case (casTicket, personOid) =>
-        val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(15, TimeUnit.SECONDS))
+    runBlocking(getSession(id), timeout = Duration(15, TimeUnit.SECONDS)).map {
+      case (casTicket, personOid, authorities) =>
         CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
     }
   }
@@ -67,21 +66,17 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def deleteSession(ticket: ServiceTicket): DBIO[Boolean] =
     sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
-  protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
+  protected def getSession(id: UUID): DBIO[Option[(Option[String], String, Array[String])]] =
     getSessionQuery(id)
       .flatMap {
-        case None =>
-          deleteSession(id).map(_ => None)
-        case Some((ticket, person)) =>
-          DBIO.successful(Some((ticket, person)))
+        case Some((ticket, person, authorities)) =>
+          DBIO.successful(Some((ticket, person, authorities.split('/'))))
       }
 
-  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String)]] =
-    sql"""select cas_ticket, person from sessions
-          where id = $id and created > now() - interval '60 minutes'"""
-      .as[(Option[String], String)].headOption
-
-  protected def searchAuthoritiesBySession(sessionId: UUID): DBIO[Vector[String]] =
-    sql"""select authority from authorities where session = $sessionId""".as[String]
-
+  // Slick doesn't support postgresql array data type, so an ugly workaround for now
+  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String, String)]] =
+    sql"""
+      select cas_ticket, person, array_to_string(array(select a.authority from authorities a where a.session = s.id), '/') as authorities
+      from sessions s where s.id = $id and s.created > now() - interval '60 minutes'"""
+      .as[(Option[String], String, String)].headOption
 }
