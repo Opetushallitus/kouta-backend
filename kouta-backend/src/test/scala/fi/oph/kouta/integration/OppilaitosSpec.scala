@@ -18,12 +18,11 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   def organisaatioHierarkia(oid: String) = OrganisaatioHierarkia(
     List(
-      Organisaatio(
+      OrganisaatioHierarkiaOrg(
         oid,
         s"""${oid}/1.2.246.562.10.47941294986/1.2.246.562.10.00000000001""",
         Some("oppilaitostyyppi_63#1"),
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
-        List(Kayntiosoite(kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = "posti_90500")),
         "AKTIIVINEN",
         Some("kunta_837"),
         List(),

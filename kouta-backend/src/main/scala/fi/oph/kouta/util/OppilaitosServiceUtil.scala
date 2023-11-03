@@ -1,7 +1,8 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{OrganisaatioHierarkia, Organisaatio}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain._
+
 
 object OppilaitosServiceUtil {
   def getHierarkiaOids(hierarkia: OrganisaatioHierarkia): List[OrganisaatioOid] = {
@@ -10,7 +11,7 @@ object OppilaitosServiceUtil {
     }).distinct
   }
 
-  def getOidsFromChildren(organisaationOsat: List[Organisaatio]): List[OrganisaatioOid] = {
+  def getOidsFromChildren(organisaationOsat: List[OrganisaatioHierarkiaOrg]): List[OrganisaatioOid] = {
     organisaationOsat.flatMap(org => {
       if (org.children.isEmpty) {
         List(OrganisaatioOid(org.oid))

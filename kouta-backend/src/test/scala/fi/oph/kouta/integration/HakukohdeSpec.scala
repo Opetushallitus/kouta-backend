@@ -639,7 +639,7 @@ class HakukohdeSpec
     val tallennettu = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
       metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
-    val lastModified = get(oid, tallennettu)
+    var lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
       liitteet = List(tallennettu.liitteet.head)
     )
@@ -648,6 +648,7 @@ class HakukohdeSpec
     val muokattuHakukohde2 = tallennettu.copy(
       liitteet = List()
     )
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     update(muokattuHakukohde2, lastModified, expectUpdate = true, ophSession)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }

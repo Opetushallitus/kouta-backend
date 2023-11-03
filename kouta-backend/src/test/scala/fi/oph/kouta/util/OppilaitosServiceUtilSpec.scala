@@ -4,11 +4,10 @@ import fi.oph.kouta.TestOids
 import fi.oph.kouta.domain._
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
-  val organisaationOsa = Organisaatio(
+  val organisaationOsa = OrganisaatioHierarkiaOrg(
     oid = TestOids.GrandChildOid.toString,
     parentOidPath = s"${TestOids.GrandChildOid.toString}/${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
-    yhteystiedot = List(Kayntiosoite(kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = "posti_90500")),
     kotipaikkaUri = Some("kunta_179"),
     status = "AKTIIVINEN",
     children = List(),
@@ -19,7 +18,16 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
-    yhteystiedot = List(Kayntiosoite(kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = "posti_90500")),
+    yhteystiedot = List(Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")))),
+    kotipaikkaUri = "kunta_595",
+    status = "AKTIIVINEN",
+    organisaatiotyypit = List("organisaatiotyyppi_03"))
+
+  val hierarkiaorganisaatio = OrganisaatioHierarkiaOrg(
+    oid = TestOids.ChildOid.toString,
+    parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
+    oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
+    nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_179"),
     children = List(),
@@ -47,21 +55,21 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
   }
 
   "getHierarkiaOids" should "return one oid for one org without children" in {
-    assert(OppilaitosServiceUtil.getHierarkiaOids(OrganisaatioHierarkia(organisaatiot = List(organisaatio))) == List(TestOids.ChildOid))
+    assert(OppilaitosServiceUtil.getHierarkiaOids(OrganisaatioHierarkia(organisaatiot = List(hierarkiaorganisaatio))) == List(TestOids.ChildOid))
   }
 
   it should "return two oids for two orgs without children" in {
     assert(OppilaitosServiceUtil.getHierarkiaOids(
       OrganisaatioHierarkia(
-        organisaatiot = List(organisaatio, organisaatio.copy(oid = TestOids.EvilChildOid.toString)))) == List(TestOids.ChildOid, TestOids.EvilChildOid))
+        organisaatiot = List(hierarkiaorganisaatio, hierarkiaorganisaatio.copy(oid = TestOids.EvilChildOid.toString)))) == List(TestOids.ChildOid, TestOids.EvilChildOid))
   }
 
   it should "return distinct oids for all the children recursively" in {
     val organisaatioHierarkia = OrganisaatioHierarkia(organisaatiot = List(
-      organisaatio.copy(
+      hierarkiaorganisaatio.copy(
         children = List(
           organisaationOsa)),
-      organisaatio.copy(
+      hierarkiaorganisaatio.copy(
         oid = TestOids.EvilChildOid.toString,
         children = List(
           organisaationOsa,

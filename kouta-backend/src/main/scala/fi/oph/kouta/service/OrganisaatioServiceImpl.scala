@@ -1,10 +1,9 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient, OrganisaatioServiceQueryException}
+import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
-import fi.oph.kouta.util.MiscUtils
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.{MultiParams, Params}
 
@@ -38,8 +37,13 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     }
   }
 
-  def getOrganisaatioHierarkia(params: Params, multiParams: MultiParams) = {
-    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params), Some(multiParams))
+  def getOrganisaatioHierarkia(params: Params, multiParams: MultiParams): Either[Throwable, OrganisaatioHierarkia] = {
+    Try[OrganisaatioHierarkia] {
+      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params), Some(multiParams))
+    } match {
+      case Success(organisaatiohierarkia: OrganisaatioHierarkia) => Right(organisaatiohierarkia)
+      case Failure(exception) => Left(exception)
+    }
   }
 
   def getOppilaitoksetForAvoinKorkeakoulutus(): OrganisaatioHierarkia = {

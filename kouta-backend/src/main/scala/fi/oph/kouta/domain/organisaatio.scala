@@ -61,15 +61,10 @@ sealed trait OrganisaationYhteystieto {
   val kieli: Kieli
 }
 
-case class OrgYhteystieto(kieli: Kieli) extends OrganisaationYhteystieto
-
-case class Kayntiosoite(kieli: Kieli,
-                        osoite: String,
-                        postinumeroUri: String) extends OrganisaationYhteystieto
-
-case class Postiosoite(kieli: Kieli,
-                       osoite: String,
-                       postinumeroUri: String) extends OrganisaationYhteystieto
+case class OrgOsoite(osoiteTyyppi: String,
+                     kieli: Kieli,
+                     osoite: String,
+                     postinumeroUri: Option[String]) extends OrganisaationYhteystieto
 
 case class Email(kieli: Kieli, email: String) extends OrganisaationYhteystieto
 
@@ -81,14 +76,24 @@ case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
-                        yhteystiedot: List[OrganisaationYhteystieto] = List(),
+                        yhteystiedot: List[Option[OrganisaationYhteystieto]] = List(),
+                        kotipaikkaUri: String,
                         status: String,
-                        kotipaikkaUri: Option[String] = None,
-                        children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List()) {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
   def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
 
-case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])
+case class OrganisaatioHierarkiaOrg(oid: String,
+                                    parentOidPath: String,
+                                    oppilaitostyyppi: Option[String] = None,
+                                    nimi: Kielistetty,
+                                    status: String,
+                                    kotipaikkaUri: Option[String] = None,
+                                    children: List[OrganisaatioHierarkiaOrg] = List(),
+                                    organisaatiotyypit: List[String] = List(),
+                                    tyypit: List[String] = List()) {
+}
+
+case class OrganisaatioHierarkia(organisaatiot: List[OrganisaatioHierarkiaOrg])

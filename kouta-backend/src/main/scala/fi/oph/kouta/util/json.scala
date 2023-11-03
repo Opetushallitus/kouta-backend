@@ -111,7 +111,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           Koulutustyyppi.withName(tyyppi)
         }.getOrElse(Amm) match {
           case kt if Koulutustyyppi.values contains kt => s.extract[GenericValintaperusteMetadata]
-          case kt                                     => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
+          case kt                                      => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
         }
       },
       { case j: ValintaperusteMetadata =>
@@ -164,53 +164,73 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     )
   )
 
-private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
-  ( {
-    case s: JObject =>
-      implicit def formats: Formats = genericKoutaFormats
-
-      val kieli = toKieli(withoutKoodiVersion((s \ "kieli").extract[String])).get
-
-      s \ "osoiteTyyppi" match {
-        case JString("kaynti") =>
-          Kayntiosoite(
-            kieli = kieli,
-            osoite = (s \ "osoite").extract[String],
-            postinumeroUri = (s \ "postinumeroUri").extract[String]
-          )
-
-        case JString("posti") =>
-          Postiosoite(
-            kieli = kieli,
-            osoite = (s \ "osoite").extract[String],
-            postinumeroUri = (s \ "postinumeroUri").extract[String]
-          )
-
-        case _ => s \ "email" match {
-          case JString(email) =>
-            Email(
-              kieli = kieli,
-              email = email
-            )
-          case _ => s \ "tyyppi" match {
-            case JString("puhelin") => Puhelin(
-              kieli = kieli, numero = (s \ "numero").extract[String]
-            )
-            case _ => s \ "www" match {
-              case JString(www) =>
-                Www(
-                  kieli = kieli, www = www
-                )
-            }
-          }
-        }
-      }
-  }, {
-    case j: OrganisaationYhteystieto =>
-      implicit def formats: Formats = genericKoutaFormats
-
-      Extraction.decompose(j)
+  def toPostinumeroKoodiuri(jsonObject: JObject): Option[String] = {
+    Try(jsonObject \ "postinumeroUri").collect { case JString(postinumerokoodiuri) =>
+      postinumerokoodiuri
+    }.toOption
   }
+
+  private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
+    (
+      { case s: JObject =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        Try(s \ "kieli").collect { case JString(kieliKoodiUri) =>
+          val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
+
+          Try(s \ "osoiteTyyppi").collect {
+            case JString(kaynti) =>
+              val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+
+              OrgOsoite(
+                osoiteTyyppi = kaynti,
+                kieli = kieli,
+                osoite = (s \ "osoite").extract[String],
+                postinumeroUri = postinumerokoodiuri
+              )
+
+            case JString(posti) =>
+              val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+
+              OrgOsoite(
+                osoiteTyyppi = posti,
+                kieli = kieli,
+                osoite = (s \ "osoite").extract[String],
+                postinumeroUri = postinumerokoodiuri
+              )
+
+            case _ =>
+              s \ "email" match {
+                case JString(email) =>
+                  Email(
+                    kieli = kieli,
+                    email = email
+                  )
+                case _ =>
+                  s \ "tyyppi" match {
+                    case JString("puhelin") =>
+                      Puhelin(
+                        kieli = kieli,
+                        numero = (s \ "numero").extract[String]
+                      )
+                    case _ =>
+                      s \ "www" match {
+                        case JString(www) =>
+                          Www(
+                            kieli = kieli,
+                            www = www
+                          )
+                      }
+                  }
+              }
+          }.get
+        }.get
+      },
+      { case j: OrganisaationYhteystieto =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        Extraction.decompose(j)
+      }
+    )
   )
-)
 }
