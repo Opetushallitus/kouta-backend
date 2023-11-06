@@ -70,6 +70,7 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
     getSessionQuery(id)
       .flatMap {
+        case None => DBIO.successful(None)
         case Some((ticket, person)) =>
           DBIO.successful(Some((ticket, person)))
       }
