@@ -42,7 +42,8 @@ object SessionDAO extends SessionDAO with SessionSQL {
 
   override def get(id: UUID): Option[Session] = {
     runBlocking(getSession(id), timeout = Duration(15, TimeUnit.SECONDS)).map {
-      case (casTicket, personOid, authorities) =>
+      case (casTicket, personOid) =>
+        val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(15, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
     }
   }
@@ -66,17 +67,19 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def deleteSession(ticket: ServiceTicket): DBIO[Boolean] =
     sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
-  protected def getSession(id: UUID): DBIO[Option[(Option[String], String, Array[String])]] =
+  protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
     getSessionQuery(id)
       .flatMap {
-        case Some((ticket, person, authorities)) =>
-          DBIO.successful(Some((ticket, person, authorities.split('/'))))
+        case Some((ticket, person)) =>
+          DBIO.successful(Some((ticket, person)))
       }
 
-  // Slick doesn't support postgresql array data type, so an ugly workaround for now
-  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String, String)]] =
-    sql"""
-      select cas_ticket, person, array_to_string(array(select a.authority from authorities a where a.session = s.id), '/') as authorities
-      from sessions s where s.id = $id and s.created > now() - interval '60 minutes'"""
-      .as[(Option[String], String, String)].headOption
+  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String)]] =
+    sql"""select cas_ticket, person from sessions
+          where id = $id and created > now() - interval '60 minutes'"""
+      .as[(Option[String], String)].headOption
+
+  protected def searchAuthoritiesBySession(sessionId: UUID): DBIO[Vector[String]] =
+    sql"""select authority from authorities where session = $sessionId""".as[String]
+
 }
