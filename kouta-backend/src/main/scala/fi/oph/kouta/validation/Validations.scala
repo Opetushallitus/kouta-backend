@@ -956,4 +956,8 @@ object Validations {
       }: _*
     )
   }
+  def invalidHakukohteenLiittajaOrganisaatio(allOrgs: String) : ErrorMessage = ErrorMessage(
+    msg = allOrgs,
+    id = "invalidHakukohteenLiittajaOrganisaatio"
+  )
 }

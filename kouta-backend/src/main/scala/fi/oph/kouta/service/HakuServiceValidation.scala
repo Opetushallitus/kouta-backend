@@ -10,11 +10,12 @@ import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
 import java.util.UUID
 
 object HakuServiceValidation
-    extends HakuServiceValidation(KoodistoService, HakemusPalveluClient, HakukohdeDAO)
+    extends HakuServiceValidation(KoodistoService, HakemusPalveluClient, HakukohdeDAO, OrganisaatioServiceImpl)
 class HakuServiceValidation(
     koodistoService: KoodistoService,
     hakemusPalveluClient: HakemusPalveluClient,
-    hakukohdeDAO: HakukohdeDAO
+    hakukohdeDAO: HakukohdeDAO,
+    organisaatioService: OrganisaatioService
 ) extends ValidatingService[Haku] {
   private def isYhteisHaku(haku: Haku): Boolean =
     haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_01")
@@ -115,11 +116,21 @@ class HakuServiceValidation(
           validateIfTrue(
             isYhteisHaku(haku),
             assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
-          )
+          ),
+          validateHakukohteenLiittajaOrganisaatiot(haku)
         )
       )
     )
   }
+
+  private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
+    assertTrue(
+      haku.hakukohteenLiittajaOrganisaatiot.forall(
+        organisaatioService.getAllChildOidsFlat(haku.organisaatioOid).contains
+      ),
+      "hakukohteenLiittajaOrganisaatiot",
+      invalidHakukohteenLiittajaOrganisaatio(haku.hakukohteenLiittajaOrganisaatiot.toString())
+    )
 
   private def validateMetadata(
       m: HakuMetadata,
