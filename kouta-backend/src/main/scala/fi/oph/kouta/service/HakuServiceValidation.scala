@@ -124,7 +124,7 @@ class HakuServiceValidation(
   }
 
   private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
-    assertTrue(
+    assertFalse(
       haku.hakukohteenLiittajaOrganisaatiot.forall(
         Seq(
           "1.2.246.562.10.81934895871",
