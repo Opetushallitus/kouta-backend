@@ -129,7 +129,11 @@ class HakuServiceValidation(
         (Seq("1.2.246.562.10.81934895871", "1.2.246.562.10.67603619189", "1.2.246.562.10.66603619189")).contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(organisaatioService.getAllChildOidsFlat(haku.organisaatioOid).toString())
+      invalidHakukohteenLiittajaOrganisaatio(
+        "organisaatioService.getAllChildOidsFlat(haku.organisaatioOid): " + organisaatioService
+          .getAllChildOidsFlat(haku.organisaatioOid)
+          .toString() + "\nhaku.hakukohteenLiittajaOrganisaatiot: ﬂ" + haku.hakukohteenLiittajaOrganisaatiot.toString()
+      )
     )
 
   private def validateMetadata(
