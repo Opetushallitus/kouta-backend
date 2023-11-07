@@ -126,13 +126,19 @@ class HakuServiceValidation(
   private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
     assertTrue(
       haku.hakukohteenLiittajaOrganisaatiot.forall(
-        (Seq("1.2.246.562.10.81934895871", "1.2.246.562.10.67603619189", "1.2.246.562.10.66603619189", "1.2.246.562.10.39218317368")).contains
+        Seq(
+          "1.2.246.562.10.81934895871",
+          "1.2.246.562.10.67603619189",
+          "1.2.246.562.10.66603619189",
+          "1.2.246.562.10.39218317368",
+          "1.2.246.562.10.000000000777"
+        ).contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
       invalidHakukohteenLiittajaOrganisaatio(
         "organisaatioService.getAllChildOidsFlat(haku.organisaatioOid): " + organisaatioService
           .getAllChildOidsFlat(haku.organisaatioOid)
-          .toString() + "\nhaku.hakukohteenLiittajaOrganisaatiot: ﬂ" + haku.hakukohteenLiittajaOrganisaatiot.toString()
+          .toString() + "\nhaku.hakukohteenLiittajaOrganisaatiot: " + haku.hakukohteenLiittajaOrganisaatiot.toString()
       )
     )
 
