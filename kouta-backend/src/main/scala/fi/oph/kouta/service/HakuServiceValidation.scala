@@ -116,8 +116,8 @@ class HakuServiceValidation(
           validateIfTrue(
             isYhteisHaku(haku),
             assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
-          )/*,
-          validateHakukohteenLiittajaOrganisaatiot(haku)*/
+          ),
+          validateHakukohteenLiittajaOrganisaatiot(haku)
         )
       )
     )
@@ -126,13 +126,14 @@ class HakuServiceValidation(
   private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
     assertFalse(
       haku.hakukohteenLiittajaOrganisaatiot.forall(
-        Seq(
+//        Seq(
 //          "1.2.246.562.10.81934895871",
 //          "1.2.246.562.10.67603619189",
 //          "1.2.246.562.10.66603619189",
 //          "1.2.246.562.10.39218317368",
 //          "1.2.246.562.10.000000000777"
-        ).contains
+//        ).contains
+        haku.hakukohteenLiittajaOrganisaatiot.contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
       invalidHakukohteenLiittajaOrganisaatio(
