@@ -129,7 +129,7 @@ class HakuServiceValidation(
         organisaatioService.getAllChildOidsFlat(haku.organisaatioOid).contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(haku.hakukohteenLiittajaOrganisaatiot.toString())
+      invalidHakukohteenLiittajaOrganisaatio(organisaatioService.getAllChildOidsFlat(haku.organisaatioOid).toString())
     )
 
   private def validateMetadata(
