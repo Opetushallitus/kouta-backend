@@ -1,1 +1,1 @@
-SELECT cron.schedule('session-cleanup', '0 * * * *', $$DELETE FROM sessions WHERE s.created < now() - interval '60 minutes'$$)
+SELECT cron.schedule('session-cleanup', '0 * * * *', $$DELETE FROM sessions WHERE created < now() - interval '60 minutes'$$)
