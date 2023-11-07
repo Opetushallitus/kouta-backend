@@ -126,7 +126,7 @@ class HakuServiceValidation(
   private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
     assertTrue(
       haku.hakukohteenLiittajaOrganisaatiot.forall(
-        (Seq("1.2.246.562.10.81934895871", "1.2.246.562.10.67603619189", "1.2.246.562.10.66603619189")).contains
+        (Seq("1.2.246.562.10.81934895871", "1.2.246.562.10.67603619189", "1.2.246.562.10.66603619189", "1.2.246.562.10.39218317368")).contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
       invalidHakukohteenLiittajaOrganisaatio(
