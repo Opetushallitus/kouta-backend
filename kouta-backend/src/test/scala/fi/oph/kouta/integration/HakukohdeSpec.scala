@@ -152,6 +152,16 @@ class HakukohdeSpec
     put(hakukohde(toteutusOid, hakuOid))
   }
 
+  it should "store ammatillinen tutkinnon osa hakukohde if toteutus uses hakukohteet" in {
+    val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
+    val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(
+      koulutusOid = KoulutusOid(koulutusOid),
+      metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu.copy(hakulomaketyyppi = None, isHakukohteetKaytossa = Some(true)))
+    )
+    val toteutusOid = put(ammToToteutus)
+    put(hakukohde(toteutusOid, hakuOid))
+  }
+
   it should "store hakukohde without nimi if hakukohdeKoodiUri given" in {
     val koulutusOid   = put(TestData.AmmKoulutus, ophSession)
     val ammToToteutus = TestData.JulkaistuAmmToteutus.copy(koulutusOid = KoulutusOid(koulutusOid))
@@ -639,12 +649,13 @@ class HakukohdeSpec
     val tallennettu = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
       metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
-    val lastModified = get(oid, tallennettu)
+    var lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
       liitteet = List(tallennettu.liitteet.head)
     )
     update(muokattuHakukohde, lastModified, expectUpdate = true, ophSession2)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid2.toString)
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     val muokattuHakukohde2 = tallennettu.copy(
       liitteet = List()
     )
