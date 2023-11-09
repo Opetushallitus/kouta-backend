@@ -19,7 +19,7 @@ trait OrganisaatioService {
     case _                   => children(getPartialHierarkia(oid, lakkautetut))
   }
 
-  def getAllOrganisaatioOids(): Either[Throwable, Seq[OrganisaatioOid]] = {
+  def getAllOrganisaatioOids(): Seq[OrganisaatioOid] = {
     def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
       item.children.map(_.oid)
     }
@@ -31,8 +31,8 @@ trait OrganisaatioService {
       None,
       "AKTIIVINEN"
       )} match {
-      case Success(topLevelItem) => Right(findChildren(topLevelItem))
-      case Failure(exp) => Left(exp)
+      case Success(topLevelItem) => findChildren(topLevelItem)
+      case Failure(exp) => Seq()
     }
   }
 
