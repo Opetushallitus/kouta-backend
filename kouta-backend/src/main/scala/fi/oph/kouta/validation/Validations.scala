@@ -956,8 +956,8 @@ object Validations {
       }: _*
     )
   }
-  def invalidHakukohteenLiittajaOrganisaatio(allOrgs: String) : ErrorMessage = ErrorMessage(
-    msg = allOrgs,
+  def invalidHakukohteenLiittajaOrganisaatio(tuntemattomatLiittajat: Seq[OrganisaatioOid]) : ErrorMessage = ErrorMessage(
+    msg = s"Yksi tai useampi organisaatio on tuntematon: [${tuntemattomatLiittajat.mkString(",")}] ",
     id = "invalidHakukohteenLiittajaOrganisaatio"
   )
 }

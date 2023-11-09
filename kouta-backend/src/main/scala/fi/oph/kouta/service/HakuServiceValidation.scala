@@ -1,7 +1,8 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{HakemusPalveluClient}
+import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
@@ -117,31 +118,21 @@ class HakuServiceValidation(
             isYhteisHaku(haku),
             assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
           ),
-          validateHakukohteenLiittajaOrganisaatiot(haku)
+          validateHakukohteenLiittajaOrganisaatiot(haku.hakukohteenLiittajaOrganisaatiot)
         )
       )
     )
   }
 
-  private def validateHakukohteenLiittajaOrganisaatiot(haku: Haku): IsValid =
-    assertTrue(
-      haku.hakukohteenLiittajaOrganisaatiot.forall(
-//        Seq(
-//          "1.2.246.562.10.81934895871",
-//          "1.2.246.562.10.67603619189",
-//          "1.2.246.562.10.66603619189",
-//          "1.2.246.562.10.39218317368",
-//          "1.2.246.562.10.000000000777"
-//        ).contains
-        haku.hakukohteenLiittajaOrganisaatiot.contains
+  private def validateHakukohteenLiittajaOrganisaatiot(liittajat: Seq[OrganisaatioOid]): IsValid = {
+    val allOids = organisaatioService.getAllOrganisaatioOids().getOrElse(Seq())
+    assertTrue(if (liittajat.isEmpty) true else liittajat.forall(
+        allOids.contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(
-        "organisaatioService.getAllChildOidsFlat(haku.organisaatioOid): " + organisaatioService
-          .getAllChildOidsFlat(haku.organisaatioOid)
-          .toString() + "\nhaku.hakukohteenLiittajaOrganisaatiot: " + haku.hakukohteenLiittajaOrganisaatiot.toString()
-      )
+      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains))
     )
+  }
 
   private def validateMetadata(
       m: HakuMetadata,

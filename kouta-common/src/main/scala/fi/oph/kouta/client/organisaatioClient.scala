@@ -15,7 +15,7 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
     .expireAfterWrite(2.hours)
     .build()
 
-  private def getWholeOrganisaatioHierarkia(): OrganisaatioResponse = {
+  def getWholeOrganisaatioHierarkia(): OrganisaatioResponse = {
     get(organisaatioUrl, followRedirects = true) { response =>
       parse(response).extract[OrganisaatioResponse]
     }

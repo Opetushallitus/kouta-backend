@@ -19,6 +19,23 @@ trait OrganisaatioService {
     case _                   => children(getPartialHierarkia(oid, lakkautetut))
   }
 
+  def getAllOrganisaatioOids(): Either[Throwable, Seq[OrganisaatioOid]] = {
+    def findChildren(item: OidAndChildren): Seq[OrganisaatioOid] = {
+      item.children.map(_.oid)
+    }
+    Try[OidAndChildren] {
+      OidAndChildren(
+      RootOrganisaatioOid,
+      cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkia().organisaatiot,
+      RootOrganisaatioOid.s,
+      None,
+      "AKTIIVINEN"
+      )} match {
+      case Success(topLevelItem) => Right(findChildren(topLevelItem))
+      case Failure(exp) => Left(exp)
+    }
+  }
+
   def getAllChildOidsAndKoulutustyypitFlat(oid: OrganisaatioOid): OrganisaatioOidsAndKoulutustyypitFlat = oid match {
     case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
     case _                   => (children(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))

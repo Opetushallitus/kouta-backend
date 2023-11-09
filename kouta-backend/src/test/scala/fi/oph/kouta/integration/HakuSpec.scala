@@ -275,8 +275,8 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku = haku(oid)
     val lastModified = get(oid, thisHaku)
-    update(thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(HkiYoOid)), lastModified)
-    get(oid, thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(HkiYoOid)))
+    update(thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(KuopionKansalaisopistoOid)), lastModified)
+    get(oid, thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(KuopionKansalaisopistoOid)))
   }
 
   it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {
