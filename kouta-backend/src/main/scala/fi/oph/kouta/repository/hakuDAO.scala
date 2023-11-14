@@ -231,7 +231,8 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     }
 
     sql"""#$selectHakuListSql
-          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          or ha.hakukohteen_liittaja_organisaatiot && (#${createOidInParams(organisaatioOids)}))
           #$includeYhteishaut
           #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
   }
