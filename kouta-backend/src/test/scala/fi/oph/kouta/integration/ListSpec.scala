@@ -93,7 +93,7 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     t22 = addToList(TestData.JulkaistuAmmOpettajaToteutus.copy(koulutusOid = k21.oid, organisaatioOid = AmkOid, tila = Julkaistu))
     t23 = addToList(TestData.JulkaistuMuuToteutus.copy(koulutusOid = k22.oid, organisaatioOid = PohjoiskalotinKoulutussaatio, tila = Julkaistu))
 
-    h1 = addToList(haku(Julkaistu, ParentOid))
+    h1 = addToList(haku(Julkaistu, ParentOid).copy(hakukohteenLiittajaOrganisaatiot = Seq(LonelyOid)))
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
@@ -229,12 +229,11 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   it should "filter arkistoidut and hakukohteeseen liitettävät if instructed" in {
     list(ToteutusPath, Map("organisaatioOid" -> LonelyOid.s, "vainHakukohteeseenLiitettavat" -> "true", "myosArkistoidut" -> "false"), List(t4, t7, t10, ophT1))
   }
-
   "Haku list" should "list all haut for authorized organizations" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s), List(h1, h2, h3))
   }
   it should "list all haut for authorized organizations 2" in {
-    list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h4))
+    list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h1, h4))
   }
   it should "return forbidden if oid is unknown" in {
     list(HakuPath, Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -268,6 +267,9 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
   it should "filter out arkistoidut if instructed" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(h1, h3))
+  }
+  it should "list all hakukohteen liittäjäorganisaatiot for given organisaatioOid" in {
+    list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h1, h4))
   }
 
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
