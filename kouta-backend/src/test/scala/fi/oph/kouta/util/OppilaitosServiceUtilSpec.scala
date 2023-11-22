@@ -82,5 +82,71 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
       List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.EvilGrandChildOid, TestOids.EvilGrandGrandChildOid, TestOids.GrandGrandChildOid, TestOids.EvilChildOid))
   }
 
-  //"toYhteystieto" should
+  val yhteystiedot = List(
+    Some(Email(Fi, "koulutus@opisto.fi")),
+    None,
+    Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
+    Some(Puhelin(Fi, "050 44042961")),
+    Some(OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110"))),
+    Some(OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))),
+    Some(Www(Fi, "http://www.salpaus.fi")))
+
+  "filterByOsoitetyyppi" should "return postiosoitteet from a list of yhteystiedot" in {
+    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List(
+      OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110")),
+      OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))))
+  }
+
+  it should "return käyntiosoite from the list of yhteystiedot" in {
+    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "kaynti") ==
+      List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))))
+  }
+
+  it should "return empty list as there is no postiosoite in yhteystiedot" in {
+    val yhteystiedot = List(
+      Some(Email(Fi, "koulutus@opisto.fi")),
+      None,
+      Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
+      Some(Puhelin(Fi, "050 44042961")),
+      Some(Www(Fi, "http://www.salpaus.fi")))
+
+    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List())
+  }
+
+  "toOsoite" should "return käyntiosoite in Fi and postinumerokoodiuri" in {
+    val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")))
+
+    assert(OppilaitosServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228"), Some("posti_15110"))))
+  }
+
+  it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri" in {
+    val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")), OrgOsoite("kaynti", Sv, "Högskolavägen 228", Some("posti_15110")))
+
+    assert(OppilaitosServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some("posti_15110"))))
+  }
+
+  it should "return None if there is no osoite" in {
+    assert(OppilaitosServiceUtil.toOsoite(List()) == None)
+  }
+
+  "toYhteystieto" should "return Yhteystieto when given organisaation yhteystiedot from organisaatio-service" in {
+    val nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en")
+    val yhteystiedot = List(
+      Some(Email(Fi, "koulutus@opisto.fi")),
+      None,
+      Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
+      Some(Puhelin(Fi, "050 44042961")),
+      Some(OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110"))),
+      Some(OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))),
+      Some(Www(Fi, "http://www.salpaus.fi")))
+
+    assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
+      Some(Yhteystieto(
+        nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
+        postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
+        kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some("posti_15110"))),
+        puhelinnumero = Map(Fi -> "050 44042961"),
+        sahkoposti = Map(Fi -> "koulutus@opisto.fi")))
+    )
+  }
 }
