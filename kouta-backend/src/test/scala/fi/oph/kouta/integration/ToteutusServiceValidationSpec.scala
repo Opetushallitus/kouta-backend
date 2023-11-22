@@ -858,33 +858,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(ammTutkinnonOsaToteutus.copy(nimi = nimiNotMatchingDefault))
   }
 
-  "AmmOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      ammOpettajaToteutus.copy(metadata = Some(AmmOpettajaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  "YoOpettajaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      yoOpettajaToteutus.copy(metadata =
-        Some(AmmOpettajaToteutuksenMetatieto.copy(tyyppi = OpePedagOpinnot, aloituspaikat = Some(-10)))
-      ),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  "TuvaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      tuvaToteutus.copy(metadata = Some(TuvaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  it should "fail if nimi not matching koulutusnimi" in {
+  it should "fail if nimi not matching koulutusnimi (tuva)" in {
     failsValidation(
       tuvaToteutus.copy(nimi = nimiNotMatchingDefault),
       Seq(
@@ -894,15 +868,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "TelmaToteutus validation" should "fail if negative aloituspaikat" in {
-    failsValidation(
-      telmaToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto.copy(aloituspaikat = Some(-10)))),
-      "metadata.aloituspaikat",
-      notNegativeMsg
-    )
-  }
-
-  it should "fail if nimi not matching koulutusnimi" in {
+  it should "fail if nimi not matching koulutusnimi (telma)" in {
     failsValidation(
       telmaToteutus.copy(nimi = nimiNotMatchingDefault),
       Seq(
@@ -931,7 +897,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           AmmatillinenMuuToteutusMetadata(
             hakulomakeLinkki = Map(Fi -> "puppu fi", Sv -> "puppu sv"),
             hakuaika = Some(ajanjakso),
-            aloituspaikat = Some(-1)
+            aloituspaikat = Some(-1),
+            aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus")
           )
         )
       ),
@@ -939,7 +906,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("metadata.hakulomakeLinkki.fi", invalidUrl("puppu fi")),
         ValidationError("metadata.hakulomakeLinkki.sv", invalidUrl("puppu sv")),
         ValidationError("metadata.hakuaika", invalidAjanjaksoMsg(ajanjakso)),
-        ValidationError("metadata.aloituspaikat", notNegativeMsg)
+        ValidationError("metadata.aloituspaikat", notNegativeMsg),
+        ValidationError("metadata.aloituspaikkakuvaus", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -1089,19 +1057,14 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  private def failValidationWhenAloituspaikatGiven(
-      metadataWithAloituspaikat: TutkintoonJohtamatonToteutusMetadata
-  ): Assertion = {
-    val koulutusOid = KoulutusOid("1.2.246.562.13.600")
-    when(koulutusDao.get(koulutusOid))
-      .thenAnswer(Some(AmmKoulutus.copy(tila = Julkaistu, koulutustyyppi = metadataWithAloituspaikat.tyyppi)))
-    val testedToteutus =
-      tpoToteutus.copy(koulutusOid = koulutusOid, sorakuvausId = None, metadata = Some(metadataWithAloituspaikat))
-    failsValidation(testedToteutus, "metadata.aloituspaikat", notMissingMsg(metadataWithAloituspaikat.aloituspaikat))
-  }
 
-  it should "fail if aloituspaikat given for koulutustyyppi not using aloituspaikat" in {
-    failValidationWhenAloituspaikatGiven(TaiteenPerusopetusToteutusMetatieto.copy(aloituspaikat = Some(10)))
+  it should "allow aloituspaikat for Taiteen perusopetus" in {
+    passesValidation(tpoToteutus.copy(metadata =
+      Some(
+        TaiteenPerusopetusToteutusMetatieto.copy(
+          aloituspaikat = Some(10),
+          aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus", Sv -> "aloituspaikkakuvaus sv")
+        ))))
   }
 
   "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {

@@ -41,7 +41,7 @@ object SessionDAO extends SessionDAO with SessionSQL {
     runBlockingTransactionally(deleteSession(ticket), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlockingTransactionally(getSession(id), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get.map {
+    runBlocking(getSession(id), timeout = Duration(15, TimeUnit.SECONDS)).map {
       case (casTicket, personOid) =>
         val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(15, TimeUnit.SECONDS))
         CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
@@ -70,8 +70,7 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
     getSessionQuery(id)
       .flatMap {
-        case None =>
-          deleteSession(id).map(_ => None)
+        case None => DBIO.successful(None)
         case Some((ticket, person)) =>
           DBIO.successful(Some((ticket, person)))
       }

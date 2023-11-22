@@ -1,0 +1,1 @@
+SELECT cron.schedule('session-cleanup', '0 0 */2 * *', $$DELETE FROM sessions WHERE created < now() - interval '2 days'$$)
