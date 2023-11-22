@@ -452,19 +452,3 @@ case class OppilaitoksetResponse(
     oppilaitokset: List[Oppilaitos],
     organisaatioHierarkia: OrganisaatioHierarkia
 )
-
-case class OrgServiceOrganisaatio(
-    oid: String,
-    parentOidPath: String,
-    oppilaitostyyppi: Option[String] = None,
-    nimi: Kielistetty,
-    kotipaikkaUri: String,
-    children: List[Organisaatio],
-    status: Option[String] = None,
-    organisaatiotyypit: Option[List[String]] = None
-)
-
-case class OrganisaatioServiceOrganisaatio(oid: String,
-                                           parentOidPath: String,
-                                           nimi: Kielistetty,
-                                           tyypit: List[String] = List())
