@@ -3,8 +3,8 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
-import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidatableSubEntity, ValidationContext}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidationContext}
 
 package object oppilaitos {
 
@@ -321,6 +321,9 @@ case class Oppilaitos(
   def withOsat(osat: Seq[OppilaitoksenOsa]): Oppilaitos = this.copy(osat = Some(osat))
 
   def getEntityDescriptionAllative(): String = "oppilaitokselle"
+
+  def withEnrichedData(enrichedData: OppilaitosEnrichedData): Oppilaitos = this.copy(_enrichedData = Some(enrichedData))
+
 }
 
 case class OppilaitoksenOsa(
@@ -354,6 +357,8 @@ case class OppilaitoksenOsa(
 
   def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
   def getEntityDescriptionAllative(): String        = "oppilaitoksen osalle"
+
+  def withEnrichedData(enrichedData: OppilaitosEnrichedData): OppilaitoksenOsa = this.copy(_enrichedData = Some(enrichedData))
 }
 
 case class OppilaitosMetadata(
@@ -441,7 +446,8 @@ case class Yhteystieto(
     )
 }
 
-case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
+                                  organisaationYhteystiedot: Option[Yhteystieto] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,

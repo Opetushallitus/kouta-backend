@@ -24,8 +24,15 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
     organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
 
-  def getOrganisaatio(organisaatioOid: OrganisaatioOid) = {
-    organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
+  def getOrganisaatio(organisaatioOid: OrganisaatioOid): Either[Throwable, Organisaatio] = {
+    Try[Organisaatio] {
+      organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
+    } match {
+      case Success(organisaatio: Organisaatio) =>
+        Right(organisaatio)
+      case Failure(exception) =>
+        Left(exception)
+    }
   }
 
   def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]] = {

@@ -1766,9 +1766,23 @@ object TestData {
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-    yhteystiedot = List(Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")))),
+    yhteystiedot = List(
+      Some(Puhelin(kieli = Fi, numero = "044 0909090")),
+      Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501"))),
+      Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500"))),
+      Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502"))),
+      Some(Puhelin(kieli = Sv, numero = "044 0101010")),
+      Some(Email(kieli = Fi, email = "virkailija@opisto.fi"))),
     kotipaikkaUri = "kunta_595",
     status = "AKTIIVINEN",
+  )
+
+  val organisaationYhteystieto: Yhteystieto = Yhteystieto(
+    nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+    postiosoite = Some(Osoite(Map(Fi -> "PL 1", Sv -> "PB 2"), Some("posti_90501"))),
+    kayntiosoite = Some(Osoite(Map(Fi -> "Opistokatu 1"), Some("posti_90500"))),
+    puhelinnumero = Map(Sv -> "044 0101010", Fi -> "044 0909090"),
+    sahkoposti = Map(Fi -> "virkailija@opisto.fi")
   )
 
   val parentOrganisaatio: Organisaatio = Organisaatio(

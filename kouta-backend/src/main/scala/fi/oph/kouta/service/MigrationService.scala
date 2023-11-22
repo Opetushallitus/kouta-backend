@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.OidAndChildren
+import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -9,7 +9,6 @@ import fi.vm.sade.utils.slf4j.Logging
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Try
-import fi.oph.kouta.service.OrganisaatioService
 
 trait MigrationHelpers extends Logging {
   import org.json4s._
@@ -367,17 +366,15 @@ class MigrationService(organisaatioServiceImpl: OrganisaatioServiceImpl) extends
   def isKoulutustoimija(organisaatio: Organisaatio): Boolean = organisaatio.organisaatiotyypit.contains("organisaatiotyyppi_02")
 
   def resolveOrganisationOidForKoulutus(originalOid: OrganisaatioOid): Option[OrganisaatioOid] = {
-    try {
-      val originalOrganisation: Organisaatio = organisaatioServiceImpl.getOrganisaatio(originalOid)
-      if(originalOrganisation.isPassivoitu) return None
-      val oid = if (isKoulutustoimija(originalOrganisation) || isOppilaitos(originalOrganisation)) OrganisaatioOid(originalOrganisation.oid)
-      else organisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
-      Some(oid)
-    } catch {
-      case t: Throwable => {
+    organisaatioServiceImpl.getOrganisaatio(originalOid) match {
+      case Left(e: OrganisaatioServiceQueryException) =>
         logger.error("Ongelmia organisaation tietojen haussa: " + originalOid)
         None
-      }
+      case Right(originalOrganisation) =>
+        if (originalOrganisation.isPassivoitu) return None
+        val oid = if (isKoulutustoimija(originalOrganisation) || isOppilaitos(originalOrganisation)) OrganisaatioOid(originalOrganisation.oid)
+        else organisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia(originalOid).get
+        Some(oid)
     }
   }
 
