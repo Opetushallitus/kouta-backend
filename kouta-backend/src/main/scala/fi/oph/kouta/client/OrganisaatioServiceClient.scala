@@ -33,6 +33,8 @@ object OrganisaatioServiceClient extends OrganisaatioServiceClient
 class OrganisaatioServiceClient extends HttpClient with CallerId with Logging with KoutaJsonFormats {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
+  val errorHandler = (url: String, status: Int, response: String) => throw OrganisaatioServiceQueryException(url, status, response)
+
   implicit val organisaatioHierarkiaWithOidsCache: Cache[Seq[OrganisaatioOid], OrganisaatioHierarkia] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
@@ -72,7 +74,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
       queryParamsStr
     ) + oidsAsQueryParams + oppilaitostyypitAsQueryParams
 
-    get(url, followRedirects = true) { response =>
+    get(url, errorHandler, followRedirects = true) { response =>
       {
         parse(response).extract[OrganisaatioHierarkia]
       }
@@ -124,12 +126,14 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
       case Success(organisaatioHierarkia: OrganisaatioHierarkia) => organisaatioHierarkia
       case Failure(exp: OrganisaatioServiceQueryException) if exp.status == 404 =>
         OrganisaatioHierarkia(organisaatiot = List())
+      case Failure(exp: Exception) => throw exp
     }
   }
 
   def getOrganisaatio(oid: OrganisaatioOid): Organisaatio = {
     val url = urlProperties.url(s"organisaatio-service.organisaatio.with.oid", oid)
-    get(url, followRedirects = true) { response =>
+
+    get(url, errorHandler, followRedirects = true) { response =>
       {
         parse(response).extract[Organisaatio]
       }
@@ -142,7 +146,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatiot(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
     val url = urlProperties.url(s"organisaatio-service.organisaatiot.with.oids")
-    post(url, oids, followRedirects = true) { response =>
+    post(url, oids, errorHandler, followRedirects = true) { response =>
       {
         parse(response).extract[Seq[Organisaatio]]
       }
