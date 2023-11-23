@@ -19,7 +19,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
     yhteystiedot = List(Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")))),
-    kotipaikkaUri = "kunta_595",
+    kotipaikkaUri = Some("kunta_595"),
     status = "AKTIIVINEN",
     organisaatiotyypit = List("organisaatiotyyppi_03"))
 

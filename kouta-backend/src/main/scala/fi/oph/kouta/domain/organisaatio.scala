@@ -77,8 +77,9 @@ case class Organisaatio(oid: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
                         yhteystiedot: List[Option[OrganisaationYhteystieto]] = List(),
-                        kotipaikkaUri: String,
                         status: String,
+                        kotipaikkaUri: Option[String] = None,
+                        children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List()) {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")

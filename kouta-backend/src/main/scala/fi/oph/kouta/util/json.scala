@@ -179,21 +179,21 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
 
           Try(s \ "osoiteTyyppi").collect {
-            case JString(kaynti) =>
+            case JString("kaynti") =>
               val postinumerokoodiuri = toPostinumeroKoodiuri(s)
 
               OrgOsoite(
-                osoiteTyyppi = kaynti,
+                osoiteTyyppi = "kaynti",
                 kieli = kieli,
                 osoite = (s \ "osoite").extract[String],
                 postinumeroUri = postinumerokoodiuri
               )
 
-            case JString(posti) =>
+            case JString("posti") =>
               val postinumerokoodiuri = toPostinumeroKoodiuri(s)
 
               OrgOsoite(
-                osoiteTyyppi = posti,
+                osoiteTyyppi = "posti",
                 kieli = kieli,
                 osoite = (s \ "osoite").extract[String],
                 postinumeroUri = postinumerokoodiuri
