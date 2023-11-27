@@ -36,17 +36,7 @@ class OppilaitosService(
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] = {
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
-    val yhteystieto = organisaatioService.getOrganisaatio(oid) match {
-      case Right(organisaatio) =>
-        val yhteystiedot = organisaatio.yhteystiedot
-        OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, yhteystiedot)
-      case Left(e: OrganisaatioServiceQueryException) if e.status == 404 =>
-        logger.warn("Organisaatiota ei löytynyt organisaatiopalvelusta oid:lla: " + oid)
-        None
-      case Left(e: Exception) =>
-        logger.error("Ongelmia organisaation tietojen haussa: " + oid)
-        None
-    }
+    val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
 
     val enrichedOppilaitos = oppilaitosWithTime match {
       case Some((o, i)) => {
@@ -176,7 +166,7 @@ class OppilaitoksenOsaService(
   sqsInTransactionService: SqsInTransactionService,
   val s3ImageService: S3ImageService,
   auditLog: AuditLog,
-  val organisaatioService: OrganisaatioService,
+  val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
   oppilaitosServiceValidation: OppilaitosServiceValidation,
@@ -191,11 +181,15 @@ class OppilaitoksenOsaService(
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] = {
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
 
+    val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
+
     val enrichedOppilaitoksenOsa = oppilaitoksenOsaWithTime match {
       case Some((o, i)) => {
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
+        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
+          muokkaajanNimi = Some(muokkaajanNimi),
+          organisaationYhteystiedot = yhteystieto))), i)
       }
       case None => None
     }

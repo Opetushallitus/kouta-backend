@@ -1,8 +1,10 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain._
-
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.service.OrganisaatioServiceImpl
+import org.slf4j.Logger
 
 object OppilaitosServiceUtil {
   def getHierarkiaOids(hierarkia: OrganisaatioHierarkia): List[OrganisaatioOid] = {
@@ -60,5 +62,19 @@ object OppilaitosServiceUtil {
     ).toMap
 
     Some(Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email))
+  }
+
+  def getYhteystieto(organisaatioService: OrganisaatioServiceImpl, oid: OrganisaatioOid, logger: Logger): Option[Yhteystieto] = {
+    organisaatioService.getOrganisaatio(oid) match {
+      case Right(organisaatio) =>
+        val yhteystiedot = organisaatio.yhteystiedot
+        OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, yhteystiedot)
+      case Left(e: OrganisaatioServiceQueryException) if e.status == 404 =>
+        logger.warn("Organisaatiota ei löytynyt organisaatiopalvelusta oid:lla: " + oid)
+        None
+      case Left(e: Exception) =>
+        logger.error("Ongelmia organisaation tietojen haussa: " + oid)
+        None
+    }
   }
 }
