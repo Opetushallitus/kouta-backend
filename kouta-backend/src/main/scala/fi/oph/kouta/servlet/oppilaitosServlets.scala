@@ -39,8 +39,14 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
 
     oppilaitosService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
+      case Some((oppilaitos, maybeInstant)) =>
+        maybeInstant match {
+          case Some(instant) =>
+            Ok(oppilaitos, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(instant)))
+          case None => Ok(oppilaitos)
+        }
     }
+
   }
 
   registerPath( "/oppilaitos/",

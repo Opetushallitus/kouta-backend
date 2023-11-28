@@ -299,7 +299,8 @@ case class Oppilaitos(
     modified: Option[Modified] = None,
     _enrichedData: Option[OppilaitosEnrichedData] = None,
     osat: Option[Seq[OppilaitoksenOsa]] = None
-) extends Validatable
+) extends OppilaitosBase
+    with Validatable
     with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
     with HasModified[Oppilaitos]
@@ -458,3 +459,12 @@ case class OppilaitoksetResponse(
     oppilaitokset: List[Oppilaitos],
     organisaatioHierarkia: OrganisaatioHierarkia
 )
+
+sealed trait OppilaitosBase {
+  val oid: OrganisaatioOid
+  val _enrichedData: Option[OppilaitosEnrichedData]
+}
+
+case class OppilaitosWithOrganisaatioData(oid: OrganisaatioOid,
+                                          _enrichedData: Option[OppilaitosEnrichedData]
+                                         ) extends OppilaitosBase

@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient, OrganisaatioServiceQueryException}
+import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
@@ -34,21 +34,27 @@ class OppilaitosService(
   val teemakuvaPrefix = "oppilaitos-teemakuva"
   val logoPrefix = "oppilaitos-logo"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] = {
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
     val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
 
-    val enrichedOppilaitos = oppilaitosWithTime match {
-      case Some((o, i)) => {
+    oppilaitosWithTime match {
+      case Some((o, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
+        val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
           muokkaajanNimi = Some(muokkaajanNimi),
-          organisaationYhteystiedot = yhteystieto))), i)
-      }
-      case None => None
+          organisaationYhteystiedot = yhteystieto))), i))
+        authorized match {
+          case Some((o: Oppilaitos, i: Instant)) => Some((o, Some(i)))
+          case _ => None
+        }
+      case None =>
+        Some(OppilaitosWithOrganisaatioData(
+          oid = oid,
+          _enrichedData = Some(
+            OppilaitosEnrichedData(organisaationYhteystiedot = yhteystieto))), None)
     }
-    authorizeGet(enrichedOppilaitos)
   }
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
