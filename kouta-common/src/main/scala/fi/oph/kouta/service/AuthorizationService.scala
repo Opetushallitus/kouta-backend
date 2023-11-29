@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
-import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, TampereenYliopisto}
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Enum, EnumType}
 import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated
@@ -81,7 +81,7 @@ trait AuthorizationService extends Logging {
 
     if(authorizedOrgs.isEmpty) {
       throw RoleAuthorizationFailedException(requiredRoles, authenticated.session.roles)
-    } else if(authorizedOrgs.contains(TampereenYliopisto) || authorizedOrgs.contains(RootOrganisaatioOid) || authorized(allAuthorizedOidsAndOppilaitostyypit())) {
+    } else if(authorizedOrgs.contains(RootOrganisaatioOid) || authorized(allAuthorizedOidsAndOppilaitostyypit())) {
       f
     } else {
       throw OrganizationAuthorizationFailedException(rule.authorizedOrganisations(authorizable, additionalAuthorizedOrganisaatioOids).distinct, authorizedOrgs, rule.organizationsAuthorizationMode())

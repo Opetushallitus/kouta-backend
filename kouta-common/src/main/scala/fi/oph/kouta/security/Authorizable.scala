@@ -17,3 +17,7 @@ trait AuthorizableMaybeJulkinen[T] extends AuthorizableEntity[T] {
 trait AuthorizableByKoulutustyyppi[T] extends AuthorizableEntity[T] {
   val koulutustyyppi: Koulutustyyppi
 }
+
+trait AuthorizableHaku extends Authorizable {
+  val hakukohteenLiittajaOrganisaatiot: Seq[OrganisaatioOid]
+}
