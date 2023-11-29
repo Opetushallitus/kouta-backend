@@ -3,12 +3,13 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, Tallennettu}
+import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData, Tallennettu}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+import org.json4s.jackson.Serialization.read
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -25,10 +26,18 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     oppilaitosOid = put(oppilaitos)
   }
 
-  "Get oppilaitoksen osa by oid" should "return 404 if oppilaitoksen osa not found" in {
-    get(s"$OppilaitoksenOsaPath/${UUID.randomUUID()}", headers = defaultHeaders) {
-      status should equal (404)
-      body should include ("Unknown organisaatio oid")
+  val notSavedInKoutaOrgOid = OrganisaatioOid("1.2.246.562.10.404")
+
+  "Get oppilaitoksen osa by oid" should "return only oid and yhteystiedot in _enrichedData for oppilaitos that hasn't been stored in kouta" in {
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(notSavedInKoutaOrgOid)).
+      thenReturn(TestData.organisaationOsa)
+
+    val expected = OppilaitosWithOrganisaatioData(
+      oid = notSavedInKoutaOrgOid,
+      _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = None, organisaationYhteystiedot = Some(TestData.organisaationOsanYhteystieto))))
+
+    get(s"$OppilaitosPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
+      read[OppilaitosWithOrganisaatioData](body) should equal(expected)
     }
   }
 

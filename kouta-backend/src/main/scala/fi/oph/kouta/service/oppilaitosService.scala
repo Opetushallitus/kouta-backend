@@ -184,22 +184,28 @@ class OppilaitoksenOsaService(
 
   val teemakuvaPrefix = "oppilaitoksen-osa-teemakuva"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] = {
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
 
     val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
 
-    val enrichedOppilaitoksenOsa = oppilaitoksenOsaWithTime match {
-      case Some((o, i)) => {
+    oppilaitoksenOsaWithTime match {
+      case Some((o, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
+        val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
           muokkaajanNimi = Some(muokkaajanNimi),
-          organisaationYhteystiedot = yhteystieto))), i)
-      }
-      case None => None
+          organisaationYhteystiedot = yhteystieto))), i))
+        authorized match {
+          case Some((o: OppilaitoksenOsa, i: Instant)) => Some((o, Some(i)))
+          case _ => None
+        }
+      case None =>
+        Some(OppilaitosWithOrganisaatioData(
+          oid = oid,
+          _enrichedData = Some(
+            OppilaitosEnrichedData(organisaationYhteystiedot = yhteystieto))), None)
     }
-    authorizeGet(enrichedOppilaitoksenOsa)
   }
 
   private def enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa: OppilaitoksenOsa) : Option[OppilaitoksenOsaMetadata] = {

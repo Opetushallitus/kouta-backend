@@ -339,7 +339,8 @@ case class OppilaitoksenOsa(
     teemakuva: Option[String] = None,
     modified: Option[Modified] = None,
     _enrichedData: Option[OppilaitosEnrichedData] = None
-) extends Validatable
+) extends OppilaitosBase
+    with Validatable
     with AuthorizableEntity[OppilaitoksenOsa]
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
     with HasModified[OppilaitoksenOsa]
