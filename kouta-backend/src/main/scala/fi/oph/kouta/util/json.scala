@@ -199,6 +199,22 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
                 postinumeroUri = postinumerokoodiuri
               )
 
+            case JString("ulkomainen_kaynti") =>
+              OrgOsoite(
+                osoiteTyyppi = "kaynti",
+                kieli = kieli,
+                osoite = (s \ "osoite").extract[String],
+                postinumeroUri = None
+              )
+
+            case JString("ulkomainen_posti") =>
+              OrgOsoite(
+                osoiteTyyppi = "posti",
+                kieli = kieli,
+                osoite = (s \ "osoite").extract[String],
+                postinumeroUri = None
+              )
+
             case _ =>
               s \ "email" match {
                 case JString(email) =>
