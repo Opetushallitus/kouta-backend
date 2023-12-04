@@ -23,8 +23,8 @@ object OppilaitosServiceUtil {
     })
   }
 
-  def filterByOsoitetyyppi(yhteystiedot: List[Option[OrganisaationYhteystieto]], osoitetyyppi: String): List[OrgOsoite] = {
-    yhteystiedot.flatten
+  def filterByOsoitetyyppi(yhteystiedot: List[OrganisaationYhteystieto], osoitetyyppi: String): List[OrgOsoite] = {
+    yhteystiedot
       .filter(_.isInstanceOf[OrgOsoite]).asInstanceOf[List[OrgOsoite]]
       .filter(_.osoiteTyyppi == osoitetyyppi)
   }
@@ -46,29 +46,29 @@ object OppilaitosServiceUtil {
     }
   }
 
-  def toYhteystieto(nimi: Kielistetty, yhteystiedot: List[Option[OrganisaationYhteystieto]]): Option[Yhteystieto] = {
+  def toYhteystieto(nimi: Kielistetty, yhteystiedot: List[OrganisaationYhteystieto]): Yhteystieto = {
     val postiosoitteet = filterByOsoitetyyppi(yhteystiedot, "posti")
     val postiosoite = toOsoite(postiosoitteet)
 
     val kayntiosoitteet = filterByOsoitetyyppi(yhteystiedot, "kaynti")
     val kayntiosoite = toOsoite(kayntiosoitteet)
 
-    val puhelinnumero = yhteystiedot.flatten.filter(_.isInstanceOf[Puhelin]).asInstanceOf[List[Puhelin]].map(
+    val puhelinnumero = yhteystiedot.filter(_.isInstanceOf[Puhelin]).asInstanceOf[List[Puhelin]].map(
       puhelinnumero => (puhelinnumero.kieli, puhelinnumero.numero)
     ).toMap
 
-    val email = yhteystiedot.flatten.filter(_.isInstanceOf[Email]).asInstanceOf[List[Email]].map(
+    val email = yhteystiedot.filter(_.isInstanceOf[Email]).asInstanceOf[List[Email]].map(
       email => (email.kieli, email.email)
     ).toMap
 
-    Some(Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email))
+    Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email)
   }
 
   def getYhteystieto(organisaatioService: OrganisaatioServiceImpl, oid: OrganisaatioOid, logger: Logger): Option[Yhteystieto] = {
     organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val yhteystiedot = organisaatio.yhteystiedot
-        OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, yhteystiedot)
+        Some(OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, yhteystiedot))
       case Left(e: OrganisaatioServiceQueryException) if e.status == 404 =>
         logger.warn("Organisaatiota ei löytynyt organisaatiopalvelusta oid:lla: " + oid)
         None

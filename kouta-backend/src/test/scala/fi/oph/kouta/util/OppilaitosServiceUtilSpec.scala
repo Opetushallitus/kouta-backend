@@ -18,7 +18,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
-    yhteystiedot = List(Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")))),
+    yhteystiedot = List(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500"))),
     kotipaikkaUri = Some("kunta_595"),
     status = "AKTIIVINEN",
     organisaatiotyypit = List("organisaatiotyyppi_03"))
@@ -83,13 +83,12 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
   }
 
   val yhteystiedot = List(
-    Some(Email(Fi, "koulutus@opisto.fi")),
-    None,
-    Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
-    Some(Puhelin(Fi, "050 44042961")),
-    Some(OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110"))),
-    Some(OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))),
-    Some(Www(Fi, "http://www.salpaus.fi")))
+    Email(Fi, "koulutus@opisto.fi"),
+    OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
+    Puhelin(Fi, "050 44042961"),
+    OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110")),
+    OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110")),
+    Www(Fi, "http://www.salpaus.fi"))
 
   "filterByOsoitetyyppi" should "return postiosoitteet from a list of yhteystiedot" in {
     assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List(
@@ -104,11 +103,10 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
 
   it should "return empty list as there is no postiosoite in yhteystiedot" in {
     val yhteystiedot = List(
-      Some(Email(Fi, "koulutus@opisto.fi")),
-      None,
-      Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
-      Some(Puhelin(Fi, "050 44042961")),
-      Some(Www(Fi, "http://www.salpaus.fi")))
+      Email(Fi, "koulutus@opisto.fi"),
+      OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
+      Puhelin(Fi, "050 44042961"),
+      Www(Fi, "http://www.salpaus.fi"))
 
     assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List())
   }
@@ -132,21 +130,20 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
   "toYhteystieto" should "return Yhteystieto when given organisaation yhteystiedot from organisaatio-service" in {
     val nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en")
     val yhteystiedot = List(
-      Some(Email(Fi, "koulutus@opisto.fi")),
-      None,
-      Some(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))),
-      Some(Puhelin(Fi, "050 44042961")),
-      Some(OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110"))),
-      Some(OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))),
-      Some(Www(Fi, "http://www.salpaus.fi")))
+      Email(Fi, "koulutus@opisto.fi"),
+      OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
+      Puhelin(Fi, "050 44042961"),
+      OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110")),
+      OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110")),
+      Www(Fi, "http://www.salpaus.fi"))
 
     assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
-      Some(Yhteystieto(
+      Yhteystieto(
         nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
         postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
         kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some("posti_15110"))),
         puhelinnumero = Map(Fi -> "050 44042961"),
-        sahkoposti = Map(Fi -> "koulutus@opisto.fi")))
+        sahkoposti = Map(Fi -> "koulutus@opisto.fi"))
     )
   }
 }

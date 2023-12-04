@@ -1757,8 +1757,8 @@ object TestData {
     nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     kotipaikkaUri = Some("kunta_123"),
     yhteystiedot = List(
-      Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500"))),
-      Some(Puhelin(kieli = Fi, numero = "044 0909090")),
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      Puhelin(kieli = Fi, numero = "044 0909090"),
     ),
     status = "AKTIIVINEN",
     children = List(),
@@ -1771,12 +1771,12 @@ object TestData {
     oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     yhteystiedot = List(
-      Some(Puhelin(kieli = Fi, numero = "044 0909090")),
-      Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501"))),
-      Some(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500"))),
-      Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502"))),
-      Some(Puhelin(kieli = Sv, numero = "044 0101010")),
-      Some(Email(kieli = Fi, email = "virkailija@opisto.fi"))),
+      Puhelin(kieli = Fi, numero = "044 0909090"),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501")),
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502")),
+      Puhelin(kieli = Sv, numero = "044 0101010"),
+      Email(kieli = Fi, email = "virkailija@opisto.fi")),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaationOsa)
@@ -1801,7 +1801,7 @@ object TestData {
     parentOidPath = s"${ParentOid.toString}/1.2.246.562.10.00000000001",
     oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
     nimi = Map(Fi -> "Parent Organisaatio", Sv -> "Parent Organisation", En -> "Parent Organization"),
-    yhteystiedot = List(Some(OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")))),
+    yhteystiedot = List(OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500"))),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaatio)
