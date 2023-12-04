@@ -2,9 +2,8 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{ExternalSession, Session}
-import fi.oph.kouta.service.MigrationService.toKieli
-import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
-import org.json4s.JsonAST.{JObject, JString}
+import fi.oph.kouta.util.MiscUtils.{toKieli, withoutKoodiVersion}
+import org.json4s.JsonAST.{JNothing, JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
@@ -174,73 +173,59 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     (
       { case s: JObject =>
         implicit def formats: Formats = genericKoutaFormats
+        s \ "kieli" match {
+          case JString(kieliKoodiUri) =>
+            val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
 
-        Try(s \ "kieli").collect { case JString(kieliKoodiUri) =>
-          val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
+            s \ "osoiteTyyppi" match {
+              case JString("kaynti") =>
+                val postinumerokoodiuri = toPostinumeroKoodiuri(s)
 
-          Try(s \ "osoiteTyyppi").collect {
-            case JString("kaynti") =>
-              val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+                OrgOsoite(
+                  osoiteTyyppi = "kaynti",
+                  kieli = kieli,
+                  osoite = (s \ "osoite").extract[String],
+                  postinumeroUri = postinumerokoodiuri
+                )
 
-              OrgOsoite(
-                osoiteTyyppi = "kaynti",
-                kieli = kieli,
-                osoite = (s \ "osoite").extract[String],
-                postinumeroUri = postinumerokoodiuri
-              )
+              case JString("posti") =>
+                val postinumerokoodiuri = toPostinumeroKoodiuri(s)
 
-            case JString("posti") =>
-              val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+                OrgOsoite(
+                  osoiteTyyppi = "posti",
+                  kieli = kieli,
+                  osoite = (s \ "osoite").extract[String],
+                  postinumeroUri = postinumerokoodiuri
+                )
 
-              OrgOsoite(
-                osoiteTyyppi = "posti",
-                kieli = kieli,
-                osoite = (s \ "osoite").extract[String],
-                postinumeroUri = postinumerokoodiuri
-              )
-
-            case JString("ulkomainen_kaynti") =>
-              OrgOsoite(
-                osoiteTyyppi = "kaynti",
-                kieli = kieli,
-                osoite = (s \ "osoite").extract[String],
-                postinumeroUri = None
-              )
-
-            case JString("ulkomainen_posti") =>
-              OrgOsoite(
-                osoiteTyyppi = "posti",
-                kieli = kieli,
-                osoite = (s \ "osoite").extract[String],
-                postinumeroUri = None
-              )
-
-            case _ =>
-              s \ "email" match {
-                case JString(email) =>
-                  Email(
-                    kieli = kieli,
-                    email = email
-                  )
-                case _ =>
-                  s \ "tyyppi" match {
-                    case JString("puhelin") =>
-                      Puhelin(
-                        kieli = kieli,
-                        numero = (s \ "numero").extract[String]
-                      )
-                    case _ =>
-                      s \ "www" match {
-                        case JString(www) =>
-                          Www(
-                            kieli = kieli,
-                            www = www
-                          )
-                      }
-                  }
-              }
-          }.get
-        }.get
+              case _ =>
+                s \ "email" match {
+                  case JString(email) =>
+                    Email(
+                      kieli = kieli,
+                      email = email
+                    )
+                  case _ =>
+                    s \ "tyyppi" match {
+                      case JString("puhelin") =>
+                        Puhelin(
+                          kieli = kieli,
+                          numero = (s \ "numero").extract[String]
+                        )
+                      case _ =>
+                        s \ "www" match {
+                          case JString(www) =>
+                            Www(
+                              kieli = kieli,
+                              www = www
+                            )
+                          case _ => null
+                        }
+                    }
+                }
+            }
+          case _ => null
+        }
       },
       { case j: OrganisaationYhteystieto =>
         implicit def formats: Formats = genericKoutaFormats

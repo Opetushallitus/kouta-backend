@@ -73,7 +73,7 @@ object OppilaitosServiceUtil {
         logger.warn("Organisaatiota ei löytynyt organisaatiopalvelusta oid:lla: " + oid)
         None
       case Left(e: Exception) =>
-        logger.error("Ongelmia organisaation tietojen haussa: " + oid)
+        logger.error(s"Ongelmia organisaation tietojen haussa oid:lla ${oid}: " + e)
         None
     }
   }

@@ -4,13 +4,12 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia}
-import fi.oph.kouta.servlet.SearchParams.commaSepStringValToSeq
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatra.{MultiParams, Params}
 
-import java.net.{URLDecoder, URLEncoder}
+import java.net.URLEncoder
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
