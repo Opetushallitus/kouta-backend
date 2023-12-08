@@ -2,8 +2,8 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{ExternalSession, Session}
-import fi.oph.kouta.util.MiscUtils.{toKieli, withoutKoodiVersion}
-import org.json4s.JsonAST.{JNothing, JObject, JString}
+import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
+import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
@@ -173,6 +173,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     (
       { case s: JObject =>
         implicit def formats: Formats = genericKoutaFormats
+
         s \ "kieli" match {
           case JString(kieliKoodiUri) =>
             val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
@@ -227,10 +228,36 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           case _ => null
         }
       },
-      { case j: OrganisaationYhteystieto =>
-        implicit def formats: Formats = genericKoutaFormats
+      {
+        case o: OrgOsoite =>
+          implicit def formats: Formats = genericKoutaFormats
 
-        Extraction.decompose(j)
+          val kieli = toKieliKoodiUri(o.kieli)
+          JObject(List(
+            "osoiteTyyppi" -> Extraction.decompose(o.osoiteTyyppi),
+            "kieli" -> JString(kieli),
+            "osoite" -> Extraction.decompose(o.osoite),
+            "postinumeroUri" -> Extraction.decompose(o.postinumeroUri))
+          )
+
+        case p: Puhelin =>
+          implicit def formats: Formats = genericKoutaFormats
+
+          val kieli = toKieliKoodiUri(p.kieli)
+          JObject(List(
+            "tyyppi" -> JString("puhelin"),
+            "numero" -> Extraction.decompose(p.numero),
+            "kieli" -> JString(kieli))
+          )
+
+        case e: Email =>
+          implicit def formats: Formats = genericKoutaFormats
+
+          val kieli = toKieliKoodiUri(e.kieli)
+          JObject(List(
+            "kieli" -> JString(kieli),
+            "email" -> Extraction.decompose(e.email))
+          )
       }
     )
   )

@@ -1765,6 +1765,17 @@ object TestData {
     organisaatiotyypit = List("organisaatiotyyppi_1")
   )
 
+  val koutaOrganisaationOsa: KoutaOrganisaatio = KoutaOrganisaatio(
+    oid = GrandChildOid.toString,
+    nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+    kotipaikkaUri = Some("kunta_123"),
+    yhteystiedot = Some(Yhteystieto(
+      Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
+      puhelinnumero = Map(Fi -> "044 0909090")
+    ))
+  )
+
   val organisaatio: Organisaatio = Organisaatio(
     oid = ChildOid.toString,
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
@@ -1780,6 +1791,19 @@ object TestData {
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaationOsa)
+  )
+
+  val koutaOrganisaatio: KoutaOrganisaatio = KoutaOrganisaatio(
+    oid = ChildOid.toString,
+    nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+    yhteystiedot = Some(Yhteystieto(
+      nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
+      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some("posti_90501"))) ,
+      puhelinnumero = Map(Fi -> "044 0909090", Sv -> "044 0101010"),
+      sahkoposti = Map(Fi -> "virkailija@opisto.fi")
+    )),
+    kotipaikkaUri = Some("kunta_123"),
   )
 
   val organisaationYhteystieto: Yhteystieto = Yhteystieto(

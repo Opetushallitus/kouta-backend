@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Arkistoitu, Julkaistu, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData, Tallennettu}
+import fi.oph.kouta.domain.{Arkistoitu, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -34,7 +34,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     val expected = OppilaitosWithOrganisaatioData(
       oid = notSavedInKoutaOrgOid,
-      _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = None, organisaationYhteystiedot = Some(TestData.organisaationOsanYhteystieto))))
+      _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = None, organisaatio = Some(TestData.koutaOrganisaationOsa))))
 
     get(s"$OppilaitosPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
       read[OppilaitosWithOrganisaatioData](body) should equal(expected)

@@ -36,7 +36,12 @@ class OppilaitosService(
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
-    val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
+    val organisaatio = organisaatioService.getOrganisaatio(oid) match {
+      case Right(organisaatio) =>
+        val yhteystieto: Yhteystieto = OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
+        Some(KoutaOrganisaatio(oid = organisaatio.oid, nimi = organisaatio.nimi, yhteystiedot = Some(yhteystieto), kotipaikkaUri = organisaatio.kotipaikkaUri))
+      case Left(_) => None
+    }
 
     oppilaitosWithTime match {
       case Some((o, i)) =>
@@ -44,7 +49,7 @@ class OppilaitosService(
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
           muokkaajanNimi = Some(muokkaajanNimi),
-          organisaationYhteystiedot = yhteystieto))), i))
+          organisaatio = organisaatio))), i))
         authorized match {
           case Some((o: Oppilaitos, i: Instant)) => Some((o, Some(i)))
           case _ => None
@@ -53,7 +58,7 @@ class OppilaitosService(
         Some(OppilaitosWithOrganisaatioData(
           oid = oid,
           _enrichedData = Some(
-            OppilaitosEnrichedData(organisaationYhteystiedot = yhteystieto))), None)
+            OppilaitosEnrichedData(organisaatio = organisaatio))), None)
     }
   }
 
@@ -186,8 +191,12 @@ class OppilaitoksenOsaService(
 
   def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
-
-    val yhteystieto = OppilaitosServiceUtil.getYhteystieto(organisaatioService, oid, logger)
+    val organisaatio = organisaatioService.getOrganisaatio(oid) match {
+      case Right(organisaatio) =>
+        val yhteystieto: Yhteystieto = OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
+        Some(KoutaOrganisaatio(oid = organisaatio.oid, nimi = organisaatio.nimi, yhteystiedot = Some(yhteystieto), kotipaikkaUri = organisaatio.kotipaikkaUri))
+      case Left(_) => None
+    }
 
     oppilaitoksenOsaWithTime match {
       case Some((o, i)) =>
@@ -195,7 +204,7 @@ class OppilaitoksenOsaService(
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
         val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
           muokkaajanNimi = Some(muokkaajanNimi),
-          organisaationYhteystiedot = yhteystieto))), i))
+          organisaatio = organisaatio))), i))
         authorized match {
           case Some((o: OppilaitoksenOsa, i: Instant)) => Some((o, Some(i)))
           case _ => None
@@ -204,7 +213,7 @@ class OppilaitoksenOsaService(
         Some(OppilaitosWithOrganisaatioData(
           oid = oid,
           _enrichedData = Some(
-            OppilaitosEnrichedData(organisaationYhteystiedot = yhteystieto))), None)
+            OppilaitosEnrichedData(organisaatio = organisaatio))), None)
     }
   }
 

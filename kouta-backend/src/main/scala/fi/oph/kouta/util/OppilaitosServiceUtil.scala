@@ -63,18 +63,4 @@ object OppilaitosServiceUtil {
 
     Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email)
   }
-
-  def getYhteystieto(organisaatioService: OrganisaatioServiceImpl, oid: OrganisaatioOid, logger: Logger): Option[Yhteystieto] = {
-    organisaatioService.getOrganisaatio(oid) match {
-      case Right(organisaatio) =>
-        val yhteystiedot = organisaatio.yhteystiedot
-        Some(OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, yhteystiedot))
-      case Left(e: OrganisaatioServiceQueryException) if e.status == 404 =>
-        logger.warn("Organisaatiota ei löytynyt organisaatiopalvelusta oid:lla: " + oid)
-        None
-      case Left(e: Exception) =>
-        logger.error(s"Ongelmia organisaation tietojen haussa oid:lla ${oid}: " + e)
-        None
-    }
-  }
 }

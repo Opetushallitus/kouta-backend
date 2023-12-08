@@ -17,7 +17,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
     assert(parse(organisaationYhteystiedotJson).extract[List[OrganisaationYhteystieto]] == List(OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Matomäenranta 985", postinumeroUri = Some("posti_00920"))))
   }
 
-  it should "return null for yhteystieti with ulkomainen_kaynti as osoiteTyyppi" in {
+  it should "return null for yhteystieto with ulkomainen_kaynti as osoiteTyyppi" in {
     val organisaationYhteystiedotJson = "[" +
       "{\"osoiteTyyppi\":\"ulkomainen_kaynti\",\"kieli\":\"kieli_en#1\",\"yhteystietoOid\":\"1.2.246.562.5.2014050813493375734386\",\"id\":\"3263980\",\"osoite\":\"Kärpäsenkuja 219\"}]," +
       "]"

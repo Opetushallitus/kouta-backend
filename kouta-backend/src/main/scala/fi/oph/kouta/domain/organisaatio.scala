@@ -72,6 +72,10 @@ case class Puhelin(kieli: Kieli, numero: String) extends OrganisaationYhteystiet
 
 case class Www(kieli: Kieli, www: String) extends OrganisaationYhteystieto
 
+sealed trait OrganisaatioBase {
+  val oid: String
+}
+
 case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
@@ -81,10 +85,15 @@ case class Organisaatio(oid: String,
                         kotipaikkaUri: Option[String] = None,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
-                        tyypit: List[String] = List()) {
+                        tyypit: List[String] = List()) extends OrganisaatioBase {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
   def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
+
+case class KoutaOrganisaatio(oid: String,
+                             nimi: Kielistetty,
+                             yhteystiedot: Option[Yhteystieto] = None,
+                             kotipaikkaUri: Option[String] = None) extends OrganisaatioBase
 
 case class OrganisaatioHierarkiaOrg(oid: String,
                                     parentOidPath: String,

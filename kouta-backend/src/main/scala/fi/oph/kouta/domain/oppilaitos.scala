@@ -449,7 +449,7 @@ case class Yhteystieto(
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
-                                  organisaationYhteystiedot: Option[Yhteystieto] = None)
+                                  organisaatio: Option[KoutaOrganisaatio] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,

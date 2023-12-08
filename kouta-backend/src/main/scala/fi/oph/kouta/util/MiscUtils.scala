@@ -31,4 +31,13 @@ object MiscUtils {
         None
     }
   }
+
+  def toKieliKoodiUri(kieli: Kieli): String = {
+    kieli match {
+      case Fi => "kieli_fi"
+      case Sv => "kieli_sv"
+      case En => "kieli_en"
+      case _ => ""
+    }
+  }
 }
