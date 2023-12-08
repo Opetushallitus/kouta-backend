@@ -38,8 +38,7 @@ class OppilaitosService(
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
-        val yhteystieto: Yhteystieto = OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
-        Some(KoutaOrganisaatio(oid = organisaatio.oid, nimi = organisaatio.nimi, yhteystiedot = Some(yhteystieto), kotipaikkaUri = organisaatio.kotipaikkaUri))
+        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio)
       case Left(_) => None
     }
 
@@ -193,8 +192,7 @@ class OppilaitoksenOsaService(
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
-        val yhteystieto: Yhteystieto = OppilaitosServiceUtil.toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
-        Some(KoutaOrganisaatio(oid = organisaatio.oid, nimi = organisaatio.nimi, yhteystiedot = Some(yhteystieto), kotipaikkaUri = organisaatio.kotipaikkaUri))
+        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio)
       case Left(_) => None
     }
 

@@ -85,7 +85,10 @@ case class Organisaatio(oid: String,
                         kotipaikkaUri: Option[String] = None,
                         children: List[Organisaatio] = List(),
                         organisaatiotyypit: List[String] = List(),
-                        tyypit: List[String] = List()) extends OrganisaatioBase {
+                        tyypit: List[String] = List(),
+                        oppilaitosTyyppiUri: Option[String] = None,
+                        kieletUris: List[String] = List()
+                       ) extends OrganisaatioBase {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
   def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
@@ -93,7 +96,9 @@ case class Organisaatio(oid: String,
 case class KoutaOrganisaatio(oid: String,
                              nimi: Kielistetty,
                              yhteystiedot: Option[Yhteystieto] = None,
-                             kotipaikkaUri: Option[String] = None) extends OrganisaatioBase
+                             kotipaikkaUri: Option[String] = None,
+                             oppilaitosTyyppiUri: Option[String] = None,
+                             kieletUris: List[String] = List()) extends OrganisaatioBase
 
 case class OrganisaatioHierarkiaOrg(oid: String,
                                     parentOidPath: String,

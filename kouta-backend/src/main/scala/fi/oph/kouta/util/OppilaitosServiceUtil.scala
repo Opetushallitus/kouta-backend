@@ -63,4 +63,16 @@ object OppilaitosServiceUtil {
 
     Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email)
   }
+
+  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio): Option[KoutaOrganisaatio] = {
+    val yhteystieto: Yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
+    Some(KoutaOrganisaatio(
+      oid = organisaatio.oid,
+      nimi = organisaatio.nimi,
+      yhteystiedot = Some(yhteystieto),
+      kotipaikkaUri = organisaatio.kotipaikkaUri,
+      oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
+      kieletUris = organisaatio.kieletUris
+    ))
+  }
 }

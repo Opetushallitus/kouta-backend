@@ -28,14 +28,22 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
   "organisaatio serializer" should "return empty list for organisaation yhteystiedot" in {
     val organisaatioJson = "{\"maskingActive\":false," +
       "\"tyypit\":[\"organisaatiotyyppi_01\"]," +
-      "\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"},\"nimet\":[{\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
-      "\"alkuPvm\":\"2007-02-23\",\"version\":0}]," +
-      "\"kuvaus2\":{},\"oid\":\"1.2.246.562.10.60198812368\"," +
+      "\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
+      "\"nimet\":[{\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
+      "\"alkuPvm\":\"2007-02-23\"," +
+      "\"version\":0}]," +
+      "\"kuvaus2\":{}," +
+      "\"oid\":\"1.2.246.562.10.60198812368\"," +
       "\"yhteystiedot\":[]," +
       "\"kayntiosoite\":{\"postinumeroUri\":\"posti_00920\",\"osoiteTyyppi\":\"kaynti\",\"yhteystietoOid\":\"1.2.246.562.5.33561261158\",\"postitoimipaikka\":\"HELSINKI\",\"osoite\":\"Matomäenranta 985\",\"ytjPaivitysPvm\":\"2015-06-25\"}," +
       "\"postiosoite\":{\"postinumeroUri\":\"posti_00920\",\"osoiteTyyppi\":\"posti\",\"yhteystietoOid\":\"1.2.246.562.5.53115405465\",\"postitoimipaikka\":\"HELSINKI\",\"osoite\":\"Myllypurontie 1\",\"ytjPaivitysPvm\":\"2023-11-19\"}," +
-      "\"kieletUris\":[\"oppilaitoksenopetuskieli_1#1\",\"oppilaitoksenopetuskieli_4#1\"],\"kotipaikkaUri\":\"kunta_091\",\"parentOidPath\":\"|1.2.246.562.10.00000000001|\",\"toimipistekoodi\":\"\"," +
-      "\"lyhytNimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"},\"status\":\"AKTIIVINEN\"}"
+      "\"kieletUris\":[\"oppilaitoksenopetuskieli_1#1\",\"oppilaitoksenopetuskieli_4#1\"]," +
+      "\"kotipaikkaUri\":\"kunta_091\"," +
+      "\"parentOidPath\":\"|1.2.246.562.10.00000000001|\"," +
+      "\"toimipistekoodi\":\"\"," +
+      "\"lyhytNimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
+      "\"status\":\"AKTIIVINEN\"," +
+      "\"oppilaitosTyyppiUri\": \"oppilaitostyyppi_63#1\"}"
 
     assert(parse(organisaatioJson).extract[Organisaatio] == Organisaatio(
       oid = "1.2.246.562.10.60198812368",
@@ -44,16 +52,21 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       yhteystiedot = List(),
       kotipaikkaUri = Some("kunta_091"),
       status = "AKTIIVINEN",
-      tyypit = List("organisaatiotyyppi_01")
+      tyypit = List("organisaatiotyyppi_01"),
+      oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+      kieletUris = List("oppilaitoksenopetuskieli_1#1", "oppilaitoksenopetuskieli_4#1")
     ))
   }
 
   it should "return organisaatio with all yhteystiedot" in {
     val organisaatioJson = "{\"maskingActive\":false," +
       "\"tyypit\":[\"organisaatiotyyppi_01\"]," +
-      "\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"},\"nimet\":[{\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
-      "\"alkuPvm\":\"2007-02-23\",\"version\":0}]," +
-      "\"kuvaus2\":{},\"oid\":\"1.2.246.562.10.60198812368\"," +
+      "\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
+      "\"nimet\":[{\"nimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
+      "\"alkuPvm\":\"2007-02-23\"," +
+      "\"version\":0}]," +
+      "\"kuvaus2\":{}," +
+      "\"oid\":\"1.2.246.562.10.60198812368\"," +
       "\"yhteystiedot\":[" +
       "{\"kieli\":\"kieli_fi#1\",\"yhteystietoOid\":\"1.2.246.562.5.92268146039\",\"id\":\"3263987\",\"email\":\"kirjaamo@organisaatio.fi\"}," +
       "{\"kieli\":\"kieli_en#1\",\"numero\":\"044 0909090\",\"tyyppi\":\"puhelin\",\"yhteystietoOid\":\"1.2.246.562.5.2014050813493375751756\",\"id\":\"3263981\"}," +
@@ -68,9 +81,12 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       "\"kayntiosoite\":{\"postinumeroUri\":\"posti_00920\",\"osoiteTyyppi\":\"kaynti\",\"yhteystietoOid\":\"1.2.246.562.5.33561261158\",\"postitoimipaikka\":\"HELSINKI\",\"osoite\":\"Matomäenranta 985\",\"ytjPaivitysPvm\":\"2015-06-25\"}," +
       "\"postiosoite\":{\"postinumeroUri\":\"posti_00920\",\"osoiteTyyppi\":\"posti\",\"yhteystietoOid\":\"1.2.246.562.5.53115405465\",\"postitoimipaikka\":\"HELSINKI\",\"osoite\":\"Myllypurontie 1\",\"ytjPaivitysPvm\":\"2023-11-19\"}," +
       "\"kieletUris\":[\"oppilaitoksenopetuskieli_1#1\",\"oppilaitoksenopetuskieli_4#1\"]," +
-      "\"kotipaikkaUri\":\"kunta_091\",\"parentOidPath\":\"|1.2.246.562.10.00000000001|\",\"toimipistekoodi\":\"\"," +
+      "\"kotipaikkaUri\":\"kunta_091\"," +
+      "\"parentOidPath\":\"|1.2.246.562.10.00000000001|\"," +
+      "\"toimipistekoodi\":\"\"," +
       "\"lyhytNimi\":{\"fi\":\"Organisaatio\",\"sv\":\"Organisation\",\"en\":\"Organization\"}," +
-      "\"status\":\"AKTIIVINEN\"}"
+      "\"status\":\"AKTIIVINEN\", " +
+      "\"oppilaitosTyyppiUri\": \"oppilaitostyyppi_63#1\"}"
 
     val result = {
       Organisaatio(oid = "1.2.246.562.10.60198812368",
@@ -90,7 +106,9 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
         ),
         status = "AKTIIVINEN",
         kotipaikkaUri = Some("kunta_091"),
-        tyypit = List("organisaatiotyyppi_01"))
+        tyypit = List("organisaatiotyyppi_01"),
+        oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+        kieletUris = List("oppilaitoksenopetuskieli_1#1", "oppilaitoksenopetuskieli_4#1"))
     }
 
     assert(parse(organisaatioJson).extract[Organisaatio] == result)

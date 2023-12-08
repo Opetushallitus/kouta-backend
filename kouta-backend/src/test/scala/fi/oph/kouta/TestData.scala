@@ -1762,7 +1762,9 @@ object TestData {
     ),
     status = "AKTIIVINEN",
     children = List(),
-    organisaatiotyypit = List("organisaatiotyyppi_1")
+    organisaatiotyypit = List("organisaatiotyyppi_1"),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
   val koutaOrganisaationOsa: KoutaOrganisaatio = KoutaOrganisaatio(
@@ -1773,7 +1775,9 @@ object TestData {
       Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
       kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
       puhelinnumero = Map(Fi -> "044 0909090")
-    ))
+    )),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
   val organisaatio: Organisaatio = Organisaatio(
@@ -1790,7 +1794,9 @@ object TestData {
       Email(kieli = Fi, email = "virkailija@opisto.fi")),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
-    children = List(organisaationOsa)
+    children = List(organisaationOsa),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
   val koutaOrganisaatio: KoutaOrganisaatio = KoutaOrganisaatio(
@@ -1804,6 +1810,8 @@ object TestData {
       sahkoposti = Map(Fi -> "virkailija@opisto.fi")
     )),
     kotipaikkaUri = Some("kunta_123"),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
   val organisaationYhteystieto: Yhteystieto = Yhteystieto(
