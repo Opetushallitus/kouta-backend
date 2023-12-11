@@ -1,4 +1,4 @@
--- luonnostilaiset hakukohteet poistetaan
+-- luonnostilaiset hakukohteet poistetaan jos toteutuksella muu hakulomake kuin ataru
 update hakukohteet
 set tila = 'poistettu'
 where toteutus_oid in (select t.oid
@@ -14,10 +14,16 @@ where toteutus_oid in (select t.oid
                          and h.tila = 'tallennettu'
                          and t.oid in (select new_oid from migration_old_to_new_oid_lookup));
 
--- lisätään hakukohteet käytössä -tieto toteutuksille joilla on hakukohteet käytössä
+-- hakukohteet käytössä -tieto toteutuksille joilla on hakukohteet käytössä
 update toteutukset t
 set metadata = jsonb_set(metadata, '{isHakukohteetKaytossa}', 'true', TRUE)
 where t.metadata::jsonb ->> 'hakulomaketyyppi' = 'ataru'
   and t.metadata::jsonb ->> 'isHakukohteetKaytossa' is null
   and t.oid in (select toteutus_oid from hakukohteet)
-  and t.tila<>'poistettu' and t.tila<>'arkistoitu'
+  and t.tila<>'poistettu' and t.tila<>'arkistoitu';
+
+-- siivotaan aloituspaikkatieto toteutuksilta jos tieto on hakukohteella
+update toteutukset t
+set metadata = metadata - 'aloituspaikat'
+where t.metadata->'aloituspaikat' is not null
+  and t.oid in (select toteutus_oid from hakukohteet where metadata->'aloituspaikat' -> 'lukumaara' is not null);
