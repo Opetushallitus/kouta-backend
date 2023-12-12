@@ -72,6 +72,7 @@ object OppilaitosServiceUtil {
     val yhteystieto: Yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
     Some(KoutaOrganisaatio(
       oid = organisaatio.oid,
+      parentOidPath = organisaatio.parentOidPath,
       nimi = organisaatio.nimi,
       yhteystiedot = Some(yhteystieto),
       kotipaikkaUri = organisaatio.kotipaikkaUri,

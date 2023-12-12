@@ -1769,6 +1769,8 @@ object TestData {
 
   val koutaOrganisaationOsa: KoutaOrganisaatio = KoutaOrganisaatio(
     oid = GrandChildOid.toString,
+    parentOidPath =
+      s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
     nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     kotipaikkaUri = Some("kunta_123"),
     yhteystiedot = Some(Yhteystieto(
@@ -1801,6 +1803,7 @@ object TestData {
 
   val koutaOrganisaatio: KoutaOrganisaatio = KoutaOrganisaatio(
     oid = ChildOid.toString,
+    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     yhteystiedot = Some(Yhteystieto(
       nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),

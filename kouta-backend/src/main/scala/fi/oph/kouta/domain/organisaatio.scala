@@ -94,6 +94,7 @@ case class Organisaatio(oid: String,
 }
 
 case class KoutaOrganisaatio(oid: String,
+                             parentOidPath: String,
                              nimi: Kielistetty,
                              yhteystiedot: Option[Yhteystieto] = None,
                              kotipaikkaUri: Option[String] = None,
