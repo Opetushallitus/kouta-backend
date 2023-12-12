@@ -26,4 +26,5 @@ where t.metadata::jsonb ->> 'hakulomaketyyppi' = 'ataru'
 update toteutukset t
 set metadata = metadata - 'aloituspaikat'
 where t.metadata->'aloituspaikat' is not null
+  and t.tila<>'poistettu'
   and t.oid in (select toteutus_oid from hakukohteet where metadata->'aloituspaikat' -> 'lukumaara' is not null);
