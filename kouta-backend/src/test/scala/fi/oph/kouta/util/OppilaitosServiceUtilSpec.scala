@@ -143,7 +143,9 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
         postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
         kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some("posti_15110"))),
         puhelinnumero = Map(Fi -> "050 44042961"),
-        sahkoposti = Map(Fi -> "koulutus@opisto.fi"))
+        sahkoposti = Map(Fi -> "koulutus@opisto.fi"),
+        www = Map(Fi -> "http://www.salpaus.fi")
+      )
     )
   }
 }

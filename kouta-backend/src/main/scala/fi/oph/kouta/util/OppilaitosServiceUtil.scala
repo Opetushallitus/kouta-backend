@@ -61,7 +61,11 @@ object OppilaitosServiceUtil {
       email => (email.kieli, email.email)
     ).toMap
 
-    Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email)
+    val www = yhteystiedot.filter(_.isInstanceOf[Www]).asInstanceOf[List[Www]].map(
+      www => (www.kieli, www.www)
+    ).toMap
+
+    Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email, www = www)
   }
 
   def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio): Option[KoutaOrganisaatio] = {

@@ -406,7 +406,8 @@ case class Yhteystieto(
     postiosoite: Option[Osoite] = None,
     kayntiosoite: Option[Osoite] = None,
     puhelinnumero: Kielistetty = Map(),
-    sahkoposti: Kielistetty = Map()
+    sahkoposti: Kielistetty = Map(),
+    www: Kielistetty = Map()
 ) {
   def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid =
     and(
