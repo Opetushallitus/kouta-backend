@@ -6,7 +6,7 @@ where toteutus_oid in (select t.oid
                             koulutukset k,
                             hakukohteet h
                        where k.tyyppi in ('kk-opintojakso', 'kk-opintokokonaisuus')
-                         and t.metadata::jsonb ->> 'hakulomaketyyppi' in ('muu', 'ei  sähköistä')
+                         and t.metadata::jsonb ->> 'hakulomaketyyppi' in ('muu', 'ei sähköistä')
                          and t.oid = h.toteutus_oid
                          and t.koulutus_oid = k.oid
                          and t.tila <> 'poistettu'
@@ -20,6 +20,14 @@ set metadata = jsonb_set(metadata, '{isHakukohteetKaytossa}', 'true', TRUE)
 where t.metadata::jsonb ->> 'hakulomaketyyppi' = 'ataru'
   and t.metadata::jsonb ->> 'isHakukohteetKaytossa' is null
   and t.oid in (select toteutus_oid from hakukohteet)
+  and t.tila<>'poistettu' and t.tila<>'arkistoitu';
+
+-- hakukohteet käytössä -tieto toteutuksille joilla ei ole hakukohteet käytössä
+update toteutukset t
+set metadata = jsonb_set(metadata, '{isHakukohteetKaytossa}', 'false', TRUE)
+where t.metadata::jsonb ->> 'hakulomaketyyppi' in ('muu', 'ei sähköistä')
+  and t.metadata::jsonb ->> 'isHakukohteetKaytossa' is null
+  and t.oid not in (select toteutus_oid from hakukohteet)
   and t.tila<>'poistettu' and t.tila<>'arkistoitu';
 
 -- siivotaan aloituspaikkatieto toteutuksilta jos tieto on hakukohteella
