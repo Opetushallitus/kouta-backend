@@ -3,9 +3,10 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData.{LukioHakukohteenLinja, LukioKoulutus}
 import fi.oph.kouta.TestOids.OphOid
 import fi.oph.kouta.client.{JononAlimmatPisteet, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
+import fi.oph.kouta.domain.Aloituspaikat
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, ValintaperusteFixture}
-import fi.oph.kouta.mocks.{LokalisointiServiceMock, SpecWithMocks}
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockHakemusPalveluClient, SpecWithMocks}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
 import fi.oph.kouta.service.PistehistoriaService
 import fi.oph.kouta.servlet.Authenticated
@@ -26,6 +27,7 @@ class PistehistoriaServiceSpec
   var pistehistoriaService: PistehistoriaService                           = _
   val mockValintaTulosServiceClient: MockValintaTulosServiceClient2        = new MockValintaTulosServiceClient2()
   val mockValintaperusteetServiceClient: MockValintaperusteetServiceClient = new MockValintaperusteetServiceClient()
+
   val authenticatedPaakayttaja = Authenticated(
     UUID.randomUUID().toString,
     CasSession(
@@ -57,23 +59,28 @@ class PistehistoriaServiceSpec
     }
   }
 
-  override def beforeAll() = {
+  override def beforeAll(): Unit = {
     super.beforeAll()
-    pistehistoriaService = new PistehistoriaService(mockValintaTulosServiceClient, mockValintaperusteetServiceClient)
+    pistehistoriaService = new PistehistoriaService(mockValintaTulosServiceClient, mockValintaperusteetServiceClient, mockHakemusPalveluClient)
     hakuOid = put(haku)
     val lkToteutusOid = put(lukioToteutus(put(LukioKoulutus, ophSession)))
     val lkHakukohde = hakukohde(lkToteutusOid, hakuOid).copy(
       nimi = Map(),
       metadata = Some(
         hakukohde.metadata.get
-          .copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq(), hakukohteenLinja = Some(LukioHakukohteenLinja))
+          .copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq(),
+            hakukohteenLinja = Some(LukioHakukohteenLinja), aloituspaikat = Some(Aloituspaikat(lukumaara = Some(100), ensikertalaisille = Some(10))))
       )
     )
     mockLokalisointiResponse("hakukohdelomake.lukionYleislinja")
+
     hakukohdeOid = put(lkHakukohde)
+    mockHakemusPalveluClient.ensisijainenApplicationCounts = Map(
+     hakukohdeOid -> 20
+    )
   }
 
-  override def afterEach() = {
+  override def afterEach(): Unit = {
     clearServiceMocks()
   }
 
@@ -90,5 +97,13 @@ class PistehistoriaServiceSpec
       sql"""select valintatapajono_tyyppi from pistehistoria where hakukohde_oid = ${hakukohdeOid}"""
         .as[String]
     ).headOption should equal(Some("valintatapajono_yp"))
+    db.runBlocking(
+      sql"""select aloituspaikat from pistehistoria where hakukohde_oid = ${hakukohdeOid}"""
+        .as[Int]
+    ).headOption should equal(Some(100))
+    db.runBlocking(
+      sql"""select ensisijaisesti_hakeneet from pistehistoria where hakukohde_oid = ${hakukohdeOid}"""
+        .as[Int]
+    ).headOption should equal(Some(20))
   }
 }
