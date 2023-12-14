@@ -68,6 +68,10 @@ package object oppilaitos {
       |          type: object
       |          description: Opintopolussa käytettävä www-sivu ja sivun nimi eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/NimettyLinkki'
+      |        esittelyvideo:
+      |          type: object
+      |          description: Opintopolussa näytettävän esittelyvideon linkki ja linkin nimi eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/NimettyLinkki'
       |        some:
       |         type: object
       |         description: Opintopolussa näytettävien sosiaalisen median kanavien osoitteita. Koodiurit toimivat avaimena.
@@ -359,6 +363,7 @@ case class OppilaitoksenOsa(
 case class OppilaitosMetadata(
     tietoaOpiskelusta: Seq[TietoaOpiskelusta] = Seq(),
     wwwSivu: Option[NimettyLinkki] = None,
+    esittelyvideo: Option[NimettyLinkki] = None,
     some: Map[String, Option[String]] = Map(),
     hakijapalveluidenYhteystiedot: Option[Yhteystieto] = None,
     esittely: Kielistetty = Map(),
