@@ -312,12 +312,15 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     update(updatedValintaperusteetWithId, lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
     var updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
     assert(updatedMuokkaaja === userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    Thread.sleep(500)
+
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
       val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
       valintaperuste.valintakokeet.size.shouldEqual(1)
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
+
     // lisätään valintakoe
     lastModified       = get(id, updatedValintaperusteetWithId.copy(muokkaaja = UserOid(updatedMuokkaaja)))
     val newValintakoe      = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
@@ -330,6 +333,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     )
     updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
     assert(updatedMuokkaaja === TestUserOid.toString)
+    Thread.sleep(500)
+
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
       val valintaperuste: Valintaperuste = Serialization.read[Valintaperuste](body)
@@ -341,6 +346,8 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     update(valintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds), lastModified, expectUpdate = true, crudSessions(valintaperuste.organisaatioOid))
     updatedMuokkaaja = readValintaperusteMuokkaaja(id.toString)
     assert(updatedMuokkaaja == userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)).toString)
+    Thread.sleep(500)
+
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
 
@@ -348,10 +355,12 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.valintakokeet.size.shouldEqual(1)
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
+
     // poistetaan kaikki valintakokeet
     lastModified       = get(id, updatedValintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds, muokkaaja = UserOid(updatedMuokkaaja)))
     update(valintaperusteetWithId.copy(valintakokeet = List()), lastModified, expectUpdate = true)
     assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
+
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)
 
