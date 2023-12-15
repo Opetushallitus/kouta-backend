@@ -2,6 +2,7 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.TestOids
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 class OppilaitosServiceUtilSpec extends UnitSpec {
   val organisaationOsa = OrganisaatioHierarkiaOrg(
@@ -147,5 +148,25 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
         www = Map(Fi -> "http://www.salpaus.fi")
       )
     )
+  }
+
+  "getParentOids" should "return empty list when parentOidPath is empty string" in {
+    assert(OppilaitosServiceUtil.getParentOids("") == List())
+  }
+
+  it should "return one oid when path consists of one oid" in {
+    assert(OppilaitosServiceUtil.getParentOids("1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
+  }
+
+  it should "return one oid when path consists of one oid preceded and followed by |" in {
+    assert(OppilaitosServiceUtil.getParentOids("|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
+  }
+
+  it should "return two oids when path consists of two oids preceded and followed by |" in {
+    assert(OppilaitosServiceUtil.getParentOids("|1.2.246.562.10.00000000001|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
+  }
+
+  it should "return two oids when path consists of two oids separated by /" in {
+    assert(OppilaitosServiceUtil.getParentOids("1.2.246.562.10.00000000001/1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
 }

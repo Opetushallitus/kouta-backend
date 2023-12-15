@@ -80,4 +80,8 @@ object OppilaitosServiceUtil {
       kieletUris = organisaatio.kieletUris
     ))
   }
+
+  def getParentOids(parentOidPath: String): List[OrganisaatioOid] = {
+    parentOidPath.split("(\\||\\/)").toList.filter(_.nonEmpty).map(oid => OrganisaatioOid(oid))
+  }
 }
