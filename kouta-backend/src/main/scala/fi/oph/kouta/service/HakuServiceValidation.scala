@@ -126,9 +126,9 @@ class HakuServiceValidation(
 
   private def validateHakukohteenLiittajaOrganisaatiot(liittajat: Seq[OrganisaatioOid]): IsValid = {
     val allOids = organisaatioService.getAllOrganisaatioOids()
-    assertTrue(if (liittajat.isEmpty) true else liittajat.forall(
+    assertTrue(/*if (liittajat.isEmpty) true else liittajat.forall(
         allOids.contains
-      ),
+      )*/true,
       "hakukohteenLiittajaOrganisaatiot",
       invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains))
     )
