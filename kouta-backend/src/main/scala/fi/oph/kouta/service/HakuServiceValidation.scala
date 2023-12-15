@@ -130,7 +130,7 @@ class HakuServiceValidation(
         allOids.contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains))
+      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains), allOids)
     )
   }
 
