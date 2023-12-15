@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
@@ -125,12 +125,12 @@ class HakuServiceValidation(
   }
 
   private def validateHakukohteenLiittajaOrganisaatiot(liittajat: Seq[OrganisaatioOid]): IsValid = {
-    val allOids = organisaatioService.getAllOrganisaatioOids()
+    val allOids = organisaatioService.getAllChildOidsFlat(RootOrganisaatioOid)
     assertTrue(if (liittajat.isEmpty) true else liittajat.forall(
         allOids.contains
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains), allOids)
+      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(allOids.contains))
     )
   }
 
