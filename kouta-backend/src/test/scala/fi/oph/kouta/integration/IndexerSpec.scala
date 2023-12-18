@@ -177,13 +177,13 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
       status should equal (200)
       read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs List(
         oppilaitoksenOsa(expectedOsat(0)).copy(
-          oppilaitosOid = OrganisaatioOid(oid),
+          oppilaitosOid = Some(OrganisaatioOid(oid)),
           modified = Some(readOppilaitoksenOsaModified(expectedOsat(0))), _enrichedData = None),
         oppilaitoksenOsa(expectedOsat(1)).copy(
-          oppilaitosOid = OrganisaatioOid(oid),
+          oppilaitosOid = Some(OrganisaatioOid(oid)),
           modified = Some(readOppilaitoksenOsaModified(expectedOsat(1))), _enrichedData = None),
         oppilaitoksenOsa(expectedOsat(2)).copy(
-          oppilaitosOid = OrganisaatioOid(oid),
+          oppilaitosOid = Some(OrganisaatioOid(oid)),
           modified = Some(readOppilaitoksenOsaModified(expectedOsat(2))), _enrichedData = None)
       )
     }

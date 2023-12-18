@@ -470,7 +470,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     if (osaOid != null) {
       osa = Some(OppilaitoksenOsa(
         oid = OrganisaatioOid(osaOid),
-        oppilaitosOid = OrganisaatioOid(r.nextString()),
+        oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
         tila = Julkaisutila.withName(r.nextString()),
         kielivalinta = extractKielivalinta(r.nextStringOption()),
         metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
@@ -490,7 +490,7 @@ trait OppilaitosExtractors extends ExtractorBase {
 trait OppilaitoksenOsaExtractors extends ExtractorBase {
   implicit val getOppilaitoksenOsaResult: GetResult[OppilaitoksenOsa] = GetResult(r => OppilaitoksenOsa(
     oid = OrganisaatioOid(r.nextString()),
-    oppilaitosOid = OrganisaatioOid(r.nextString()),
+    oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
     tila = Julkaisutila.withName(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),

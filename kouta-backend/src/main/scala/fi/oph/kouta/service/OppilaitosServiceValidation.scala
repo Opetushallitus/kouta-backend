@@ -151,7 +151,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
   override def validateEntity(osa: OppilaitoksenOsa, oldOsa: Option[OppilaitoksenOsa]): IsValid = {
     and(
       assertValid(osa.oid, "oid"),
-      validateIfSuccessful(assertValid(osa.oppilaitosOid, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
+      validateIfSuccessful(assertValid(osa.oppilaitosOid.get, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
       assertValid(osa.organisaatioOid, "organisaatioOid"),
       validateIfDefined[String](osa.teemakuva, assertValidUrl(_, "teemakuva")),
       assertNotEmpty(osa.kielivalinta, "kielivalinta")
@@ -196,8 +196,8 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
   private def validateOppilaitosIntegrity(oppilaitoksenOsa: OppilaitoksenOsa): IsValid = {
     validateDependency(
       oppilaitoksenOsa.tila,
-      oppilaitosDAO.getTila(oppilaitoksenOsa.oppilaitosOid),
-      oppilaitoksenOsa.oppilaitosOid,
+      oppilaitosDAO.getTila(oppilaitoksenOsa.oppilaitosOid.get),
+      oppilaitoksenOsa.oppilaitosOid.get,
       "Oppilaitosta",
       "oppilaitosOid"
     )

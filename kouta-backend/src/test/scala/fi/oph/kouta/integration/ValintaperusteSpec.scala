@@ -360,6 +360,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     lastModified       = get(id, updatedValintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds, muokkaaja = UserOid(updatedMuokkaaja)))
     update(valintaperusteetWithId.copy(valintakokeet = List()), lastModified, expectUpdate = true)
     assert(readValintaperusteMuokkaaja(id.toString) == TestUserOid.toString)
+    Thread.sleep(500)
 
     get(s"$ValintaperustePath/$id", headers = defaultHeaders) {
       status should equal(200)

@@ -329,7 +329,7 @@ case class Oppilaitos(
 
 case class OppilaitoksenOsa(
     oid: OrganisaatioOid,
-    oppilaitosOid: OrganisaatioOid,
+    oppilaitosOid: Option[OrganisaatioOid] = None,
     tila: Julkaisutila = Tallennettu,
     esikatselu: Boolean = false,
     metadata: Option[OppilaitoksenOsaMetadata] = None,

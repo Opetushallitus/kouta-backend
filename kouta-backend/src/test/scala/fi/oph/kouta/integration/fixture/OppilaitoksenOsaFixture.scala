@@ -59,7 +59,7 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
                        tila: Julkaisutila,
                        organisaatioOid: OrganisaatioOid
                       ): OppilaitoksenOsa = {
-    oppilaitoksenOsa.copy(oid = oid, oppilaitosOid = oppilaitosOid, organisaatioOid = organisaatioOid, tila = tila)
+    oppilaitoksenOsa.copy(oid = oid, oppilaitosOid = Some(oppilaitosOid), organisaatioOid = organisaatioOid, tila = tila)
   }
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa): String = put(OppilaitoksenOsaPath, oppilaitoksenOsa, oid(_))
@@ -85,7 +85,7 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
     val modified = readOppilaitoksenOsaModified(oid)
     OppilaitoksenOsaListItem(
       OrganisaatioOid(oid),
-      oppilaitoksenOsa.oppilaitosOid,
+      oppilaitoksenOsa.oppilaitosOid.get,
       oppilaitoksenOsa.tila,
       oppilaitoksenOsa.organisaatioOid,
       oppilaitoksenOsa.muokkaaja,

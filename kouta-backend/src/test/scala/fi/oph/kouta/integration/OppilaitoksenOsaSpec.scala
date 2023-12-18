@@ -34,7 +34,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     super.beforeAll()
     put(oppilaitos.copy(OrganisaatioOid(oppilaitosOid)))
     defaultOppilaitoksenOsa = oppilaitoksenOsa(oppilaitoksenOsaOid).copy(
-      oppilaitosOid = OrganisaatioOid(oppilaitosOid),
+      oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid)),
       _enrichedData = Some(OppilaitosEnrichedData(
         muokkaajanNimi = Some(TestData.muokkaajanNimi),
         organisaatio = Some(TestData.koutaOrganisaationOsa.copy(oid = oppilaitoksenOsaOid)))))
@@ -256,7 +256,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     val oppilaitoksenOsaWithEnriched = defaultOppilaitoksenOsa.copy(
       oid = OrganisaatioOid(oid),
-      oppilaitosOid = OrganisaatioOid(oppilaitosOid),
+      oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid)),
       _enrichedData = Some(defaulOppilaitosEnrichedData.copy(
         organisaatio = Some(defaultOrganisaatio.copy(oid = oid))
       )))
@@ -264,8 +264,8 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     val newOppilaitosOid = put(oppilaitos(randomOrganisaatioOid.s))
 
-    update(oppilaitoksenOsa(oid).copy(oppilaitosOid = OrganisaatioOid(newOppilaitosOid)), lastModified, 200, crudSessions(ParentOid))
-    get(oid, oppilaitoksenOsaWithEnriched.copy(oppilaitosOid = OrganisaatioOid(oppilaitosOid)))
+    update(oppilaitoksenOsa(oid).copy(oppilaitosOid = Some(OrganisaatioOid(newOppilaitosOid))), lastModified, 200, crudSessions(ParentOid))
+    get(oid, oppilaitoksenOsaWithEnriched.copy(oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid))))
   }
 
   it should "allow a user of the oppilaitoksen osa organization to update the oppilaitoksen osa" in {
@@ -329,7 +329,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   it should "store and update unfinished oppilaitoksen osa" in {
-    val unfinishedOppilaitoksenOsa = TestData.MinOppilaitoksenOsa.copy(OrganisaatioOid(oppilaitoksenOsaOid), OrganisaatioOid(oppilaitosOid))
+    val unfinishedOppilaitoksenOsa = TestData.MinOppilaitoksenOsa.copy(OrganisaatioOid(oppilaitoksenOsaOid), Some(OrganisaatioOid(oppilaitosOid)))
     val oid = put(unfinishedOppilaitoksenOsa)
     val unfinishedOppilaitoksenOsaWithOrg = unfinishedOppilaitoksenOsa.copy(
       oid = OrganisaatioOid(oid),

@@ -1708,7 +1708,7 @@ object TestData {
 
   val JulkaistuOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
-    oppilaitosOid = ChildOid,
+    oppilaitosOid = Some(ChildOid),
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(
@@ -1743,7 +1743,7 @@ object TestData {
 
   val MinOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
-    oppilaitosOid = ChildOid,
+    oppilaitosOid = Some(ChildOid),
     tila = Tallennettu,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),

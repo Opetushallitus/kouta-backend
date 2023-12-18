@@ -244,7 +244,7 @@ class OppilaitoksenOsaService(
     }
 
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
-    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(organisaatio.get.oid), metadata = enrichedMetadata)
+    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = Some(OrganisaatioOid(organisaatio.get.oid)), metadata = enrichedMetadata)
 
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       oppilaitoksenOsaServiceValidation.withValidation(o, None, authenticated) { o =>
