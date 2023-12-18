@@ -42,6 +42,12 @@ package object organisaatio {
       |            example:
       |              - organisaatiotyyppi_1
       |              - organisaatiotyyppi_2
+      |        kieletUris:
+      |          items:
+      |            type: string
+      |            example:
+      |              - oppilaitoksenopetuskieli_1#1
+      |              - oppilaitoksenopetuskieli_4#1
       |""".stripMargin
 
   val OrganisaatioHierarkiaModel =
@@ -54,7 +60,42 @@ package object organisaatio {
       |            $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
-  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel)
+  val KoutaOrganisaatioModel =
+    """    KoutaOrganisaatio:
+      |      type: object
+      |      properties:
+      |        oid:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871
+      |        parentOidPath:
+      |          type: string
+      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        nimi:
+      |          type: object
+      |          $ref: '#/components/schemas/Nimi'
+      |        yhteystiedot:
+      |          type: object
+      |          $ref: '#/components/schemas/Yhteystieto'
+      |        kotipaikkaUri:
+      |          type: string
+      |          example:
+      |            - kunta_091
+      |            - kunta_398
+      |        organisaatiotyypit:
+      |          items:
+      |            type: string
+      |            example:
+      |              - organisaatiotyyppi_1
+      |              - organisaatiotyyppi_2
+      |        kieletUris:
+      |          items:
+      |            type: string
+      |            example:
+      |              - oppilaitoksenopetuskieli_1#1
+      |              - oppilaitoksenopetuskieli_4#1
+      |""".stripMargin
+
+  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel, KoutaOrganisaatioModel)
 }
 
 sealed trait OrganisaationYhteystieto {

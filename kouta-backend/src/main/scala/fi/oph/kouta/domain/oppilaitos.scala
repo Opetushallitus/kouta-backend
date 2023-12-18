@@ -58,6 +58,9 @@ package object oppilaitos {
       |          type: array
       |          items:
       |            $ref: '#/components/schemas/OppilaitoksenOsa'
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -157,6 +160,9 @@ package object oppilaitos {
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -189,6 +195,19 @@ package object oppilaitos {
       |        jarjestaaUrheilijanAmmKoulutusta: 
       |          type: boolean
       |          description: Järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta?
+      |""".stripMargin
+
+  val OppilaitosEnrichedDataModel: String =
+    """    OppilaitosEnrichedData:
+      |      type: object
+      |      properties:
+      |        muokkaajanNimi:
+      |          type: string
+      |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilön nimi
+      |          $ref: '#/components/schemas/Nimi'
+      |        organisaatio:
+      |          type: object
+      |          $ref: '#/components/schemas/KoutaOrganisaatio'
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -279,6 +298,7 @@ package object oppilaitos {
     OppilaitoksenOsaModel,
     OppilaitosMetadataModel,
     OppilaitoksenOsaMetadataModel,
+    OppilaitosEnrichedDataModel,
     OppilaitoksenOsaListItemModel,
     YhteystietoModel,
     TietoaOpiskelustaModel,
