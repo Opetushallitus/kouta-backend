@@ -1,9 +1,11 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.security.RoleEntity
+import fi.oph.kouta.util.OppilaitosServiceUtil
 import org.json4s.jackson.Serialization.read
 
 class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
@@ -142,16 +144,47 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
 
   "Get oppilaitoksen osat" should "return oppilaitoksen osat for indexer" in {
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(ChildOid)).
+      thenReturn(TestData.organisaationOsa.copy(oid = ChildOid.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(GrandChildOid)).
+      thenReturn(TestData.organisaationOsa.copy(oid = GrandChildOid.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(GrandGrandChildOid)).
+      thenReturn(TestData.organisaationOsa.copy(oid = GrandGrandChildOid.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(EvilChildOid)).
+      thenReturn(TestData.organisaationOsa.copy(oid = EvilGrandChildOid.s))
+
+    val evilParentOidPath = s"${EvilChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001"
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(EvilGrandChildOid)).
+      thenReturn(TestData.organisaationOsa.copy(oid = EvilGrandChildOid.s, parentOidPath = evilParentOidPath))
+
+    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaationOsa.parentOidPath)
+    val evilParentOids = OppilaitosServiceUtil.getParentOids(evilParentOidPath)
+
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
+      thenReturn(List(TestData.organisaatio.copy(oid = oid)))
+
     val anotherOid = put(oppilaitos)
-    val expectedOsat = Seq(put(oppilaitoksenOsa(oid)), put(oppilaitoksenOsa(oid)), put(oppilaitoksenOsa(oid)))
-    val unexpected = put(oppilaitoksenOsa(anotherOid))
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(evilParentOids)).
+      thenReturn(List(TestData.organisaatio.copy(oid = anotherOid)))
+
+    val expectedOsat = Seq(
+      put(oppilaitoksenOsa(ChildOid.s)),
+      put(oppilaitoksenOsa(GrandChildOid.s)),
+      put(oppilaitoksenOsa(GrandGrandChildOid.s)))
+    val unexpected = put(oppilaitoksenOsa(EvilGrandChildOid.s))
     get(s"$IndexerPath/oppilaitos/$oid/osat", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
       read[List[OppilaitoksenOsa]](body) should contain theSameElementsAs List(
-        oppilaitoksenOsa(expectedOsat(0), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(0))), _enrichedData = None),
-        oppilaitoksenOsa(expectedOsat(1), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(1))), _enrichedData = None),
-        oppilaitoksenOsa(expectedOsat(2), oid).copy(modified = Some(readOppilaitoksenOsaModified(expectedOsat(2))), _enrichedData = None)
+        oppilaitoksenOsa(expectedOsat(0)).copy(
+          oppilaitosOid = OrganisaatioOid(oid),
+          modified = Some(readOppilaitoksenOsaModified(expectedOsat(0))), _enrichedData = None),
+        oppilaitoksenOsa(expectedOsat(1)).copy(
+          oppilaitosOid = OrganisaatioOid(oid),
+          modified = Some(readOppilaitoksenOsaModified(expectedOsat(1))), _enrichedData = None),
+        oppilaitoksenOsa(expectedOsat(2)).copy(
+          oppilaitosOid = OrganisaatioOid(oid),
+          modified = Some(readOppilaitoksenOsaModified(expectedOsat(2))), _enrichedData = None)
       )
     }
   }

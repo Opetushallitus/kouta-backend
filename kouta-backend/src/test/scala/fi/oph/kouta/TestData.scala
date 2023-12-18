@@ -1798,7 +1798,8 @@ object TestData {
     kotipaikkaUri = Some("kunta_123"),
     children = List(organisaationOsa),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
-    kieletUris = List("oppilaitoksenopetuskieli_1#2")
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    tyypit = List("organisaatiotyyppi_02")
   )
 
   val koutaOrganisaatio: KoutaOrganisaatio = KoutaOrganisaatio(

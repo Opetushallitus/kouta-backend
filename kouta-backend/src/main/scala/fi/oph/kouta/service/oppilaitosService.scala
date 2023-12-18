@@ -226,8 +226,25 @@ class OppilaitoksenOsaService(
   }
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
+    val organisaatio = organisaatioService.getOrganisaatio(oppilaitoksenOsa.oid) match {
+      case Right(organisaatio: Organisaatio) =>
+        val parentOrgOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath)
+        val parentOrgs = organisaatioService.getOrganisaatiot(parentOrgOids)
+        parentOrgs match {
+          case Right(organisaatiot) =>
+            organisaatiot.find(_.isOppilaitos)
+          case Left(e) =>
+            logger.error(s"Error when getting data from organisaatio-service: $e")
+            throw e
+        }
+
+      case Left(e) =>
+        logger.error(s"Error when getting data from organisaatio-service: $e")
+        throw e
+    }
+
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
-    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
+    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = OrganisaatioOid(organisaatio.get.oid), metadata = enrichedMetadata)
 
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       oppilaitoksenOsaServiceValidation.withValidation(o, None, authenticated) { o =>

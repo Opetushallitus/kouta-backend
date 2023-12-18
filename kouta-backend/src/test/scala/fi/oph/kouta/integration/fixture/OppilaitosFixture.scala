@@ -42,6 +42,9 @@ trait OppilaitosFixture extends AccessControlSpec {
   def oppilaitos(tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Oppilaitos =
     oppilaitos.copy(organisaatioOid = organisaatioOid, tila = tila)
 
+  def oppilaitos(oid: OrganisaatioOid, tila: Julkaisutila, organisaatioOid: OrganisaatioOid): Oppilaitos =
+    oppilaitos.copy(oid = oid, organisaatioOid = organisaatioOid, tila = tila)
+
   def put(oppilaitos: Oppilaitos): String = put(OppilaitosPath, oppilaitos, oid(_))
   def put(oppilaitos: Oppilaitos, sessionId: UUID): String = put(OppilaitosPath, oppilaitos, sessionId, oid(_))
 

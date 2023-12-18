@@ -1,10 +1,13 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain.{OppilaitoksenOsa, Oppilaitos}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OppilaitoksenOsaService, OppilaitosService}
 import org.scalatra.{NotFound, Ok}
+
+import scala.util.{Failure, Success, Try}
 
 class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServlet {
 
@@ -265,8 +268,14 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    oppilaitoksenOsaService.put(parsedBody.extract[OppilaitoksenOsa]) match {
-      case oid => Ok("oid" -> oid)
+    Try[OrganisaatioOid] {
+      oppilaitoksenOsaService.put(parsedBody.extract[OppilaitoksenOsa])
+    } match {
+      case Success(oid) => Ok("oid" -> oid)
+      case Failure(exception: OrganisaatioServiceQueryException) if exception.status == 404 =>
+        NotFound("error" -> exception.message)
+      case Failure(e) =>
+        throw e
     }
   }
 
