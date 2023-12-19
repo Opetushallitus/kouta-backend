@@ -1665,6 +1665,12 @@ object TestData {
             nimi = Map(Fi -> "Linkki suomeksi", Sv -> "Linkki ruotsiksi")
           )
         ),
+        esittelyvideo = Some(
+          NimettyLinkki(
+            url = Map(Fi -> "http://www.oppilaitos.fi/video", Sv -> "http://www.oppilaitos.sv/video"),
+            nimi = Map(Fi -> "esittelyvideo", Sv -> "esittelyvideo")
+          )
+        ),
         hakijapalveluidenYhteystiedot = Some(
           Yhteystieto(
             nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
