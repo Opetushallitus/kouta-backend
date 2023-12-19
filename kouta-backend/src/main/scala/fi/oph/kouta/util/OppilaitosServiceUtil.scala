@@ -68,7 +68,7 @@ object OppilaitosServiceUtil {
     Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email, www = www)
   }
 
-  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio): Option[KoutaOrganisaatio] = {
+  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio, children: Seq[Organisaatio] = List()): Option[KoutaOrganisaatio] = {
     val yhteystieto: Yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
     Some(KoutaOrganisaatio(
       oid = organisaatio.oid,
@@ -76,6 +76,7 @@ object OppilaitosServiceUtil {
       nimi = organisaatio.nimi,
       yhteystiedot = Some(yhteystieto),
       kotipaikkaUri = organisaatio.kotipaikkaUri,
+      children = children.toList.map(org => organisaatioToKoutaOrganisaatio(org)).flatten,
       oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
       kieletUris = organisaatio.kieletUris
     ))

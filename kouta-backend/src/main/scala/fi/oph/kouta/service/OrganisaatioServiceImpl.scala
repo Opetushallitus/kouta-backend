@@ -61,4 +61,13 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
         .map(_.copy(children = List()))
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
+
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
+    Try[Seq[Organisaatio]] {
+      organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
+    } match {
+      case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
+      case Failure(exception) => Left(exception)
+    }
+  }
 }

@@ -46,6 +46,9 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   implicit val organisaatiotCache: Cache[Seq[OrganisaatioOid], Seq[Organisaatio]] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
+  implicit val organisaatioChildrenCache: Cache[OrganisaatioOid, Seq[Organisaatio]] = Scaffeine()
+    .expireAfterWrite(45.minutes)
+    .build()
 
   def getOrganisaatioHierarkia(queryParams: OrganisaatioHierarkiaQueryParams): OrganisaatioHierarkia = {
     val oidsAsQueryParams = queryParams.oids.mkString("&oidRestrictionList=", "&oidRestrictionList=", "")
@@ -154,5 +157,19 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatiotWithOidsFromCache(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
     organisaatiotCache.get(oids, oids => getOrganisaatiot(oids))
+  }
+
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Seq[Organisaatio] = {
+    val url = urlProperties.url(s"organisaatio-service.organisaatio.children", oid)
+
+    get(url, errorHandler, followRedirects = true) {
+      response => {
+        parse(response).extract[Seq[Organisaatio]]
+      }
+    }
+  }
+
+  def getOrganisaatioChildrenFromCache(oid: OrganisaatioOid): Seq[Organisaatio] = {
+    organisaatioChildrenCache.get(oid, oid => getOrganisaatioChildren(oid))
   }
 }

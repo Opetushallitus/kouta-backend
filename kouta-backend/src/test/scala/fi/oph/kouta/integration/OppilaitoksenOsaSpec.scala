@@ -64,9 +64,11 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     val expected = OppilaitosWithOrganisaatioData(
       oid = notSavedInKoutaOrgOid,
-      _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = None, organisaatio = Some(TestData.koutaOrganisaationOsa))))
+      _enrichedData = Some(OppilaitosEnrichedData(
+        muokkaajanNimi = None,
+        organisaatio = Some(TestData.koutaOrganisaationOsa.copy(oid = notSavedInKoutaOrgOid.s)))))
 
-    get(s"$OppilaitosPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
+    get(s"$OppilaitoksenOsaPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
       read[OppilaitosWithOrganisaatioData](body) should equal(expected)
     }
   }

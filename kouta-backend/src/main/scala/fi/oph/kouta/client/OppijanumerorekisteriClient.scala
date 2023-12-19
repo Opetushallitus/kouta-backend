@@ -80,7 +80,6 @@ object OppijanumerorekisteriClient
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
         throw error
-
     }
   }
 
@@ -88,8 +87,9 @@ object OppijanumerorekisteriClient
     try {
       OppijanumeroCache.get(oid, oid => getHenkilö(oid))
     } catch {
-      case _: CasClientException => Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
-      case error: Throwable => throw error
+      case e: Throwable =>
+        logger.error(s"Error fetching henkilö data from oppijarekisteri-service: $e")
+        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
     }
   }
 }
