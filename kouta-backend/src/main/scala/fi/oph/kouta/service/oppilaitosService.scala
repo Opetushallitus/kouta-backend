@@ -193,7 +193,8 @@ class OppilaitoksenOsaService(
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
-        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio)
+        val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
+        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children)
       case Left(_) => None
     }
 

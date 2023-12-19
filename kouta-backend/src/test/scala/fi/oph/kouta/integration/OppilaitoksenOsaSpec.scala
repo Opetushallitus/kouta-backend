@@ -32,6 +32,8 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(List())
+
     put(oppilaitos.copy(OrganisaatioOid(oppilaitosOid)))
     defaultOppilaitoksenOsa = oppilaitoksenOsa(oppilaitoksenOsaOid).copy(
       oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid)),
@@ -60,13 +62,15 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   "Get oppilaitoksen osa by oid" should "return only oid and yhteystiedot in _enrichedData for oppilaitos that hasn't been stored in kouta" in {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(notSavedInKoutaOrgOid)).
-      thenReturn(TestData.organisaationOsa)
+      thenReturn(TestData.organisaationOsa.copy(oid = notSavedInKoutaOrgOid.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(notSavedInKoutaOrgOid)).
+      thenReturn(List(TestData.organisaationOsa))
 
     val expected = OppilaitosWithOrganisaatioData(
       oid = notSavedInKoutaOrgOid,
       _enrichedData = Some(OppilaitosEnrichedData(
         muokkaajanNimi = None,
-        organisaatio = Some(TestData.koutaOrganisaationOsa.copy(oid = notSavedInKoutaOrgOid.s)))))
+        organisaatio = Some(TestData.koutaOrganisaationOsa.copy(oid = notSavedInKoutaOrgOid.s, children = List(TestData.koutaOrganisaationOsa))))))
 
     get(s"$OppilaitoksenOsaPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
       read[OppilaitosWithOrganisaatioData](body) should equal(expected)
