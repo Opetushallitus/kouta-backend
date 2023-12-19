@@ -61,6 +61,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
       )
     ),
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
+    validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
     validateIfDefined[Yhteystieto](
       m.hakijapalveluidenYhteystiedot,
       _.validate(
