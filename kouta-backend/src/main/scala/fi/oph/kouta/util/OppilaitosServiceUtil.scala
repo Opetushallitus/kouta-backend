@@ -78,7 +78,8 @@ object OppilaitosServiceUtil {
       kotipaikkaUri = organisaatio.kotipaikkaUri,
       children = children.toList.map(org => organisaatioToKoutaOrganisaatio(org)).flatten,
       oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
-      kieletUris = organisaatio.kieletUris
+      kieletUris = organisaatio.kieletUris,
+      tyypit = organisaatio.tyypit
     ))
   }
 

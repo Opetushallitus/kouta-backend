@@ -141,7 +141,8 @@ case class KoutaOrganisaatio(oid: String,
                              kotipaikkaUri: Option[String] = None,
                              children: List[KoutaOrganisaatio] = List(),
                              oppilaitosTyyppiUri: Option[String] = None,
-                             kieletUris: List[String] = List()) extends OrganisaatioBase
+                             kieletUris: List[String] = List(),
+                             tyypit: List[String] = List()) extends OrganisaatioBase
 
 case class OrganisaatioHierarkiaOrg(oid: String,
                                     parentOidPath: String,

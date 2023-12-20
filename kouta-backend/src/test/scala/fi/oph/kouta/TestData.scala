@@ -1815,7 +1815,8 @@ object TestData {
     )),
     kotipaikkaUri = Some("kunta_123"),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
-    kieletUris = List("oppilaitoksenopetuskieli_1#2")
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    tyypit = List("organisaatiotyyppi_02")
   )
 
   val organisaationYhteystieto: Yhteystieto = Yhteystieto(
