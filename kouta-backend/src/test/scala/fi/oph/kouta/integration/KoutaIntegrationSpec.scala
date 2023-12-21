@@ -415,6 +415,19 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     }
   }
 
+  def get[E <: scala.AnyRef, I](path: String, id: I)
+                               (implicit
+                                equality: Equality[E],
+                                mf: Manifest[E]
+  ): Any = {
+    get(s"$path/${id.toString}", headers = Seq(sessionHeader(defaultSessionId))) {
+      withClue(body) {
+        status should equal(200)
+      }
+      header(KoutaServlet.LastModifiedHeader)
+    }
+  }
+
   def get(path: String, sessionId: UUID, expectedStatus: Int): Unit = {
     get(path, headers = Seq(sessionHeader(sessionId))) {
       withClue(body) {
