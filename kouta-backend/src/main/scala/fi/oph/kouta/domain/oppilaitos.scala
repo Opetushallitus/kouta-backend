@@ -264,6 +264,10 @@ package object oppilaitos {
       |          type: object
       |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
+      |        www:
+      |          type: object
+      |          description: Opintopolussa näytettävä verkkosivu eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val TietoaOpiskelustaModel =
