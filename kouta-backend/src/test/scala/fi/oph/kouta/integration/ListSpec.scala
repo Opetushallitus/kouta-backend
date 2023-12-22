@@ -268,10 +268,9 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   it should "filter out arkistoidut if instructed" in {
     list(HakuPath, Map("organisaatioOid" -> ChildOid.s, "myosArkistoidut" -> "false"), List(h1, h3))
   }
-  /*it should "list all hakukohteen liittäjäorganisaatiot for given organisaatioOid" in {
+  it should "list all hakukohteen liittäjäorganisaatiot for given organisaatioOid" in {
     list(HakuPath, Map("organisaatioOid" -> LonelyOid.s), List(h1, h4))
-  }*/
-
+  }
   "Valintaperuste list" should "list all valintaperustekuvaukset for authorized organizations" in {
     list(ValintaperustePath, Map("organisaatioOid" -> ChildOid.s), List(v1, v2, v3))
   }
