@@ -5,7 +5,7 @@ import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, error, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, onlyTeemakuvaOrEsittelyvideoAllowed, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
@@ -30,10 +30,20 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
     }
   }
 
+  private def onlyTeemakuvaOrEsittelyvideo(teemakuva: Option[String],
+                                           esittelyvideo: Option[NimettyLinkki]): IsValid = {
+    (teemakuva, esittelyvideo) match {
+      case (Some(_), Some(video)) if video.nimi.nonEmpty || video.url.nonEmpty =>
+        error("teemakuva", onlyTeemakuvaOrEsittelyvideoAllowed)
+      case (_, _) => NoErrors
+    }
+  }
+
   override def validateEntity(ol: Oppilaitos, oldOl: Option[Oppilaitos]): IsValid = {
     and(
       assertValid(ol.oid, "oid"),
       assertValid(ol.organisaatioOid, "organisaatioOid"),
+      onlyTeemakuvaOrEsittelyvideo(ol.teemakuva, ol.metadata.flatMap(_.esittelyvideo)),
       validateIfDefined[String](ol.teemakuva, assertValidUrl(_, "teemakuva")),
       validateIfDefined[String](ol.logo, assertValidUrl(_, "logo")),
       assertNotEmpty(ol.kielivalinta, "kielivalinta")
