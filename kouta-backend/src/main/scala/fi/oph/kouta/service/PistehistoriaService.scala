@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{JononAlimmatPisteet, LegacyTarjontaClient, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
+import fi.oph.kouta.client.{HakemusPalveluClient, JononAlimmatPisteet, LegacyTarjontaClient, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
 import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, PistehistoriaDAO}
@@ -18,7 +18,7 @@ case class LegacyHakukohde(
     hakukausiVuosi: Option[String]
 )
 
-object PistehistoriaService extends PistehistoriaService(ValintaTulosServiceClient, ValintaperusteetServiceClient)
+object PistehistoriaService extends PistehistoriaService(ValintaTulosServiceClient, ValintaperusteetServiceClient, HakemusPalveluClient)
 
 case class Pistetieto(
     tarjoaja: OrganisaatioOid,
@@ -28,10 +28,12 @@ case class Pistetieto(
     valintatapajonoOid: String,
     hakukohdeOid: HakukohdeOid,
     hakuOid: HakuOid,
-    valintatapajonoTyyppi: String
+    valintatapajonoTyyppi: String,
+    ensisijaisestiHakeneet: Option[Int],
+    aloituspaikat: Option[Int]
 )
 
-class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient, valintaperusteetServiceClient: ValintaperusteetServiceClient) extends Logging {
+class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient, valintaperusteetServiceClient: ValintaperusteetServiceClient, ataruClient: HakemusPalveluClient) extends Logging {
   def getPistehistoria(tarjoaja: OrganisaatioOid, hakukohdeKoodi: String): Seq[Pistetieto] = {
     PistehistoriaDAO.getPistehistoria(tarjoaja, hakukohdeKoodi)
   }
@@ -50,7 +52,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     }
   }
 
-  private def lukiolinjaToHakukohdekoodi(koodiUri: String) = {
+  private def lukiolinjaToHakukohdekoodi(koodiUri: String): Seq[String] = {
     val result =
       KoodistoService
         .getRinnasteisetKooditInKoodisto(koodiUri, "hakukohteet")
@@ -60,7 +62,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     result
   }
 
-  private def getHakukohdekoodiUris(hakukohde: Hakukohde) = {
+  private def getHakukohdekoodiUris(hakukohde: Hakukohde): Seq[String] = {
     if (hakukohde.hakukohdeKoodiUri.isDefined) {
       Seq(hakukohde.hakukohdeKoodiUri.get)
     } else {
@@ -88,6 +90,8 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
       .flatMap(_.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi))
       .getOrElse(throw new RuntimeException(s"Haulle $hakuOid ei löytynyt koulutuksen alkamiskautta. Haku: $haku"))
 
+    val ensisijaisestiHakeneetCounts = ataruClient.getEnsisijainenApplicationCounts(hakuOid)
+
     val result = rawPistetiedot.flatMap(pt => {
       val result: Seq[Pistetieto] = HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()) match {
         case Some((hakukohde, _)) =>
@@ -106,6 +110,8 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
               hakuOid = hakuOid,
               hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
               valintatapajonoTyyppi = valintatapajono.tyyppi,
+              aloituspaikat = hakukohde.metadata.flatMap(_.aloituspaikat).flatMap(_.lukumaara),
+              ensisijaisestiHakeneet = ensisijaisestiHakeneetCounts.get(pt.hakukohdeOid)
             )
           }
         case None =>
@@ -126,7 +132,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     changed
   }
 
-  private def syncPistehistoriaForLegacyHaku(hakuOid: HakuOid) = {
+  private def syncPistehistoriaForLegacyHaku(hakuOid: HakuOid): Int = {
     logger.info(s"Käsitellään legacy-haku ${hakuOid}")
     val parallelism       = 8
     lazy val forkJoinPool = new java.util.concurrent.ForkJoinPool(parallelism)
@@ -136,6 +142,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     logger.info(
       s"Saatiin ${pistetiedot.size} pistetietoa Valinta-tulos-servicestä haulle $hakuOid, parallelism $parallelism"
     )
+
     val haku     = LegacyTarjontaClient.getHaku(hakuOid.toString)
     var progress = 0
     val result = pistetiedot
@@ -154,6 +161,8 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
             hakuOid = hakuOid,
             hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
             valintatapajonoTyyppi = valintatapajono.tyyppi,
+            aloituspaikat = None,
+            ensisijaisestiHakeneet = None
           )
         })
       })
@@ -169,7 +178,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
   //2021: 1.2.246.562.29.15658556293
   //2020: 1.2.246.562.29.54537554997
   //2019: 1.2.246.562.29.676633696010
-  //2018: 1.2.246.562.29.557 39081531
+  //2018: 1.2.246.562.29.55739081531
   def syncDefaults()(implicit authenticated: Authenticated): String = {
     val hakuOids = Seq(
       HakuOid("1.2.246.562.29.55739081531"),
