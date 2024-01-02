@@ -73,7 +73,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     .expireAfterWrite(15.minutes)
     .build()
 
-  private def defaultParse[R: Manifest](res: String) = parse(res).extract[R]
+  def defaultParse[R: Manifest](res: String): R = parse(res).extract[R]
 
 
   private def getFromHakemuspalvelu[R: Manifest](
@@ -168,7 +168,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     getWithRetry(
       doGet = () =>
         getFromHakemuspalvelu[HakukohdeInfo](urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid),
-          parseResponse = defaultParse),
+          parseResponse = defaultParse[HakukohdeInfo]),
       errorMsg = "Failed to fetch hakukohde information from Hakemuspalvelu"
     )
   }
@@ -179,7 +179,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
       doGet = () =>
         getFromHakemuspalvelu[HakukohdeApplicationCounts](
           urlProperties.url("hakemuspalvelu-service.haku-ensisijainen-counts", hakuOid),
-          parseResponse = defaultParse
+          parseResponse = defaultParse[HakukohdeApplicationCounts]
         ),
       errorMsg = "Failed to fetch ensisijainen application counts from Hakemuspalvelu"
     )
