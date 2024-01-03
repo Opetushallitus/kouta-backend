@@ -94,6 +94,7 @@ object OppilaitosServiceUtil {
 
     BasicOrganisaatio(
       oid = organisaatio.oid,
+      parentOidPath = organisaatio.parentOidPath,
       oppilaitostyyppi = oppilaitostyyppi,
       nimi = organisaatio.nimi,
       organisaatiotyypit = organisaatio.organisaatiotyypit,

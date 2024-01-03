@@ -119,11 +119,11 @@ sealed trait OrganisaatioBase {
 }
 
 case class BasicOrganisaatio(oid: String,
+                             parentOidPath: String,
                              oppilaitostyyppi: Option[String] = None,
                              nimi: Kielistetty,
                              organisaatiotyypit: List[String] = List(),
                              tyypit: List[String] = List(),
-                             children: Option[List[BasicOrganisaatio]] = None
                             ) extends OrganisaatioBase
 
 case class Organisaatio(oid: String,
@@ -157,8 +157,6 @@ case class OrganisaatioHierarkiaOrg(oid: String,
                                     parentOidPath: String,
                                     oppilaitostyyppi: Option[String] = None,
                                     nimi: Kielistetty,
-                                    status: String,
-                                    kotipaikkaUri: Option[String] = None,
                                     children: List[OrganisaatioHierarkiaOrg] = List(),
                                     organisaatiotyypit: List[String] = List(),
                                     tyypit: List[String] = List()) {}

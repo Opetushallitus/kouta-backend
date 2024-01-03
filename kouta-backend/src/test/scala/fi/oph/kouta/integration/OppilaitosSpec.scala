@@ -33,8 +33,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         s"""${oid}/1.2.246.562.10.47941294986/1.2.246.562.10.00000000001""",
         Some("oppilaitostyyppi_63#1"),
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
-        "AKTIIVINEN",
-        Some("kunta_837"),
         List(),
         List("organisaatiotyyppi_02"))))
 
