@@ -817,11 +817,25 @@ class IndexerServlet(
       |          name: hakuOid
       |          schema:
       |            type: String
-      |          example: 1.2.246.562.29.54537554997
+      |          example: 1.2.246.562.29.00000000000000021303
       |          description: Yksittäisen haun oid tai "defaults" viiden edellisen toisen asteen yhteishaun synkronoimiseksi (2023)
       |      responses:
       |        '200':
       |          description: Ok
+      |          content:
+      |            text/plain:
+      |              schema:
+      |                type: string
+      |        '400':
+      |          content:
+      |            text/plain:
+      |              schema:
+      |                type: string
+      |        '500':
+      |          content:
+      |            text/plain:
+      |              schema:
+      |                type: string
       |""".stripMargin
   )
   get("/pistehistoria/sync") {
@@ -834,13 +848,13 @@ class IndexerServlet(
       if (defaults) {
         val result = pistehistoriaService.syncDefaults()
         logger.info("Oletushaut synkattu: " + result)
-        Ok(result)
+        Ok(result, Map("Content-Type" -> "text/plain;charset=utf-8"))
       } else {
         val hakuOid: Option[HakuOid] = params.get("hakuOid").map(HakuOid).filter(_.isValid)
         hakuOid match {
           case None => BadRequest("error" -> "Pakollinen parametri puuttuu: hakuOid")
           case Some(oid) =>
-            Ok(pistehistoriaService.syncPistehistoriaForHaku(oid))
+            Ok(pistehistoriaService.syncPistehistoriaForHaku(oid), Map("Content-Type" -> "text/plain;charset=utf-8"))
         }
       }
     } catch {
