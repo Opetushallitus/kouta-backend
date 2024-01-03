@@ -827,11 +827,13 @@ class IndexerServlet(
       |              schema:
       |                type: string
       |        '400':
+      |          description: Pakollinen parametri puuttuu
       |          content:
       |            text/plain:
       |              schema:
       |                type: string
       |        '500':
+      |          description: Palvelinvirhe
       |          content:
       |            text/plain:
       |              schema:
