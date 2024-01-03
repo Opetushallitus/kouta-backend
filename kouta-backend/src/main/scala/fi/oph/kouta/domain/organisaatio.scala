@@ -118,14 +118,6 @@ sealed trait OrganisaatioBase {
   val nimi: Kielistetty
 }
 
-case class BasicOrganisaatio(oid: String,
-                             parentOidPath: String,
-                             oppilaitostyyppi: Option[String] = None,
-                             nimi: Kielistetty,
-                             organisaatiotyypit: List[String] = List(),
-                             tyypit: List[String] = List(),
-                            ) extends OrganisaatioBase
-
 case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
@@ -140,8 +132,15 @@ case class Organisaatio(oid: String,
                         kieletUris: List[String] = List()
                        ) extends OrganisaatioBase {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
-  def isPassivoitu: Boolean = status == "PASSIIVINEN"
 }
+
+case class BasicOrganisaatio(oid: String,
+                             parentOidPath: String,
+                             oppilaitostyyppi: Option[String] = None,
+                             nimi: Kielistetty,
+                             organisaatiotyypit: List[String] = List(),
+                             tyypit: List[String] = List(),
+                            ) extends OrganisaatioBase
 
 case class KoutaOrganisaatio(oid: String,
                              parentOidPath: String,
@@ -159,6 +158,6 @@ case class OrganisaatioHierarkiaOrg(oid: String,
                                     nimi: Kielistetty,
                                     children: List[OrganisaatioHierarkiaOrg] = List(),
                                     organisaatiotyypit: List[String] = List(),
-                                    tyypit: List[String] = List()) {}
+                                    tyypit: List[String] = List()) extends OrganisaatioBase
 
 case class OrganisaatioHierarkia(organisaatiot: List[OrganisaatioHierarkiaOrg])
