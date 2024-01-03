@@ -83,6 +83,23 @@ object OppilaitosServiceUtil {
     ))
   }
 
+  def organisaatioToBasicOrganisaatio(organisaatio: Organisaatio): BasicOrganisaatio = {
+    val oppilaitostyyppi = organisaatio.oppilaitostyyppi match {
+      case Some(oppilaitostyyppi) => Some(oppilaitostyyppi)
+      case _ => organisaatio.oppilaitosTyyppiUri match {
+        case Some(oppilaitosTyyppiUri) => Some(oppilaitosTyyppiUri)
+        case None => None
+      }
+    }
+
+    BasicOrganisaatio(
+      oid = organisaatio.oid,
+      oppilaitostyyppi = oppilaitostyyppi,
+      nimi = organisaatio.nimi,
+      organisaatiotyypit = organisaatio.organisaatiotyypit,
+      tyypit = organisaatio.tyypit)
+  }
+
   def getParentOids(parentOidPath: String): List[OrganisaatioOid] = {
     parentOidPath.split("(\\||\\/)").toList.filter(_.nonEmpty).map(oid => OrganisaatioOid(oid))
   }

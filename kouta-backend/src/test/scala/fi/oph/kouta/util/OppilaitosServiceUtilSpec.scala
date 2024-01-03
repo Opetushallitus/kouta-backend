@@ -169,4 +169,13 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
   it should "return two oids when path consists of two oids separated by /" in {
     assert(OppilaitosServiceUtil.getParentOids("1.2.246.562.10.00000000001/1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
+
+  "organisaatioToBasicOrganisaatio" should "return basic organisaatio data" in {
+    assert(OppilaitosServiceUtil.organisaatioToBasicOrganisaatio(organisaatio) == BasicOrganisaatio(
+      oid = TestOids.ChildOid.toString,
+      oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
+      nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+      organisaatiotyypit = List("organisaatiotyyppi_03"),
+      tyypit = List()))
+  }
 }

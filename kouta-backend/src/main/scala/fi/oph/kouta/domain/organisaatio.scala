@@ -115,7 +115,16 @@ case class Www(kieli: Kieli, www: String) extends OrganisaationYhteystieto
 
 sealed trait OrganisaatioBase {
   val oid: String
+  val nimi: Kielistetty
 }
+
+case class BasicOrganisaatio(oid: String,
+                             oppilaitostyyppi: Option[String] = None,
+                             nimi: Kielistetty,
+                             organisaatiotyypit: List[String] = List(),
+                             tyypit: List[String] = List(),
+                             children: Option[List[BasicOrganisaatio]] = None
+                            ) extends OrganisaatioBase
 
 case class Organisaatio(oid: String,
                         parentOidPath: String,
@@ -152,7 +161,6 @@ case class OrganisaatioHierarkiaOrg(oid: String,
                                     kotipaikkaUri: Option[String] = None,
                                     children: List[OrganisaatioHierarkiaOrg] = List(),
                                     organisaatiotyypit: List[String] = List(),
-                                    tyypit: List[String] = List()) {
-}
+                                    tyypit: List[String] = List()) {}
 
 case class OrganisaatioHierarkia(organisaatiot: List[OrganisaatioHierarkiaOrg])
