@@ -135,15 +135,22 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
       Www(Fi, "http://www.salpaus.fi"))
 
     assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
-      Yhteystieto(
+      Some(Yhteystieto(
         nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
         postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
         kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some("posti_15110"))),
         puhelinnumero = Map(Fi -> "050 44042961"),
         sahkoposti = Map(Fi -> "koulutus@opisto.fi"),
         www = Map(Fi -> "http://www.salpaus.fi")
-      )
+      ))
     )
+  }
+
+  it should "return None when organisaatio has no yhteystiedot" in {
+    val nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en")
+    val yhteystiedot = List()
+
+    assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) == None)
   }
 
   "getParentOids" should "return empty list when parentOidPath is empty string" in {

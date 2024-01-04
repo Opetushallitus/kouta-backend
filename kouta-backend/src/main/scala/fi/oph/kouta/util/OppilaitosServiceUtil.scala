@@ -46,35 +46,39 @@ object OppilaitosServiceUtil {
     }
   }
 
-  def toYhteystieto(nimi: Kielistetty, yhteystiedot: List[OrganisaationYhteystieto]): Yhteystieto = {
-    val postiosoitteet = filterByOsoitetyyppi(yhteystiedot, "posti")
-    val postiosoite = toOsoite(postiosoitteet)
+  def toYhteystieto(nimi: Kielistetty, yhteystiedot: List[OrganisaationYhteystieto]): Option[Yhteystieto] = {
+    if (yhteystiedot.nonEmpty) {
+      val postiosoitteet = filterByOsoitetyyppi(yhteystiedot, "posti")
+      val postiosoite = toOsoite(postiosoitteet)
 
-    val kayntiosoitteet = filterByOsoitetyyppi(yhteystiedot, "kaynti")
-    val kayntiosoite = toOsoite(kayntiosoitteet)
+      val kayntiosoitteet = filterByOsoitetyyppi(yhteystiedot, "kaynti")
+      val kayntiosoite = toOsoite(kayntiosoitteet)
 
-    val puhelinnumero = yhteystiedot.filter(_.isInstanceOf[Puhelin]).asInstanceOf[List[Puhelin]].map(
-      puhelinnumero => (puhelinnumero.kieli, puhelinnumero.numero)
-    ).toMap
+      val puhelinnumero = yhteystiedot.filter(_.isInstanceOf[Puhelin]).asInstanceOf[List[Puhelin]].map(
+        puhelinnumero => (puhelinnumero.kieli, puhelinnumero.numero)
+      ).toMap
 
-    val email = yhteystiedot.filter(_.isInstanceOf[Email]).asInstanceOf[List[Email]].map(
-      email => (email.kieli, email.email)
-    ).toMap
+      val email = yhteystiedot.filter(_.isInstanceOf[Email]).asInstanceOf[List[Email]].map(
+        email => (email.kieli, email.email)
+      ).toMap
 
-    val www = yhteystiedot.filter(_.isInstanceOf[Www]).asInstanceOf[List[Www]].map(
-      www => (www.kieli, www.www)
-    ).toMap
+      val www = yhteystiedot.filter(_.isInstanceOf[Www]).asInstanceOf[List[Www]].map(
+        www => (www.kieli, www.www)
+      ).toMap
 
-    Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email, www = www)
+      Some(Yhteystieto(nimi = nimi, postiosoite = postiosoite, kayntiosoite = kayntiosoite, puhelinnumero = puhelinnumero, sahkoposti = email, www = www))
+    } else {
+      None
+    }
   }
 
   def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio, children: Seq[Organisaatio] = List()): Option[KoutaOrganisaatio] = {
-    val yhteystieto: Yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
+    val yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
     Some(KoutaOrganisaatio(
       oid = organisaatio.oid,
       parentOidPath = organisaatio.parentOidPath,
       nimi = organisaatio.nimi,
-      yhteystiedot = Some(yhteystieto),
+      yhteystiedot = yhteystieto,
       kotipaikkaUri = organisaatio.kotipaikkaUri,
       children = children.toList.map(org => organisaatioToKoutaOrganisaatio(org)).flatten,
       oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
