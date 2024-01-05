@@ -49,7 +49,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       oid = "1.2.246.562.10.60198812368",
       parentOidPath = "|1.2.246.562.10.00000000001|",
       nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-      yhteystiedot = List(),
+      yhteystiedot = Some(List()),
       kotipaikkaUri = Some("kunta_091"),
       status = "AKTIIVINEN",
       tyypit = List("organisaatiotyyppi_01"),
@@ -92,7 +92,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       Organisaatio(oid = "1.2.246.562.10.60198812368",
         parentOidPath = "|1.2.246.562.10.00000000001|",
         nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-        yhteystiedot = List(
+        yhteystiedot = Some(List(
           Email(kieli = Fi, email = "kirjaamo@organisaatio.fi"),
           Puhelin(kieli = En, numero = "044 0909090"),
           null,
@@ -103,7 +103,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
           Puhelin(kieli = Fi, numero = "09 74245555"),
           Email(kieli = En, email = "hakija-60428052@oph.fi"),
           null
-        ),
+        )),
         status = "AKTIIVINEN",
         kotipaikkaUri = Some("kunta_091"),
         tyypit = List("organisaatiotyyppi_01"),

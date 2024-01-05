@@ -3,8 +3,8 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia}
-import fi.oph.kouta.util.KoutaJsonFormats
+import fi.oph.kouta.domain.{OrgServiceOrganisaatioHierarkia, Organisaatio, OrganisaatioHierarkia}
+import fi.oph.kouta.util.{KoutaJsonFormats, OppilaitosServiceUtil}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatra.{MultiParams, Params}
@@ -78,7 +78,11 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
     get(url, errorHandler, followRedirects = true) { response =>
       {
-        parse(response).extract[OrganisaatioHierarkia]
+        val parsedOrganisaatioHierarkia = parse(response).extract[OrgServiceOrganisaatioHierarkia]
+        OrganisaatioHierarkia(
+          organisaatiot = parsedOrganisaatioHierarkia.organisaatiot.map(org =>
+            OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(org))
+        )
       }
     }
   }

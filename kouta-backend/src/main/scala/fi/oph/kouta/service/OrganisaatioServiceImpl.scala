@@ -58,7 +58,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       organisaatioServiceClient
         .getOrganisaatioHierarkiaFromCache(None, None, oppilaitostyypitForAvoinKorkeakoulutus)
         .organisaatiot
-        .map(_.copy(children = List()))
+        .map(_.copy(children = None))
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 

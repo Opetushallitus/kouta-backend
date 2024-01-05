@@ -2,7 +2,7 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.OrganisaatioServiceQueryException
-import fi.oph.kouta.domain.{BasicOrganisaatio, Organisaatio}
+import fi.oph.kouta.domain.{Organisaatio}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OrganisaatioServiceImpl => OrganisaatioService}
 import fi.oph.kouta.util.OppilaitosServiceUtil
@@ -39,7 +39,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
     implicit val authenticated: Authenticated = authenticate()
 
     organisaatioService.getOrganisaatio(OrganisaatioOid(params("oid"))) match {
-      case Right(organisaatio: Organisaatio) => Ok(OppilaitosServiceUtil.organisaatioToBasicOrganisaatio(organisaatio))
+      case Right(organisaatio: Organisaatio) => Ok(OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio))
       case Left(e: Throwable) => NotFound("error" -> e.getMessage)
     }
   }
@@ -77,7 +77,7 @@ class OrganisaatioServlet(organisaatioService: OrganisaatioService) extends Kout
 
     organisaatioService.getOrganisaatiot(parsedBody.extract[Seq[OrganisaatioOid]]) match {
       case Left(e: OrganisaatioServiceQueryException) => ActionResult(status = e.status, body = e.message, headers = Map())
-      case Right(organisaatiot) => Ok(organisaatiot.map(org => OppilaitosServiceUtil.organisaatioToBasicOrganisaatio(org)))
+      case Right(organisaatiot) => Ok(organisaatiot.map(org => OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(org)))
       case Left(e) => throw e
     }
   }

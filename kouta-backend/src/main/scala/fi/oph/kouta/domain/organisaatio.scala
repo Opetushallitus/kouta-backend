@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+
 package object organisaatio {
 
   val OrganisaatioModel =
@@ -122,10 +124,10 @@ case class Organisaatio(oid: String,
                         parentOidPath: String,
                         oppilaitostyyppi: Option[String] = None,
                         nimi: Kielistetty,
-                        yhteystiedot: List[OrganisaationYhteystieto] = List(),
+                        yhteystiedot: Option[List[OrganisaationYhteystieto]] = None,
                         status: String,
                         kotipaikkaUri: Option[String] = None,
-                        children: List[Organisaatio] = List(),
+                        children: Option[List[Organisaatio]] = None,
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List(),
                         oppilaitosTyyppiUri: Option[String] = None,
@@ -134,30 +136,19 @@ case class Organisaatio(oid: String,
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
 }
 
-case class BasicOrganisaatio(oid: String,
-                             parentOidPath: String,
-                             oppilaitostyyppi: Option[String] = None,
-                             nimi: Kielistetty,
-                             organisaatiotyypit: List[String] = List(),
-                             tyypit: List[String] = List(),
-                            ) extends OrganisaatioBase
-
 case class KoutaOrganisaatio(oid: String,
                              parentOidPath: String,
+                             parentOids: List[OrganisaatioOid] = List(),
                              nimi: Kielistetty,
                              yhteystiedot: Option[Yhteystieto] = None,
                              kotipaikkaUri: Option[String] = None,
-                             children: List[KoutaOrganisaatio] = List(),
+                             children: Option[List[KoutaOrganisaatio]] = None,
                              oppilaitosTyyppiUri: Option[String] = None,
+                             oppilaitostyyppi: Option[String] = None,
                              kieletUris: List[String] = List(),
+                             organisaatiotyypit: List[String] = List(),
                              tyypit: List[String] = List()) extends OrganisaatioBase
 
-case class OrganisaatioHierarkiaOrg(oid: String,
-                                    parentOidPath: String,
-                                    oppilaitostyyppi: Option[String] = None,
-                                    nimi: Kielistetty,
-                                    children: List[OrganisaatioHierarkiaOrg] = List(),
-                                    organisaatiotyypit: List[String] = List(),
-                                    tyypit: List[String] = List()) extends OrganisaatioBase
+case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[Organisaatio])
 
-case class OrganisaatioHierarkia(organisaatiot: List[OrganisaatioHierarkiaOrg])
+case class OrganisaatioHierarkia(organisaatiot: List[KoutaOrganisaatio])

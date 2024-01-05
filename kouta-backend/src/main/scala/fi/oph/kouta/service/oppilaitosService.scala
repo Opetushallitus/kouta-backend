@@ -39,7 +39,7 @@ class OppilaitosService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children)
+        Some(OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 
@@ -194,7 +194,7 @@ class OppilaitoksenOsaService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children)
+        Some(OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 

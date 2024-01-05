@@ -13,14 +13,18 @@ object OppilaitosServiceUtil {
     }).distinct
   }
 
-  def getOidsFromChildren(organisaationOsat: List[OrganisaatioHierarkiaOrg]): List[OrganisaatioOid] = {
-    organisaationOsat.flatMap(org => {
-      if (org.children.isEmpty) {
-        List(OrganisaatioOid(org.oid))
-      } else {
-        OrganisaatioOid(org.oid) +: getOidsFromChildren(org.children)
-      }
-    })
+  def getOidsFromChildren(organisaationOsat: Option[List[KoutaOrganisaatio]]): List[OrganisaatioOid] = {
+    organisaationOsat match {
+      case Some(organisaationOsat) =>
+      organisaationOsat.flatMap(org => {
+           if (org.children.isEmpty) {
+             List(OrganisaatioOid(org.oid))
+           } else {
+             OrganisaatioOid(org.oid) +: getOidsFromChildren(org.children)
+           }
+         })
+      case None => List()
+    }
   }
 
   def filterByOsoitetyyppi(yhteystiedot: List[OrganisaationYhteystieto], osoitetyyppi: String): List[OrgOsoite] = {
@@ -72,22 +76,17 @@ object OppilaitosServiceUtil {
     }
   }
 
-  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio, children: Seq[Organisaatio] = List()): Option[KoutaOrganisaatio] = {
-    val yhteystieto = toYhteystieto(organisaatio.nimi, organisaatio.yhteystiedot)
-    Some(KoutaOrganisaatio(
-      oid = organisaatio.oid,
-      parentOidPath = organisaatio.parentOidPath,
-      nimi = organisaatio.nimi,
-      yhteystiedot = yhteystieto,
-      kotipaikkaUri = organisaatio.kotipaikkaUri,
-      children = children.toList.map(org => organisaatioToKoutaOrganisaatio(org)).flatten,
-      oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
-      kieletUris = organisaatio.kieletUris,
-      tyypit = organisaatio.tyypit
-    ))
-  }
+  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio, children: Seq[Organisaatio] = List()): KoutaOrganisaatio = {
+    val yhteystiedot = organisaatio.yhteystiedot match {
+      case Some(yhteystiedot: List[OrganisaationYhteystieto]) => toYhteystieto(organisaatio.nimi, yhteystiedot)
+      case None => None
+    }
 
-  def organisaatioToBasicOrganisaatio(organisaatio: Organisaatio): BasicOrganisaatio = {
+    val organisaatioChildren = organisaatio.children match {
+      case Some(children) => Some(children)
+      case None => if (children.nonEmpty) Some(children.toList) else None
+    }
+
     val oppilaitostyyppi = organisaatio.oppilaitostyyppi match {
       case Some(oppilaitostyyppi) => Some(oppilaitostyyppi)
       case _ => organisaatio.oppilaitosTyyppiUri match {
@@ -96,13 +95,23 @@ object OppilaitosServiceUtil {
       }
     }
 
-    BasicOrganisaatio(
+    KoutaOrganisaatio(
       oid = organisaatio.oid,
       parentOidPath = organisaatio.parentOidPath,
-      oppilaitostyyppi = oppilaitostyyppi,
+      parentOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
+      yhteystiedot = yhteystiedot,
+      kotipaikkaUri = organisaatio.kotipaikkaUri,
+      children = organisaatioChildren match {
+        case Some(orgChildren) => Some(orgChildren.map(org => organisaatioToKoutaOrganisaatio(org)))
+        case None => None
+      },
+      oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
+      oppilaitostyyppi = oppilaitostyyppi,
+      kieletUris = organisaatio.kieletUris,
       organisaatiotyypit = organisaatio.organisaatiotyypit,
-      tyypit = organisaatio.tyypit)
+      tyypit = organisaatio.tyypit
+    )
   }
 
   def getParentOids(parentOidPath: String): List[OrganisaatioOid] = {
