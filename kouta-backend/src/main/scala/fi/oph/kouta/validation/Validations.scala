@@ -1,6 +1,7 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient}
+import fi.oph.kouta.client.HakemusPalveluClient
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
@@ -47,7 +48,8 @@ object Validations {
   )
 
   def valintakoeIsNotFoundFromAllowedRelations(valintakoetyypinKoodiUri: String) = ErrorMessage(
-    msg = s"Hakukohteella on valintakokeen tyyppi $valintakoetyypinKoodiUri, mitä ei saa hakukohteen haun (kohdejoukko tai hakutapa) tai koulutuksen (koulutuskoodi) tietojen mukaan valita",
+    msg =
+      s"Hakukohteella on valintakokeen tyyppi $valintakoetyypinKoodiUri, mitä ei saa hakukohteen haun (kohdejoukko tai hakutapa) tai koulutuksen (koulutuskoodi) tietojen mukaan valita",
     id = "valintakoeIsNotFoundFromAllowedRelations"
   )
 
@@ -939,16 +941,15 @@ object Validations {
       case x if x.isEmpty => NoErrors
       case kielet         => error(path, invalidKielistettyByOtherFields(kielet, otherPaths))
     }
-  }
 
+  }
   def assertKielistetytHavingSameLocales(kielistetyt: (Kielistetty, String)*): IsValid = {
     val kaikkiKielet: Seq[Kieli] = kielistetyt
       .map(_._1)
       .flatMap(kielistetty =>
         kielistetty.filter(kielistetty => kielistetty._2 != null && kielistetty._2.nonEmpty).keySet
       )
-      .toSet
-      .toSeq
+      .distinct
     val allPaths: Seq[String] = kielistetyt.map(_._2)
     and(
       kielistetyt.map { case (kielistetty, path) =>
@@ -956,4 +957,30 @@ object Validations {
       }: _*
     )
   }
+
+  def validateTeemakuvaUrl(teemakuva: Option[String], imageBucketUrl: String): IsValid = {
+    val isTest = imageBucketUrl.contains(".untuvaopintopolku.fi");
+    val urls = if (isTest) List(imageBucketUrl, "https://konfo-files.opintopolku.fi") else List(imageBucketUrl)
+
+    validateIfDefined[String](
+      teemakuva,
+      tk => {
+        val urlValidationErrors = assertValidUrl(tk, "teemakuva")
+        if (urlValidationErrors.nonEmpty) {
+          urlValidationErrors
+        } else {
+          assertTrue(
+            urls.exists(tk.startsWith),
+            "teemakuva",
+            ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain")
+          )
+        }
+      }
+    )
+  }
+
+  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+
+  def validateTeemakuvaWithConfig(teemakuva: Option[String]): IsValid =
+    validateTeemakuvaUrl(teemakuva, imageBucketPublicUrl)
 }

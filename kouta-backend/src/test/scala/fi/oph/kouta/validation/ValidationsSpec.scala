@@ -1,7 +1,7 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient}
-import fi.oph.kouta.domain.{AmmatillisetKoulutusKoodit, En, Fi, LukioKoulutusKoodit, Sv, Tallennettu, ValintakoeTyyppiKoodisto}
+import fi.oph.kouta.client.HakemusPalveluClient
+import fi.oph.kouta.domain._
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.create
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound, queryFailed}
@@ -63,7 +63,11 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   }
 
   it should "return both missing and non-allowed kielet" in {
-    validateKielistetty(Seq(Fi, Sv), Map(Fi -> "text", Sv -> "", En -> "something"), "test") should contain theSameElementsAs Seq(
+    validateKielistetty(
+      Seq(Fi, Sv),
+      Map(Fi -> "text", Sv -> "", En -> "something"),
+      "test"
+    ) should contain theSameElementsAs Seq(
       ValidationError("test", invalidKielistetty(Seq(Sv))),
       ValidationError("test", notAllowedKielistetty(Seq(En)))
     )
@@ -151,7 +155,7 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
 
   it should "not accept nimi when both invalid and non-allowed names" in {
     assertNimiMatchExternal(
-      Map(Fi -> "nimi", Sv -> "nimi sv", En -> "nimi en"),
+      Map(Fi -> "nimi", Sv     -> "nimi sv", En -> "nimi en"),
       Map(Fi -> "eri nimi", Sv -> "nimi sv"),
       "nimi",
       "koulutuksessa"
@@ -173,24 +177,28 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
     )
 
   "Koodisto validation" should "succeed when valid koodiUri" in {
-    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1"))
+      .thenAnswer(itemFound)
     doAssertKoodistoQuery() should equal(NoErrors)
   }
 
   it should "fail when invalid koodiUri" in {
-    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemNotFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1"))
+      .thenAnswer(itemNotFound)
     doAssertKoodistoQuery() should equal(error("path", invalidValintakoeTyyppiKoodiuri("valintakokeentyyppi_1#1")))
   }
 
   it should "fail when koodiUri query failed" in {
-    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(queryFailed)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1"))
+      .thenAnswer(queryFailed)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
     validationContext.isKoodistoServiceOk() should equal(false)
   }
 
   it should "fail when koodisto-service failure has been detected already before" in {
-    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1"))
+      .thenAnswer(itemFound)
     val validationContext = ValidationContext(Tallennettu, kielet, create)
     validationContext.setKoodistoServiceOk(false)
     doAssertKoodistoQuery(validationContext) should equal(error("path", koodistoServiceFailureMsg))
@@ -292,5 +300,50 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
   it should "fail when Ataru-query failed" in {
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(queryFailed)
     doAssertAtaruQuery() should equal(error("path", ataruServiceFailureMsg))
+  }
+
+  val prodBucketURL = "https://konfo-files.opintopolku.fi"
+  val untuvaBucketURL = "https://konfo-files.untuvaopintopolku.fi"
+
+  "validateTeemakuva" should "succeed with untuva konfo-files URL and untuva bucket" in {
+    validateTeemakuvaUrl(Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"), untuvaBucketURL) should equal(
+      NoErrors
+    )
+  }
+
+  it should "succeed with prod konfo-files URL and untuva bucket" in {
+    validateTeemakuvaUrl(Some("https://konfo-files.opintopolku.fi/test.jpg"), untuvaBucketURL) should equal(NoErrors)
+  }
+
+  it should "succeed with prod konfo-files URL adn prod bucket" in {
+    validateTeemakuvaUrl(Some("https://konfo-files.opintopolku.fi/test.jpg"), prodBucketURL) should equal(NoErrors)
+  }
+
+  it should "fail with untuva konfo-files URL and prod bucket" in {
+    validateTeemakuvaUrl(Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"), prodBucketURL) should equal(
+      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    )
+  }
+
+  it should "fail with wrong domain url and untuva bucket" in {
+    validateTeemakuvaUrl(Some("https://example.com/test.jpg"), untuvaBucketURL) should equal(
+      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    )
+  }
+
+  it should "fail with wrong domain url and prod bucket" in {
+    validateTeemakuvaUrl(Some("https://example.com/test.jpg"), prodBucketURL) should equal(
+      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    )
+  }
+
+  it should "fail with non-url string and untuva bucket" in {
+    validateTeemakuvaUrl(Some("asdf"), untuvaBucketURL) should equal(
+      error("teemakuva", ErrorMessage("'asdf' ei ole validi URL", "invalidUrl"))
+    )
+  }
+
+  it should "succeed with none teemakuva" in {
+    validateTeemakuvaUrl(None, untuvaBucketURL) should equal(NoErrors)
   }
 }

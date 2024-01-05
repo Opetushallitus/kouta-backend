@@ -97,9 +97,9 @@ class KoulutusServiceValidation(
             "johtaaTutkintoon",
             invalidTutkintoonjohtavuus(tyyppi.toString)
           ),
-          validateIfDefined[String](koulutus.teemakuva, assertValidUrl(_, "teemakuva"))
         )
-      )
+      ),
+      validateTeemakuvaWithConfig(koulutus.teemakuva)
     )
   }
 

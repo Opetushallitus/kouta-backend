@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
@@ -17,6 +18,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   val koodistoService              = mock[KoodistoService]
   var organisaatioService          = mock[OrganisaatioService]
   val toteutusDao                  = mock[ToteutusDAO]
