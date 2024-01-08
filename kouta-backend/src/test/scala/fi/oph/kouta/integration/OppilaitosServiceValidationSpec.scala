@@ -3,12 +3,13 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData.Osoite1
 import fi.oph.kouta.TestOids.{ChildOid, OphOid}
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
 import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OppilaitosServiceValidation}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.validation.ExternalQueryResults.{ itemFound, itemNotFound }
+import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
 import org.mockito.scalatest.MockitoSugar
@@ -22,6 +23,8 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSugar {
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+
   val koodistoService     = mock[KoodistoService]
 
   val min         = TestData.MinOppilaitos
