@@ -63,7 +63,7 @@ class ToteutusServiceValidation(
         assertNotOptional(toteutus.oid, "oid"),
         assertNotDefined(toteutus.oid, "oid")
       ),
-      validateUrlWithConfig(toteutus.teemakuva, "teemakuva"),
+      validateImageUrlWithConfig(toteutus.teemakuva, "teemakuva"),
       validateIfSuccessful(
         koulutusOidValid,
         validateKoulutusIntegrity(toteutus, koulutus)

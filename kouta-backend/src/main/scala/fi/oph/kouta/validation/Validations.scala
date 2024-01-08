@@ -378,8 +378,8 @@ object Validations {
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
-  def invalidUrlDomain(url: String, allowedUrls: Set[String]): ErrorMessage =
-    ErrorMessage(msg = s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedUrls.toSeq.sorted.map(u => s"'$u'").mkString(", ")}", "invalidUrlDomain")
+  def invalidUrlDomain(url: String, allowedDomain: Set[String]): ErrorMessage =
+    ErrorMessage(msg = s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}", "invalidUrlDomain")
   def invalidEmail(email: String): ErrorMessage =
     ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage =
@@ -963,7 +963,7 @@ object Validations {
   def validateImageURL(imageURL: Option[String], imageBucketUrl: String, path: String = "teemakuva"): IsValid = {
     val isTest = imageBucketUrl.contains(".untuvaopintopolku.fi");
     // Sallitaan testiympäristöissä myös tuotannon kuva-URL:t, jotta tuotu data ei estä muokkausta
-    val allowedUrls = if (isTest) Set(imageBucketUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketUrl)
+    val allowedDomains = if (isTest) Set(imageBucketUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketUrl)
 
     validateIfDefined[String](
       imageURL,
@@ -973,9 +973,9 @@ object Validations {
           urlValidationErrors
         } else {
           assertTrue(
-            allowedUrls.exists(url.startsWith),
+            allowedDomains.exists(url.startsWith),
             path,
-            invalidUrlDomain(url, allowedUrls)
+            invalidUrlDomain(url, allowedDomains)
           )
         }
       }
@@ -984,7 +984,7 @@ object Validations {
 
   private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
 
-  def validateUrlWithConfig(imageURL: Option[String], path: String): IsValid =
+  def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
     validateImageURL(imageURL, imageBucketPublicUrl, path)
 
 }
