@@ -41,18 +41,21 @@ package object organisaatio {
       |          type: string
       |          example: AKTIIVINEN
       |        organisaatiotyypit:
+      |          type: array
       |          items:
       |            type: string
       |            example:
       |              - organisaatiotyyppi_1
       |              - organisaatiotyyppi_2
       |        tyypit:
+      |          type: array
       |          items:
       |            type: string
       |            example:
       |              - organisaatiotyyppi_1
       |              - organisaatiotyyppi_2
       |        kieletUris:
+      |          type: array
       |          items:
       |            type: string
       |            example:
