@@ -2,12 +2,13 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{KoodistoService, KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
+import fi.oph.kouta.service.{KoodistoService, KoulutusServiceValidation, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
@@ -17,6 +18,7 @@ import org.scalatest.Assertion
 import java.util.UUID
 
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
   val koodistoService              = mock[KoodistoService]
   var organisaatioService          = mock[OrganisaatioService]
   val toteutusDao                  = mock[ToteutusDAO]
@@ -768,6 +770,17 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   it should "fail if invalid teemakuva" in {
     failsValidation(yo.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
+  }
+
+  it should "fail if teemakuva from wrong domain" in {
+    failsValidation(
+      yo.copy(teemakuva = Some("https://example.com/test.jpg")),
+      "teemakuva",
+      invalidUrlDomain(
+        "https://example.com/test.jpg",
+        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
+      )
+    )
   }
 
   it should "fail if invalid lisätieto" in {

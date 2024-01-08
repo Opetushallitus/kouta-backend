@@ -2,13 +2,14 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.mocks.TestKoodistoElement
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.{KoodistoService, KoutaValidationException, OrganisaatioService, OrganizationAuthorizationFailedException, ToteutusServiceValidation}
+import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
@@ -23,13 +24,15 @@ import java.util.UUID
 import scala.util.{Failure, Try}
 
 class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] {
+  KoutaConfigurationFactory.setupWithDefaultTemplateFile()
+
   val koodistoService     = mock[KoodistoService]
   val organisaatioService = mock[OrganisaatioService]
   val koulutusDao         = mock[KoulutusDAO]
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
   val toteutusDao         = mock[ToteutusDAO]
-  val lukioToteutus = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"), nimi = Map())
+  val lukioToteutus       = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"), nimi = Map())
   val lukioDIAKoulutus =
     LukioKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.122")), koulutuksetKoodiUri = Seq("koulutus_301103"))
   val lukioDIAToteutus =
@@ -64,23 +67,23 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     koulutusOid = pelastusalanAmmKoulutus.oid.get,
     metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = List()))
   )
-  val sorakuvausId  = UUID.randomUUID()
-  val sorakuvausId2 = UUID.randomUUID()
-  val sorakuvausId3 = UUID.randomUUID()
-  val sorakuvausId4 = UUID.randomUUID()
-  val sorakuvausId5 = UUID.randomUUID()
-  val sorakuvausId6 = UUID.randomUUID()
-  val toteutusOid  = ToteutusOid("1.2.246.562.17.00000000000000000123")
-  val toteutusOid2 = ToteutusOid("1.2.246.562.17.00000000000000000124")
-  val toteutusOid3 = ToteutusOid("1.2.246.562.17.00000000000000000125")
-  val toteutusOid4 = ToteutusOid("1.2.246.562.17.00000000000000000126")
-  val existingToteutus   = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
-  val koulutusOid1       = KoulutusOid("1.2.246.562.13.00000000000000000997")
-  val koulutusOid2       = KoulutusOid("1.2.246.562.13.00000000000000000998")
-  val invalidKoulutusOid = KoulutusOid("1.2.246.562.13.00000000000000000999")
+  val sorakuvausId                  = UUID.randomUUID()
+  val sorakuvausId2                 = UUID.randomUUID()
+  val sorakuvausId3                 = UUID.randomUUID()
+  val sorakuvausId4                 = UUID.randomUUID()
+  val sorakuvausId5                 = UUID.randomUUID()
+  val sorakuvausId6                 = UUID.randomUUID()
+  val toteutusOid                   = ToteutusOid("1.2.246.562.17.00000000000000000123")
+  val toteutusOid2                  = ToteutusOid("1.2.246.562.17.00000000000000000124")
+  val toteutusOid3                  = ToteutusOid("1.2.246.562.17.00000000000000000125")
+  val toteutusOid4                  = ToteutusOid("1.2.246.562.17.00000000000000000126")
+  val existingToteutus              = JulkaistuAmmToteutus.copy(oid = Some(toteutusOid))
+  val koulutusOid1                  = KoulutusOid("1.2.246.562.13.00000000000000000997")
+  val koulutusOid2                  = KoulutusOid("1.2.246.562.13.00000000000000000998")
+  val invalidKoulutusOid            = KoulutusOid("1.2.246.562.13.00000000000000000999")
   val organisaatioOidCausingFailure = OrganisaatioOid("1.2.246.562.10.66666666666")
-  val invalidKoulutuksetKoodiUri = "koulutus_XXX#1"
-  val validKoulutuksetKoodiUri   = "koulutus_371101#1"
+  val invalidKoulutuksetKoodiUri    = "koulutus_XXX#1"
+  val validKoulutuksetKoodiUri      = "koulutus_371101#1"
   val authenticatedNonPaakayttaja = Authenticated(
     UUID.randomUUID().toString,
     CasSession(
@@ -299,8 +302,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(tpoKoulutus.oid.get)).thenAnswer(Some(tpoKoulutus))
     when(koulutusDao.get(muuKoulutus.oid.get)).thenAnswer(Some(muuKoulutus))
     when(koulutusDao.get(pelastusalanAmmKoulutus.oid.get)).thenAnswer(Some(pelastusalanAmmKoulutus))
-    when(koulutusDao.get(yoTohtoriKoulutus.oid.get)).thenAnswer(Some(
-      YoKoulutus.copy(tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_855101#12"))))
+    when(koulutusDao.get(yoTohtoriKoulutus.oid.get))
+      .thenAnswer(Some(YoKoulutus.copy(tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_855101#12"))))
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri)))
@@ -360,7 +363,15 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koodistoService.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
       .thenAnswer(itemFound)
     when(koodistoService.getKoulutuksetByTutkintotyyppi("tutkintotyyppi_16"))
-      .thenReturn(Right(Seq(TestKoodistoElement("koulutus_655101", 2, defaultName), TestKoodistoElement("koulutus_755101", 2, defaultName), TestKoodistoElement("koulutus_855101", 2, defaultName))))
+      .thenReturn(
+        Right(
+          Seq(
+            TestKoodistoElement("koulutus_655101", 2, defaultName),
+            TestKoodistoElement("koulutus_755101", 2, defaultName),
+            TestKoodistoElement("koulutus_855101", 2, defaultName)
+          )
+        )
+      )
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
@@ -502,6 +513,14 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failsValidation(lukioToteutus.copy(organisaatioOid = OrganisaatioOid("")), "organisaatioOid", validationMsg(""))
     failsValidation(lukioToteutus.copy(koulutusOid = KoulutusOid("puppu")), "koulutusOid", validationMsg("puppu"))
     failsValidation(lukioToteutus.copy(teemakuva = Some("puppu")), "teemakuva", invalidUrl("puppu"))
+    failsValidation(
+      lukioToteutus.copy(teemakuva = Some("https://example.com/test.jpg")),
+      "teemakuva",
+      invalidUrlDomain(
+        "https://example.com/test.jpg",
+        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
+      )
+    )
     failsValidation(lukioDIAToteutus.copy(nimi = Map()), "nimi", invalidKielistetty(Seq(Fi, Sv)))
   }
 
@@ -1057,14 +1076,17 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-
   it should "allow aloituspaikat for Taiteen perusopetus" in {
-    passesValidation(tpoToteutus.copy(metadata =
-      Some(
-        TaiteenPerusopetusToteutusMetatieto.copy(
-          aloituspaikat = Some(10),
-          aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus", Sv -> "aloituspaikkakuvaus sv")
-        ))))
+    passesValidation(
+      tpoToteutus.copy(metadata =
+        Some(
+          TaiteenPerusopetusToteutusMetatieto.copy(
+            aloituspaikat = Some(10),
+            aloituspaikkakuvaus = Map(Fi -> "aloituspaikkakuvaus", Sv -> "aloituspaikkakuvaus sv")
+          )
+        )
+      )
+    )
   }
 
   "Kk-opintojakso validation" should "fail if ammattinimikkeet given" in {

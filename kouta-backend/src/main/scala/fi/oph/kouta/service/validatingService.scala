@@ -3,7 +3,6 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.SorakuvausDAO
-import fi.oph.kouta.service.KoodistoService.isKoulutusValiotsikkoKoodiUri
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 import scalaz.syntax.std.boolean._

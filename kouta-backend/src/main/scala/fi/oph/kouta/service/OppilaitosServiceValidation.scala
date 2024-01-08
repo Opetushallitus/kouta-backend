@@ -5,7 +5,7 @@ import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, error, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, onlyTeemakuvaOrEsittelyvideoAllowed, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, error, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, onlyTeemakuvaOrEsittelyvideoAllowed, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateImageURL, validateImageUrlWithConfig, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
@@ -44,8 +44,8 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
       assertValid(ol.oid, "oid"),
       assertValid(ol.organisaatioOid, "organisaatioOid"),
       onlyTeemakuvaOrEsittelyvideo(ol.teemakuva, ol.metadata.flatMap(_.esittelyvideo)),
-      validateIfDefined[String](ol.teemakuva, assertValidUrl(_, "teemakuva")),
-      validateIfDefined[String](ol.logo, assertValidUrl(_, "logo")),
+      validateImageUrlWithConfig(ol.teemakuva, "teemakuva"),
+      validateImageUrlWithConfig(ol.logo, "logo"),
       assertNotEmpty(ol.kielivalinta, "kielivalinta")
     )
   }
@@ -164,7 +164,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
       assertValid(osa.oid, "oid"),
       validateIfSuccessful(assertValid(osa.oppilaitosOid, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
       assertValid(osa.organisaatioOid, "organisaatioOid"),
-      validateIfDefined[String](osa.teemakuva, assertValidUrl(_, "teemakuva")),
+      validateImageUrlWithConfig(osa.teemakuva, "teemakuva"),
       assertNotEmpty(osa.kielivalinta, "kielivalinta")
     )
   }

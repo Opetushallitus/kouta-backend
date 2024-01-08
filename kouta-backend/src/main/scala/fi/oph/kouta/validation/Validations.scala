@@ -1,6 +1,7 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.client.{HakemusPalveluClient}
+import fi.oph.kouta.client.HakemusPalveluClient
+import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
@@ -47,7 +48,8 @@ object Validations {
   )
 
   def valintakoeIsNotFoundFromAllowedRelations(valintakoetyypinKoodiUri: String) = ErrorMessage(
-    msg = s"Hakukohteella on valintakokeen tyyppi $valintakoetyypinKoodiUri, mitä ei saa hakukohteen haun (kohdejoukko tai hakutapa) tai koulutuksen (koulutuskoodi) tietojen mukaan valita",
+    msg =
+      s"Hakukohteella on valintakokeen tyyppi $valintakoetyypinKoodiUri, mitä ei saa hakukohteen haun (kohdejoukko tai hakutapa) tai koulutuksen (koulutuskoodi) tietojen mukaan valita",
     id = "valintakoeIsNotFoundFromAllowedRelations"
   )
 
@@ -376,6 +378,8 @@ object Validations {
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
+  def invalidUrlDomain(url: String, allowedDomain: Set[String]): ErrorMessage =
+    ErrorMessage(msg = s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}", "invalidUrlDomain")
   def invalidEmail(email: String): ErrorMessage =
     ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage =
@@ -944,16 +948,15 @@ object Validations {
       case x if x.isEmpty => NoErrors
       case kielet         => error(path, invalidKielistettyByOtherFields(kielet, otherPaths))
     }
-  }
 
+  }
   def assertKielistetytHavingSameLocales(kielistetyt: (Kielistetty, String)*): IsValid = {
     val kaikkiKielet: Seq[Kieli] = kielistetyt
       .map(_._1)
       .flatMap(kielistetty =>
         kielistetty.filter(kielistetty => kielistetty._2 != null && kielistetty._2.nonEmpty).keySet
       )
-      .toSet
-      .toSeq
+      .distinct
     val allPaths: Seq[String] = kielistetyt.map(_._2)
     and(
       kielistetyt.map { case (kielistetty, path) =>
@@ -961,4 +964,32 @@ object Validations {
       }: _*
     )
   }
+
+  def validateImageURL(imageURL: Option[String], imageBucketUrl: String, path: String = "teemakuva"): IsValid = {
+    val isTest = imageBucketUrl.contains(".untuvaopintopolku.fi");
+    // Sallitaan testiympäristöissä myös tuotannon kuva-URL:t, jotta tuotu data ei estä muokkausta
+    val allowedDomains = if (isTest) Set(imageBucketUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketUrl)
+
+    validateIfDefined[String](
+      imageURL,
+      url => {
+        val urlValidationErrors = assertValidUrl(url, path)
+        if (urlValidationErrors.nonEmpty) {
+          urlValidationErrors
+        } else {
+          assertTrue(
+            allowedDomains.exists(url.startsWith),
+            path,
+            invalidUrlDomain(url, allowedDomains)
+          )
+        }
+      }
+    )
+  }
+
+  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+
+  def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
+    validateImageURL(imageURL, imageBucketPublicUrl, path)
+
 }

@@ -131,7 +131,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/ammkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = None,
     modified = None,
     _enrichedData = Some(
@@ -165,7 +165,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/ammkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = Some(11L),
     modified = None,
     _enrichedData = Some(
@@ -202,7 +202,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/yokuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -235,7 +235,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/yokuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -268,7 +268,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/yokuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -301,7 +301,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/yokuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -344,7 +344,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -367,7 +367,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -395,7 +395,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/erikoislaakari-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -426,7 +426,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -457,7 +457,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -487,7 +487,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = None,
     modified = None,
     _enrichedData = Some(
@@ -532,7 +532,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/amm-kuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -564,7 +564,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -594,7 +594,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = None,
     modified = None,
     _enrichedData = Some(
@@ -625,7 +625,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = None,
     modified = None,
     _enrichedData = Some(
@@ -657,7 +657,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     ePerusteId = None,
     modified = None,
     _enrichedData = Some(
@@ -703,7 +703,7 @@ object TestData {
     muokkaaja = OphUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(
@@ -731,7 +731,7 @@ object TestData {
     muokkaaja = TestUserOid,
     organisaatioOid = ChildOid,
     kielivalinta = List(Fi, Sv),
-    teemakuva = Some("http://kuva.fi/lkkuva"),
+    teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
     modified = None,
     _enrichedData = Some(
       KoulutusEnrichedData(

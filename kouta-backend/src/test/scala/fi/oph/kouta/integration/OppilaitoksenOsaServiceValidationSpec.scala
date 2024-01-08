@@ -100,6 +100,22 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
     failsValidation(min.copy(kielivalinta = Seq()), "kielivalinta", missingMsg)
     failsValidation(max.copy(organisaatioOid = OrganisaatioOid("virhe")), "organisaatioOid", validationMsg("virhe"))
     failsValidation(min.copy(teemakuva = Some("url")), "teemakuva", invalidUrl("url"))
+    failsValidation(
+      max.copy(teemakuva = Some("https://example.com/test.jpg")),
+      "teemakuva",
+      invalidUrlDomain(
+        "https://example.com/test.jpg",
+        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
+      )
+    )
+    failsValidation(
+      max.copy(teemakuva = Some("https://example.com/test.jpg")),
+      "teemakuva",
+      invalidUrlDomain(
+        "https://example.com/test.jpg",
+        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
+      )
+    )
   }
 
   it should "fail if oppilaitosOid invalid" in {
