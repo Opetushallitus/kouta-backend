@@ -139,6 +139,33 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  it should "fail if invalid esittelyvideo" in {
+    failsValidation(
+      min.copy(metadata =
+        Some(OppilaitosMetadata(esittelyvideo = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi", Sv -> "puppu")))))
+      ),
+      "metadata.esittelyvideo.url.sv",
+      invalidUrl("puppu")
+    )
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(esittelyvideo = Some(NimettyLinkki(url = Map(), nimi = vainSuomeksi))))),
+      Seq(
+        ValidationError("metadata.esittelyvideo.url", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError("metadata.esittelyvideo.nimi", invalidKielistetty(Seq(Sv)))
+      )
+    )
+  }
+
+  it should "fail if both teemakuva and esittelyvideo are defined" in {
+    failsValidation(
+      min.copy(
+        teemakuva = Some("http://testi.fi/kuva.png"),
+        metadata = Some(OppilaitosMetadata(esittelyvideo = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi/video")))))),
+      "teemakuva",
+      onlyTeemakuvaOrEsittelyvideoAllowed
+    )
+  }
+
   it should "fail if any of the numeric fields negative" in {
     failsValidation(
       min.copy(metadata =
