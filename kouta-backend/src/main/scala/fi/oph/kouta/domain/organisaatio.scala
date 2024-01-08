@@ -14,6 +14,14 @@ package object organisaatio {
       |        parentOidPath:
       |          type: string
       |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        parentOids:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - 1.2.246.562.10.66634895871
+      |              - 1.2.246.562.10.594252633210
+      |              - 1.2.246.562.10.00000000001
       |        oppilaitostyyppi:
       |          type: string
       |          example: oppilaitostyyppi_21
@@ -72,6 +80,16 @@ package object organisaatio {
       |        parentOidPath:
       |          type: string
       |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
+      |        parentOids:
+      |          items:
+      |            type: string
+      |            example:
+      |              - 1.2.246.562.10.66634895871
+      |              - 1.2.246.562.10.594252633210
+      |              - 1.2.246.562.10.00000000001
+      |        oppilaitostyyppi:
+      |          type: string
+      |          example: oppilaitostyyppi_21
       |        nimi:
       |          type: object
       |          $ref: '#/components/schemas/Nimi'
