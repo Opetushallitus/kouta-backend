@@ -99,7 +99,7 @@ class KoulutusServiceValidation(
           ),
         )
       ),
-      validateTeemakuvaWithConfig(koulutus.teemakuva)
+      validateUrlWithConfig(koulutus.teemakuva, "teemakuva")
     )
   }
 

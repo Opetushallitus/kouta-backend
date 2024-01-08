@@ -304,46 +304,48 @@ class ValidationsSpec extends AnyFlatSpec with BeforeAndAfterEach with MockitoSu
 
   val prodBucketURL = "https://konfo-files.opintopolku.fi"
   val untuvaBucketURL = "https://konfo-files.untuvaopintopolku.fi"
+  val untuvaUrl = "https://konfo-files.untuvaopintopolku.fi/test.jpg"
+  val prodUrl = "https://konfo-files.opintopolku.fi/test.jpg"
 
   "validateTeemakuva" should "succeed with untuva konfo-files URL and untuva bucket" in {
-    validateTeemakuvaUrl(Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"), untuvaBucketURL) should equal(
+    validateImageURL(Some(untuvaUrl), untuvaBucketURL) should equal(
       NoErrors
     )
   }
 
   it should "succeed with prod konfo-files URL and untuva bucket" in {
-    validateTeemakuvaUrl(Some("https://konfo-files.opintopolku.fi/test.jpg"), untuvaBucketURL) should equal(NoErrors)
+    validateImageURL(Some(prodUrl), untuvaBucketURL) should equal(NoErrors)
   }
 
-  it should "succeed with prod konfo-files URL adn prod bucket" in {
-    validateTeemakuvaUrl(Some("https://konfo-files.opintopolku.fi/test.jpg"), prodBucketURL) should equal(NoErrors)
+  it should "succeed with prod konfo-files URL and prod bucket" in {
+    validateImageURL(Some(prodUrl), prodBucketURL) should equal(NoErrors)
   }
 
   it should "fail with untuva konfo-files URL and prod bucket" in {
-    validateTeemakuvaUrl(Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"), prodBucketURL) should equal(
-      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    validateImageURL(Some(untuvaUrl), prodBucketURL) should equal(
+      error("teemakuva", invalidUrlDomain(untuvaUrl, Set(prodBucketURL)))
     )
   }
 
   it should "fail with wrong domain url and untuva bucket" in {
-    validateTeemakuvaUrl(Some("https://example.com/test.jpg"), untuvaBucketURL) should equal(
-      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    validateImageURL(Some("https://example.com/test.jpg"), untuvaBucketURL) should equal(
+      error("teemakuva", invalidUrlDomain("https://example.com/test.jpg", Set(prodBucketURL, untuvaBucketURL)))
     )
   }
 
   it should "fail with wrong domain url and prod bucket" in {
-    validateTeemakuvaUrl(Some("https://example.com/test.jpg"), prodBucketURL) should equal(
-      error("teemakuva", ErrorMessage("Teemakuvalla on väärä domain", "invalidUrlDomain"))
+    validateImageURL(Some("https://example.com/test.jpg"), prodBucketURL) should equal(
+      error("teemakuva", invalidUrlDomain("https://example.com/test.jpg", Set(prodBucketURL)))
     )
   }
 
   it should "fail with non-url string and untuva bucket" in {
-    validateTeemakuvaUrl(Some("asdf"), untuvaBucketURL) should equal(
-      error("teemakuva", ErrorMessage("'asdf' ei ole validi URL", "invalidUrl"))
+    validateImageURL(Some("asdf"), untuvaBucketURL) should equal(
+      error("teemakuva", invalidUrl("asdf"))
     )
   }
 
   it should "succeed with none teemakuva" in {
-    validateTeemakuvaUrl(None, untuvaBucketURL) should equal(NoErrors)
+    validateImageURL(None, untuvaBucketURL) should equal(NoErrors)
   }
 }
