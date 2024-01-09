@@ -27,6 +27,7 @@ kouta-backend.sqs.region={{kouta_backend_sqs_region}}
 kouta-backend.s3.region={{kouta_backend_s3_region}}
 kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
 kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
+kouta-backend.s3.transferFileBucket={{kouta_backend_s3_transfer_file_bucket}}
 
 host.virkailija={{host_virkailija}}
 host.alb.virkailija={{host_alb_virkailija}}
