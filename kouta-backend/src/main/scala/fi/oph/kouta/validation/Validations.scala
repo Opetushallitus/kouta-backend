@@ -965,10 +965,8 @@ object Validations {
     )
   }
 
-  def validateImageURL(imageURL: Option[String], imageBucketUrl: String, path: String = "teemakuva"): IsValid = {
-    val isTest = imageBucketUrl.contains(".untuvaopintopolku.fi");
+  def validateImageURL(imageURL: Option[String], allowedDomains: Set[String], path: String = "teemakuva"): IsValid = {
     // Sallitaan testiympäristöissä myös tuotannon kuva-URL:t, jotta tuotu data ei estä muokkausta
-    val allowedDomains = if (isTest) Set(imageBucketUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketUrl)
 
     validateIfDefined[String](
       imageURL,
@@ -988,8 +986,9 @@ object Validations {
   }
 
   private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+  private lazy val isTest = KoutaConfigurationFactory.configuration.isTestEnvironment
 
   def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
-    validateImageURL(imageURL, imageBucketPublicUrl, path)
+    validateImageURL(imageURL, if (isTest) Set(imageBucketPublicUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketPublicUrl), path)
 
 }
