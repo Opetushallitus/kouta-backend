@@ -412,23 +412,23 @@ class KoulutusService(
     }
   }
 
+  def enrichKoulutus(koulutus: Koulutus): Koulutus = {
+    val peruste        = koulutus.ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
+    val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(koulutus.nimi, peruste)
+    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(koulutus.muokkaaja)
+    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+    koulutus.copy(_enrichedData =
+      Some(KoulutusEnrichedData(esitysnimi = enrichedNimi, muokkaajanNimi = Some(muokkaajanNimi)))
+    )
+  }
+
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Koulutus, Instant)] = {
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
 
     val enrichedKoulutus = koulutusWithTime match {
-      case Some((k, i)) =>
-        val peruste        = k.ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
-        val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(k.nimi, peruste)
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
-        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(
-          k.copy(_enrichedData =
-            Some(KoulutusEnrichedData(esitysnimi = enrichedNimi, muokkaajanNimi = Some(muokkaajanNimi)))
-          ),
-          i
-        )
+      case Some((k, i)) => Some(enrichKoulutus(k), i)
       case None => None
     }
 
@@ -543,26 +543,33 @@ class KoulutusService(
       organisaatioOid: OrganisaatioOid
   )(implicit authenticated: Authenticated): Map[String, KoulutusWithToteutukset] =
     withRootAccess(indexerRoles) {
-      KoulutusDAO.getJulkaistutByTarjoajaOids(
-        organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
-      ).groupBy(_.oid).map(k => {
-        val (koulutusOid, koulutukset) = k
-        val toteutukset = koulutukset.flatMap(k => {
-          val maybeToteutus = k.toteutus
-          maybeToteutus.oid match {
-            case Some(_) =>
-              val toteutus = MaybeToteutus(maybeToteutus).copy(koulutusMetadata = k.metadata)
+      KoulutusDAO
+        .getJulkaistutByTarjoajaOids(
+          organisaatioService.getAllChildOidsFlat(organisaatioOid, lakkautetut = true)
+        )
+        .groupBy(_.oid)
+        .map(k => {
+          val (koulutusOid, koulutukset) = k
+          val toteutukset = koulutukset.flatMap(k => {
+            val maybeToteutus = k.toteutus
+            maybeToteutus.oid match {
+              case Some(_) =>
+                val toteutus = MaybeToteutus(maybeToteutus).copy(koulutusMetadata = k.metadata)
 
-              Some(toteutus
-                .withEnrichedData(ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(toteutus)))
-                .withoutRelatedData())
-            case None => None
-          }
+                Some(
+                  toteutus
+                    .withEnrichedData(
+                      ToteutusEnrichedData(esitysnimi = ToteutusService.generateToteutusEsitysnimi(toteutus))
+                    )
+                    .withoutRelatedData()
+                )
+              case None => None
+            }
+          })
+
+          val koulutus = koulutukset.head
+          koulutusOid.toString -> KoulutusWithToteutukset(koulutus, toteutukset = toteutukset)
         })
-
-        val koulutus = koulutukset.head
-        koulutusOid.toString -> KoulutusWithToteutukset(koulutus, toteutukset = toteutukset)
-      })
     }
 
   def toteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[Toteutus] =
@@ -737,7 +744,8 @@ class KoulutusService(
     KoulutustyyppiToOppilaitostyyppiResult(koulutustyyppi2oppilaitostyyppi)
   }
 
-  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit authenticated: Authenticated
+  def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter)(implicit
+      authenticated: Authenticated
   ): Seq[KoulutusOid] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.getOidsByTarjoajat(tarjoajaOids, tilaFilter)

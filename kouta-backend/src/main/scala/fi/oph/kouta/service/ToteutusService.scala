@@ -46,11 +46,11 @@ case class ToteutusCopyResultObject(
 )
 
 case class ToteutusTilaChangeResultObject(
-  oid: ToteutusOid,
-  status: String,
-  errorPaths: List[String] = List(),
-  errorMessages: List[String] = List(),
-  errorTypes: List[String] = List()
+    oid: ToteutusOid,
+    status: String,
+    errorPaths: List[String] = List(),
+    errorMessages: List[String] = List(),
+    errorTypes: List[String] = List()
 )
 
 class ToteutusService(
@@ -126,7 +126,7 @@ class ToteutusService(
       metadata = Some(toteutusMetadata)
     )
 
-  private def enrichToteutus(t: Toteutus, koulutus: Option[(Koulutus, Instant)]): Toteutus = {
+  private def enrichToteutusMetadata(t: Toteutus, koulutus: Option[(Koulutus, Instant)]): Toteutus = {
     val muokkaajanOrganisaatiot = kayttooikeusClient.getOrganisaatiotFromCache(t.muokkaaja)
     val isOphVirkailija         = ServiceUtils.hasOphOrganisaatioOid(muokkaajanOrganisaatiot)
 
@@ -168,7 +168,8 @@ class ToteutusService(
                       case Some(kkOpintojaksoKoulutusMetadata: KkOpintojaksoKoulutusMetadata) =>
                         kkOpintojaksoKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
                     }
-                  ))
+                  )
+                )
               case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata =>
                 withMData(t, vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata =>
@@ -185,7 +186,8 @@ class ToteutusService(
                       case Some(kkOpintokokonaisuusKoulutusMetadata: KkOpintokokonaisuusKoulutusMetadata) =>
                         kkOpintokokonaisuusKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
                     }
-                  ))
+                  )
+                )
               case erikoistumisKoulutusMetadata: ErikoistumiskoulutusToteutusMetadata =>
                 withMData(t, erikoistumisKoulutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case taiteenPerusopetusToteutusMetadata: TaiteenPerusopetusToteutusMetadata =>
@@ -193,7 +195,8 @@ class ToteutusService(
                   t,
                   taiteenPerusopetusToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija))
                 )
-              case muuToteutusMetadata: MuuToteutusMetadata => withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case muuToteutusMetadata: MuuToteutusMetadata =>
+                withMData(t, muuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
             }
           case lukioMetadata: LukioToteutusMetadata =>
             withMData(t, lukioMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
@@ -214,17 +217,20 @@ class ToteutusService(
     }
   }
 
+  def enrichToteutus(toteutus: Toteutus): Toteutus = {
+    val esitysnimi     = generateToteutusEsitysnimi(toteutus)
+    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(toteutus.muokkaaja)
+    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+    toteutus.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData()
+
+  }
   def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Toteutus, Instant)] = {
     val toteutusWithTime = ToteutusDAO.get(oid, tilaFilter)
     val enrichedToteutus = toteutusWithTime match {
-      case Some((t, i)) =>
-        val esitysnimi     = generateToteutusEsitysnimi(t)
-        val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(t.muokkaaja)
-        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(t.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData(), i)
-      case None => None
+      case Some((t, i)) => Some(enrichToteutus(t), i)
+      case None         => None
     }
     authorizeGet(
       enrichedToteutus,
@@ -246,7 +252,7 @@ class ToteutusService(
       )
     ) { t =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
-      val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
+      val enrichedToteutus         = enrichToteutusMetadata(t, koulutusWithLastModified)
       toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
         doPut(
           t,
@@ -285,7 +291,7 @@ class ToteutusService(
 
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
-      val enrichedToteutus         = enrichToteutus(t, koulutusWithLastModified)
+      val enrichedToteutus         = enrichToteutusMetadata(t, koulutusWithLastModified)
       toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
@@ -349,9 +355,10 @@ class ToteutusService(
   }
 
   def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid,
-      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true))(
-      ToteutusDAO.listOpintojaksotByAllowedOrganisaatiot(_, TilaFilter.onlyOlemassaolevatAndArkistoimattomat()))
+    withAuthorizedOrganizationOids(
+      organisaatioOid,
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
+    )(ToteutusDAO.listOpintojaksotByAllowedOrganisaatiot(_, TilaFilter.onlyOlemassaolevatAndArkistoimattomat()))
 
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
       authenticated: Authenticated
@@ -473,7 +480,7 @@ class ToteutusService(
   private def quickIndex(toteutusOid: Option[ToteutusOid]): List[String] = {
     toteutusOid match {
       case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("toteutus", oid.toString)
-      case None => List.empty
+      case None      => List.empty
     }
   }
 
@@ -501,19 +508,22 @@ class ToteutusService(
     }
 
   def changeTila(toteutusOids: Seq[ToteutusOid], tila: String, unModifiedSince: Instant)(implicit
-                                                                                           authenticated: Authenticated
+      authenticated: Authenticated
   ): List[ToteutusTilaChangeResultObject] = {
-    val toteutukset: Seq[Toteutus] = toteutusOids.map(oid => {
-      ToteutusDAO.get(oid, TilaFilter.all())
-    }).collect {
-      case Some(result) => result._1
-    }
+    val toteutukset: Seq[Toteutus] = toteutusOids
+      .map(oid => {
+        ToteutusDAO.get(oid, TilaFilter.all())
+      })
+      .collect { case Some(result) =>
+        result._1
+      }
 
     val updatedToteutusOids = scala.collection.mutable.Set[ToteutusOid]()
 
     val tilaChangeResults = toteutukset.toList.map(toteutus => {
       try {
-        val toteutusWithNewTila = toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
+        val toteutusWithNewTila =
+          toteutus.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
         update(toteutusWithNewTila, unModifiedSince) match {
           case UpdateResult(true, _) =>
             updatedToteutusOids += toteutus.oid.get
@@ -539,7 +549,7 @@ class ToteutusService(
             oid = toteutus.oid.get,
             status = "error",
             errorPaths = error.getPaths,
-            errorMessages =  error.getMsgs,
+            errorMessages = error.getMsgs,
             errorTypes = error.getErrorTypes
           )
         case error: OrganizationAuthorizationFailedException =>
