@@ -8,3 +8,4 @@ alter table pistehistoria
 
 COMMENT ON COLUMN pistehistoria.ensisijaisesti_hakeneet IS 'Ensisijaisesti hakeneiden määrä hakukohteella.';
 
+alter table pistehistoria alter column pisteet drop not null;

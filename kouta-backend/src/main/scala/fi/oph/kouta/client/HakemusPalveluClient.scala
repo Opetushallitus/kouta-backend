@@ -75,7 +75,6 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
 
   def defaultParse[R: Manifest](res: String): R = parse(res).extract[R]
 
-
   private def getFromHakemuspalvelu[R: Manifest](
       urlStr: String,
       timeout: Duration = Duration(5, TimeUnit.SECONDS),
