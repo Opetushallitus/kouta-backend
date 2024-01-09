@@ -379,7 +379,11 @@ object Validations {
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
   def invalidUrlDomain(url: String, allowedDomain: Set[String]): ErrorMessage =
-    ErrorMessage(msg = s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}", "invalidUrlDomain")
+    ErrorMessage(
+      msg =
+        s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}",
+      "invalidUrlDomain"
+    )
   def invalidEmail(email: String): ErrorMessage =
     ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage =
@@ -960,11 +964,7 @@ object Validations {
     )
   }
 
-  def validateImageURL(imageURL: Option[String], imageBucketUrl: String, path: String = "teemakuva"): IsValid = {
-    val isTest = imageBucketUrl.contains(".untuvaopintopolku.fi");
-    // Sallitaan testiympäristöissä myös tuotannon kuva-URL:t, jotta tuotu data ei estä muokkausta
-    val allowedDomains = if (isTest) Set(imageBucketUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketUrl)
-
+  def validateImageURL(imageURL: Option[String], allowedDomains: Set[String], path: String = "teemakuva"): IsValid = {
     validateIfDefined[String](
       imageURL,
       url => {
@@ -983,8 +983,14 @@ object Validations {
   }
 
   private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+  private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
 
   def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
-    validateImageURL(imageURL, imageBucketPublicUrl, path)
+    validateImageURL(
+      imageURL,
+      // Sallitaan testiympäristöissä myös tuotannon kuva-URL:t, jotta tuotu data ei estä muokkausta
+      if (isTest) Set(imageBucketPublicUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketPublicUrl),
+      path
+    )
 
 }

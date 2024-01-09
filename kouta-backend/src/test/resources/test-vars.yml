@@ -20,3 +20,4 @@ kouta_backend_elasticsearch_url: http://localhost:9200
 kouta_backend_elasticsearch_auth_enabled: false
 kouta_backend_elasticsearch_username: DUMMY
 kouta_backend_elasticsearch_password: DUMMY
+kouta_backend_test_environment: true
