@@ -1750,7 +1750,7 @@ object TestData {
     muokkaaja = TestUserOid
   )
 
-  val organisaationOsa: Organisaatio = Organisaatio(
+  val organisaatioServiceOrgOrganisaationOsa: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = GrandChildOid.toString,
     parentOidPath =
       s"${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
@@ -1767,7 +1767,7 @@ object TestData {
     kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
-  val organisaatio: Organisaatio = Organisaatio(
+  val organisaatioServiceOrg: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = ChildOid.toString,
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
@@ -1781,14 +1781,14 @@ object TestData {
       Email(kieli = Fi, email = "virkailija@opisto.fi"))),
     status = "AKTIIVINEN",
     kotipaikkaUri = Some("kunta_123"),
-    children = Some(List(organisaationOsa)),
+    children = Some(List(organisaatioServiceOrgOrganisaationOsa)),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     tyypit = List("organisaatiotyyppi_02")
   )
 
   // organisaatio.with.oid
-  val organisaatioWithOid: Organisaatio = Organisaatio(
+  val organisaatioServiceOrgWithOid: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = ChildOid.toString,
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
@@ -1806,9 +1806,8 @@ object TestData {
     tyypit = List("organisaatiotyyppi_02")
   )
 
-  val koutaOrganisaatio: KoutaOrganisaatio = KoutaOrganisaatio(
+  val organisaatio: Organisaatio = Organisaatio(
     oid = ChildOid.toString,
-    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/${OphOid.toString}",
     parentOids = List(ChildOid, ParentOid, OphOid),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     yhteystiedot = Some(Yhteystieto(
@@ -1825,7 +1824,7 @@ object TestData {
     tyypit = List("organisaatiotyyppi_02")
   )
 
-  val organisaatioChild: Organisaatio = Organisaatio(
+  val organisaatioServiceOrgChild: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = GrandChildOid.toString,
     parentOidPath =
       s"${ChildOid.toString}/${ParentOid.toString}/${OphOid.toString}",
@@ -1841,9 +1840,8 @@ object TestData {
   )
 
   // organisaatio.children
-  val koutaOrganisaatioChild: KoutaOrganisaatio = KoutaOrganisaatio(
+  val organisaatioChild: Organisaatio = Organisaatio(
     oid = GrandChildOid.toString,
-    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/${OphOid.toString}",
     parentOids = List(ChildOid, ParentOid, OphOid),
     nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     yhteystiedot = Some(Yhteystieto(
@@ -1857,7 +1855,7 @@ object TestData {
   )
 
   // organisaatiot.with.oids
-  val organisaatioForFindByOids: Organisaatio = Organisaatio(
+  val organisaatioServiceOrgForFindByOids: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = ChildOid.toString,
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),

@@ -25,7 +25,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   var oppilaitoksenOsaOid = TestOids.GrandChildOid.toString
   var oppilaitosOid = TestOids.ChildOid.toString
   var defaultOppilaitoksenOsa: OppilaitoksenOsa = _
-  var defaultOrganisaatio = TestData.koutaOrganisaatioChild
+  var defaultOrganisaatio = TestData.organisaatioChild
   var defaulOppilaitosEnrichedData = OppilaitosEnrichedData(
     muokkaajanNimi = Some(TestData.muokkaajanNimi),
   )
@@ -39,20 +39,20 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
       oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid)),
       _enrichedData = Some(OppilaitosEnrichedData(
         muokkaajanNimi = Some(TestData.muokkaajanNimi),
-        organisaatio = Some(TestData.koutaOrganisaatioChild.copy(oid = oppilaitoksenOsaOid)))))
+        organisaatio = Some(TestData.organisaatioChild.copy(oid = oppilaitoksenOsaOid)))))
   }
 
   override def beforeEach(): Unit = {
     deleteOppilaitostenOsat()
 
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
-      thenReturn(TestData.organisaatioChild.copy(oid = oppilaitoksenOsaOid))
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid))
 
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioChild.parentOidPath)
+    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
       thenReturn(Seq(
-        TestData.organisaatioForFindByOids.copy(oid = oppilaitosOid),
-        TestData.organisaatioForFindByOids.copy(oid = TestOids.randomOrganisaatioOid.s, organisaatiotyypit = List("organisaatiotyyppi_03"))))
+        TestData.organisaatioServiceOrgForFindByOids.copy(oid = oppilaitosOid),
+        TestData.organisaatioServiceOrgForFindByOids.copy(oid = TestOids.randomOrganisaatioOid.s, organisaatiotyypit = List("organisaatiotyyppi_03"))))
 
     when(mockOppilaitoksenOsaDao.get(OrganisaatioOid(oppilaitoksenOsaOid))).
       thenReturn(Some(TestData.JulkaistuOppilaitoksenOsa.copy(oid = OrganisaatioOid(oppilaitoksenOsaOid)), Instant.now()))
@@ -62,15 +62,15 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   "Get oppilaitoksen osa by oid" should "return only oid and yhteystiedot in _enrichedData for oppilaitos that hasn't been stored in kouta" in {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(notSavedInKoutaOrgOid)).
-      thenReturn(TestData.organisaatioChild.copy(oid = notSavedInKoutaOrgOid.s))
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = notSavedInKoutaOrgOid.s))
     when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(notSavedInKoutaOrgOid)).
-      thenReturn(List(TestData.organisaatioChild))
+      thenReturn(List(TestData.organisaatioServiceOrgChild))
 
     val expected = OppilaitosWithOrganisaatioData(
       oid = notSavedInKoutaOrgOid,
       _enrichedData = Some(OppilaitosEnrichedData(
         muokkaajanNimi = None,
-        organisaatio = Some(TestData.koutaOrganisaatioChild.copy(oid = notSavedInKoutaOrgOid.s, children = Some(List(TestData.koutaOrganisaatioChild)))))))
+        organisaatio = Some(TestData.organisaatioChild.copy(oid = notSavedInKoutaOrgOid.s, children = Some(List(TestData.organisaatioChild)))))))
 
     get(s"$OppilaitoksenOsaPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
       read[OppilaitosWithOrganisaatioData](body) should equal(expected)
@@ -85,11 +85,11 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   it should "allow a user of the oppilaitoksen osa organization to read the oppilaitoksen osa" in {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
-      thenReturn(TestData.organisaatioChild.copy(oid = oppilaitoksenOsaOid))
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioChild.parentOidPath)
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid))
+    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
 
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
-      thenReturn(Seq(TestData.organisaatioForFindByOids.copy(oid = oppilaitosOid)))
+      thenReturn(Seq(TestData.organisaatioServiceOrgForFindByOids.copy(oid = oppilaitosOid)))
     val oid = put(oppilaitoksenOsa(oppilaitoksenOsaOid))
     get(oid, crudSessions(oppilaitoksenOsa.organisaatioOid), defaultOppilaitoksenOsa)
   }
@@ -146,7 +146,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "return 404 when oppilaitoksen osan parent oppilaitos is not found from organisaatio-service" in {
     val parentOidPath = s"${UnknownOid.toString}/1.2.246.562.10.00000000001"
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
-      thenReturn(TestData.organisaatioChild.copy(oid = oppilaitoksenOsaOid, parentOidPath = parentOidPath))
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid, parentOidPath = parentOidPath))
 
     val parentOids = OppilaitosServiceUtil.getParentOids(parentOidPath)
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids))
@@ -257,7 +257,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   it should "not update oppilaitos oid" in {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(GrandChildOid)).
-      thenReturn(TestData.organisaatioChild.copy(oid = GrandChildOid.s))
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = GrandChildOid.s))
     val oid = put(oppilaitoksenOsa(GrandChildOid.s))
 
     val oppilaitoksenOsaWithEnriched = defaultOppilaitoksenOsa.copy(
@@ -386,7 +386,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     val oppilaitoksenOsaOid2 = TestOids.EvilChildOid.toString
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid2))).
-      thenReturn(TestData.organisaatioChild.copy(oid = oppilaitoksenOsaOid2))
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid2))
     val oid2 = put(oppilaitoksenOsa(oppilaitoksenOsaOid2))
 
     val lastModified = get(oid1, defaultOppilaitoksenOsa)

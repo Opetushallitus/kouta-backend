@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
+import fi.oph.kouta.domain.{OrganisaatioServiceOrg, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.{MultiParams, Params}
 
@@ -24,22 +24,22 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
     organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
 
-  def getOrganisaatio(organisaatioOid: OrganisaatioOid): Either[Throwable, Organisaatio] = {
-    Try[Organisaatio] {
+  def getOrganisaatio(organisaatioOid: OrganisaatioOid): Either[Throwable, OrganisaatioServiceOrg] = {
+    Try[OrganisaatioServiceOrg] {
       organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
     } match {
-      case Success(organisaatio: Organisaatio) =>
+      case Success(organisaatio: OrganisaatioServiceOrg) =>
         Right(organisaatio)
       case Failure(exception) =>
         Left(exception)
     }
   }
 
-  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]] = {
-    Try[Seq[Organisaatio]] {
+  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[OrganisaatioServiceOrg]] = {
+    Try[Seq[OrganisaatioServiceOrg]] {
       organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
     } match {
-      case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
+      case Success(organisaatiot: Seq[OrganisaatioServiceOrg]) => Right(organisaatiot)
       case Failure(exception)                        => Left(exception)
     }
   }
@@ -62,11 +62,11 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
-    Try[Seq[Organisaatio]] {
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[OrganisaatioServiceOrg]] = {
+    Try[Seq[OrganisaatioServiceOrg]] {
       organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
     } match {
-      case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
+      case Success(organisaatiot: Seq[OrganisaatioServiceOrg]) => Right(organisaatiot)
       case Failure(exception) => Left(exception)
     }
   }

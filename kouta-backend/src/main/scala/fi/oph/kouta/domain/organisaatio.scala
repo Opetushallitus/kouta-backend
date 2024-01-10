@@ -11,9 +11,6 @@ package object organisaatio {
       |        oid:
       |          type: string
       |          example: 1.2.246.562.10.66634895871
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
       |        parentOids:
       |          type: array
       |          items:
@@ -73,52 +70,7 @@ package object organisaatio {
       |            $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
-  val KoutaOrganisaatioModel =
-    """    KoutaOrganisaatio:
-      |      type: object
-      |      properties:
-      |        oid:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871
-      |        parentOidPath:
-      |          type: string
-      |          example: 1.2.246.562.10.66634895871/1.2.246.562.10.594252633210/1.2.246.562.10.00000000001
-      |        parentOids:
-      |          items:
-      |            type: string
-      |            example:
-      |              - 1.2.246.562.10.66634895871
-      |              - 1.2.246.562.10.594252633210
-      |              - 1.2.246.562.10.00000000001
-      |        oppilaitostyyppi:
-      |          type: string
-      |          example: oppilaitostyyppi_21
-      |        nimi:
-      |          type: object
-      |          $ref: '#/components/schemas/Nimi'
-      |        yhteystiedot:
-      |          type: object
-      |          $ref: '#/components/schemas/Yhteystieto'
-      |        kotipaikkaUri:
-      |          type: string
-      |          example:
-      |            - kunta_091
-      |            - kunta_398
-      |        organisaatiotyypit:
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |        kieletUris:
-      |          items:
-      |            type: string
-      |            example:
-      |              - oppilaitoksenopetuskieli_1#1
-      |              - oppilaitoksenopetuskieli_4#1
-      |""".stripMargin
-
-  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel, KoutaOrganisaatioModel)
+  def models = Seq(OrganisaatioModel, OrganisaatioHierarkiaModel)
 }
 
 sealed trait OrganisaationYhteystieto {
@@ -141,35 +93,34 @@ sealed trait OrganisaatioBase {
   val nimi: Kielistetty
 }
 
-case class Organisaatio(oid: String,
-                        parentOidPath: String,
-                        oppilaitostyyppi: Option[String] = None,
-                        nimi: Kielistetty,
-                        yhteystiedot: Option[List[OrganisaationYhteystieto]] = None,
-                        status: String,
-                        kotipaikkaUri: Option[String] = None,
-                        children: Option[List[Organisaatio]] = None,
-                        organisaatiotyypit: List[String] = List(),
-                        tyypit: List[String] = List(),
-                        oppilaitosTyyppiUri: Option[String] = None,
-                        kieletUris: List[String] = List()
+case class OrganisaatioServiceOrg(oid: String,
+                                  parentOidPath: String,
+                                  oppilaitostyyppi: Option[String] = None,
+                                  nimi: Kielistetty,
+                                  yhteystiedot: Option[List[OrganisaationYhteystieto]] = None,
+                                  status: String,
+                                  kotipaikkaUri: Option[String] = None,
+                                  children: Option[List[OrganisaatioServiceOrg]] = None,
+                                  organisaatiotyypit: List[String] = List(),
+                                  tyypit: List[String] = List(),
+                                  oppilaitosTyyppiUri: Option[String] = None,
+                                  kieletUris: List[String] = List()
                        ) extends OrganisaatioBase {
   def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
 }
 
-case class KoutaOrganisaatio(oid: String,
-                             parentOidPath: String,
-                             parentOids: List[OrganisaatioOid] = List(),
-                             nimi: Kielistetty,
-                             yhteystiedot: Option[Yhteystieto] = None,
-                             kotipaikkaUri: Option[String] = None,
-                             children: Option[List[KoutaOrganisaatio]] = None,
-                             oppilaitosTyyppiUri: Option[String] = None,
-                             oppilaitostyyppi: Option[String] = None,
-                             kieletUris: List[String] = List(),
-                             organisaatiotyypit: List[String] = List(),
-                             tyypit: List[String] = List()) extends OrganisaatioBase
+case class Organisaatio(oid: String,
+                        parentOids: List[OrganisaatioOid] = List(),
+                        nimi: Kielistetty,
+                        yhteystiedot: Option[Yhteystieto] = None,
+                        kotipaikkaUri: Option[String] = None,
+                        children: Option[List[Organisaatio]] = None,
+                        oppilaitosTyyppiUri: Option[String] = None,
+                        oppilaitostyyppi: Option[String] = None,
+                        kieletUris: List[String] = List(),
+                        organisaatiotyypit: List[String] = List(),
+                        tyypit: List[String] = List()) extends OrganisaatioBase
 
-case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[Organisaatio])
+case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[OrganisaatioServiceOrg])
 
-case class OrganisaatioHierarkia(organisaatiot: List[KoutaOrganisaatio])
+case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])
