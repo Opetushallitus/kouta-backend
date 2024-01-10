@@ -13,7 +13,7 @@ object OppilaitosServiceUtil {
     }).distinct
   }
 
-  def getOidsFromChildren(organisaationOsat: Option[List[KoutaOrganisaatio]]): List[OrganisaatioOid] = {
+  def getOidsFromChildren(organisaationOsat: Option[List[Organisaatio]]): List[OrganisaatioOid] = {
     organisaationOsat match {
       case Some(organisaationOsat) =>
       organisaationOsat.flatMap(org => {
@@ -76,7 +76,7 @@ object OppilaitosServiceUtil {
     }
   }
 
-  def organisaatioToKoutaOrganisaatio(organisaatio: Organisaatio, children: Seq[Organisaatio] = List()): KoutaOrganisaatio = {
+  def organisaatioServiceOrgToOrganisaatio(organisaatio: OrganisaatioServiceOrg, children: Seq[OrganisaatioServiceOrg] = List()): Organisaatio = {
     val yhteystiedot = organisaatio.yhteystiedot match {
       case Some(yhteystiedot: List[OrganisaationYhteystieto]) => toYhteystieto(organisaatio.nimi, yhteystiedot)
       case None => None
@@ -95,15 +95,14 @@ object OppilaitosServiceUtil {
       }
     }
 
-    KoutaOrganisaatio(
+    Organisaatio(
       oid = organisaatio.oid,
-      parentOidPath = organisaatio.parentOidPath,
       parentOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
       yhteystiedot = yhteystiedot,
       kotipaikkaUri = organisaatio.kotipaikkaUri,
       children = organisaatioChildren match {
-        case Some(orgChildren) => Some(orgChildren.map(org => organisaatioToKoutaOrganisaatio(org)))
+        case Some(orgChildren) => Some(orgChildren.map(org => organisaatioServiceOrgToOrganisaatio(org)))
         case None => None
       },
       oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,

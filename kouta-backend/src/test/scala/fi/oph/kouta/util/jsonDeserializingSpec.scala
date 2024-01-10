@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, Organisaatio, OrganisaationYhteystieto, Puhelin, Sv, Www}
+import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Puhelin, Sv, Www}
 import org.json4s.jackson.JsonMethods.parse
 
 class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
@@ -45,7 +45,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       "\"status\":\"AKTIIVINEN\"," +
       "\"oppilaitosTyyppiUri\": \"oppilaitostyyppi_63#1\"}"
 
-    assert(parse(organisaatioJson).extract[Organisaatio] == Organisaatio(
+    assert(parse(organisaatioJson).extract[OrganisaatioServiceOrg] == OrganisaatioServiceOrg(
       oid = "1.2.246.562.10.60198812368",
       parentOidPath = "|1.2.246.562.10.00000000001|",
       nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
@@ -89,7 +89,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       "\"oppilaitosTyyppiUri\": \"oppilaitostyyppi_63#1\"}"
 
     val result = {
-      Organisaatio(oid = "1.2.246.562.10.60198812368",
+      OrganisaatioServiceOrg(oid = "1.2.246.562.10.60198812368",
         parentOidPath = "|1.2.246.562.10.00000000001|",
         nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
         yhteystiedot = Some(List(
@@ -111,6 +111,6 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
         kieletUris = List("oppilaitoksenopetuskieli_1#1", "oppilaitoksenopetuskieli_4#1"))
     }
 
-    assert(parse(organisaatioJson).extract[Organisaatio] == result)
+    assert(parse(organisaatioJson).extract[OrganisaatioServiceOrg] == result)
   }
 }

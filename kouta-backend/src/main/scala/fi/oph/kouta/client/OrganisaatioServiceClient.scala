@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.domain.{OrgServiceOrganisaatioHierarkia, Organisaatio, OrganisaatioHierarkia}
+import fi.oph.kouta.domain.{OrgServiceOrganisaatioHierarkia, OrganisaatioServiceOrg, OrganisaatioHierarkia}
 import fi.oph.kouta.util.{KoutaJsonFormats, OppilaitosServiceUtil}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
@@ -40,13 +40,13 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
   implicit val organisaatioHierarkiaCache: Cache[OrganisaatioHierarkiaQueryParams, OrganisaatioHierarkia] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
-  implicit val organisaatioCache: Cache[OrganisaatioOid, Organisaatio] = Scaffeine()
+  implicit val organisaatioCache: Cache[OrganisaatioOid, OrganisaatioServiceOrg] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
-  implicit val organisaatiotCache: Cache[Seq[OrganisaatioOid], Seq[Organisaatio]] = Scaffeine()
+  implicit val organisaatiotCache: Cache[Seq[OrganisaatioOid], Seq[OrganisaatioServiceOrg]] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
-  implicit val organisaatioChildrenCache: Cache[OrganisaatioOid, Seq[Organisaatio]] = Scaffeine()
+  implicit val organisaatioChildrenCache: Cache[OrganisaatioOid, Seq[OrganisaatioServiceOrg]] = Scaffeine()
     .expireAfterWrite(45.minutes)
     .build()
 
@@ -81,7 +81,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
         val parsedOrganisaatioHierarkia = parse(response).extract[OrgServiceOrganisaatioHierarkia]
         OrganisaatioHierarkia(
           organisaatiot = parsedOrganisaatioHierarkia.organisaatiot.map(org =>
-            OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(org))
+            OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(org))
         )
       }
     }
@@ -136,44 +136,44 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     }
   }
 
-  def getOrganisaatio(oid: OrganisaatioOid): Organisaatio = {
+  def getOrganisaatio(oid: OrganisaatioOid): OrganisaatioServiceOrg = {
     val url = urlProperties.url(s"organisaatio-service.organisaatio.with.oid", oid)
 
     get(url, errorHandler, followRedirects = true) { response =>
       {
-        parse(response).extract[Organisaatio]
+        parse(response).extract[OrganisaatioServiceOrg]
       }
     }
   }
 
-  def getOrganisaatioWithOidFromCache(oid: OrganisaatioOid): Organisaatio = {
+  def getOrganisaatioWithOidFromCache(oid: OrganisaatioOid): OrganisaatioServiceOrg = {
     organisaatioCache.get(oid, oid => getOrganisaatio(oid))
   }
 
-  def getOrganisaatiot(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
+  def getOrganisaatiot(oids: Seq[OrganisaatioOid]): Seq[OrganisaatioServiceOrg] = {
     val url = urlProperties.url(s"organisaatio-service.organisaatiot.with.oids")
     post(url, oids, errorHandler, followRedirects = true) { response =>
       {
-        parse(response).extract[Seq[Organisaatio]]
+        parse(response).extract[Seq[OrganisaatioServiceOrg]]
       }
     }
   }
 
-  def getOrganisaatiotWithOidsFromCache(oids: Seq[OrganisaatioOid]): Seq[Organisaatio] = {
+  def getOrganisaatiotWithOidsFromCache(oids: Seq[OrganisaatioOid]): Seq[OrganisaatioServiceOrg] = {
     organisaatiotCache.get(oids, oids => getOrganisaatiot(oids))
   }
 
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Seq[Organisaatio] = {
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Seq[OrganisaatioServiceOrg] = {
     val url = urlProperties.url(s"organisaatio-service.organisaatio.children", oid)
 
     get(url, errorHandler, followRedirects = true) {
       response => {
-        parse(response).extract[Seq[Organisaatio]]
+        parse(response).extract[Seq[OrganisaatioServiceOrg]]
       }
     }
   }
 
-  def getOrganisaatioChildrenFromCache(oid: OrganisaatioOid): Seq[Organisaatio] = {
+  def getOrganisaatioChildrenFromCache(oid: OrganisaatioOid): Seq[OrganisaatioServiceOrg] = {
     organisaatioChildrenCache.get(oid, oid => getOrganisaatioChildren(oid))
   }
 }

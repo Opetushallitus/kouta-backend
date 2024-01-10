@@ -207,7 +207,7 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/Nimi'
       |        organisaatio:
       |          type: object
-      |          $ref: '#/components/schemas/KoutaOrganisaatio'
+      |          $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -474,7 +474,7 @@ case class Yhteystieto(
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
-                                  organisaatio: Option[KoutaOrganisaatio] = None)
+                                  organisaatio: Option[Organisaatio] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,

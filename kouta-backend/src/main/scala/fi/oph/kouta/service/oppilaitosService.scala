@@ -39,7 +39,7 @@ class OppilaitosService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        Some(OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children))
+        Some(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 
@@ -194,7 +194,7 @@ class OppilaitoksenOsaService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        Some(OppilaitosServiceUtil.organisaatioToKoutaOrganisaatio(organisaatio, children))
+        Some(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 
@@ -229,7 +229,7 @@ class OppilaitoksenOsaService(
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
     val organisaatio = organisaatioService.getOrganisaatio(oppilaitoksenOsa.oid) match {
-      case Right(organisaatio: Organisaatio) =>
+      case Right(organisaatio: OrganisaatioServiceOrg) =>
         val parentOrgOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath)
         val parentOrgs = organisaatioService.getOrganisaatiot(parentOrgOids)
         parentOrgs match {
