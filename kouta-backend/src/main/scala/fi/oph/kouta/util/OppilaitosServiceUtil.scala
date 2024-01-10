@@ -105,7 +105,6 @@ object OppilaitosServiceUtil {
         case Some(orgChildren) => Some(orgChildren.map(org => organisaatioServiceOrgToOrganisaatio(org)))
         case None => None
       },
-      oppilaitosTyyppiUri = organisaatio.oppilaitosTyyppiUri,
       oppilaitostyyppi = oppilaitostyyppi,
       kieletUris = organisaatio.kieletUris,
       organisaatiotyypit = organisaatio.organisaatiotyypit,
