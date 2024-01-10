@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.servlet.{IndexerServlet, SearchServlet}
 
 import java.util.UUID
@@ -25,6 +26,8 @@ trait IndexerFixture
     with OppilaitoksenOsaFixture {
   this: KoutaIntegrationSpec =>
   val IndexerPath = "/indexer"
+
+  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
 
   override def beforeAll(): Unit = {
     super.beforeAll()

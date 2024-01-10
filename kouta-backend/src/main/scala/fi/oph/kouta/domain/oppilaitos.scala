@@ -58,6 +58,9 @@ package object oppilaitos {
       |          type: array
       |          items:
       |            $ref: '#/components/schemas/OppilaitoksenOsa'
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -157,6 +160,9 @@ package object oppilaitos {
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -186,7 +192,7 @@ package object oppilaitos {
       |          type: string
       |          description: Oppilaitoksen osan Opintopolussa näytettävän teemakuvan URL.
       |          example: https://konfo-files.opintopolku.fi/toteutus-teema/1.2.246.562.10.00000000000000000009/f4ecc80a-f664-40ef-98e6-eaf8dfa57f6e.png
-      |        jarjestaaUrheilijanAmmKoulutusta: 
+      |        jarjestaaUrheilijanAmmKoulutusta:
       |          type: boolean
       |          description: Järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta?
       |""".stripMargin
@@ -274,6 +280,18 @@ package object oppilaitos {
       |          $ref: '#/components/schemas/OrganisaatioHierarkia'
       |""".stripMargin
 
+  val OppilaitosEnrichedDataModel =
+    """    OppilaitosEnrichedData:
+      |      type: object
+      |      properties:
+      |        muokkaajanNimi:
+      |          type: string
+      |          description: "Muokkajan nimi"
+      |        yhteystiedot:
+      |          type: object
+      |          $ref: '#/components/schemas/OrganisaatioYhteystiedot'
+      |""".stripMargin
+
   def models = Seq(
     OppilaitosModel,
     OppilaitoksenOsaModel,
@@ -283,6 +301,7 @@ package object oppilaitos {
     YhteystietoModel,
     TietoaOpiskelustaModel,
     OppilaitoksetResponseModel,
+    OppilaitosEnrichedDataModel
   )
 }
 
@@ -441,7 +460,8 @@ case class Yhteystieto(
     )
 }
 
-case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
+                                  yhteystiedot: Option[OrganisaatioYhteystiedot] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
