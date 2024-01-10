@@ -129,7 +129,7 @@ class HakuServiceValidation(
       organisaatioService.findOrganisaatioOidsFlatByMemberOid(liittaja).contains(liittaja)
       ),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(liittajat)
+      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(l => organisaatioService.findOrganisaatioOidsFlatByMemberOid(l).contains(l)))
     )
   }
 
