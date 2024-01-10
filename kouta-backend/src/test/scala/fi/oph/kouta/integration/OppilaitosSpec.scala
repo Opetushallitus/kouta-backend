@@ -35,7 +35,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         yhteystiedot = None,
         kotipaikkaUri = None,
         children = None,
-        oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
         oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
         kieletUris = List(),
         List(),
