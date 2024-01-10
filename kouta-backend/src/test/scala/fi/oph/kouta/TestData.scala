@@ -1787,7 +1787,7 @@ object TestData {
     tyypit = List("organisaatiotyyppi_02")
   )
 
-  // organisaatio.with.oid
+  // organisaatio.with.oid, organisaatiot.with.oids
   val organisaatioServiceOrgWithOid: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = ChildOid.toString,
     parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
@@ -1824,6 +1824,7 @@ object TestData {
     tyypit = List("organisaatiotyyppi_02")
   )
 
+  // organisaatio.children
   val organisaatioServiceOrgChild: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = GrandChildOid.toString,
     parentOidPath =
@@ -1835,11 +1836,11 @@ object TestData {
       Puhelin(kieli = Fi, numero = "044 0909090"),
     )),
     status = "AKTIIVINEN",
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
     tyypit = List("organisaatiotyyppi_1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
-  // organisaatio.children
   val organisaatioChild: Organisaatio = Organisaatio(
     oid = GrandChildOid.toString,
     parentOids = List(ChildOid, ParentOid, OphOid),
@@ -1850,26 +1851,10 @@ object TestData {
       puhelinnumero = Map(Fi -> "044 0909090"),
     )),
     kotipaikkaUri = Some("kunta_123"),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     tyypit = List("organisaatiotyyppi_1")
-  )
-
-  // organisaatiot.with.oids
-  val organisaatioServiceOrgForFindByOids: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
-    oid = ChildOid.toString,
-    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
-    nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-    yhteystiedot = Some(List(
-      Puhelin(kieli = Fi, numero = "044 0909090"),
-      OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501")),
-      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
-      OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502")),
-      Puhelin(kieli = Sv, numero = "044 0101010"),
-      Email(kieli = Fi, email = "virkailija@opisto.fi"))),
-    status = "AKTIIVINEN",
-    kotipaikkaUri = Some("kunta_123"),
-    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
-    tyypit = List("organisaatiotyyppi_02")
   )
 
   val inPastAikaleima             = inPast(1000)
