@@ -1818,7 +1818,7 @@ object TestData {
       sahkoposti = Map(Fi -> "virkailija@opisto.fi")
     )),
     kotipaikkaUri = Some("kunta_123"),
-    oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
+    oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     tyypit = List("organisaatiotyyppi_02")
   )
@@ -1850,7 +1850,7 @@ object TestData {
       puhelinnumero = Map(Fi -> "044 0909090"),
     )),
     kotipaikkaUri = Some("kunta_123"),
-    oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
+    oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     tyypit = List("organisaatiotyyppi_1")
   )
