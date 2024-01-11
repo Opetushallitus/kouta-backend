@@ -26,7 +26,7 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
     val organisaatioService   = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val hakuServiceValidation = new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO)
+    val hakuServiceValidation = new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO, OrganisaatioServiceImpl)
     new HakuService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),
