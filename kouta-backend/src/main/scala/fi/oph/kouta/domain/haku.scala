@@ -43,6 +43,12 @@ package object haku {
       |          description: Viimeinen ajanhetki, jolloin hakuun liitettyä hakukohdetta on sallittua muokata.
       |            Hakukohteen tietoja ei saa muokata enää sen jälkeen, kun haku on käynnissä.
       |          example: 2019-08-23T09:55
+      |        hakukohteenLiittajaOrganisaatiot:
+      |          type: array
+      |          description: Hakukohteen liittajaorganisaatioiden oidit
+      |          items:
+      |             type: string
+      |          example: [1.2.246.562.10.00101010101, 1.2.246.562.10.00101010102] 
       |        ajastettuJulkaisu:
       |          type: string
       |          format: date-time
@@ -182,6 +188,7 @@ case class Haku(oid: Option[HakuOid] = None,
                 hakutapaKoodiUri: Option[String] = None,
                 hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
                 hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
+                hakukohteenLiittajaOrganisaatiot: Seq[OrganisaatioOid] = Seq(),
                 ajastettuJulkaisu: Option[LocalDateTime] = None,
                 ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime] = None,
                 ajastettuHaunJaHakukohteidenArkistointiAjettu: Option[LocalDateTime] = None,

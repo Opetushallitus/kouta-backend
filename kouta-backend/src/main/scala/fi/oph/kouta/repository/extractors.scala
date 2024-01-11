@@ -59,6 +59,10 @@ trait ExtractorBase extends KoutaJsonFormats {
   def extractKielistetty(json: Option[String]): Kielistetty = json.map(read[Map[Kieli, String]]).getOrElse(Map())
   def extractKielivalinta(json: Option[String]): Seq[Kieli] = json.map(read[Seq[Kieli]]).getOrElse(Seq())
 
+  def extractOrganisaatiot(json: String): Seq[OrganisaatioOid] = {
+    read[Seq[OrganisaatioOid]](json)
+  }
+
   implicit val getUUIDResult: GetResult[UUID] = GetResult(r => {
     UUID.fromString(r.nextString())
   })
@@ -184,6 +188,7 @@ trait HakuExtractors extends ExtractorBase {
     hakutapaKoodiUri = r.nextStringOption(),
     hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
     hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
+    hakukohteenLiittajaOrganisaatiot = extractOrganisaatiot(r.nextString()),
     ajastettuJulkaisu = r.nextTimestampOption().map(_.toLocalDateTime),
     ajastettuHaunJaHakukohteidenArkistointi = r.nextTimestampOption().map(_.toLocalDateTime),
     ajastettuHaunJaHakukohteidenArkistointiAjettu = r.nextTimestampOption().map(_.toLocalDateTime),

@@ -25,7 +25,7 @@ import scala.util.Try
 
 object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient)
 
-class HakuService(sqsInTransactionService: SqsInTransactionService,
+  class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient,
                   val organisaatioService: OrganisaatioService,
@@ -59,10 +59,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       }
       case None => None
     }
-
+    val liittajaOrganisaatiot = enrichedHaku.map(h => h._1.hakukohteenLiittajaOrganisaatiot).getOrElse(Seq.empty)
     authorizeGet(
       enrichedHaku,
-      readRules)
+      AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = liittajaOrganisaatiot))
   }
   def put(haku: Haku)(implicit authenticated: Authenticated): CreateResult = {
     val rules = if (MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri)) {
