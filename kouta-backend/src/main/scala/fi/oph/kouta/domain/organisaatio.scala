@@ -19,7 +19,7 @@ package object organisaatio {
       |              - 1.2.246.562.10.66634895871
       |              - 1.2.246.562.10.594252633210
       |              - 1.2.246.562.10.00000000001
-      |        oppilaitostyyppi:
+      |        oppilaitostyyppiUri:
       |          type: string
       |          example: oppilaitostyyppi_21
       |        nimi:
@@ -115,7 +115,7 @@ case class Organisaatio(oid: String,
                         yhteystiedot: Option[Yhteystieto] = None,
                         kotipaikkaUri: Option[String] = None,
                         children: Option[List[Organisaatio]] = None,
-                        oppilaitostyyppi: Option[String] = None,
+                        oppilaitostyyppiUri: Option[String] = None,
                         kieletUris: List[String] = List(),
                         organisaatiotyypit: List[String] = List(),
                         tyypit: List[String] = List()) extends OrganisaatioBase
