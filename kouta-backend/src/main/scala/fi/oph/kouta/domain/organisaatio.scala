@@ -101,13 +101,15 @@ case class OrganisaatioServiceOrg(oid: String,
                                   status: String,
                                   kotipaikkaUri: Option[String] = None,
                                   children: Option[List[OrganisaatioServiceOrg]] = None,
-                                  organisaatiotyypit: List[String] = List(),
-                                  tyypit: List[String] = List(),
+                                  organisaatiotyypit: Option[List[String]] = None,
+                                  tyypit: Option[List[String]] = None,
                                   oppilaitosTyyppiUri: Option[String] = None,
                                   kieletUris: List[String] = List()
                        ) extends OrganisaatioBase {
-  def isOppilaitos: Boolean = (organisaatiotyypit ++ tyypit).contains("organisaatiotyyppi_02")
+  def isOppilaitos: Boolean = (organisaatiotyypit.getOrElse(List()) ++ tyypit.getOrElse(List())).contains("organisaatiotyyppi_02")
 }
+
+case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[OrganisaatioServiceOrg])
 
 case class Organisaatio(oid: String,
                         parentOids: List[OrganisaatioOid] = List(),
@@ -117,9 +119,6 @@ case class Organisaatio(oid: String,
                         children: Option[List[Organisaatio]] = None,
                         oppilaitostyyppiUri: Option[String] = None,
                         kieletUris: List[String] = List(),
-                        organisaatiotyypit: List[String] = List(),
-                        tyypit: List[String] = List()) extends OrganisaatioBase
-
-case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[OrganisaatioServiceOrg])
+                        organisaatiotyyppiUris: Option[List[String]] = None) extends OrganisaatioBase
 
 case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])

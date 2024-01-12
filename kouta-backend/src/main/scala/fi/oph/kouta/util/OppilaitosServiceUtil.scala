@@ -89,8 +89,16 @@ object OppilaitosServiceUtil {
 
     val oppilaitostyyppi = organisaatio.oppilaitostyyppi match {
       case Some(oppilaitostyyppi) => Some(oppilaitostyyppi)
-      case _ => organisaatio.oppilaitosTyyppiUri match {
+      case None => organisaatio.oppilaitosTyyppiUri match {
         case Some(oppilaitosTyyppiUri) => Some(oppilaitosTyyppiUri)
+        case None => None
+      }
+    }
+
+    val organisaatiotyyppiUris = organisaatio.organisaatiotyypit match {
+      case Some(organisaatiotyypit) => Some(organisaatiotyypit)
+      case None => organisaatio.tyypit match {
+        case Some(tyypit) => Some(tyypit)
         case None => None
       }
     }
@@ -107,8 +115,7 @@ object OppilaitosServiceUtil {
       },
       oppilaitostyyppiUri = oppilaitostyyppi,
       kieletUris = organisaatio.kieletUris,
-      organisaatiotyypit = organisaatio.organisaatiotyypit,
-      tyypit = organisaatio.tyypit
+      organisaatiotyyppiUris = organisaatiotyyppiUris
     )
   }
 

@@ -37,8 +37,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         children = None,
         oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
         kieletUris = List(),
-        List(),
-        List("organisaatiotyyppi_02"))))
+        Some(List("organisaatiotyyppi_02")))))
 
   val notSavedInKoutaOrgOid = OrganisaatioOid("1.2.246.562.10.404")
 

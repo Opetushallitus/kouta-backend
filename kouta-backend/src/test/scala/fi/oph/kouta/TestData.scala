@@ -1762,7 +1762,7 @@ object TestData {
     )),
     status = "AKTIIVINEN",
     children = None,
-    organisaatiotyypit = List("organisaatiotyyppi_1"),
+    organisaatiotyypit = Some(List("organisaatiotyyppi_1")),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
@@ -1784,7 +1784,7 @@ object TestData {
     children = Some(List(organisaatioServiceOrgOrganisaationOsa)),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
-    tyypit = List("organisaatiotyyppi_02")
+    tyypit = Some(List("organisaatiotyyppi_02"))
   )
 
   // organisaatio.with.oid, organisaatiot.with.oids
@@ -1803,7 +1803,7 @@ object TestData {
     kotipaikkaUri = Some("kunta_123"),
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
-    tyypit = List("organisaatiotyyppi_02")
+    tyypit = Some(List("organisaatiotyyppi_02"))
   )
 
   val organisaatio: Organisaatio = Organisaatio(
@@ -1820,7 +1820,7 @@ object TestData {
     kotipaikkaUri = Some("kunta_123"),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
-    tyypit = List("organisaatiotyyppi_02")
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_02"))
   )
 
   // organisaatio.children
@@ -1836,7 +1836,7 @@ object TestData {
     )),
     status = "AKTIIVINEN",
     oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
-    tyypit = List("organisaatiotyyppi_1"),
+    tyypit = Some(List("organisaatiotyyppi_1")),
     kieletUris = List("oppilaitoksenopetuskieli_1#2")
   )
 
@@ -1852,7 +1852,7 @@ object TestData {
     kotipaikkaUri = Some("kunta_123"),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     kieletUris = List("oppilaitoksenopetuskieli_1#2"),
-    tyypit = List("organisaatiotyyppi_1")
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_1"))
   )
 
   val inPastAikaleima             = inPast(1000)

@@ -10,7 +10,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     parentOids = List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
     children = None,
-    organisaatiotyypit = List("organisaatiotyyppi_03"))
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
   val hierarkiaorganisaatio = Organisaatio(
     oid = TestOids.ChildOid.toString,
@@ -18,7 +18,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
     children = None,
-    organisaatiotyypit = List("organisaatiotyyppi_03"))
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
   val orgServiceHierarkiaOrganisaationOsa = OrganisaatioServiceOrg(
     oid = TestOids.GrandChildOid.toString,
@@ -27,7 +27,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     status = "AKTIIVINEN",
     nimi = Map(Fi -> "Oppilaitoksen osa fi", Sv -> "Oppilaitoksen osa sv", En -> "Oppilaitoksen osa en"),
     children = None,
-    organisaatiotyypit = List("organisaatiotyyppi_03"))
+    organisaatiotyypit = Some(List("organisaatiotyyppi_03")))
 
   val orgServiceHierarkiaOrganisaatio = OrganisaatioServiceOrg(
     oid = TestOids.ChildOid.toString,
@@ -36,7 +36,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     status = "AKTIIVINEN",
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
     children = Some(List(orgServiceHierarkiaOrganisaationOsa)),
-    organisaatiotyypit = List("organisaatiotyyppi_04"))
+    organisaatiotyypit = Some(List("organisaatiotyyppi_04")))
 
   "getOidsFromChildren" should "return one oid for one child org" in {
     assert(OppilaitosServiceUtil.getOidsFromChildren(Some(List(organisaationOsa))) == List(TestOids.GrandChildOid))
@@ -187,15 +187,13 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
       oppilaitostyyppiUri = Some("oppilaitostyyppi_64#1"),
       nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
-      organisaatiotyypit = List("organisaatiotyyppi_04"),
-      tyypit = List(),
+      organisaatiotyyppiUris = Some(List("organisaatiotyyppi_04")),
       children = Some(List(Organisaatio(
         oid = TestOids.GrandChildOid.toString,
         parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
         oppilaitostyyppiUri =  Some("oppilaitostyyppi_63#1"),
         nimi = Map(Fi -> "Oppilaitoksen osa fi", Sv -> "Oppilaitoksen osa sv", En -> "Oppilaitoksen osa en"),
-        organisaatiotyypit = List("organisaatiotyyppi_03"),
-        tyypit = List(),
+        organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")),
         children = None
       )))))
   }
