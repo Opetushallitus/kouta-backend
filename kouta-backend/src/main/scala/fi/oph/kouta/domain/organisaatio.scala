@@ -7,6 +7,11 @@ package object organisaatio {
   val OrganisaatioModel =
     """    Organisaatio:
       |      type: object
+      |      required:
+      |        - oid
+      |        - parentOids
+      |        - nimi
+      |        - kieletUris
       |      properties:
       |        oid:
       |          type: string
@@ -19,12 +24,19 @@ package object organisaatio {
       |              - 1.2.246.562.10.66634895871
       |              - 1.2.246.562.10.594252633210
       |              - 1.2.246.562.10.00000000001
-      |        oppilaitostyyppiUri:
-      |          type: string
-      |          example: oppilaitostyyppi_21
       |        nimi:
       |          type: object
       |          $ref: '#/components/schemas/Nimi'
+      |        kieletUris:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - oppilaitoksenopetuskieli_1#1
+      |              - oppilaitoksenopetuskieli_4#1
+      |        yhteystiedot:
+      |          type: object
+      |          $ref: '#/components/schemas/Yhteystieto'
       |        kotipaikkaUri:
       |          type: string
       |          example:
@@ -34,16 +46,19 @@ package object organisaatio {
       |          type: array
       |          items:
       |            $ref: '#/components/schemas/Organisaatio'
-      |        status:
+      |          example: {
+      |            oid: 1.2.246.562.10.66634895777,
+      |            parentOids: [1.2.246.562.10.66634895871,1.2.246.562.10.594252633210,1.2.246.562.10.00000000001],
+      |            nimi: {
+      |              fi: Lapsiorganisaation nimi fi,
+      |              sv: Lapsiorganisaation nimi sv,
+      |              en: Lapsiorganisaation nimi en
+      |            },
+      |            kieletUris: [oppilaitoksenopetuskieli_1#1],
+      |            }
+      |        oppilaitostyyppiUri:
       |          type: string
-      |          example: AKTIIVINEN
-      |        kieletUris:
-      |          type: array
-      |          items:
-      |            type: string
-      |            example:
-      |              - oppilaitoksenopetuskieli_1#1
-      |              - oppilaitoksenopetuskieli_4#1
+      |          example: oppilaitostyyppi_21
       |        organisaatiotyyppiUris:
       |          type: array
       |          items:
@@ -107,11 +122,11 @@ case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[OrganisaatioServi
 case class Organisaatio(oid: String,
                         parentOids: List[OrganisaatioOid] = List(),
                         nimi: Kielistetty,
+                        kieletUris: List[String] = List(),
                         yhteystiedot: Option[Yhteystieto] = None,
                         kotipaikkaUri: Option[String] = None,
                         children: Option[List[Organisaatio]] = None,
                         oppilaitostyyppiUri: Option[String] = None,
-                        kieletUris: List[String] = List(),
                         organisaatiotyyppiUris: Option[List[String]] = None) extends OrganisaatioBase
 
 case class OrganisaatioHierarkia(organisaatiot: List[Organisaatio])
