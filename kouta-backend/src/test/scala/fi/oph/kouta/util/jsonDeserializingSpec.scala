@@ -52,7 +52,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
       yhteystiedot = Some(List()),
       kotipaikkaUri = Some("kunta_091"),
       status = "AKTIIVINEN",
-      tyypit = List("organisaatiotyyppi_01"),
+      tyypit = Some(List("organisaatiotyyppi_01")),
       oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
       kieletUris = List("oppilaitoksenopetuskieli_1#1", "oppilaitoksenopetuskieli_4#1")
     ))
@@ -106,7 +106,7 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
         )),
         status = "AKTIIVINEN",
         kotipaikkaUri = Some("kunta_091"),
-        tyypit = List("organisaatiotyyppi_01"),
+        tyypit = Some(List("organisaatiotyyppi_01")),
         oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
         kieletUris = List("oppilaitoksenopetuskieli_1#1", "oppilaitoksenopetuskieli_4#1"))
     }

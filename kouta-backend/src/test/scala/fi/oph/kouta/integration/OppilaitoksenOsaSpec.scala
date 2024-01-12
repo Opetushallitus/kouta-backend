@@ -52,7 +52,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
       thenReturn(Seq(
         TestData.organisaatioServiceOrgWithOid.copy(oid = oppilaitosOid),
-        TestData.organisaatioServiceOrgWithOid.copy(oid = TestOids.randomOrganisaatioOid.s, organisaatiotyypit = List("organisaatiotyyppi_03"))))
+        TestData.organisaatioServiceOrgWithOid.copy(oid = TestOids.randomOrganisaatioOid.s, organisaatiotyypit = Some(List("organisaatiotyyppi_03")))))
 
     when(mockOppilaitoksenOsaDao.get(OrganisaatioOid(oppilaitoksenOsaOid))).
       thenReturn(Some(TestData.JulkaistuOppilaitoksenOsa.copy(oid = OrganisaatioOid(oppilaitoksenOsaOid)), Instant.now()))
