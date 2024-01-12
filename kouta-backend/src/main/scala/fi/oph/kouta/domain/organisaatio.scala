@@ -37,20 +37,6 @@ package object organisaatio {
       |        status:
       |          type: string
       |          example: AKTIIVINEN
-      |        organisaatiotyypit:
-      |          type: array
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
-      |        tyypit:
-      |          type: array
-      |          items:
-      |            type: string
-      |            example:
-      |              - organisaatiotyyppi_1
-      |              - organisaatiotyyppi_2
       |        kieletUris:
       |          type: array
       |          items:
@@ -58,6 +44,13 @@ package object organisaatio {
       |            example:
       |              - oppilaitoksenopetuskieli_1#1
       |              - oppilaitoksenopetuskieli_4#1
+      |        organisaatiotyyppiUris:
+      |          type: array
+      |          items:
+      |            type: string
+      |            example:
+      |              - organisaatiotyyppi_1
+      |              - organisaatiotyyppi_2
       |""".stripMargin
 
   val OrganisaatioHierarkiaModel =
