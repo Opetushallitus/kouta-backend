@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.domain.{OrganisaatioServiceOrg, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatioServiceOrg, oppilaitostyypitForAvoinKorkeakoulutus}
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.{MultiParams, Params}
 
@@ -62,11 +62,32 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[OrganisaatioServiceOrg]] = {
-    Try[Seq[OrganisaatioServiceOrg]] {
+  private def flattenChildren(organisaatio: Organisaatio): List[Organisaatio] = {
+    organisaatio.children match {
+      case Some(children) if children.isEmpty => List()
+      case Some(children) =>
+        children ::: children.flatMap(flattenChildren)
+      case None =>
+        List()
+    }
+  }
+
+  private def flattenOrganisaatiotWithChildren(organisaatiot: List[Organisaatio]): List[(OrganisaatioOid, Organisaatio)] = {
+    organisaatiot.map(organisaatio =>
+      (OrganisaatioOid(organisaatio.oid), organisaatio.copy(children = Some(flattenChildren(organisaatio))))
+    )
+  }
+
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
+    Try[OrganisaatioHierarkia] {
       organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
     } match {
-      case Success(organisaatiot: Seq[OrganisaatioServiceOrg]) => Right(organisaatiot)
+      case Success(organisaatioHierarkia: OrganisaatioHierarkia) =>
+        val orgs = flattenOrganisaatiotWithChildren(organisaatioHierarkia.organisaatiot)
+
+        val children = if (orgs.nonEmpty) orgs.head._2.children.getOrElse(List()) else List()
+
+        Right(children)
       case Failure(exception) => Left(exception)
     }
   }

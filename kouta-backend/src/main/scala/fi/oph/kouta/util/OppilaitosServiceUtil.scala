@@ -76,46 +76,48 @@ object OppilaitosServiceUtil {
     }
   }
 
-  def organisaatioServiceOrgToOrganisaatio(organisaatio: OrganisaatioServiceOrg, children: Seq[OrganisaatioServiceOrg] = List()): Organisaatio = {
-    val yhteystiedot = organisaatio.yhteystiedot match {
+  private def getYhteystiedot(organisaatio: OrganisaatioServiceOrg): Option[Yhteystieto] = {
+    organisaatio.yhteystiedot match {
       case Some(yhteystiedot: List[OrganisaationYhteystieto]) => toYhteystieto(organisaatio.nimi, yhteystiedot)
       case None => None
     }
+  }
 
-    val organisaatioChildren = organisaatio.children match {
-      case Some(children) => Some(children)
-      case None => if (children.nonEmpty) Some(children.toList) else None
-    }
-
-    val oppilaitostyyppi = organisaatio.oppilaitostyyppi match {
+  private def getOppilaitostyyppiUri(organisaatio: OrganisaatioServiceOrg): Option[String] = {
+    organisaatio.oppilaitostyyppi match {
       case Some(oppilaitostyyppi) => Some(oppilaitostyyppi)
       case None => organisaatio.oppilaitosTyyppiUri match {
         case Some(oppilaitosTyyppiUri) => Some(oppilaitosTyyppiUri)
         case None => None
       }
     }
+  }
 
-    val organisaatiotyyppiUris = organisaatio.organisaatiotyypit match {
+  private def getOrganisaatiotyyppiUris(organisaatio: OrganisaatioServiceOrg): Option[List[String]] = {
+    organisaatio.organisaatiotyypit match {
       case Some(organisaatiotyypit) => Some(organisaatiotyypit)
       case None => organisaatio.tyypit match {
         case Some(tyypit) => Some(tyypit)
         case None => None
       }
     }
+  }
 
+  def organisaatioServiceOrgToOrganisaatio(organisaatio: OrganisaatioServiceOrg, children: Seq[Organisaatio] = List()): Organisaatio = {
     Organisaatio(
       oid = organisaatio.oid,
-      parentOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath),
+      parentOids = getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
-      yhteystiedot = yhteystiedot,
+      yhteystiedot = getYhteystiedot(organisaatio),
       kotipaikkaUri = organisaatio.kotipaikkaUri,
-      children = organisaatioChildren match {
+      children = if (children.nonEmpty) Some(children.toList)
+      else organisaatio.children match {
         case Some(orgChildren) => Some(orgChildren.map(org => organisaatioServiceOrgToOrganisaatio(org)))
         case None => None
       },
-      oppilaitostyyppiUri = oppilaitostyyppi,
+      oppilaitostyyppiUri = getOppilaitostyyppiUri(organisaatio),
       kieletUris = organisaatio.kieletUris,
-      organisaatiotyyppiUris = organisaatiotyyppiUris
+      organisaatiotyyppiUris = getOrganisaatiotyyppiUris(organisaatio)
     )
   }
 
