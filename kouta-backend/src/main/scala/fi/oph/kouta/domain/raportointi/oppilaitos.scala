@@ -35,7 +35,7 @@ case class OppilaitosRaporttiItem(
 
 case class OppilaitoksenOsaRaporttiItem(
     oid: OrganisaatioOid,
-    oppilaitosOid: OrganisaatioOid,
+    oppilaitosOid: Option[OrganisaatioOid],
     tila: Julkaisutila = Tallennettu,
     esikatselu: Boolean = false,
     metadata: Option[OppilaitoksenOsaMetadataRaporttiItem] = None,
