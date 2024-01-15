@@ -23,7 +23,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   override def beforeAll(): Unit = {
     super.beforeAll()
 
-    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(List())
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(OrganisaatioHierarkia(organisaatiot = List()))
   }
 
   def organisaatioHierarkia(oid: String) = OrganisaatioHierarkia(
@@ -121,7 +121,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
       thenReturn(organisaatioServiceOrgWithOid)
     when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
-      thenReturn(Seq(TestData.organisaatioServiceOrgChild))
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
 
     val oppilaitosWithEnrichedData = oppilaitos(oid)
       .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio.copy(children = Some(List(TestData.organisaatioChild))))))
@@ -134,7 +134,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
       thenReturn(organisaatioServiceOrgWithOid)
     when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
-      thenReturn(Seq(TestData.organisaatioServiceOrgChild))
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
 
     val oppilaitosWithEnrichedData = oppilaitos(oid)
       .withEnrichedData(oppilaitos._enrichedData.get.copy(
@@ -148,7 +148,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
       thenReturn(organisaatioServiceOrgWithOid)
     when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
-      thenReturn(Seq(TestData.organisaatioServiceOrgChild))
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
 
     val oppilaitosWithEnrichedData = oppilaitos(oid)
       .copy(muokkaaja = testUser.oid)
@@ -210,7 +210,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     val oid = put(oppilaitosWithTeemakuva)
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
       thenReturn(organisaatioServiceOrgWithOid)
-    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).thenReturn(List())
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).thenReturn(OrganisaatioHierarkia(List()))
 
     val oppilaitosWithEnrichedData = oppilaitosWithTeemakuva
       .withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png"))

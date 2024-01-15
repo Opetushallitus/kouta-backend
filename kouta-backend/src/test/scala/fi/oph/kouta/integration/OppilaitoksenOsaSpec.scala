@@ -4,7 +4,7 @@ import fi.oph.kouta.{TestData, TestOids}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.{OrganisaatioServiceClient, OrganisaatioServiceQueryException}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Arkistoitu, OppilaitoksenOsa, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData}
+import fi.oph.kouta.domain.{Arkistoitu, OppilaitoksenOsa, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData, OrganisaatioHierarkia}
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
@@ -32,7 +32,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(List())
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(OrganisaatioHierarkia(organisaatiot = List()))
 
     put(oppilaitos.copy(OrganisaatioOid(oppilaitosOid)))
     defaultOppilaitoksenOsa = oppilaitoksenOsa(oppilaitoksenOsaOid).copy(
@@ -64,7 +64,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(notSavedInKoutaOrgOid)).
       thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = notSavedInKoutaOrgOid.s))
     when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(notSavedInKoutaOrgOid)).
-      thenReturn(List(TestData.organisaatioServiceOrgChild))
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatioChild.copy(oid = notSavedInKoutaOrgOid.s, children = Some(List(TestData.organisaatioChild))))))
 
     val expected = OppilaitosWithOrganisaatioData(
       oid = notSavedInKoutaOrgOid,
