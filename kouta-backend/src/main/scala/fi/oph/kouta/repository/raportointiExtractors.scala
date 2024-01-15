@@ -103,8 +103,8 @@ trait RaportointiExtractors extends ExtractorBase {
       parentOidOrUUID = r.nextString(),
       tyyppiKoodiUri = r.nextStringOption(),
       nimi = extractKielistetty(r.nextStringOption()),
-      metadata = r.nextStringOption().map(read[ValintakoeMetadata]),
-      tilaisuudet = r.nextStringOption().map(read[List[Valintakoetilaisuus]]).getOrElse(List()),
+      metadata = r.nextStringOption().map(read[ValintakoeMetadataRaporttiItem]),
+      tilaisuudet = r.nextStringOption().map(read[List[ValintakoetilaisuusRaporttiItem]]).getOrElse(List()),
       muokkaaja = r.nextString()
     )
   )
@@ -127,6 +127,4 @@ trait RaportointiExtractors extends ExtractorBase {
       modified = Some(timeStampToModified(r.nextTimestamp()))
     )
   )
-
-
 }
