@@ -178,7 +178,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
   it should "fail if both teemakuva and esittelyvideo are defined" in {
     failsValidation(
       min.copy(
-        teemakuva = Some("http://testi.fi/kuva.png"),
+        teemakuva = Some("https://konfo-files.untuvaopintopolku.fi/test.jpg"),
         metadata = Some(OppilaitosMetadata(esittelyvideo = Some(NimettyLinkki(url = Map(Fi -> "http://testi.fi/video")))))),
       "teemakuva",
       onlyTeemakuvaOrEsittelyvideoAllowed
