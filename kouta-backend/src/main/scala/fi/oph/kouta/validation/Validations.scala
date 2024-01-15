@@ -19,6 +19,9 @@ object Validations {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
+  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+  private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
+
   def error(path: String, msg: ErrorMessage): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid          = validations.flatten.distinct
@@ -981,9 +984,6 @@ object Validations {
       }
     )
   }
-
-  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
-  private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
 
   def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
     validateImageURL(
