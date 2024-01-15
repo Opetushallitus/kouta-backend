@@ -8,7 +8,7 @@ import java.util.UUID
 sealed trait KoulutusMetadataRaporttiItem {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
-  val lisatiedot: Seq[Lisatieto]
+  val lisatiedot: Seq[LisatietoRaporttiItem]
   val isMuokkaajaOphVirkailija: Option[Boolean]
 }
 
@@ -83,10 +83,7 @@ case class KoulutusRaporttiItem(
       k.teemakuva,
       k.ePerusteId,
       k.modified.get,
-      k._enrichedData match {
-        case Some(e) => Some(KoulutusEnrichedDataRaporttiItem(e.esitysnimi, e.muokkaajanNimi))
-        case _ => None
-      }
+      k._enrichedData.map(e => KoulutusEnrichedDataRaporttiItem(e.esitysnimi, e.muokkaajanNimi))
     )
   }
 }
@@ -103,7 +100,7 @@ trait KorkeakoulutusRelatedKoulutusMetadataRaporttiItem extends KoulutusMetadata
 case class AmmatillinenKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
@@ -114,7 +111,7 @@ case class AmmatillinenKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.isMuokkaajaOphVirkailija,
       m.koulutusalaKoodiUrit,
       m.tutkintonimikeKoodiUrit,
@@ -127,7 +124,7 @@ case class AmmatillinenKoulutusMetadataRaporttiItem(
 case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     tutkinnonOsat: Seq[TutkinnonOsaRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem {
@@ -135,7 +132,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.tutkinnonOsat.map(t => new TutkinnonOsaRaporttiItem(t)),
       m.isMuokkaajaOphVirkailija
     )
@@ -145,7 +142,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
 case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     osaamisalaKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem {
@@ -153,7 +150,7 @@ case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.osaamisalaKoodiUri,
       m.isMuokkaajaOphVirkailija
     )
@@ -162,7 +159,7 @@ case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
 
 case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmMuu,
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     kuvaus: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -173,7 +170,7 @@ case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
   def this(m: AmmatillinenMuuKoulutusMetadata) = {
     this(
       m.tyyppi,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.kuvaus,
       m.koulutusalaKoodiUrit,
       m.opintojenLaajuusyksikkoKoodiUri,
@@ -186,7 +183,7 @@ case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
 case class YliopistoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Yo,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -197,7 +194,7 @@ case class YliopistoKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.tutkintonimikeKoodiUrit,
       m.opintojenLaajuusNumero,
@@ -210,7 +207,7 @@ case class YliopistoKoulutusMetadataRaporttiItem(
 case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amk,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -221,7 +218,7 @@ case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.tutkintonimikeKoodiUrit,
       m.opintojenLaajuusNumero,
@@ -234,7 +231,7 @@ case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
 case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -245,7 +242,7 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.tutkintonimikeKoodiUrit,
       m.opintojenLaajuusNumero,
@@ -257,7 +254,7 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
 case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = OpePedagOpinnot,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -268,7 +265,7 @@ case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.tutkintonimikeKoodiUrit,
       m.opintojenLaajuusNumero,
@@ -280,7 +277,7 @@ case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
 case class KkOpintojaksoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintojakso,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
@@ -295,7 +292,7 @@ case class KkOpintojaksoKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.opintojenLaajuusNumeroMin,
       m.opintojenLaajuusNumeroMax,
@@ -311,7 +308,7 @@ case class KkOpintojaksoKoulutusMetadataRaporttiItem(
 case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
@@ -326,7 +323,7 @@ case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.koulutusalaKoodiUrit,
       m.opintojenLaajuusNumeroMin,
       m.opintojenLaajuusNumeroMax,
@@ -342,7 +339,7 @@ case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
 case class LukioKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Lk,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
@@ -353,7 +350,7 @@ case class LukioKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.opintojenLaajuusNumero,
       m.opintojenLaajuusyksikkoKoodiUri,
       m.koulutusalaKoodiUrit,
@@ -364,7 +361,7 @@ case class LukioKoulutusMetadataRaporttiItem(
 case class TuvaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Tuva,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -375,7 +372,7 @@ case class TuvaKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.linkkiEPerusteisiin,
       m.opintojenLaajuusNumero,
       m.opintojenLaajuusyksikkoKoodiUri,
@@ -386,7 +383,7 @@ case class TuvaKoulutusMetadataRaporttiItem(
 case class TelmaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Telma,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -397,7 +394,7 @@ case class TelmaKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.linkkiEPerusteisiin,
       m.opintojenLaajuusNumero,
       m.opintojenLaajuusyksikkoKoodiUri,
@@ -413,7 +410,7 @@ trait VapaaSivistystyoKoulutusMetadataRaporttiItem extends KoulutusMetadataRapor
 
 case class VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     kuvaus: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -424,7 +421,7 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(
   def this(m: VapaaSivistystyoOpistovuosiKoulutusMetadata) =
     this(
       m.tyyppi,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.kuvaus,
       m.linkkiEPerusteisiin,
       m.koulutusalaKoodiUrit,
@@ -436,7 +433,7 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(
 
 case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     kuvaus: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -447,7 +444,7 @@ case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
   def this(m: VapaaSivistystyoMuuKoulutusMetadata) =
     this(
       m.tyyppi,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.kuvaus,
       m.linkkiEPerusteisiin,
       m.koulutusalaKoodiUrit,
@@ -460,7 +457,7 @@ case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
 case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
@@ -471,7 +468,7 @@ case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.linkkiEPerusteisiin,
       m.opintojenLaajuusyksikkoKoodiUri,
       m.opintojenLaajuusNumero,
@@ -482,7 +479,7 @@ case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
 case class ErikoislaakariKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoislaakari,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
@@ -491,7 +488,7 @@ case class ErikoislaakariKoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.tutkintonimikeKoodiUrit,
       m.koulutusalaKoodiUrit,
       m.isMuokkaajaOphVirkailija
@@ -501,7 +498,7 @@ case class ErikoislaakariKoulutusMetadataRaporttiItem(
 case class ErikoistumiskoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     erikoistumiskoulutusKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -514,7 +511,7 @@ case class ErikoistumiskoulutusMetadataRaporttiItem(
     this(
       m.tyyppi,
       m.kuvaus,
-      m.lisatiedot,
+      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
       m.erikoistumiskoulutusKoodiUri,
       m.koulutusalaKoodiUrit,
       m.opintojenLaajuusyksikkoKoodiUri,
@@ -528,14 +525,14 @@ case class ErikoistumiskoulutusMetadataRaporttiItem(
 case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem {
   def this(m: TaiteenPerusopetusKoulutusMetadata) = this(
     m.tyyppi,
     m.kuvaus,
-    m.lisatiedot,
+    m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
     m.linkkiEPerusteisiin,
     m.isMuokkaajaOphVirkailija
   )
@@ -544,7 +541,7 @@ case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
 case class MuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Muu,
     kuvaus: Kielistetty = Map(),
-    lisatiedot: Seq[Lisatieto] = Seq(),
+    lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumeroMin: Option[Double] = None,
@@ -555,7 +552,7 @@ case class MuuKoulutusMetadataRaporttiItem(
   def this(m: MuuKoulutusMetadata) = this(
     m.tyyppi,
     m.kuvaus,
-    m.lisatiedot,
+    m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
     m.koulutusalaKoodiUrit,
     m.opintojenLaajuusyksikkoKoodiUri,
     m.opintojenLaajuusNumeroMin,

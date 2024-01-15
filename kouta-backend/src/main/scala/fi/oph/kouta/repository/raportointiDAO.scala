@@ -47,10 +47,12 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
   override def listHakukohteet(startTime: Option[Instant], endTime: Option[Instant]): Seq[HakukohdeRaporttiItem] = {
     KoutaDatabase
       .runBlockingTransactionally(for {
-        hakukohteet   <- selectHakukohteet(startTime, endTime)
-        hakuajat      <- selectHakukohteidenHakuajat(if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None)
-        liitteet      <- selectHakukohteidenLiitteet(if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None)
-        valintakokeet <- selectHakukohteidenValintakokeet(if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None)
+        hakukohteet <- selectHakukohteet(startTime, endTime)
+        hakuajat    <- selectHakukohteidenHakuajat(if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None)
+        liitteet    <- selectHakukohteidenLiitteet(if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None)
+        valintakokeet <- selectHakukohteidenValintakokeet(
+          if (timeLimitsDefined(startTime, endTime)) Some(hakukohteet) else None
+        )
       } yield (hakukohteet, hakuajat, liitteet, valintakokeet))
       .map { case (hakukohteet, hakuajat, liitteet, valintakokeet) =>
         hakukohteet.map(hk =>
@@ -136,6 +138,19 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     }
   }
 
+  private def selectByTimerange(startTime: Option[Instant], endTime: Option[Instant], selectPart: String, timeField: String, groupBy: String = "") = {
+    val groupByStr = if (!groupBy.isEmpty) s" group by $groupBy" else ""
+    (startTime, endTime) match {
+      case (Some(startTimeVal), Some(endTimeVal)) =>
+        sql"""#$selectPart where #$timeField between $startTimeVal and $endTimeVal#$groupByStr"""
+      case (Some(startTimeVal), None) =>
+        sql"""#$selectPart where $startTimeVal < #$timeField#$groupByStr"""
+      case (None, Some(endTimeVal)) =>
+        sql"""#$selectPart where $endTimeVal > #$timeField#$groupByStr"""
+      case (_, _ ) => sql"""#$selectPart#$groupByStr"""
+    }
+  }
+
   def selectKoulutukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Koulutus]] = {
     val selectPart = s"""select k.oid, k.external_id, k.johtaa_tutkintoon, k.tyyppi, k.koulutukset_koodi_uri, k.tila,
       array_agg(distinct kt.tarjoaja_oid) as koulutuksen_tarjoajat,
@@ -143,30 +158,21 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
       k.kielivalinta, k.teemakuva, k.eperuste_id, k.last_modified
       from koulutukset k
       left join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid"""
-    (startTime, endTime) match {
-      case (Some(startTimeVal), Some(endTimeVal)) =>
-        sql"""#$selectPart where k.last_modified between $startTimeVal and $endTimeVal group by k.oid""".as[Koulutus]
-      case (Some(startTimeVal), None) =>
-        sql"""#$selectPart where $startTimeVal < k.last_modified group by k.oid""".as[Koulutus]
-      case (None, Some(endTimeVal)) =>
-        sql"""#$selectPart where $endTimeVal > k.last_modified group by k.oid""".as[Koulutus]
-    }
+    selectByTimerange(startTime, endTime, selectPart, "k.last_modified", "k.oid").as[Koulutus]
   }
 
   def selectToteutukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Toteutus]] = {
-    sql"""select t.oid, t.external_id, t.koulutus_oid, t.tila,
-                array_agg(distinct tt.tarjoaja_oid) as toteutuksen_tarjoajat,
-                t.nimi, t.metadata, t.muokkaaja, t.esikatselu, t.organisaatio_oid, t.kielivalinta, t.teemakuva,
-                t.sorakuvaus_id, t.last_modified
-                from toteutukset t
-                left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
-                ${modificationTimeCondition(startTime, endTime, "t.last_modified")}
-                group by t.oid
-         """.as[Toteutus]
+    val selectPart = s"""select t.oid, t.external_id, t.koulutus_oid, t.tila,
+                        array_agg(distinct tt.tarjoaja_oid) as toteutuksen_tarjoajat,
+                        t.nimi, t.metadata, t.muokkaaja, t.esikatselu, t.organisaatio_oid, t.kielivalinta, t.teemakuva,
+                        t.sorakuvaus_id, t.last_modified
+                        from toteutukset t
+                        left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid"""
+    selectByTimerange(startTime, endTime, selectPart, "t.last_modified", "t.oid").as[Toteutus]
   }
 
   def selectHakukohteet(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[HakukohdeRaporttiItem]] = {
-    sql"""select oid, external_id, toteutus_oid, haku_oid, tila, nimi, hakukohde_koodi_uri, hakulomaketyyppi,
+    val selectPart = s"""select oid, external_id, toteutus_oid, haku_oid, tila, nimi, hakukohde_koodi_uri, hakulomaketyyppi,
                 hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, kaytetaan_haun_hakulomaketta,
                 jarjestyspaikka_oid, pohjakoulutusvaatimus_koodi_urit, pohjakoulutusvaatimus_tarkenne,
                 muu_pohjakoulutusvaatimus_kuvaus, toinen_aste_onko_kaksoistutkinto,
@@ -174,15 +180,14 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
                 liitteet_onko_sama_toimitusosoite, liitteiden_toimitusaika,
                 liitteiden_toimitustapa, liitteiden_toimitusosoite, esikatselu, metadata, muokkaaja, organisaatio_oid,
                 kielivalinta, last_modified
-                from hakukohteet
-                ${modificationTimeCondition(startTime, endTime)}
-         """.as[HakukohdeRaporttiItem]
+                from hakukohteet"""
+    selectByTimerange(startTime, endTime, selectPart, "last_modified").as[HakukohdeRaporttiItem]
   }
 
   def selectHakukohteidenHakuajat(hakukohteet: Option[Seq[HakukohdeRaporttiItem]]): DBIO[Seq[Hakuaika]] = {
     sql"""select hakukohde_oid, lower(hakuaika), upper(hakuaika)
                 from hakukohteiden_hakuajat
-                ${hakukohdeOidInCondition(hakukohteet)}
+                #${hakukohdeOidInCondition(hakukohteet)}
                """.as[Hakuaika]
   }
 
@@ -191,7 +196,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   ): DBIO[Seq[HakukohdeLiiteRaporttiItem]] = {
     sql"""select id, hakukohde_oid, tyyppi_koodi_uri, nimi, kuvaus, toimitusaika, toimitustapa, toimitusosoite
             from hakukohteiden_liitteet
-            ${hakukohdeOidInCondition(hakukohteet)}
+            #${hakukohdeOidInCondition(hakukohteet)}
            """.as[HakukohdeLiiteRaporttiItem]
   }
 
@@ -200,17 +205,17 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   ): DBIO[Seq[ValintakoeRaporttiItem]] = {
     sql"""select id, hakukohde_oid as parentOidOrUUID, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja
           from hakukohteiden_valintakokeet
-            ${hakukohdeOidInCondition(hakukohteet)}
+            #${hakukohdeOidInCondition(hakukohteet)}
            """.as[ValintakoeRaporttiItem]
   }
 
   def selectHaut(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Haku]] = {
-    sql"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
-                 ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi, ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
-                 hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
-                 muokkaaja, kielivalinta, last_modified from haut
-                ${modificationTimeCondition(startTime, endTime)}
-         """.as[Haku]
+    val selectPart = s"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja,
+                    hakukohteen_muokkaamisen_takaraja, ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi,
+                    ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri,
+                    kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus,
+                    hakulomake_linkki, metadata, organisaatio_oid, muokkaaja, kielivalinta, last_modified from haut"""
+    selectByTimerange(startTime, endTime, selectPart, "last_modified").as[Haku]
   }
 
   def selectHakujenHakuajat(haut: Option[Seq[Haku]]): DBIO[Seq[Hakuaika]] = {
@@ -220,7 +225,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     }
 
     sql"""select haku_oid, lower(hakuaika), upper(hakuaika) from hakujen_hakuajat
-                $hakuOidInCondition
+                #$hakuOidInCondition
           """.as[Hakuaika]
   }
 
@@ -228,11 +233,10 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
       startTime: Option[Instant],
       endTime: Option[Instant]
   ): DBIO[Seq[ValintaperusteRaporttiItem]] = {
-    sql"""select id, external_id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, nimi, julkinen,
-                esikatselu, metadata, organisaatio_oid, muokkaaja, kielivalinta, last_modified
-                from valintaperusteet
-                ${modificationTimeCondition(startTime, endTime)}
-         """.as[ValintaperusteRaporttiItem]
+    val selectPart = """select id, external_id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, nimi,
+                    julkinen, esikatselu, metadata, organisaatio_oid, muokkaaja, kielivalinta, last_modified
+                    from valintaperusteet"""
+    selectByTimerange(startTime, endTime, selectPart, "last_modified").as[ValintaperusteRaporttiItem]
   }
 
   def selectValintaperusteidenValintakokeet(
@@ -240,53 +244,45 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   ): DBIO[Seq[ValintakoeRaporttiItem]] = {
     val valintaperusteIdInCondition = valintaperusteet match {
       case Some(valintaperusteet) =>
-        s"where valintaperuste_id in (${createUUIDInParams(valintaperusteet.map(_.id))})"
+        s"""where valintaperuste_id in (${createUUIDInParams(valintaperusteet.map(_.id))})"""
       case _ => ""
     }
 
     sql"""select id, valintaperuste_id as parentOidOrUUID, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja
                 from valintaperusteiden_valintakokeet
-                $valintaperusteIdInCondition
+                #$valintaperusteIdInCondition
            """.as[ValintakoeRaporttiItem]
   }
 
   def selectSorakuvaukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Sorakuvaus]] = {
-    sql"""select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
-                metadata, organisaatio_oid, muokkaaja, lower(system_time)
-                from sorakuvaukset
-                ${modificationTimeCondition(startTime, endTime, "lower(system_time)")}
-         """.as[Sorakuvaus]
+    val selectPart = """select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
+                       metadata, organisaatio_oid, muokkaaja, lower(system_time) from sorakuvaukset"""
+    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[Sorakuvaus]
   }
 
   def selectOppilaitokset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Oppilaitos]] = {
-    sql"""select oid, tila, kielivalinta, metadata, muokkaaja, esikatselu, organisaatio_oid, teemakuva, logo,
-                lower(system_time)
-                from oppilaitokset
-                ${modificationTimeCondition(startTime, endTime, "lower(system_time)")}
-         """.as[Oppilaitos]
+    val selectPart = """select oid, tila, kielivalinta, metadata, muokkaaja, esikatselu, organisaatio_oid, teemakuva,
+                    logo, lower(system_time) from oppilaitokset"""
+    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[Oppilaitos]
   }
 
-  def selectOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Vector[OppilaitoksenOsa]] = {
-    sql"""select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, esikatselu, organisaatio_oid,
-                teemakuva, lower(system_time)
-                from oppilaitosten_osat
-                ${modificationTimeCondition(startTime, endTime, "lower(system_time)")}
-         """.as[OppilaitoksenOsa]
+  def selectOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[OppilaitoksenOsa]] = {
+    val selectPart = """select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, esikatselu,
+                    organisaatio_oid, teemakuva, lower(system_time) from oppilaitosten_osat"""
+    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[OppilaitoksenOsa]
   }
 
   def selectPistehistoria(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Vector[Pistetieto]] = {
-    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid,
-                valintatapajono_tyyppi
-                from pistehistoria
-                ${modificationTimeCondition(startTime, endTime, "updated")}
-          """.as[Pistetieto]
+    val selectPart = """select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid,
+                    valintatapajono_tyyppi from pistehistoria"""
+    selectByTimerange(startTime, endTime, selectPart, "updated").as[Pistetieto]
   }
 
   def selectAmmattinimikkeet(): DBIO[Seq[Keyword]] = {
-    sql"""select distinct ammattinimike, kieli from ammattinimikkeet""".as[Keyword]
+    sql"""select distinct kieli, ammattinimike from ammattinimikkeet order by kieli""".as[Keyword]
   }
 
   def selectAsiasanat(): DBIO[Seq[Keyword]] = {
-    sql"""select distinct asiasana, kieli from asiasanat""".as[Keyword]
+    sql"""select distinct kieli, asiasana from asiasanat order by kieli""".as[Keyword]
   }
 }
