@@ -3,12 +3,24 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, SosiaalinenMedia, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.service.SharedOppilaitosValidation.onlyTeemakuvaOrEsittelyvideo
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, error, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, onlyTeemakuvaOrEsittelyvideoAllowed, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
+
+private object SharedOppilaitosValidation {
+  def onlyTeemakuvaOrEsittelyvideo(teemakuva: Option[String],
+                                   esittelyvideo: Option[NimettyLinkki]): IsValid = {
+    (teemakuva, esittelyvideo) match {
+      case (Some(_), Some(video)) if video.nimi.nonEmpty || video.url.nonEmpty =>
+        error("teemakuva", onlyTeemakuvaOrEsittelyvideoAllowed)
+      case (_, _) => NoErrors
+    }
+  }
+}
 
 class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends ValidatingService[Oppilaitos] {
 
@@ -27,15 +39,6 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
     errors match {
       case NoErrors => f(oppilaitos)
       case errors => throw KoutaValidationException(errors)
-    }
-  }
-
-  private def onlyTeemakuvaOrEsittelyvideo(teemakuva: Option[String],
-                                           esittelyvideo: Option[NimettyLinkki]): IsValid = {
-    (teemakuva, esittelyvideo) match {
-      case (Some(_), Some(video)) if video.nimi.nonEmpty || video.url.nonEmpty =>
-        error("teemakuva", onlyTeemakuvaOrEsittelyvideoAllowed)
-      case (_, _) => NoErrors
     }
   }
 
@@ -164,6 +167,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
       assertValid(osa.oid, "oid"),
       validateIfSuccessful(assertValid(osa.oppilaitosOid, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
       assertValid(osa.organisaatioOid, "organisaatioOid"),
+      onlyTeemakuvaOrEsittelyvideo(osa.teemakuva, osa.metadata.flatMap(_.esittelyvideo)),
       validateIfDefined[String](osa.teemakuva, assertValidUrl(_, "teemakuva")),
       assertNotEmpty(osa.kielivalinta, "kielivalinta")
     )
@@ -176,6 +180,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
       diffResolver: OppilaitosOrOsaDiffResolver[OppilaitoksenOsa]
   ): IsValid = and(
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
+    validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
     validateIfDefined[Yhteystieto](
       m.hakijapalveluidenYhteystiedot,
       _.validate(
