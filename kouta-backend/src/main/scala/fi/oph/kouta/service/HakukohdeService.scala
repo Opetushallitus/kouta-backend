@@ -75,24 +75,26 @@ class HakukohdeService(
     }
   }
 
+  def enrichHakukohde(hakukohde: Hakukohde): Hakukohde = {
+    val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(hakukohde.muokkaaja)
+    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+    val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
+    val toteutus                                = ToteutusDAO.get(hakukohde.toteutusOid, TilaFilter.onlyOlemassaolevat())
+    toteutus match {
+      case Some((t, _)) =>
+        val esitysnimi = generateHakukohdeEsitysnimi(hakukohde, t.metadata)
+        hakukohde.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi)))
+      case None => hakukohde.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi))
+    }
+  }
+
   def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Hakukohde, Instant)] = {
-    val hakukohde = HakukohdeDAO.get(oid, tilaFilter)
+    val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)
 
-    val enrichedHakukohde = hakukohde match {
-      case Some((h, i)) =>
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(h.muokkaaja)
-        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
-        val toteutus                                = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
-        toteutus match {
-          case Some((t, _)) =>
-            val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
-            Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi))), i)
-          case None => Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi)), i)
-        }
-
+    val enrichedHakukohde = hakukohdeWithTime match {
+      case Some((h, i)) => Some(enrichHakukohde(h), i)
       case None => None
     }
 
