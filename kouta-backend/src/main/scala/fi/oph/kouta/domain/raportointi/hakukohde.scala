@@ -86,7 +86,7 @@ case class HakukohdeMetadataRaporttiItem(
     valintakokeidenYleiskuvaus: Kielistetty = Map(),
     valintaperusteenValintakokeidenLisatilaisuudet: Seq[ValintakokeenLisatilaisuudet] = Seq(),
     kynnysehto: Kielistetty = Map(),
-    koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
+    koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausiRaporttiItem] = None,
     kaytetaanHaunAlkamiskautta: Option[Boolean] = None,
     aloituspaikat: Option[Aloituspaikat] = None,
     hakukohteenLinja: Option[HakukohteenLinjaRaporttiItem] = None,
