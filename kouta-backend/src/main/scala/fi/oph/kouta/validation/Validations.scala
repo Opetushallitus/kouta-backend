@@ -554,7 +554,7 @@ object Validations {
     ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
   val onlyTeemakuvaOrEsittelyvideoAllowed: ErrorMessage =
     ErrorMessage(
-      msg = "Oppilaitoksella voi olla samanaikaisesti vain joko teemakuva tai esittelyvideo",
+      msg = "Oppilaitoksella tai sen osalla voi olla samanaikaisesti vain joko teemakuva tai esittelyvideo",
       id = "onlyTeemakuvaOrEsittelyvideo"
     )
 
