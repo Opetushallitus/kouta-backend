@@ -84,6 +84,8 @@ trait ValintaperusteFixture extends AccessControlSpec {
       case _ => false
     }
 
+  def getLastModified(id: UUID): String = get(ValintaperustePath, id).toString
+
   def get(id: UUID, expected: Valintaperuste): String =
     get(ValintaperustePath, id, expected.copy(modified = Some(readValintaperusteModified(id))))
   def get(id: UUID, sessionId: UUID, expected: Valintaperuste): String =
