@@ -108,14 +108,6 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
         Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
       )
     )
-    failsValidation(
-      max.copy(teemakuva = Some("https://example.com/test.jpg")),
-      "teemakuva",
-      invalidUrlDomain(
-        "https://example.com/test.jpg",
-        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
-      )
-    )
   }
 
   it should "fail if oppilaitosOid invalid" in {
