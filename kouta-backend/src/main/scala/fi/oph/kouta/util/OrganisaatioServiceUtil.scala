@@ -76,6 +76,10 @@ object OppilaitosServiceUtil {
     }
   }
 
+  def getParentOids(parentOidPath: String): List[OrganisaatioOid] = {
+    parentOidPath.split("(\\||\\/)").toList.filter(_.nonEmpty).map(oid => OrganisaatioOid(oid))
+  }
+
   private def getYhteystiedot(organisaatio: OrganisaatioServiceOrg): Option[Yhteystieto] = {
     organisaatio.yhteystiedot match {
       case Some(yhteystiedot: List[OrganisaationYhteystieto]) => toYhteystieto(organisaatio.nimi, yhteystiedot)
@@ -122,9 +126,5 @@ object OppilaitosServiceUtil {
       kieletUris = organisaatio.kieletUris.map(kieli => MiscUtils.withoutKoodiVersion(kieli)),
       organisaatiotyyppiUris = getOrganisaatiotyyppiUris(organisaatio)
     )
-  }
-
-  def getParentOids(parentOidPath: String): List[OrganisaatioOid] = {
-    parentOidPath.split("(\\||\\/)").toList.filter(_.nonEmpty).map(oid => OrganisaatioOid(oid))
   }
 }
