@@ -32,8 +32,8 @@ package object organisaatio {
       |          items:
       |            type: string
       |            example:
-      |              - oppilaitoksenopetuskieli_1#1
-      |              - oppilaitoksenopetuskieli_4#1
+      |              - oppilaitoksenopetuskieli_1
+      |              - oppilaitoksenopetuskieli_4
       |        yhteystiedot:
       |          type: object
       |          $ref: '#/components/schemas/Yhteystieto'
@@ -54,7 +54,7 @@ package object organisaatio {
       |              sv: Lapsiorganisaation nimi sv,
       |              en: Lapsiorganisaation nimi en
       |            },
-      |            kieletUris: [oppilaitoksenopetuskieli_1#1],
+      |            kieletUris: [oppilaitoksenopetuskieli_1],
       |            }
       |        oppilaitostyyppiUri:
       |          type: string
