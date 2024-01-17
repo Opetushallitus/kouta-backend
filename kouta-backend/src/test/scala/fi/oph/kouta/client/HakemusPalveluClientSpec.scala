@@ -53,4 +53,8 @@ class HakemusPalveluClientSpec extends ScalatraFlatSpec {
     val form = AtaruForm("51666769-c664-40a8-893c-7bbe82399eea", None, Some(AtaruFormProperties(Some(true))));
     HakemusPalveluClient.formAllowsHakuTapa(form, Some("hakutapa_01")) should equal(true);
   }
+
+  "defaultParse" should "work with HaukohdeApplicationCounts" in {
+    HakemusPalveluClient.defaultParse[HakemusPalveluClient.HakukohdeApplicationCounts]("{\"12345\": 123}") should equal(Map("12345" -> 123));
+  }
 }

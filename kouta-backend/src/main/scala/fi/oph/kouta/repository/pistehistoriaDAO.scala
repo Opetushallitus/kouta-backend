@@ -16,7 +16,7 @@ object PistehistoriaDAO extends PistetietoSQL {
     KoutaDatabase.runBlocking(selectPistehistoria(tarjoaja, hakukohdekoodi))
   }
 
-  def savePistehistorias(pisteet: Seq[Pistetieto]) = {
+  def savePistehistorias(pisteet: Seq[Pistetieto]): Int = {
     if (pisteet.isEmpty) {
       0
     } else {
@@ -36,15 +36,14 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
       case koodi => "'"+koodi+"'"
     }
 
-    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi from pistehistoria
+    sql"""select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi, aloituspaikat, ensisijaisesti_hakeneet from pistehistoria
           where tarjoaja_oid = #${"'"+tarjoaja.toString+"'"}
             and hakukohdekoodi in (#$hakukohdekoodiInParam)""".as[Pistetieto]
   }
 
-  def persistPistehistoria(pisteet: Seq[Pistetieto]) = {
-    DBIO.sequence(
-      pisteet.map((pistetieto: Pistetieto) => {
-        sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi)
+  def persistPistehistoria(pisteet: Seq[Pistetieto]): DBIOAction[Seq[Int], NoStream, Effect] = {
+    DBIO.sequence(pisteet.map((pistetieto: Pistetieto) => {
+      sqlu"""insert into pistehistoria (tarjoaja_oid, hakukohdekoodi, vuosi, pisteet, valintatapajono_oid, hakukohde_oid, haku_oid, valintatapajono_tyyppi, aloituspaikat, ensisijaisesti_hakeneet)
               values (
                       ${pistetieto.tarjoaja},
                       ${pistetieto.hakukohdekoodi.split('#').head},
@@ -53,13 +52,17 @@ sealed trait PistetietoSQL extends PistehistoriaExtractors with SQLHelpers {
                       ${pistetieto.valintatapajonoOid},
                       ${pistetieto.hakukohdeOid},
                       ${pistetieto.hakuOid},
-                      ${pistetieto.valintatapajonoTyyppi}
+                      ${pistetieto.valintatapajonoTyyppi},
+                      ${pistetieto.aloituspaikat},
+                      ${pistetieto.ensisijaisestiHakeneet}
                 ) on conflict (tarjoaja_oid, hakukohdekoodi, vuosi) do update set pisteet = excluded.pisteet,
                                                                                  valintatapajono_oid = excluded.valintatapajono_oid,
                                                                                  hakukohde_oid = excluded.hakukohde_oid,
                                                                                  haku_oid = excluded.haku_oid,
                                                                                  valintatapajono_tyyppi = excluded.valintatapajono_tyyppi,
+                                                                                 aloituspaikat = excluded.aloituspaikat,
+                                                                                 ensisijaisesti_hakeneet = excluded.ensisijaisesti_hakeneet,
                                                                                  updated = now()"""
-      }))
+    }))
   }
 }
