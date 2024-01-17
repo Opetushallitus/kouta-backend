@@ -85,9 +85,9 @@ object OppilaitosServiceUtil {
 
   private def getOppilaitostyyppiUri(organisaatio: OrganisaatioServiceOrg): Option[String] = {
     organisaatio.oppilaitostyyppi match {
-      case Some(oppilaitostyyppi) => Some(oppilaitostyyppi)
+      case Some(oppilaitostyyppi) => Some(MiscUtils.withoutKoodiVersion(oppilaitostyyppi))
       case None => organisaatio.oppilaitosTyyppiUri match {
-        case Some(oppilaitosTyyppiUri) => Some(oppilaitosTyyppiUri)
+        case Some(oppilaitosTyyppiUri) => Some(MiscUtils.withoutKoodiVersion(oppilaitosTyyppiUri))
         case None => None
       }
     }
@@ -95,9 +95,9 @@ object OppilaitosServiceUtil {
 
   private def getOrganisaatiotyyppiUris(organisaatio: OrganisaatioServiceOrg): Option[List[String]] = {
     organisaatio.organisaatiotyypit match {
-      case Some(organisaatiotyypit) => Some(organisaatiotyypit)
+      case Some(organisaatiotyypit) => Some(organisaatiotyypit.map(orgtyyppi => MiscUtils.withoutKoodiVersion(orgtyyppi)))
       case None => organisaatio.tyypit match {
-        case Some(tyypit) => Some(tyypit)
+        case Some(tyypit) => Some(tyypit.map(orgtyyppi => MiscUtils.withoutKoodiVersion(orgtyyppi)))
         case None => None
       }
     }
@@ -109,14 +109,17 @@ object OppilaitosServiceUtil {
       parentOids = getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
       yhteystiedot = getYhteystiedot(organisaatio),
-      kotipaikkaUri = organisaatio.kotipaikkaUri,
+      kotipaikkaUri = organisaatio.kotipaikkaUri match {
+        case Some(kotipaikkaUri) => Some(MiscUtils.withoutKoodiVersion(kotipaikkaUri))
+        case None => None
+      },
       children = if (children.nonEmpty) Some(children.toList)
       else organisaatio.children match {
         case Some(orgChildren) => Some(orgChildren.map(org => organisaatioServiceOrgToOrganisaatio(org)))
         case None => None
       },
       oppilaitostyyppiUri = getOppilaitostyyppiUri(organisaatio),
-      kieletUris = organisaatio.kieletUris,
+      kieletUris = organisaatio.kieletUris.map(kieli => MiscUtils.withoutKoodiVersion(kieli)),
       organisaatiotyyppiUris = getOrganisaatiotyyppiUris(organisaatio)
     )
   }

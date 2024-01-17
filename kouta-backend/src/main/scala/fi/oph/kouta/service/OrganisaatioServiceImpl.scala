@@ -40,7 +40,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
     } match {
       case Success(organisaatiot: Seq[OrganisaatioServiceOrg]) => Right(organisaatiot)
-      case Failure(exception)                        => Left(exception)
+      case Failure(exception) => Left(exception)
     }
   }
 
@@ -64,7 +64,6 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
 
   private def flattenChildren(organisaatio: Organisaatio): List[Organisaatio] = {
     organisaatio.children match {
-      case Some(children) if children.isEmpty => List()
       case Some(children) =>
         children ::: children.flatMap(flattenChildren)
       case None =>

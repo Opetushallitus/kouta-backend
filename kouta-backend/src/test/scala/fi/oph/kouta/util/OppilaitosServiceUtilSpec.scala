@@ -185,13 +185,13 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     assert(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(orgServiceHierarkiaOrganisaatio) == Organisaatio(
       oid = TestOids.ChildOid.toString,
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
-      oppilaitostyyppiUri = Some("oppilaitostyyppi_64#1"),
+      oppilaitostyyppiUri = Some("oppilaitostyyppi_64"),
       nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
       organisaatiotyyppiUris = Some(List("organisaatiotyyppi_04")),
       children = Some(List(Organisaatio(
         oid = TestOids.GrandChildOid.toString,
         parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
-        oppilaitostyyppiUri =  Some("oppilaitostyyppi_63#1"),
+        oppilaitostyyppiUri =  Some("oppilaitostyyppi_63"),
         nimi = Map(Fi -> "Oppilaitoksen osa fi", Sv -> "Oppilaitoksen osa sv", En -> "Oppilaitoksen osa en"),
         organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")),
         children = None
