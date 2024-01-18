@@ -1,8 +1,8 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{JononAlimmatPisteet, LegacyTarjontaClient, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
-import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.{Hakukohde, HakukohteenLinja, TilaFilter}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, PistehistoriaDAO}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.Authenticated
@@ -18,20 +18,27 @@ case class LegacyHakukohde(
     hakukausiVuosi: Option[String]
 )
 
-object PistehistoriaService extends PistehistoriaService(ValintaTulosServiceClient, ValintaperusteetServiceClient)
+object PistehistoriaService
+    extends PistehistoriaService(ValintaTulosServiceClient, ValintaperusteetServiceClient, HakemusPalveluClient)
 
 case class Pistetieto(
     tarjoaja: OrganisaatioOid,
     hakukohdekoodi: String,
-    pisteet: Double,
+    pisteet: Option[Double],
     vuosi: String,
-    valintatapajonoOid: String,
+    valintatapajonoOid: Option[String],
     hakukohdeOid: HakukohdeOid,
     hakuOid: HakuOid,
-    valintatapajonoTyyppi: String
+    valintatapajonoTyyppi: Option[String],
+    ensisijaisestiHakeneet: Option[Int],
+    aloituspaikat: Option[Int]
 )
 
-class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient, valintaperusteetServiceClient: ValintaperusteetServiceClient) extends Logging {
+class PistehistoriaService(
+    valintaTulosServiceClient: ValintaTulosServiceClient,
+    valintaperusteetServiceClient: ValintaperusteetServiceClient,
+    ataruClient: HakemusPalveluClient
+) extends Logging {
   def getPistehistoria(tarjoaja: OrganisaatioOid, hakukohdeKoodi: String): Seq[Pistetieto] = {
     PistehistoriaDAO.getPistehistoria(tarjoaja, hakukohdeKoodi)
   }
@@ -50,7 +57,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     }
   }
 
-  private def lukiolinjaToHakukohdekoodi(koodiUri: String) = {
+  private def lukiolinjaToHakukohdekoodi(koodiUri: String): Seq[String] = {
     val result =
       KoodistoService
         .getRinnasteisetKooditInKoodisto(koodiUri, "hakukohteet")
@@ -60,7 +67,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     result
   }
 
-  private def getHakukohdekoodiUris(hakukohde: Hakukohde) = {
+  private def getHakukohdekoodiUris(hakukohde: Hakukohde): Seq[String] = {
     if (hakukohde.hakukohdeKoodiUri.isDefined) {
       Seq(hakukohde.hakukohdeKoodiUri.get)
     } else {
@@ -80,45 +87,60 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     val rawPistetiedot: Seq[JononAlimmatPisteet] = valintaTulosServiceClient.fetchPisteet(hakuOid)
     logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
 
+    val hakukohteet = HakukohdeDAO.getHakukohteetByHakuOid(hakuOid, TilaFilter.all())
+
     val haku = HakuDAO
       .get(hakuOid, TilaFilter.all())
       .getOrElse(throw new RuntimeException(s"Hakua $hakuOid ei löytynyt kannasta!"))
       ._1
+
     val alkamisvuosi: String = haku.metadata
       .flatMap(_.koulutuksenAlkamiskausi.flatMap(_.koulutuksenAlkamisvuosi))
       .getOrElse(throw new RuntimeException(s"Haulle $hakuOid ei löytynyt koulutuksen alkamiskautta. Haku: $haku"))
 
-    val result = rawPistetiedot.flatMap(pt => {
-      val result: Seq[Pistetieto] = HakukohdeDAO.get(HakukohdeOid(pt.hakukohdeOid), TilaFilter.all()) match {
-        case Some((hakukohde, _)) =>
-          logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohteen ${hakukohde.oid} pistetieto $pt")
-          val valintatapajono: ValintatapajonoDTO = valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)
-          for {
-            hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
-            tarjoaja               <- hakukohde.jarjestyspaikkaOid
-          } yield {
-            Pistetieto(
-              tarjoaja = tarjoaja,
-              hakukohdekoodi = hakukohdekoodi,
-              pt.alinHyvaksyttyPistemaara,
-              vuosi = alkamisvuosi,
-              valintatapajonoOid = pt.valintatapajonoOid,
-              hakuOid = hakuOid,
-              hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
-              valintatapajonoTyyppi = valintatapajono.tyyppi,
-            )
-          }
-        case None =>
-          logger.warn(
-            s"syncPistehistoria: Ei löytynyt hakukohdetta oidilla ${pt.hakukohdeOid}, ei voida käsitellä pistetietoa $pt"
+    val ensisijaisestiHakeneetCounts = ataruClient.getEnsisijainenApplicationCounts(hakuOid)
+
+    val result = hakukohteet.flatMap(hakukohde => {
+      val hakukohdeOid = hakukohde.oid.get // Kannasta haetulla hakukohteella on pakko olla oid!
+      val pt = rawPistetiedot.find(p => p.hakukohdeOid == hakukohdeOid.toString)
+
+      logger.info(s"syncPistehistoria: Käsitellään haun $hakuOid hakukohteen ${hakukohdeOid} tiedot.")
+
+      val (valintatapajono, alinHyvaksyttyPistemaara) = pt match {
+        case Some(pt) =>
+          (
+            Some(valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)),
+            Some(pt.alinHyvaksyttyPistemaara)
           )
-          Seq()
+        case None => {
+          logger.info(s"Hakukohteelle ${hakukohde.oid} ei löytynyt pistetietoja.")
+          (None, None)
+        }
+      }
+
+      val res = for {
+        hakukohdekoodi: String <- getHakukohdekoodiUris(hakukohde)
+        tarjoaja               <- hakukohde.jarjestyspaikkaOid
+      } yield {
+        Pistetieto(
+          tarjoaja = tarjoaja,
+          hakukohdekoodi = hakukohdekoodi,
+          pisteet = alinHyvaksyttyPistemaara,
+          vuosi = alkamisvuosi,
+          valintatapajonoOid = valintatapajono.map(_.oid),
+          hakuOid = hakuOid,
+          hakukohdeOid = hakukohdeOid,
+          valintatapajonoTyyppi = valintatapajono.map(_.tyyppi),
+          aloituspaikat = hakukohde.metadata.flatMap(_.aloituspaikat).flatMap(_.lukumaara),
+          ensisijaisestiHakeneet = ensisijaisestiHakeneetCounts.get(hakukohdeOid.toString)
+        )
       }
       logger.info(
-        s"syncPistehistoria: syntyi ${result.size} pistetieto(a) haun $hakuOid hakukohteelle ${pt.hakukohdeOid}"
+        s"syncPistehistoria: syntyi ${res.size} pistetieto(a) haun $hakuOid hakukohteelle ${hakukohde.oid}"
       )
-      result
+      res
     })
+
     val changed = PistehistoriaDAO.savePistehistorias(result)
     logger.info(
       s"syncPistehistoria: tallennettiin $changed uutta pistehistoriatietoa ${rawPistetiedot.size} jonon ${result.size} tulokselle"
@@ -126,7 +148,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     changed
   }
 
-  private def syncPistehistoriaForLegacyHaku(hakuOid: HakuOid) = {
+  private def syncPistehistoriaForLegacyHaku(hakuOid: HakuOid): Int = {
     logger.info(s"Käsitellään legacy-haku ${hakuOid}")
     val parallelism       = 8
     lazy val forkJoinPool = new java.util.concurrent.ForkJoinPool(parallelism)
@@ -136,24 +158,28 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
     logger.info(
       s"Saatiin ${pistetiedot.size} pistetietoa Valinta-tulos-servicestä haulle $hakuOid, parallelism $parallelism"
     )
+
     val haku     = LegacyTarjontaClient.getHaku(hakuOid.toString)
     var progress = 0
     val result = pistetiedot
       .flatMap(pt => {
         val hakukohde = LegacyTarjontaClient.getHakukohde(pt.hakukohdeOid)
-        val valintatapajono: ValintatapajonoDTO = valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)
+        val valintatapajono: ValintatapajonoDTO =
+          valintaperusteetServiceClient.getValintatapajono(pt.valintatapajonoOid)
         progress += 1
         if (progress % 100 == 0) logger.info(s"handled $progress/${pistetiedot.size} pistetietos")
         hakukohde.tarjoajaOids.map(tarjoaja => {
           Pistetieto(
             tarjoaja = OrganisaatioOid(tarjoaja),
             hakukohdekoodi = hakukohde.hakukohteenNimiUri.map(_.split("#").head).getOrElse("SOS"),
-            pt.alinHyvaksyttyPistemaara,
+            Some(pt.alinHyvaksyttyPistemaara),
             vuosi = haku.hakukausiVuosi.get,
-            valintatapajonoOid = pt.valintatapajonoOid,
+            valintatapajonoOid = Some(pt.valintatapajonoOid),
             hakuOid = hakuOid,
             hakukohdeOid = HakukohdeOid(pt.hakukohdeOid),
-            valintatapajonoTyyppi = valintatapajono.tyyppi,
+            valintatapajonoTyyppi = Some(valintatapajono.tyyppi),
+            aloituspaikat = None,
+            ensisijaisestiHakeneet = None
           )
         })
       })
@@ -169,7 +195,7 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
   //2021: 1.2.246.562.29.15658556293
   //2020: 1.2.246.562.29.54537554997
   //2019: 1.2.246.562.29.676633696010
-  //2018: 1.2.246.562.29.557 39081531
+  //2018: 1.2.246.562.29.55739081531
   def syncDefaults()(implicit authenticated: Authenticated): String = {
     val hakuOids = Seq(
       HakuOid("1.2.246.562.29.55739081531"),
@@ -180,20 +206,24 @@ class PistehistoriaService(valintaTulosServiceClient: ValintaTulosServiceClient,
       HakuOid("1.2.246.562.29.00000000000000021303")
     )
     logger.info(s"Synkataan alimmat pisteet oletushauille: $hakuOids")
-    hakuOids.map(oid => {
-      syncPistehistoriaForHaku(oid)
-    }).mkString("\n")
+    hakuOids
+      .map(oid => {
+        syncPistehistoriaForHaku(oid)
+      })
+      .mkString("\n")
   }
 
   def syncPistehistoriaForHaku(hakuOid: HakuOid)(implicit authenticated: Authenticated): String = {
     if (!authenticated.session.roleMap.exists(r => r._1.equals(Role.Indexer) && r._2.contains(RootOrganisaatioOid))) {
-      logger.error(s"Käyttäjällä ${authenticated.session.personOid} ei ole rekisterinpitäjän oikeuksia, joten ei voida synkata pistehistoriaa haulle $hakuOid.")
+      logger.error(
+        s"Käyttäjällä ${authenticated.session.personOid} ei ole rekisterinpitäjän oikeuksia, joten ei voida synkata pistehistoriaa haulle $hakuOid."
+      )
       throw OrganizationAuthorizationFailedException(Seq(RootOrganisaatioOid), Seq.empty)
     }
     try {
       val result = hakuOid.toString match {
         case oid if oid.length != 35 => syncPistehistoriaForLegacyHaku(hakuOid)
-        case _ => syncPistehistoriaForKoutaHaku(hakuOid)
+        case _                       => syncPistehistoriaForKoutaHaku(hakuOid)
       }
       s"Tallennettiin haulle $hakuOid yhteensä $result pistetietoa."
     } catch {

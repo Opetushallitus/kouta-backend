@@ -64,11 +64,6 @@ trait ExtractorBase extends KoutaJsonFormats {
   })
 }
 
-trait MigrationExtractors extends ExtractorBase {
-  implicit val findResult: GetResult[Option[String]] = GetResult(r => r.nextStringOption())
-  implicit val getResult: GetResult[String] = GetResult(r => r.nextString())
-}
-
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid),
@@ -470,7 +465,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     if (osaOid != null) {
       osa = Some(OppilaitoksenOsa(
         oid = OrganisaatioOid(osaOid),
-        oppilaitosOid = OrganisaatioOid(r.nextString()),
+        oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
         tila = Julkaisutila.withName(r.nextString()),
         kielivalinta = extractKielivalinta(r.nextStringOption()),
         metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
@@ -490,7 +485,7 @@ trait OppilaitosExtractors extends ExtractorBase {
 trait OppilaitoksenOsaExtractors extends ExtractorBase {
   implicit val getOppilaitoksenOsaResult: GetResult[OppilaitoksenOsa] = GetResult(r => OppilaitoksenOsa(
     oid = OrganisaatioOid(r.nextString()),
-    oppilaitosOid = OrganisaatioOid(r.nextString()),
+    oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
     tila = Julkaisutila.withName(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
@@ -583,16 +578,17 @@ trait HakutietoExtractors extends ExtractorBase {
 }
 
 trait PistehistoriaExtractors extends ExtractorBase {
-
   implicit val getPistehistoriaResult: GetResult[Pistetieto] = GetResult(r => Pistetieto(
     tarjoaja = OrganisaatioOid(r.nextString()),
     hakukohdekoodi = r.nextString(),
-    pisteet = r.nextDouble(),
+    pisteet = r.nextDoubleOption(),
     vuosi = r.nextString(),
-    valintatapajonoOid = r.nextString,
+    valintatapajonoOid = r.nextStringOption(),
     hakukohdeOid = HakukohdeOid(r.nextString()),
     hakuOid = HakuOid(r.nextString()),
-    valintatapajonoTyyppi = r.nextString())
+    valintatapajonoTyyppi = r.nextStringOption(),
+    aloituspaikat = r.nextIntOption(),
+    ensisijaisestiHakeneet = r.nextIntOption())
   )
 }
 

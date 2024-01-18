@@ -9,6 +9,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.util.OppilaitosServiceUtil
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
@@ -114,9 +115,28 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     o1 = OrganisaatioOid(put(oppilaitos(Julkaistu, ParentOid)))
     o2 = OrganisaatioOid(put(oppilaitos(Julkaistu, EvilChildOid)))
 
-    oo1 = addToList(oppilaitoksenOsa(o1, Julkaistu, ChildOid))
-    oo2 = addToList(oppilaitoksenOsa(o1, Julkaistu, GrandChildOid))
-    oo3 = addToList(oppilaitoksenOsa(o2, Julkaistu, EvilGrandChildOid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(ChildOid)).
+      thenReturn(TestData.organisaatioServiceOrgOrganisaationOsa.copy(oid = ChildOid.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(GrandChildOid)).
+      thenReturn(TestData.organisaatioServiceOrgOrganisaationOsa.copy(oid = GrandChildOid.s))
+
+    val evilParentOidPath = s"${EvilChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001"
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(EvilGrandChildOid)).
+      thenReturn(TestData.organisaatioServiceOrgOrganisaationOsa.copy(oid = EvilGrandChildOid.s, parentOidPath = evilParentOidPath))
+
+    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgOrganisaationOsa.parentOidPath)
+    val evilParentOids = OppilaitosServiceUtil.getParentOids(evilParentOidPath)
+
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
+      thenReturn(List(TestData.organisaatioServiceOrg.copy(oid = o1.s)))
+
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(evilParentOids)).
+      thenReturn(List(TestData.organisaatioServiceOrg.copy(oid = o2.s)))
+
+    // oppilaitosOid pois
+    oo1 = addToList(oppilaitoksenOsa(ChildOid, o1, Julkaistu, ChildOid))
+    oo2 = addToList(oppilaitoksenOsa(GrandChildOid, o1, Julkaistu, GrandChildOid))
+    oo3 = addToList(oppilaitoksenOsa(EvilGrandChildOid, o2, Julkaistu, EvilGrandChildOid))
 
     ophKoulutus = addToList(koulutus(julkinen = true, OphOid, Julkaistu).copy(tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     ophT1 = addToList(toteutus(ophKoulutus.oid.toString, Julkaistu, LonelyOid))

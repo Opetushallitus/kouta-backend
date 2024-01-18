@@ -19,6 +19,9 @@ object Validations {
   private val urlValidator   = new UrlValidator(Array("http", "https"))
   private val emailValidator = EmailValidator.getInstance(false, false)
 
+  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
+  private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
+
   def error(path: String, msg: ErrorMessage): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid          = validations.flatten.distinct
@@ -379,7 +382,11 @@ object Validations {
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
   def invalidUrlDomain(url: String, allowedDomain: Set[String]): ErrorMessage =
-    ErrorMessage(msg = s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}", "invalidUrlDomain")
+    ErrorMessage(
+      msg =
+        s"URL:n '${url}' domain ei ole sallittu. Sallitut domainit ovat ${allowedDomain.toSeq.sorted.map(d => s"'$d'").mkString(", ")}",
+      "invalidUrlDomain"
+    )
   def invalidEmail(email: String): ErrorMessage =
     ErrorMessage(msg = s"'$email' ei ole validi email", id = "invalidEmail")
   def invalidAjanjaksoMsg(ajanjakso: Ajanjakso): ErrorMessage =
@@ -984,9 +991,6 @@ object Validations {
       }
     )
   }
-
-  private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
-  private lazy val isTest = KoutaConfigurationFactory.configuration.isTestEnvironment
 
   def validateImageUrlWithConfig(imageURL: Option[String], path: String): IsValid =
     validateImageURL(imageURL, if (isTest) Set(imageBucketPublicUrl, "https://konfo-files.opintopolku.fi") else Set(imageBucketPublicUrl), path)

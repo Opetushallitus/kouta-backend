@@ -3,8 +3,8 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.security.AuthorizableEntity
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
-import fi.oph.kouta.validation.Validations.{validateIfJulkaistu, _}
-import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidatableSubEntity, ValidationContext}
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation.{IsValid, NoErrors, Validatable, ValidationContext}
 
 package object oppilaitos {
 
@@ -58,6 +58,9 @@ package object oppilaitos {
       |          type: array
       |          items:
       |            $ref: '#/components/schemas/OppilaitoksenOsa'
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitosMetadataModel =
@@ -161,6 +164,9 @@ package object oppilaitos {
       |           format: date-time
       |           description: Oppilaitoksen osan kuvailutietojen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        _enrichedData:
+      |          type: object
+      |          $ref: '#/components/schemas/OppilaitosEnrichedData'
       |""".stripMargin
 
   val OppilaitoksenOsaMetadataModel =
@@ -197,6 +203,19 @@ package object oppilaitos {
       |        jarjestaaUrheilijanAmmKoulutusta: 
       |          type: boolean
       |          description: Järjestääkö oppilaitoksen osa urheilijan ammatillista koulutusta?
+      |""".stripMargin
+
+  val OppilaitosEnrichedDataModel: String =
+    """    OppilaitosEnrichedData:
+      |      type: object
+      |      properties:
+      |        muokkaajanNimi:
+      |          type: string
+      |          description: Oppilaitoksen osan kuvailutietoja viimeksi muokanneen virkailijan henkilön nimi
+      |          $ref: '#/components/schemas/Nimi'
+      |        organisaatio:
+      |          type: object
+      |          $ref: '#/components/schemas/Organisaatio'
       |""".stripMargin
 
   val OppilaitoksenOsaListItemModel =
@@ -253,6 +272,10 @@ package object oppilaitos {
       |          type: object
       |          description: Opintopolussa näytettävä puhelinnumero eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
+      |        www:
+      |          type: object
+      |          description: Opintopolussa näytettävä verkkosivu eri kielillä. Kielet on määritetty kielivalinnassa.
+      |          $ref: '#/components/schemas/Teksti'
       |""".stripMargin
 
   val TietoaOpiskelustaModel =
@@ -287,6 +310,7 @@ package object oppilaitos {
     OppilaitoksenOsaModel,
     OppilaitosMetadataModel,
     OppilaitoksenOsaMetadataModel,
+    OppilaitosEnrichedDataModel,
     OppilaitoksenOsaListItemModel,
     YhteystietoModel,
     TietoaOpiskelustaModel,
@@ -307,7 +331,8 @@ case class Oppilaitos(
     modified: Option[Modified] = None,
     _enrichedData: Option[OppilaitosEnrichedData] = None,
     osat: Option[Seq[OppilaitoksenOsa]] = None
-) extends Validatable
+) extends OppilaitosBase
+    with Validatable
     with AuthorizableEntity[Oppilaitos]
     with HasPrimaryId[OrganisaatioOid, Oppilaitos]
     with HasModified[Oppilaitos]
@@ -329,11 +354,14 @@ case class Oppilaitos(
   def withOsat(osat: Seq[OppilaitoksenOsa]): Oppilaitos = this.copy(osat = Some(osat))
 
   def getEntityDescriptionAllative(): String = "oppilaitokselle"
+
+  def withEnrichedData(enrichedData: OppilaitosEnrichedData): Oppilaitos = this.copy(_enrichedData = Some(enrichedData))
+
 }
 
 case class OppilaitoksenOsa(
     oid: OrganisaatioOid,
-    oppilaitosOid: OrganisaatioOid,
+    oppilaitosOid: Option[OrganisaatioOid] = None,
     tila: Julkaisutila = Tallennettu,
     esikatselu: Boolean = false,
     metadata: Option[OppilaitoksenOsaMetadata] = None,
@@ -343,7 +371,8 @@ case class OppilaitoksenOsa(
     teemakuva: Option[String] = None,
     modified: Option[Modified] = None,
     _enrichedData: Option[OppilaitosEnrichedData] = None
-) extends Validatable
+) extends OppilaitosBase
+    with Validatable
     with AuthorizableEntity[OppilaitoksenOsa]
     with HasPrimaryId[OrganisaatioOid, OppilaitoksenOsa]
     with HasModified[OppilaitoksenOsa]
@@ -362,6 +391,8 @@ case class OppilaitoksenOsa(
 
   def withMuokkaaja(oid: UserOid): OppilaitoksenOsa = this.copy(muokkaaja = oid)
   def getEntityDescriptionAllative(): String        = "oppilaitoksen osalle"
+
+  def withEnrichedData(enrichedData: OppilaitosEnrichedData): OppilaitoksenOsa = this.copy(_enrichedData = Some(enrichedData))
 }
 
 case class OppilaitosMetadata(
@@ -409,7 +440,8 @@ case class Yhteystieto(
     postiosoite: Option[Osoite] = None,
     kayntiosoite: Option[Osoite] = None,
     puhelinnumero: Kielistetty = Map(),
-    sahkoposti: Kielistetty = Map()
+    sahkoposti: Kielistetty = Map(),
+    www: Kielistetty = Map()
 ) {
   def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid =
     and(
@@ -451,7 +483,8 @@ case class Yhteystieto(
     )
 }
 
-case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None)
+case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
+                                  organisaatio: Option[Organisaatio] = None)
 
 case class OppilaitosAndOsa(
     oppilaitos: Oppilaitos,
@@ -463,18 +496,11 @@ case class OppilaitoksetResponse(
     organisaatioHierarkia: OrganisaatioHierarkia
 )
 
-case class OrgServiceOrganisaatio(
-    oid: String,
-    parentOidPath: String,
-    oppilaitostyyppi: Option[String] = None,
-    nimi: Kielistetty,
-    kotipaikkaUri: String,
-    children: List[Organisaatio],
-    status: Option[String] = None,
-    organisaatiotyypit: Option[List[String]] = None
-)
+sealed trait OppilaitosBase {
+  val oid: OrganisaatioOid
+  val _enrichedData: Option[OppilaitosEnrichedData]
+}
 
-case class OrganisaatioServiceOrganisaatio(oid: String,
-                                           parentOidPath: String,
-                                           nimi: Kielistetty,
-                                           tyypit: List[String] = List())
+case class OppilaitosWithOrganisaatioData(oid: OrganisaatioOid,
+                                          _enrichedData: Option[OppilaitosEnrichedData]
+                                         ) extends OppilaitosBase

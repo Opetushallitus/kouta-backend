@@ -319,6 +319,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.valintakokeet.size.shouldEqual(1)
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
+
     // lisätään valintakoe
     lastModified       = get(id, updatedValintaperusteetWithId.copy(muokkaaja = UserOid(updatedMuokkaaja)))
     val newValintakoe      = TestData.Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_57#2"))
@@ -351,6 +352,7 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
       valintaperuste.valintakokeet.size.shouldEqual(1)
       valintaperuste.muokkaaja.shouldEqual(userOidForTestSessionId(crudSessions(valintaperuste.organisaatioOid)))
     }
+
     // poistetaan kaikki valintakokeet
     lastModified       = get(id, updatedValintaperusteetWithId.copy(valintakokeet = updatedValintakokeetWithIds, muokkaaja = UserOid(updatedMuokkaaja)))
     update(valintaperusteetWithId.copy(valintakokeet = List()), lastModified, expectUpdate = true)

@@ -1,10 +1,9 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient, OrganisaatioServiceQueryException}
+import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, oppilaitostyypitForAvoinKorkeakoulutus}
-import fi.oph.kouta.util.MiscUtils
+import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatioServiceOrg, oppilaitostyypitForAvoinKorkeakoulutus}
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.{MultiParams, Params}
 
@@ -25,21 +24,33 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
   def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
     organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
 
-  def getOrganisaatio(organisaatioOid: OrganisaatioOid) = {
-    organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
-  }
-
-  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[Organisaatio]] = {
-    Try[Seq[Organisaatio]] {
-      organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
+  def getOrganisaatio(organisaatioOid: OrganisaatioOid): Either[Throwable, OrganisaatioServiceOrg] = {
+    Try[OrganisaatioServiceOrg] {
+      organisaatioServiceClient.getOrganisaatioWithOidFromCache(organisaatioOid)
     } match {
-      case Success(organisaatiot: Seq[Organisaatio]) => Right(organisaatiot)
-      case Failure(exception)                        => Left(exception)
+      case Success(organisaatio: OrganisaatioServiceOrg) =>
+        Right(organisaatio)
+      case Failure(exception) =>
+        Left(exception)
     }
   }
 
-  def getOrganisaatioHierarkia(params: Params, multiParams: MultiParams) = {
-    organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params), Some(multiParams))
+  def getOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Either[Throwable, Seq[OrganisaatioServiceOrg]] = {
+    Try[Seq[OrganisaatioServiceOrg]] {
+      organisaatioServiceClient.getOrganisaatiotWithOidsFromCache(organisaatioOids)
+    } match {
+      case Success(organisaatiot: Seq[OrganisaatioServiceOrg]) => Right(organisaatiot)
+      case Failure(exception) => Left(exception)
+    }
+  }
+
+  def getOrganisaatioHierarkia(params: Params, multiParams: MultiParams): Either[Throwable, OrganisaatioHierarkia] = {
+    Try[OrganisaatioHierarkia] {
+      organisaatioServiceClient.getOrganisaatioHierarkiaFromCache(Some(params), Some(multiParams))
+    } match {
+      case Success(organisaatiohierarkia: OrganisaatioHierarkia) => Right(organisaatiohierarkia)
+      case Failure(exception) => Left(exception)
+    }
   }
 
   def getOppilaitoksetForAvoinKorkeakoulutus(): OrganisaatioHierarkia = {
@@ -47,7 +58,36 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       organisaatioServiceClient
         .getOrganisaatioHierarkiaFromCache(None, None, oppilaitostyypitForAvoinKorkeakoulutus)
         .organisaatiot
-        .map(_.copy(children = List()))
+        .map(_.copy(children = None))
     OrganisaatioHierarkia(organisaatiot = filtered)
+  }
+
+  private def flattenChildren(organisaatio: Organisaatio): List[Organisaatio] = {
+    organisaatio.children match {
+      case Some(children) =>
+        children ::: children.flatMap(flattenChildren)
+      case None =>
+        List()
+    }
+  }
+
+  private def flattenOrganisaatiotWithChildren(organisaatiot: List[Organisaatio]): List[(OrganisaatioOid, Organisaatio)] = {
+    organisaatiot.map(organisaatio =>
+      (OrganisaatioOid(organisaatio.oid), organisaatio.copy(children = Some(flattenChildren(organisaatio))))
+    )
+  }
+
+  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
+    Try[OrganisaatioHierarkia] {
+      organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
+    } match {
+      case Success(organisaatioHierarkia: OrganisaatioHierarkia) =>
+        val orgs = flattenOrganisaatiotWithChildren(organisaatioHierarkia.organisaatiot)
+
+        val children = if (orgs.nonEmpty) orgs.head._2.children.getOrElse(List()) else List()
+
+        Right(children)
+      case Failure(exception) => Left(exception)
+    }
   }
 }

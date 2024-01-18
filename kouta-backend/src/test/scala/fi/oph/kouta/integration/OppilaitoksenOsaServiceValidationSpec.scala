@@ -108,20 +108,12 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
         Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
       )
     )
-    failsValidation(
-      max.copy(teemakuva = Some("https://example.com/test.jpg")),
-      "teemakuva",
-      invalidUrlDomain(
-        "https://example.com/test.jpg",
-        Set("https://konfo-files.opintopolku.fi", "https://konfo-files.untuvaopintopolku.fi")
-      )
-    )
   }
 
   it should "fail if oppilaitosOid invalid" in {
-    failsValidation(max.copy(oppilaitosOid = OrganisaatioOid("virhe")), "oppilaitosOid", validationMsg("virhe"))
-    failsValidation(max.copy(oppilaitosOid = UnknownOid), "oppilaitosOid", nonExistent("Oppilaitosta", UnknownOid))
-    failsValidation(max.copy(oppilaitosOid = EvilCousin), "tila", notYetJulkaistu("Oppilaitosta", EvilCousin))
+    failsValidation(max.copy(oppilaitosOid = Some(OrganisaatioOid("virhe"))), "oppilaitosOid", validationMsg("virhe"))
+    failsValidation(max.copy(oppilaitosOid = Some(UnknownOid)), "oppilaitosOid", nonExistent("Oppilaitosta", UnknownOid))
+    failsValidation(max.copy(oppilaitosOid = Some(EvilCousin)), "tila", notYetJulkaistu("Oppilaitosta", EvilCousin))
   }
 
   "Metadata validation" should "fail if invalid wwwSivu" in {

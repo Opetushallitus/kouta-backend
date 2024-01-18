@@ -53,6 +53,10 @@ trait DatabaseFixture {
     db.runBlocking(sqlu"""delete from ammattinimikkeet""")
   }
 
+  def deleteOppilaitostenOsat(): Int = {
+    db.runBlocking(sqlu"""truncate oppilaitosten_osat""")
+  }
+
   def getStringColumnValue(tableName: String, column: String, idKey: String = "", id: String = ""): String =
     db.runBlocking(
       sql"""select #${column} from #${tableName} where #${s"$idKey = '$id'"};""".as[String].head

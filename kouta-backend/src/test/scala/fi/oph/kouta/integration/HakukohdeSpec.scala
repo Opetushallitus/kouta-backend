@@ -659,6 +659,7 @@ class HakukohdeSpec
     val muokattuHakukohde2 = tallennettu.copy(
       liitteet = List()
     )
+    lastModified = get(oid, muokattuHakukohde.copy(muokkaaja = OphUserOid2))
     update(muokattuHakukohde2, lastModified, expectUpdate = true, ophSession)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
   }
