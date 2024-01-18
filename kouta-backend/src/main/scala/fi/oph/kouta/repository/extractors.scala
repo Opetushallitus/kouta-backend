@@ -578,16 +578,17 @@ trait HakutietoExtractors extends ExtractorBase {
 }
 
 trait PistehistoriaExtractors extends ExtractorBase {
-
   implicit val getPistehistoriaResult: GetResult[Pistetieto] = GetResult(r => Pistetieto(
     tarjoaja = OrganisaatioOid(r.nextString()),
     hakukohdekoodi = r.nextString(),
-    pisteet = r.nextDouble(),
+    pisteet = r.nextDoubleOption(),
     vuosi = r.nextString(),
-    valintatapajonoOid = r.nextString,
+    valintatapajonoOid = r.nextStringOption(),
     hakukohdeOid = HakukohdeOid(r.nextString()),
     hakuOid = HakuOid(r.nextString()),
-    valintatapajonoTyyppi = r.nextString())
+    valintatapajonoTyyppi = r.nextStringOption(),
+    aloituspaikat = r.nextIntOption(),
+    ensisijaisestiHakeneet = r.nextIntOption())
   )
 }
 
