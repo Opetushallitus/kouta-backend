@@ -68,12 +68,12 @@ package object raportointi {
   case class PistetietoRaporttiItem(
       tarjoaja: OrganisaatioOid,
       hakukohdekoodi: String,
-      pisteet: Double,
+      pisteet: Option[Double],
       vuosi: String,
-      valintatapajonoOid: String,
+      valintatapajonoOid: Option[String],
       hakukohdeOid: HakukohdeOid,
       hakuOid: HakuOid,
-      valintatapajonoTyyppi: String
+      valintatapajonoTyyppi: Option[String]
   ) {
     def this(p: Pistetieto) = this(
       p.tarjoaja,
