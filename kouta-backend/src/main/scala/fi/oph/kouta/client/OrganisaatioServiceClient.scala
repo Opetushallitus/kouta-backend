@@ -163,16 +163,6 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     organisaatiotCache.get(oids, oids => getOrganisaatiot(oids))
   }
 
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Seq[OrganisaatioServiceOrg] = {
-    val url = urlProperties.url(s"organisaatio-service.organisaatio.children", oid)
-
-    get(url, errorHandler, followRedirects = true) {
-      response => {
-        parse(response).extract[Seq[OrganisaatioServiceOrg]]
-      }
-    }
-  }
-
   def getOrganisaatioChildrenFromCache(oid: OrganisaatioOid): OrganisaatioHierarkia = {
     val queryParams = OrganisaatioHierarkiaQueryParams(
       oid = Some(oid)
