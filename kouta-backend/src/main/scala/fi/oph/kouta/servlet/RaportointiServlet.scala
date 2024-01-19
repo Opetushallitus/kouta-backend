@@ -8,14 +8,41 @@ import org.scalatra.Ok
 
 import java.net.URLDecoder
 import java.time.Instant
+import scala.util.{Failure, Success, Try}
 
 class RaportointiServlet(raportointiService: RaportointiService) extends KoutaServlet {
   def this() = this(RaportointiService)
 
-  private def parseDatetime(dateTime: Option[String], default: Option[Instant] = None): Option[Instant] = {
+  private def parseDatetime(
+      dateTime: Option[String],
+      fieldName: String,
+      default: Option[Instant] = None
+  ): Option[Instant] = {
     dateTime match {
-      case Some(dateTimeStr) => Some(parseHttpDate(URLDecoder.decode(dateTimeStr, "UTF-8")))
-      case None              => default
+      case Some(dateTimeStr) =>
+        Try[Instant] {
+          parseHttpDate(URLDecoder.decode(dateTimeStr, "UTF-8"))
+        } match {
+          case Success(instantVal) => Some(instantVal)
+          case Failure(_)          => throw new IllegalArgumentException(s"Virheellinen $fieldName '$dateTimeStr'")
+        }
+      case None => default
+    }
+  }
+
+  private def parseTimeRange(
+      startTime: Option[String],
+      endTime: Option[String],
+      defaultEndTime: Option[Instant]
+  ): (Option[Instant], Option[Instant]) = {
+    val startTimeVal = parseDatetime(startTime, "alkuaika")
+    val endTimeVal   = parseDatetime(endTime, "loppuaika", defaultEndTime)
+    (startTimeVal, endTimeVal) match {
+      case (Some(startTimeVal), _) if startTimeVal.isAfter(Instant.now()) =>
+        throw new IllegalArgumentException("Alkuaika ei voi olla tulevaisuudessa")
+      case (Some(startTimeVal), Some(endTimeVal)) if startTimeVal.isAfter(endTimeVal) =>
+        throw new IllegalArgumentException("Alkuaika ei voi olla loppuajan jälkeen")
+      case (_, _) => (startTimeVal, endTimeVal)
     }
   }
 
@@ -50,13 +77,8 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/koulutukset") {
     implicit val authenticated: Authenticated = authenticate()
-
-    Ok(
-      raportointiService.saveKoulutukset(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    Ok(raportointiService.saveKoulutukset(startTime, endTime))
   }
 
   registerPath(
@@ -90,13 +112,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/toteutukset") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveToteutukset(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveToteutukset(startTime, endTime))
   }
 
   registerPath(
@@ -130,13 +148,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/hakukohteet") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveHakukohteet(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveHakukohteet(startTime, endTime))
   }
 
   registerPath(
@@ -170,13 +184,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/haut") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveHaut(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveHaut(startTime, endTime))
   }
 
   registerPath(
@@ -210,13 +220,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/valintaperusteet") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveValintaperusteet(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveValintaperusteet(startTime, endTime))
   }
 
   registerPath(
@@ -250,13 +256,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/sorakuvaukset") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveSorakuvaukset(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveSorakuvaukset(startTime, endTime))
   }
 
   registerPath(
@@ -290,13 +292,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/oppilaitokset") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveOppilaitokset(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveOppilaitokset(startTime, endTime))
   }
 
   registerPath(
@@ -330,13 +328,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/oppilaitoksenosat") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.saveOppilaitoksenOsat(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.saveOppilaitoksenOsat(startTime, endTime))
   }
 
   registerPath(
@@ -370,13 +364,9 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/pistehistoria") {
     implicit val authenticated: Authenticated = authenticate()
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
 
-    Ok(
-      raportointiService.savePistehistoria(
-        parseDatetime(params.get("startTime")),
-        parseDatetime(params.get("endTime"), Some(Instant.now()))
-      )
-    )
+    Ok(raportointiService.savePistehistoria(startTime, endTime))
   }
 
   registerPath(
