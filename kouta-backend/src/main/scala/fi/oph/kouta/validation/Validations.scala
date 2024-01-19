@@ -552,6 +552,11 @@ object Validations {
     )
   def notModifiableMsg(parameter: String, entityType: String): ErrorMessage =
     ErrorMessage(msg = s"$parameter ei voi muuttaa olemassaolevalle $entityType", id = "notModifiable")
+  val onlyTeemakuvaOrEsittelyvideoAllowed: ErrorMessage =
+    ErrorMessage(
+      msg = "Oppilaitoksella tai sen osalla voi olla samanaikaisesti vain joko teemakuva tai esittelyvideo",
+      id = "onlyTeemakuvaOrEsittelyvideo"
+    )
 
   val KoulutusKoodiPattern: Pattern                 = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
