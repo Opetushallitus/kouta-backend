@@ -3,13 +3,25 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain.{NimettyLinkki, OppilaitoksenOsa, OppilaitoksenOsaMetadata, Oppilaitos, OppilaitosMetadata, PostiosoiteKoodisto, SosiaalinenMedia, TietoaOpiskelusta, TietoaOpiskelustaKoodisto, Yhteystieto}
 import fi.oph.kouta.repository.OppilaitosDAO
 import fi.oph.kouta.security.Role
+import fi.oph.kouta.service.SharedOppilaitosValidation.onlyTeemakuvaOrEsittelyvideo
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.CrudOperations.{create, update}
-import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfDefinedOrModified, validateIfJulkaistu, validateIfNonEmpty, validateIfNonEmptySeq, validateIfSuccessful, validateImageURL, validateKielistetty, validateOptionalKielistetty,
-  validateImageUrlWithConfig}
+import fi.oph.kouta.validation.Validations.{and, assertKoodistoQueryResult, assertNotEmpty, assertNotNegative, assertNotOptional, assertTrue, assertValid, assertValidUrl, invalidSomeKoodiUri, invalidTietoaOpiskelustaOtsikkoKoodiUri, validateDependency, validateIfDefined, validateIfJulkaistu, validateIfNonEmptySeq, validateIfSuccessful, validateKielistetty, validateOptionalKielistetty,
+  validateImageUrlWithConfig, error, onlyTeemakuvaOrEsittelyvideoAllowed}
 import fi.oph.kouta.validation.{ErrorMessage, IsValid, NoErrors, OppilaitosOrOsaDiffResolver, ValidationContext}
 
 object OppilaitosServiceValidation extends OppilaitosServiceValidation(KoodistoService)
+
+private object SharedOppilaitosValidation {
+  def onlyTeemakuvaOrEsittelyvideo(teemakuva: Option[String],
+                                   esittelyvideo: Option[NimettyLinkki]): IsValid = {
+    (teemakuva, esittelyvideo) match {
+      case (Some(_), Some(video)) if video.nimi.nonEmpty || video.url.nonEmpty =>
+        error("teemakuva", onlyTeemakuvaOrEsittelyvideoAllowed)
+      case (_, _) => NoErrors
+    }
+  }
+}
 
 class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends ValidatingService[Oppilaitos] {
 
@@ -35,6 +47,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
     and(
       assertValid(ol.oid, "oid"),
       assertValid(ol.organisaatioOid, "organisaatioOid"),
+      onlyTeemakuvaOrEsittelyvideo(ol.teemakuva, ol.metadata.flatMap(_.esittelyvideo)),
       validateImageUrlWithConfig(ol.teemakuva, "teemakuva"),
       validateImageUrlWithConfig(ol.logo, "logo"),
       assertNotEmpty(ol.kielivalinta, "kielivalinta")
@@ -62,6 +75,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
       )
     ),
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
+    validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
     validateIfDefined[Yhteystieto](
       m.hakijapalveluidenYhteystiedot,
       _.validate(
@@ -154,6 +168,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
       assertValid(osa.oid, "oid"),
       validateIfSuccessful(assertValid(osa.oppilaitosOid.get, "oppilaitosOid"), validateOppilaitosIntegrity(osa)),
       assertValid(osa.organisaatioOid, "organisaatioOid"),
+      onlyTeemakuvaOrEsittelyvideo(osa.teemakuva, osa.metadata.flatMap(_.esittelyvideo)),
       validateImageUrlWithConfig(osa.teemakuva, "teemakuva"),
       assertNotEmpty(osa.kielivalinta, "kielivalinta")
     )
@@ -166,6 +181,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
       diffResolver: OppilaitosOrOsaDiffResolver[OppilaitoksenOsa]
   ): IsValid = and(
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
+    validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
     validateIfDefined[Yhteystieto](
       m.hakijapalveluidenYhteystiedot,
       _.validate(
