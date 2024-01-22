@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
+import fi.oph.kouta.util.{NameHelper, OrganisaatioServiceUtil, ServiceUtils}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -39,7 +39,7 @@ class OppilaitosService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        Some(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
+        Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 
@@ -64,7 +64,7 @@ class OppilaitosService(
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
     val hierarkia = organisaatioService.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
-    val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
+    val oids = OrganisaatioServiceUtil.getHierarkiaOids(hierarkia)
     val oppilaitokset = oppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
 
     val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
@@ -194,7 +194,7 @@ class OppilaitoksenOsaService(
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
         val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
-        Some(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
+        Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
 
@@ -230,7 +230,7 @@ class OppilaitoksenOsaService(
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
     val organisaatio = organisaatioService.getOrganisaatio(oppilaitoksenOsa.oid) match {
       case Right(organisaatio: OrganisaatioServiceOrg) =>
-        val parentOrgOids = OppilaitosServiceUtil.getParentOids(organisaatio.parentOidPath)
+        val parentOrgOids = OrganisaatioServiceUtil.getParentOids(organisaatio.parentOidPath)
         val parentOrgs = organisaatioService.getOrganisaatiot(parentOrgOids)
         parentOrgs match {
           case Right(organisaatiot) =>

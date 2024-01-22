@@ -4,7 +4,7 @@ import fi.oph.kouta.TestOids
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
-class OppilaitosServiceUtilSpec extends UnitSpec {
+class OrganisaatioServiceUtilSpec extends UnitSpec {
   val organisaationOsa = Organisaatio(
     oid = TestOids.GrandChildOid.toString,
     parentOids = List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
@@ -39,20 +39,20 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     organisaatiotyypit = Some(List("organisaatiotyyppi_04")))
 
   "getOidsFromChildren" should "return one oid for one child org" in {
-    assert(OppilaitosServiceUtil.getOidsFromChildren(Some(List(organisaationOsa))) == List(TestOids.GrandChildOid))
+    assert(OrganisaatioServiceUtil.getOidsFromChildren(Some(List(organisaationOsa))) == List(TestOids.GrandChildOid))
   }
 
   it should "return two oids for org and one child org" in {
-    assert(OppilaitosServiceUtil.getOidsFromChildren(Some(
+    assert(OrganisaatioServiceUtil.getOidsFromChildren(Some(
       List(organisaationOsa.copy(children = Some(List(organisaationOsa.copy(oid = TestOids.GrandGrandChildOid.toString))))))) == List(TestOids.GrandChildOid, TestOids.GrandGrandChildOid))
   }
 
   it should "return two oids for two child orgs" in {
-    assert(OppilaitosServiceUtil.getOidsFromChildren(Some(List(organisaationOsa, organisaationOsa.copy(oid = TestOids.EvilGrandChildOid.toString)))) == List(TestOids.GrandChildOid, TestOids.EvilGrandChildOid))
+    assert(OrganisaatioServiceUtil.getOidsFromChildren(Some(List(organisaationOsa, organisaationOsa.copy(oid = TestOids.EvilGrandChildOid.toString)))) == List(TestOids.GrandChildOid, TestOids.EvilGrandChildOid))
   }
 
   it should "return oids for two child orgs and their sub orgs" in {
-    assert(OppilaitosServiceUtil.getOidsFromChildren(
+    assert(OrganisaatioServiceUtil.getOidsFromChildren(
       Some(List(
         organisaationOsa.copy(children = Some(List(organisaationOsa.copy(oid = TestOids.GrandGrandChildOid.toString)))),
         organisaationOsa.copy(oid = TestOids.EvilGrandChildOid.toString, children = Some(List(organisaationOsa.copy(oid = TestOids.EvilGrandGrandChildOid.toString)))))))
@@ -60,11 +60,11 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
   }
 
   "getHierarkiaOids" should "return one oid for one org without children" in {
-    assert(OppilaitosServiceUtil.getHierarkiaOids(OrganisaatioHierarkia(organisaatiot = List(hierarkiaorganisaatio))) == List(TestOids.ChildOid))
+    assert(OrganisaatioServiceUtil.getHierarkiaOids(OrganisaatioHierarkia(organisaatiot = List(hierarkiaorganisaatio))) == List(TestOids.ChildOid))
   }
 
   it should "return two oids for two orgs without children" in {
-    assert(OppilaitosServiceUtil.getHierarkiaOids(
+    assert(OrganisaatioServiceUtil.getHierarkiaOids(
       OrganisaatioHierarkia(
         organisaatiot = List(hierarkiaorganisaatio, hierarkiaorganisaatio.copy(oid = TestOids.EvilChildOid.toString)))) == List(TestOids.ChildOid, TestOids.EvilChildOid))
   }
@@ -83,7 +83,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
             organisaationOsa.copy(oid = TestOids.GrandGrandChildOid.toString)))))))
     ))
 
-    assert(OppilaitosServiceUtil.getHierarkiaOids(organisaatioHierarkia) ==
+    assert(OrganisaatioServiceUtil.getHierarkiaOids(organisaatioHierarkia) ==
       List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.EvilGrandChildOid, TestOids.EvilGrandGrandChildOid, TestOids.GrandGrandChildOid, TestOids.EvilChildOid))
   }
 
@@ -96,13 +96,13 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     Www(Fi, "http://www.salpaus.fi"))
 
   "filterByOsoitetyyppi" should "return postiosoitteet from a list of yhteystiedot" in {
-    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List(
+    assert(OrganisaatioServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List(
       OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110")),
       OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110"))))
   }
 
   it should "return käyntiosoite from the list of yhteystiedot" in {
-    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "kaynti") ==
+    assert(OrganisaatioServiceUtil.filterByOsoitetyyppi(yhteystiedot, "kaynti") ==
       List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110"))))
   }
 
@@ -113,23 +113,23 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
       Puhelin(Fi, "050 44042961"),
       Www(Fi, "http://www.salpaus.fi"))
 
-    assert(OppilaitosServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List())
+    assert(OrganisaatioServiceUtil.filterByOsoitetyyppi(yhteystiedot, "posti") == List())
   }
 
   "toOsoite" should "return käyntiosoite in Fi and postinumerokoodiuri" in {
     val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")))
 
-    assert(OppilaitosServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228"), Some("posti_15110"))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228"), Some("posti_15110"))))
   }
 
   it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri" in {
     val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")), OrgOsoite("kaynti", Sv, "Högskolavägen 228", Some("posti_15110")))
 
-    assert(OppilaitosServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some("posti_15110"))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some("posti_15110"))))
   }
 
   it should "return None if there is no osoite" in {
-    assert(OppilaitosServiceUtil.toOsoite(List()) == None)
+    assert(OrganisaatioServiceUtil.toOsoite(List()) == None)
   }
 
   "toYhteystieto" should "return Yhteystieto when given organisaation yhteystiedot from organisaatio-service" in {
@@ -142,7 +142,7 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
       OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110")),
       Www(Fi, "http://www.salpaus.fi"))
 
-    assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
+    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
       Some(Yhteystieto(
         nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
         postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
@@ -158,31 +158,31 @@ class OppilaitosServiceUtilSpec extends UnitSpec {
     val nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en")
     val yhteystiedot = List()
 
-    assert(OppilaitosServiceUtil.toYhteystieto(nimi, yhteystiedot) == None)
+    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot) == None)
   }
 
   "getParentOids" should "return empty list when parentOidPath is empty string" in {
-    assert(OppilaitosServiceUtil.getParentOids("") == List())
+    assert(OrganisaatioServiceUtil.getParentOids("") == List())
   }
 
   it should "return one oid when path consists of one oid" in {
-    assert(OppilaitosServiceUtil.getParentOids("1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
+    assert(OrganisaatioServiceUtil.getParentOids("1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
 
   it should "return one oid when path consists of one oid preceded and followed by |" in {
-    assert(OppilaitosServiceUtil.getParentOids("|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
+    assert(OrganisaatioServiceUtil.getParentOids("|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
 
   it should "return two oids when path consists of two oids preceded and followed by |" in {
-    assert(OppilaitosServiceUtil.getParentOids("|1.2.246.562.10.00000000001|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
+    assert(OrganisaatioServiceUtil.getParentOids("|1.2.246.562.10.00000000001|1.2.246.562.10.44413919323|") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
 
   it should "return two oids when path consists of two oids separated by /" in {
-    assert(OppilaitosServiceUtil.getParentOids("1.2.246.562.10.00000000001/1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
+    assert(OrganisaatioServiceUtil.getParentOids("1.2.246.562.10.00000000001/1.2.246.562.10.44413919323") == List(OrganisaatioOid("1.2.246.562.10.00000000001"), OrganisaatioOid("1.2.246.562.10.44413919323")))
   }
 
   "organisaatioServiceOrgToOrganisaatio" should "return basic organisaatio data with children" in {
-    assert(OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(orgServiceHierarkiaOrganisaatio) == Organisaatio(
+    assert(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(orgServiceHierarkiaOrganisaatio) == Organisaatio(
       oid = TestOids.ChildOid.toString,
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
       oppilaitostyyppiUri = Some("oppilaitostyyppi_64"),
