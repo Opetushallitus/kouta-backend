@@ -38,7 +38,6 @@ kayttooikeus-service.userDetails.byUsername=http://{{host_alb_virkailija}}/kaytt
 organisaatio-service.organisaatio.oid.jalkelaiset=https://{{host_virkailija}}/organisaatio-service/api/$1/jalkelaiset
 organisaatio-service.organisaatio.hierarkia=https://{{host_virkailija}}/organisaatio-service/api/hierarkia/hae
 organisaatio-service.organisaatio.with.oid=https://{{host_virkailija}}/organisaatio-service/api/$1
-organisaatio-service.organisaatio.children=https://{{host_virkailija}}/organisaatio-service/api/$1/children
 organisaatio-service.organisaatiot.with.oids=https://{{host_virkailija}}/organisaatio-service/api/findbyoids
 
 lokalisointi-service.localisation=https://{{host_virkailija}}/lokalisointi/cxf/rest/v1/localisation?category=kouta

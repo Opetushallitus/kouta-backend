@@ -9,7 +9,7 @@ import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, 
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.OppilaitosServiceUtil
+import fi.oph.kouta.util.OrganisaatioServiceUtil
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
 
@@ -48,7 +48,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
       thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid))
 
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
+    val parentOids = OrganisaatioServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
       thenReturn(Seq(
         TestData.organisaatioServiceOrgWithOid.copy(oid = oppilaitosOid),
@@ -86,7 +86,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "allow a user of the oppilaitoksen osa organization to read the oppilaitoksen osa" in {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
       thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid))
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
+    val parentOids = OrganisaatioServiceUtil.getParentOids(TestData.organisaatioServiceOrgChild.parentOidPath)
 
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
       thenReturn(Seq(TestData.organisaatioServiceOrgWithOid.copy(oid = oppilaitosOid)))
@@ -148,7 +148,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
       thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid, parentOidPath = parentOidPath))
 
-    val parentOids = OppilaitosServiceUtil.getParentOids(parentOidPath)
+    val parentOids = OrganisaatioServiceUtil.getParentOids(parentOidPath)
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids))
       .thenThrow(OrganisaatioServiceQueryException(url = s"organisaatio-service/api/$UnknownOid", status = 404, message = "Error"))
 

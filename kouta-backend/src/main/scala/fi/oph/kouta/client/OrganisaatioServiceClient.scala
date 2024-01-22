@@ -4,7 +4,7 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{OrgServiceOrganisaatioHierarkia, OrganisaatioServiceOrg, OrganisaatioHierarkia}
-import fi.oph.kouta.util.{KoutaJsonFormats, OppilaitosServiceUtil}
+import fi.oph.kouta.util.{KoutaJsonFormats, OrganisaatioServiceUtil}
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatra.{MultiParams, Params}
@@ -81,7 +81,7 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
         val parsedOrganisaatioHierarkia = parse(response).extract[OrgServiceOrganisaatioHierarkia]
         OrganisaatioHierarkia(
           organisaatiot = parsedOrganisaatioHierarkia.organisaatiot.map(org =>
-            OppilaitosServiceUtil.organisaatioServiceOrgToOrganisaatio(org))
+            OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(org))
         )
       }
     }
@@ -161,16 +161,6 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
 
   def getOrganisaatiotWithOidsFromCache(oids: Seq[OrganisaatioOid]): Seq[OrganisaatioServiceOrg] = {
     organisaatiotCache.get(oids, oids => getOrganisaatiot(oids))
-  }
-
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Seq[OrganisaatioServiceOrg] = {
-    val url = urlProperties.url(s"organisaatio-service.organisaatio.children", oid)
-
-    get(url, errorHandler, followRedirects = true) {
-      response => {
-        parse(response).extract[Seq[OrganisaatioServiceOrg]]
-      }
-    }
   }
 
   def getOrganisaatioChildrenFromCache(oid: OrganisaatioOid): OrganisaatioHierarkia = {

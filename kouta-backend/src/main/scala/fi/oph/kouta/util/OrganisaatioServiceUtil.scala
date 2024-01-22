@@ -1,12 +1,9 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.service.OrganisaatioServiceImpl
-import org.slf4j.Logger
 
-object OppilaitosServiceUtil {
+object OrganisaatioServiceUtil {
   def getHierarkiaOids(hierarkia: OrganisaatioHierarkia): List[OrganisaatioOid] = {
     hierarkia.organisaatiot.flatMap(org => {
       getOidsFromChildren(org.children) :+ OrganisaatioOid(org.oid)
