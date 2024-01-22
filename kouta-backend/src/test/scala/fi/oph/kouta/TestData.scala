@@ -1819,7 +1819,7 @@ object TestData {
     )),
     kotipaikkaUri = Some("kunta_123"),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63"),
-    kieletUris = List("oppilaitoksenopetuskieli_1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_02"))
   )
 
@@ -1851,7 +1851,7 @@ object TestData {
     )),
     kotipaikkaUri = Some("kunta_123"),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63"),
-    kieletUris = List("oppilaitoksenopetuskieli_1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_1"))
   )
 
