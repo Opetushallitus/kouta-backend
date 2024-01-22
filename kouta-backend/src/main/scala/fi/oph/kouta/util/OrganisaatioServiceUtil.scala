@@ -120,7 +120,7 @@ object OrganisaatioServiceUtil {
         case None => None
       },
       oppilaitostyyppiUri = getOppilaitostyyppiUri(organisaatio),
-      kieletUris = organisaatio.kieletUris.map(kieli => MiscUtils.withoutKoodiVersion(kieli)),
+      kieletUris = organisaatio.kieletUris,
       organisaatiotyyppiUris = getOrganisaatiotyyppiUris(organisaatio)
     )
   }
