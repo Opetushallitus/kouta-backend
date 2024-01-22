@@ -5,7 +5,7 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.security.RoleEntity
-import fi.oph.kouta.util.OppilaitosServiceUtil
+import fi.oph.kouta.util.OrganisaatioServiceUtil
 import org.json4s.jackson.Serialization.read
 
 class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
@@ -157,8 +157,8 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(EvilGrandChildOid)).
       thenReturn(TestData.organisaatioServiceOrgOrganisaationOsa.copy(oid = EvilGrandChildOid.s, parentOidPath = evilParentOidPath))
 
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgOrganisaationOsa.parentOidPath)
-    val evilParentOids = OppilaitosServiceUtil.getParentOids(evilParentOidPath)
+    val parentOids = OrganisaatioServiceUtil.getParentOids(TestData.organisaatioServiceOrgOrganisaationOsa.parentOidPath)
+    val evilParentOids = OrganisaatioServiceUtil.getParentOids(evilParentOidPath)
 
     val oid = put(oppilaitos)
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).

@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
-import com.softwaremill.diffx.{ObjectMatcher, _}
+
+import com.softwaremill.diffx._
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
@@ -9,7 +10,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.util.OppilaitosServiceUtil
+import fi.oph.kouta.util.OrganisaatioServiceUtil
 import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
@@ -124,8 +125,8 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(EvilGrandChildOid)).
       thenReturn(TestData.organisaatioServiceOrgOrganisaationOsa.copy(oid = EvilGrandChildOid.s, parentOidPath = evilParentOidPath))
 
-    val parentOids = OppilaitosServiceUtil.getParentOids(TestData.organisaatioServiceOrgOrganisaationOsa.parentOidPath)
-    val evilParentOids = OppilaitosServiceUtil.getParentOids(evilParentOidPath)
+    val parentOids = OrganisaatioServiceUtil.getParentOids(TestData.organisaatioServiceOrgOrganisaationOsa.parentOidPath)
+    val evilParentOids = OrganisaatioServiceUtil.getParentOids(evilParentOidPath)
 
     when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(parentOids)).
       thenReturn(List(TestData.organisaatioServiceOrg.copy(oid = o1.s)))
