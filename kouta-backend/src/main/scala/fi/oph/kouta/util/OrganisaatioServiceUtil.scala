@@ -35,15 +35,18 @@ object OrganisaatioServiceUtil {
       (osoite.kieli, osoite.osoite)
     }).toMap
 
+    val kielistettyPostinumero = osoitteet.flatMap(osoite => {
+      osoite.postinumeroUri match {
+        case Some(postinumeroUri) => Some(osoite.kieli, postinumeroUri)
+        case None => None
+      }
+    }).toMap
+
     kielistettyOsoite match {
       case _ if kielistettyOsoite.isEmpty => None
       case _ =>
-        val postinumero = osoitteet.map(_.postinumeroUri) match {
-          case Nil => None
-          case x :: _ => Some(x)
-        }
-
-        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = postinumero.get))
+        val kielistettyPnro = if (kielistettyPostinumero.nonEmpty) Some(kielistettyPostinumero) else None
+        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = kielistettyPnro))
     }
   }
 
