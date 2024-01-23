@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 id_file="$HOME/.kouta_localstack"
-localstack_version=2.3.0
+localstack_version=latest
 
 wait_for_ready () {
     echo "Wait for services to be started..."

@@ -1,0 +1,82 @@
+package fi.oph.kouta.integration.fixture
+
+import fi.oph.kouta.integration.KoutaIntegrationSpec
+import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
+import fi.oph.kouta.service.RaportointiService
+import fi.oph.kouta.servlet.RaportointiServlet
+import fi.oph.kouta.util.TimeUtils.renderHttpDate
+import org.json4s.JsonAST.JArray
+import org.json4s.jackson.JsonMethods.parse
+import org.scalatest.Assertion
+
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.time.{Duration, Instant}
+import java.time.temporal.ChronoUnit
+
+trait RaportointiFixture
+    extends KoulutusFixture
+    with ToteutusFixture
+    with HakukohdeFixture
+    with HakuFixture
+    with SorakuvausFixture
+    with ValintaperusteFixture
+    with OppilaitosFixture
+    with OppilaitoksenOsaFixture
+    with KeywordFixture {
+
+  this: KoutaIntegrationSpec =>
+  val RaportointiPath = "/raportointi"
+  val dayBefore       = Some(Instant.now.minus(Duration.of(1, ChronoUnit.DAYS)))
+  val twoDaysBefore   = Some(Instant.now.minus(Duration.of(2, ChronoUnit.DAYS)))
+  val dayAfter        = Some(Instant.now.plus(Duration.of(1, ChronoUnit.DAYS)))
+
+  val siirtotiedostoPalveluClient = new MockSiirtotiedostoPalveluClient()
+  def raportointiService: RaportointiService =
+    new RaportointiService(
+      koulutusService,
+      toteutusService,
+      hakukohdeService,
+      mockOppijanumerorekisteriClient,
+      siirtotiedostoPalveluClient
+    )
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+    addServlet(new RaportointiServlet(raportointiService), RaportointiPath)
+  }
+
+  def get(entityPath: String, startTime: Option[Instant], endTime: Option[Instant], expectedStatusCode: Int): String = {
+    val queryParams = (startTime, endTime) match {
+      case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"
+      case (Some(startTime), None)          => s"?startTime=${dateParam(startTime)}"
+      case (None, Some(endTime))            => s"?endTime=${dateParam(endTime)}"
+      case (_, _)                           => ""
+    }
+    get(s"$RaportointiPath/$entityPath$queryParams", headers = Seq(sessionHeader(raportointiSession))) {
+      status should equal(expectedStatusCode)
+      body
+    }
+  }
+
+  def verifyContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
+    val reportJson = parse(lastRaporttiContent())
+    val contentIds = (0 until reportJson.asInstanceOf[JArray].values.size).map(idx => (reportJson(idx) \ idFieldName).extract[String])
+    contentIds should contain theSameElementsAs checkedIds
+  }
+
+  def verifyKeywordContents(rawList: List[String]): Assertion = {
+    val allLowercase = rawList.map(_.toLowerCase)
+    val sv = allLowercase.map(k => s"${k}_sv")
+    val searchedKeywords = allLowercase ::: sv
+    val reportJson = parse(lastRaporttiContent())
+    val contentIds = (0 until reportJson.asInstanceOf[JArray].values.size).map(idx => (reportJson(idx) \ "arvo").extract[String])
+    contentIds.intersect(searchedKeywords) should contain theSameElementsAs searchedKeywords
+  }
+
+  def nbrOfContentItems(): Int = siirtotiedostoPalveluClient.numberOfContentItems
+  def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
+  def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
+
+  def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)
+}

@@ -10,6 +10,7 @@ import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
+import scala.annotation.tailrec
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
 import scala.concurrent.duration.DurationInt
@@ -57,7 +58,7 @@ case class KoodistoElement(
 object KoodistoUtils {
 
   def removeVersio(koodiUri: String): String = {
-    koodiUri.split("#")(0);
+    koodiUri.split("#")(0)
   }
 
   def getVersio(koodiUri: String): Option[Int] = {
@@ -68,9 +69,9 @@ object KoodistoUtils {
   }
 
   def contains(koodiUri: String, koodistoElements: Seq[KoodistoElement]): Boolean = {
-    val versio = getVersio(koodiUri).getOrElse(Int.MinValue);
-    val base = removeVersio(koodiUri);
-    koodistoElements.exists(element => element.koodiUri.equals(base) && element.versio>=versio);
+    val versio = getVersio(koodiUri).getOrElse(Int.MinValue)
+    val base = removeVersio(koodiUri)
+    koodistoElements.exists(element => element.koodiUri.equals(base) && element.versio>=versio)
   }
 }
 
@@ -87,11 +88,11 @@ class CachedMethod[A, B](cache: Cache[A, B], method: A => Either[KoodistoError, 
         }
       }))
     } catch {
-      case(err: KoodistoError) => Left(err)
+      case err: KoodistoError => Left(err)
     }
   }
 
-  def clearCache() = {
+  def clearCache(): Unit = {
     cache.invalidateAll()
   }
 }
@@ -100,8 +101,9 @@ object KoodistoClient extends KoodistoClient(KoutaConfigurationFactory.configura
 
 class KoodistoClient(urlProperties: OphProperties) extends HttpClient with CallerId with Logging {
 
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
+  @tailrec
   private def getWithRetry[A](url: String, followRedirects: Boolean = false, retries: Int = 1)(parse: String => A): Either[KoodistoError, A] = {
     Try[A] {
       get(url, (url, status, response) => throw KoodistoError(url, Some(status), response), followRedirects)(parse)
@@ -160,7 +162,7 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
       followRedirects = true
     ) { response => parse(response).extract[KoodistoElement] })
 
-  def invalidateCaches() = {
+  def invalidateCaches(): Unit = {
     getKoodistoKoodit.clearCache()
     getYlakoodit.clearCache()
     getRinnasteisetKoodit.clearCache()
