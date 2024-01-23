@@ -536,7 +536,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "succeed when liitteidentoimitusosoite not changed in modify operation, eventhough postinumeroKoodiUri unknown" in {
-    val osoite = Some(LiitteenToimitusosoite(osoite = Osoite(postinumeroKoodiUri = Some("posti_12345#1"))))
+    val osoite = Some(LiitteenToimitusosoite(osoite = Osoite(postinumeroKoodiUri = Some(Map(Fi -> "posti_12345#1")))))
     passesValidation(
       initMockSeq(
         maxWithIds.copy(
@@ -619,7 +619,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       Seq(
         ValintakokeenLisatilaisuudet(
           id = Some(valintaperusteenValintakoeId1),
-          tilaisuudet = Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_12345#1")))))
+          tilaisuudet = Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some(Map(Fi -> "posti_12345#1"))))))
         )
       )
     )

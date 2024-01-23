@@ -30,9 +30,9 @@ object TestData {
   )
 
   val Osoite1: Osoite =
-    Osoite(osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"), postinumeroKoodiUri = Some("posti_04230#2"))
+    Osoite(osoite = Map(Fi -> "Kivatie 1", Sv -> "kivavägen 1"), postinumeroKoodiUri = Some(Map(Fi -> "posti_04230#2")))
   val Osoite2: Osoite =
-    Osoite(osoite = Map(Fi -> "Hauskatie 1", Sv -> "Hauskavägen 1"), postinumeroKoodiUri = Some("posti_61100#2"))
+    Osoite(osoite = Map(Fi -> "Hauskatie 1", Sv -> "Hauskavägen 1"), postinumeroKoodiUri = Some(Map(Fi -> "posti_61100#2")))
   val LiitteenToimitusosoite1 = LiitteenToimitusosoite(
     osoite = Osoite1,
     sahkoposti = Some("foo@bar.fi"),
@@ -1812,8 +1812,8 @@ object TestData {
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
     yhteystiedot = Some(Yhteystieto(
       nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
-      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some("posti_90501"))) ,
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some(Map(Fi -> "posti_90500")))),
+      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some(Map(Fi -> "posti_90501", Sv -> "posti_90502")))),
       puhelinnumero = Map(Fi -> "044 0909090", Sv -> "044 0101010"),
       sahkoposti = Map(Fi -> "virkailija@opisto.fi")
     )),
@@ -1846,7 +1846,7 @@ object TestData {
     nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     yhteystiedot = Some(Yhteystieto(
       nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
-      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some(Map(Fi -> "posti_90500")))),
       puhelinnumero = Map(Fi -> "044 0909090"),
     )),
     kotipaikkaUri = Some("kunta_123"),

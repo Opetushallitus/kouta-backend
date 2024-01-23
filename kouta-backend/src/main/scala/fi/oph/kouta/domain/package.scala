@@ -2,10 +2,11 @@ package fi.oph.kouta
 
 import fi.oph.kouta.client.TutkinnonOsaServiceItem
 import fi.oph.kouta.domain.oid._
+import fi.oph.kouta.service.KoulutusServiceValidation.assertKoodiUritExist
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
-import fi.oph.kouta.validation.Validations.{assertTrue, _}
+import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult}
+import fi.oph.kouta.validation.Validations.{assertKoodistoQueryResult, assertTrue, _}
 import fi.oph.kouta.validation.{
   IsValid,
   JulkaisuValidatableSubEntity,
@@ -881,24 +882,45 @@ package object domain {
       ePerusteId.isDefined && tutkinnonosaViite.isDefined && tutkinnonosaId.isDefined
   }
 
-  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[String]) {
+  private def assertPostinumerokoodiuritValid(
+      koodiUrit: List[String],
+      path: String,
+      vCtx: ValidationContext,
+      koodistoCheckFunc: String => ExternalQueryResult
+  ): IsValid = {
+    validateIfNonEmpty[String](
+      koodiUrit,
+      path,
+      (koodiUri, path) =>
+        assertKoodistoQueryResult(
+          koodiUri,
+          koodistoCheckFunc,
+          path,
+          vCtx,
+          invalidPostiosoiteKoodiUri(koodiUri)
+        )
+    )
+  }
+
+  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[Kielistetty]) {
     def validate(
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
-    ): IsValid =
+    ): IsValid = {
+      val koodiurit = entityWithNewValues.flatMap(_.postinumeroKoodiUri)
+        .flatMap((k: Kielistetty) => Some(k.values.toList))
+
       and(
-        validateIfDefined[String](
-          entityWithNewValues.flatMap(_.postinumeroKoodiUri),
-          koodiUri =>
-            assertKoodistoQueryResult(
-              koodiUri,
-              koodistoCheckFunc,
-              s"$path.postinumeroKoodiUri",
-              vCtx,
-              invalidPostiosoiteKoodiUri(koodiUri)
-            )
+        validateIfDefined[List[String]](
+          koodiurit,
+          koodiurit => assertPostinumerokoodiuritValid(
+            koodiurit,
+            s"$path.postinumeroKoodiUri",
+            vCtx,
+            koodistoCheckFunc
+          )
         ),
         validateIfJulkaistu(
           vCtx.tila,
@@ -908,6 +930,7 @@ package object domain {
           )
         )
       )
+    }
   }
 
   case class KoulutuksenAlkamiskausi(

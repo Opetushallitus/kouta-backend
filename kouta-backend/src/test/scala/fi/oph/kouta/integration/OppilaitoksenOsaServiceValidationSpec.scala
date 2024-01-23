@@ -29,7 +29,7 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
   val min = TestData.MinOppilaitoksenOsa
   val max = TestData.JulkaistuOppilaitoksenOsa
   val maxMetadata = max.metadata.get
-  val invalidOsoite = Some(Osoite1.copy(postinumeroKoodiUri = Some("puppu")))
+  val invalidOsoite = Some(Osoite1.copy(postinumeroKoodiUri = Some(Map(Fi -> "puppu"))))
   def minWithYhteystieto(yt: Yhteystieto): OppilaitoksenOsa =
     min.copy(metadata = Some(OppilaitoksenOsaMetadata(hakijapalveluidenYhteystiedot = Some(yt))))
 
@@ -177,7 +177,7 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
   }
 
   it should "fail if invalid data" in {
-    failsValidation(minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)), "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("puppu"))
+    failsValidation(minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)), "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("puppu"))
   }
 
   it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
