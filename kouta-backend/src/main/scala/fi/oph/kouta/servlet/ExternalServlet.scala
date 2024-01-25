@@ -105,6 +105,8 @@ class ExternalServlet(
   )
   post("/koulutus") {
     if (securityConfiguration.externalApiModifyEnabled) {
+      println("parsedBody")
+      println(parsedBody)
       val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
