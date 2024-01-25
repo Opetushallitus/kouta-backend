@@ -3,15 +3,15 @@ package fi.oph.kouta.mocks
 import fi.oph.kouta.client.SiirtotiedostoPalveluClient
 import org.json4s.jackson.Serialization.write
 
-import java.time.Instant
+import java.time.{Instant, LocalDateTime}
 import scala.collection.mutable.ListBuffer
 
 
 class MockSiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient {
   val contentBuffer: ListBuffer[String] = new ListBuffer[String]();
   override def saveSiirtotiedosto[T](
-      contentStartTime: Option[Instant],
-      contentEndTime: Option[Instant],
+      contentStartTime: Option[LocalDateTime],
+      contentEndTime: Option[LocalDateTime],
       contentType: String,
       content: Seq[T]
   ): String = {

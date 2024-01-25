@@ -4,9 +4,12 @@ import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.service.Pistetieto
 
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 package object raportointi {
+  val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+
   case class YhteyshenkiloRaporttiItem(
       nimi: Kielistetty = Map(),
       titteli: Kielistetty = Map(),

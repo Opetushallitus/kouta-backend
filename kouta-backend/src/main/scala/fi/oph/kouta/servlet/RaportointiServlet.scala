@@ -1,29 +1,33 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.oph.kouta.service.RaportointiService
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import org.scalatra.Ok
 
 import java.net.URLDecoder
-import java.time.Instant
+import java.time.{Instant, LocalDateTime, ZoneId, ZoneOffset}
+import java.time.format.DateTimeFormatter
 import scala.util.{Failure, Success, Try}
 
 class RaportointiServlet(raportointiService: RaportointiService) extends KoutaServlet {
   def this() = this(RaportointiService)
 
+  val DateTimeExample = RaportointiDateTimeFormat.format(LocalDateTime.now())
+
   private def parseDatetime(
       dateTime: Option[String],
       fieldName: String,
-      default: Option[Instant] = None
-  ): Option[Instant] = {
+      default: Option[LocalDateTime] = None
+  ): Option[LocalDateTime] = {
     dateTime match {
       case Some(dateTimeStr) =>
-        Try[Instant] {
-          parseHttpDate(URLDecoder.decode(dateTimeStr, "UTF-8"))
+        Try[LocalDateTime] {
+          LocalDateTime.from(RaportointiDateTimeFormat.parse(dateTimeStr))
         } match {
-          case Success(instantVal) => Some(instantVal)
+          case Success(dateTime) => Some(dateTime)
           case Failure(_)          => throw new IllegalArgumentException(s"Virheellinen $fieldName '$dateTimeStr'")
         }
       case None => default
@@ -33,12 +37,12 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   private def parseTimeRange(
       startTime: Option[String],
       endTime: Option[String],
-      defaultEndTime: Option[Instant]
-  ): (Option[Instant], Option[Instant]) = {
+      defaultEndTime: Option[LocalDateTime]
+  ): (Option[LocalDateTime], Option[LocalDateTime]) = {
     val startTimeVal = parseDatetime(startTime, "alkuaika")
     val endTimeVal   = parseDatetime(endTime, "loppuaika", defaultEndTime)
     (startTimeVal, endTimeVal) match {
-      case (Some(startTimeVal), _) if startTimeVal.isAfter(Instant.now()) =>
+      case (Some(startTimeVal), _) if startTimeVal.isAfter(LocalDateTime.now()) =>
         throw new IllegalArgumentException("Alkuaika ei voi olla tulevaisuudessa")
       case (Some(startTimeVal), Some(endTimeVal)) if startTimeVal.isAfter(endTimeVal) =>
         throw new IllegalArgumentException("Alkuaika ei voi olla loppuajan jälkeen")
@@ -61,7 +65,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -69,7 +73,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -77,7 +81,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/koulutukset") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
     Ok(raportointiService.saveKoulutukset(startTime, endTime))
   }
 
@@ -96,7 +100,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -104,7 +108,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -112,7 +116,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/toteutukset") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveToteutukset(startTime, endTime))
   }
@@ -132,7 +136,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -140,7 +144,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -148,7 +152,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/hakukohteet") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveHakukohteet(startTime, endTime))
   }
@@ -168,7 +172,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -176,7 +180,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -184,7 +188,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/haut") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveHaut(startTime, endTime))
   }
@@ -204,7 +208,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -212,7 +216,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -220,7 +224,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/valintaperusteet") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveValintaperusteet(startTime, endTime))
   }
@@ -240,7 +244,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -248,7 +252,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -256,7 +260,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/sorakuvaukset") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveSorakuvaukset(startTime, endTime))
   }
@@ -276,7 +280,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -284,7 +288,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -292,7 +296,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/oppilaitokset") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveOppilaitokset(startTime, endTime))
   }
@@ -312,7 +316,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -320,7 +324,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -328,7 +332,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/oppilaitoksenosat") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.saveOppilaitoksenOsat(startTime, endTime))
   }
@@ -348,7 +352,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |        - in: query
        |          name: endTime
        |          schema:
@@ -356,7 +360,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${SampleHttpDate}
+       |          example: ${DateTimeExample}
        |      responses:
        |        '200':
        |          description: Ok
@@ -364,7 +368,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   )
   get("/pistehistoria") {
     implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(Instant.now()))
+    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
     Ok(raportointiService.savePistehistoria(startTime, endTime))
   }

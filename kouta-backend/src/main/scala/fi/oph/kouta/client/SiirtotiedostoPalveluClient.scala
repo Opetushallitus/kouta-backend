@@ -1,12 +1,19 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.{KoutaConfigurationFactory, S3Configuration}
+import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.vm.sade.valinta.dokumenttipalvelu.SiirtotiedostoPalvelu
 import fi.oph.kouta.util.KoutaJsonFormats
 import org.json4s.jackson.Serialization.writePretty
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.S3AsyncClient
+import software.amazon.awssdk.services.s3.presigner.S3Presigner
 
 import java.io.ByteArrayInputStream
-import java.time.Instant
+import java.net.URI
+import java.time.{Duration, Instant, LocalDateTime}
 import java.util.{Date, Optional}
 
 object SiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient
@@ -16,18 +23,18 @@ class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
   val siirtotiedostoPalvelu   = new SiirtotiedostoPalvelu(config.region.getOrElse("eu-west-1"), config.transferFileBucket)
 
   def saveSiirtotiedosto[T](
-      contentStartTime: Option[Instant],
-      contentEndTime: Option[Instant],
+      contentStartTime: Option[LocalDateTime],
+      contentEndTime: Option[LocalDateTime],
       contentType: String,
       content: Seq[T]
   ): String = {
     if (content.isEmpty) return "Ei hakutuloksia annetuilla aikarajoilla"
 
     val objectMetadata = siirtotiedostoPalvelu.saveSiirtotiedosto(
-      Optional.ofNullable(contentStartTime.map(Date.from(_)).orNull),
-      Optional.ofNullable(contentEndTime.map(Date.from(_)).orNull),
+      contentStartTime.map(RaportointiDateTimeFormat.format(_)).orNull,
+      contentEndTime.map(RaportointiDateTimeFormat.format(_)).orNull,
       "kouta",
-      Optional.of(contentType),
+      contentType,
       new ByteArrayInputStream(writePretty(content).getBytes())
     )
     s"$contentType, yhteensä ${content.size} kpl tallennettu S3 buckettiin avaimella ${objectMetadata.key}"
