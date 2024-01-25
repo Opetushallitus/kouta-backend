@@ -261,7 +261,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
   it should "fail if invalid postiosoite" in {
     failsValidation(
       minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite)),
-      "metadata.hakijapalveluidenYhteystiedot.postiosoite.postinumeroKoodiUri",
+      "metadata.hakijapalveluidenYhteystiedot.postiosoite.postinumeroKoodiUri[0]",
       invalidPostiosoiteKoodiUri("puppu")
     )
   }
@@ -269,7 +269,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
   it should "fail if invalid kayntiosoite" in {
     failsValidation(
       minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)),
-      "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri",
+      "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri[0]",
       invalidPostiosoiteKoodiUri("puppu")
     )
   }
