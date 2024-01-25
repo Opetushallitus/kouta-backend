@@ -200,6 +200,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       Some(e),
       ValidationContext(tila, kielet, create),
+      koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
     ) match {
       case NoErrors => fail("Expecting validation failure, but it succeeded")
       case errors   => errors should contain theSameElementsAs expected
@@ -210,6 +211,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
+      koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
     ) match {
       case NoErrors =>
       case errors   => fail("Expected no errors, but received: " + errors)
@@ -220,7 +222,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     failsValidation(
       Osoite(postinumeroKoodiUri = Some(Map(Fi -> "posti_99999#2"))),
       Tallennettu,
-      Seq(ValidationError("path.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("posti_99999#2")))
+      Seq(ValidationError("path.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("posti_99999#2")))
     )
   }
 
@@ -382,7 +384,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     failsValidation(
       Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some(Map(Fi -> "puppu"))))),
       Tallennettu,
-      Seq(ValidationError("path.osoite.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("puppu")))
+      Seq(ValidationError("path.osoite.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("puppu")))
     )
   }
 
