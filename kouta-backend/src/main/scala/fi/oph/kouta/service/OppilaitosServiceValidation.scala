@@ -82,6 +82,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
         "metadata.hakijapalveluidenYhteystiedot",
         oppilaitosDiffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     validateIfDefined[Int](m.opiskelijoita, assertNotNegative(_, "metadata.opiskelijoita")),
@@ -187,6 +188,7 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
         "metadata.hakijapalveluidenYhteystiedot",
         diffResolver.newHakijapalveluidenYhteystiedot(),
         vCtx,
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
       )
     ),
     assertTrue(

@@ -1813,7 +1813,7 @@ object TestData {
     yhteystiedot = Some(Yhteystieto(
       nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
       kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some(Map(Fi -> "posti_90500")))),
-      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some(Map(Sv -> "posti_90501")))) ,
+      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some(Map(Fi -> "posti_90501", Sv -> "posti_90502")))),
       puhelinnumero = Map(Fi -> "044 0909090", Sv -> "044 0101010"),
       sahkoposti = Map(Fi -> "virkailija@opisto.fi")
     )),

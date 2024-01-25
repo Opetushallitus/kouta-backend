@@ -48,7 +48,7 @@ case class OppilaitoksenOsaRaporttiItem(
 ) {
   def this(o: OppilaitoksenOsa) = this(
     o.oid,
-    o.oppilaitosOid,
+    o.oppilaitosOid.get,
     o.tila,
     o.esikatselu,
     o.metadata.map(new OppilaitoksenOsaMetadataRaporttiItem(_)),

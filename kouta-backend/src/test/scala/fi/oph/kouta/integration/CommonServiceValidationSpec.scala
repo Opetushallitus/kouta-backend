@@ -220,7 +220,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     failsValidation(
       Osoite(postinumeroKoodiUri = Some(Map(Fi -> "posti_99999#2"))),
       Tallennettu,
-      Seq(ValidationError("path.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("posti_99999#2")))
+      Seq(ValidationError("path.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("posti_99999#2")))
     )
   }
 
@@ -382,7 +382,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     failsValidation(
       Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some(Map(Fi -> "puppu"))))),
       Tallennettu,
-      Seq(ValidationError("path.osoite.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("puppu")))
+      Seq(ValidationError("path.osoite.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("puppu")))
     )
   }
 

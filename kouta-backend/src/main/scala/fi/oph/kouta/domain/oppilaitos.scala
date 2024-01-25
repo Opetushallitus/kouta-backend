@@ -443,7 +443,7 @@ case class Yhteystieto(
     sahkoposti: Kielistetty = Map(),
     www: Kielistetty = Map()
 ) {
-  def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext): IsValid =
+  def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid =
     and(
       validateIfDefined[Osoite](
         postiosoite,
@@ -451,6 +451,7 @@ case class Yhteystieto(
           s"$path.postiosoite",
           entityWithNewValues.flatMap(_.postiosoite),
           vCtx,
+          osoiteKoodistoCheckFunc
         )
       ),
       validateIfDefined[Osoite](
@@ -459,6 +460,7 @@ case class Yhteystieto(
           s"$path.kayntiosoite",
           entityWithNewValues.flatMap(_.kayntiosoite),
           vCtx,
+          osoiteKoodistoCheckFunc
         )
       ),
       validateIfNonEmpty(sahkoposti, s"$path.sahkoposti", assertValidEmail _),

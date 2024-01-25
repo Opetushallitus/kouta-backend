@@ -760,6 +760,7 @@ package object domain {
           s"$path.osoite",
           entityWithNewValues.flatMap(_.osoite),
           vCtx,
+          osoiteKoodistoCheckFunc
         )
       ),
       validateIfDefined[Ajanjakso](aika, _.validate(vCtx, s"$path.aika")),
@@ -882,16 +883,22 @@ package object domain {
   }
 
   private def assertPostinumerokoodiuritValid(
-      koodiurit: List[String],
+      koodiUrit: List[String],
       path: String,
-      vCtx: ValidationContext
+      vCtx: ValidationContext,
+      koodistoCheckFunc: String => ExternalQueryResult
   ): IsValid = {
-    assertKoodiUritExist(
-      koodiurit,
-      PostiosoiteKoodisto,
-      s"$path.postinumeroKoodiUri",
-      invalidPostiosoiteKoodiUri,
-      vCtx
+    validateIfNonEmpty[String](
+      koodiUrit,
+      path,
+      (koodiUri, path) =>
+        assertKoodistoQueryResult(
+          koodiUri,
+          koodistoCheckFunc,
+          path,
+          vCtx,
+          invalidPostiosoiteKoodiUri(koodiUri)
+        )
     )
   }
 
@@ -900,6 +907,7 @@ package object domain {
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
+        koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid = {
       val koodiurit = entityWithNewValues.flatMap(_.postinumeroKoodiUri)
         .flatMap((k: Kielistetty) => Some(k.values.toList))
@@ -909,8 +917,9 @@ package object domain {
           koodiurit,
           koodiurit => assertPostinumerokoodiuritValid(
             koodiurit,
-            path,
-            vCtx
+            s"$path.postinumeroKoodiUri",
+            vCtx,
+            koodistoCheckFunc
           )
         ),
         validateIfJulkaistu(
