@@ -1,12 +1,7 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.raportointi.{
-  HakukohdeLiiteRaporttiItem,
-  HakukohdeRaporttiItem,
-  ValintakoeRaporttiItem,
-  ValintaperusteRaporttiItem
-}
+import fi.oph.kouta.domain.raportointi.{HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
 import fi.oph.kouta.domain.{Ajanjakso, Haku, Koulutus, OppilaitoksenOsa, Oppilaitos, Sorakuvaus, Toteutus}
 import fi.oph.kouta.repository.HakuDAO.getHakuResult
 import fi.oph.kouta.repository.OppilaitoksenOsaDAO.getOppilaitoksenOsaResult
@@ -17,34 +12,34 @@ import fi.oph.kouta.service.Pistetieto
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.Instant
+import java.time.LocalDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 
 trait RaportointiDAO {
-  def listKoulutukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Koulutus]
-  def listToteutukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Toteutus]
-  def listHakukohteet(startTime: Option[Instant], endTime: Option[Instant]): Seq[HakukohdeRaporttiItem]
-  def listHaut(startTime: Option[Instant], endTime: Option[Instant]): Seq[Haku]
-  def listValintaperusteet(startTime: Option[Instant], endTime: Option[Instant]): Seq[ValintaperusteRaporttiItem]
-  def listSorakuvaukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Sorakuvaus]
-  def listOppilaitokset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Oppilaitos]
-  def listOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant]): Seq[OppilaitoksenOsa]
-  def listPistehistoria(startTime: Option[Instant], endTime: Option[Instant]): Seq[Pistetieto]
+  def listKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Koulutus]
+  def listToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Toteutus]
+  def listHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[HakukohdeRaporttiItem]
+  def listHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Haku]
+  def listValintaperusteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[ValintaperusteRaporttiItem]
+  def listSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Sorakuvaus]
+  def listOppilaitokset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Oppilaitos]
+  def listOppilaitoksenOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[OppilaitoksenOsa]
+  def listPistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Pistetieto]
   def listAmmattinimikkeet(): Seq[Keyword]
   def listAsiasanat(): Seq[Keyword]
 }
 
 object RaportointiDAO extends RaportointiDAO with EntitySQL {
-  override def listKoulutukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Koulutus] =
+  override def listKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Koulutus] =
     KoutaDatabase.runBlocking(selectKoulutukset(startTime, endTime))
 
-  override def listToteutukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Toteutus] =
+  override def listToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Toteutus] =
     KoutaDatabase.runBlocking(selectToteutukset(startTime, endTime))
 
-  private def timeLimitsDefined(startTime: Option[Instant], endTime: Option[Instant]) =
+  private def timeLimitsDefined(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]) =
     startTime.isDefined || endTime.isDefined
 
-  override def listHakukohteet(startTime: Option[Instant], endTime: Option[Instant]): Seq[HakukohdeRaporttiItem] = {
+  override def listHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[HakukohdeRaporttiItem] = {
     KoutaDatabase
       .runBlockingTransactionally(for {
         hakukohteet <- selectHakukohteet(startTime, endTime)
@@ -68,7 +63,7 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       .get
   }
 
-  override def listHaut(startTime: Option[Instant], endTime: Option[Instant]): Seq[Haku] =
+  override def listHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Haku] =
     KoutaDatabase
       .runBlockingTransactionally(for {
         haut     <- selectHaut(startTime, endTime)
@@ -84,8 +79,8 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       .get
 
   override def listValintaperusteet(
-      startTime: Option[Instant],
-      endTime: Option[Instant]
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
   ): Seq[ValintaperusteRaporttiItem] =
     KoutaDatabase
       .runBlockingTransactionally(for {
@@ -97,16 +92,16 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       }
       .get
 
-  override def listSorakuvaukset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Sorakuvaus] =
+  override def listSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Sorakuvaus] =
     KoutaDatabase.runBlocking(selectSorakuvaukset(startTime, endTime))
 
-  override def listOppilaitokset(startTime: Option[Instant], endTime: Option[Instant]): Seq[Oppilaitos] =
+  override def listOppilaitokset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Oppilaitos] =
     KoutaDatabase.runBlocking(selectOppilaitokset(startTime, endTime))
 
-  override def listOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant]): Seq[OppilaitoksenOsa] =
+  override def listOppilaitoksenOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[OppilaitoksenOsa] =
     KoutaDatabase.runBlocking(selectOppilaitoksenOsat(startTime, endTime))
 
-  override def listPistehistoria(startTime: Option[Instant], endTime: Option[Instant]): Seq[Pistetieto] =
+  override def listPistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): Seq[Pistetieto] =
     KoutaDatabase.runBlocking(selectPistehistoria(startTime, endTime))
 
   override def listAmmattinimikkeet(): Seq[Keyword] =
@@ -118,8 +113,8 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
 
 sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   def modificationTimeCondition(
-      minModificationTime: Option[Instant],
-      maxModificationTime: Option[Instant],
+      minModificationTime: Option[LocalDateTime],
+      maxModificationTime: Option[LocalDateTime],
       fieldName: String = "last_modified"
   ): String = {
     (minModificationTime, maxModificationTime) match {
@@ -138,7 +133,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     }
   }
 
-  private def selectByTimerange(startTime: Option[Instant], endTime: Option[Instant], selectPart: String, timeField: String, groupBy: String = "") = {
+  private def selectByTimerange(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime], selectPart: String, timeField: String, groupBy: String = "") = {
     val groupByStr = if (!groupBy.isEmpty) s" group by $groupBy" else ""
     (startTime, endTime) match {
       case (Some(startTimeVal), Some(endTimeVal)) =>
@@ -151,7 +146,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     }
   }
 
-  def selectKoulutukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Koulutus]] = {
+  def selectKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[Koulutus]] = {
     val selectPart = s"""select k.oid, k.external_id, k.johtaa_tutkintoon, k.tyyppi, k.koulutukset_koodi_uri, k.tila,
       array_agg(distinct kt.tarjoaja_oid) as koulutuksen_tarjoajat,
       k.nimi, k.sorakuvaus_id, k.metadata, k.julkinen, k.muokkaaja, k.organisaatio_oid, k.esikatselu,
@@ -161,7 +156,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     selectByTimerange(startTime, endTime, selectPart, "k.last_modified", "k.oid").as[Koulutus]
   }
 
-  def selectToteutukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Toteutus]] = {
+  def selectToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[Toteutus]] = {
     val selectPart = s"""select t.oid, t.external_id, t.koulutus_oid, t.tila,
                         array_agg(distinct tt.tarjoaja_oid) as toteutuksen_tarjoajat,
                         t.nimi, t.metadata, t.muokkaaja, t.esikatselu, t.organisaatio_oid, t.kielivalinta, t.teemakuva,
@@ -171,7 +166,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     selectByTimerange(startTime, endTime, selectPart, "t.last_modified", "t.oid").as[Toteutus]
   }
 
-  def selectHakukohteet(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[HakukohdeRaporttiItem]] = {
+  def selectHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[HakukohdeRaporttiItem]] = {
     val selectPart = s"""select oid, external_id, toteutus_oid, haku_oid, tila, nimi, hakukohde_koodi_uri, hakulomaketyyppi,
                 hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, kaytetaan_haun_hakulomaketta,
                 jarjestyspaikka_oid, pohjakoulutusvaatimus_koodi_urit, pohjakoulutusvaatimus_tarkenne,
@@ -209,7 +204,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
            """.as[ValintakoeRaporttiItem]
   }
 
-  def selectHaut(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Haku]] = {
+  def selectHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[Haku]] = {
     val selectPart = s"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja,
                     hakukohteen_muokkaamisen_takaraja, ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi,
                     ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri,
@@ -230,8 +225,8 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   }
 
   def selectValintaperusteet(
-      startTime: Option[Instant],
-      endTime: Option[Instant]
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
   ): DBIO[Seq[ValintaperusteRaporttiItem]] = {
     val selectPart = """select id, external_id, tila, koulutustyyppi, hakutapa_koodi_uri, kohdejoukko_koodi_uri, nimi,
                     julkinen, esikatselu, metadata, organisaatio_oid, muokkaaja, kielivalinta, last_modified
@@ -254,25 +249,25 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
            """.as[ValintakoeRaporttiItem]
   }
 
-  def selectSorakuvaukset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Sorakuvaus]] = {
+  def selectSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[Sorakuvaus]] = {
     val selectPart = """select id, external_id, tila, nimi, koulutustyyppi, kielivalinta,
                        metadata, organisaatio_oid, muokkaaja, lower(system_time) from sorakuvaukset"""
     selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[Sorakuvaus]
   }
 
-  def selectOppilaitokset(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[Oppilaitos]] = {
+  def selectOppilaitokset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[Oppilaitos]] = {
     val selectPart = """select oid, tila, kielivalinta, metadata, muokkaaja, esikatselu, organisaatio_oid, teemakuva,
                     logo, lower(system_time) from oppilaitokset"""
     selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[Oppilaitos]
   }
 
-  def selectOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Seq[OppilaitoksenOsa]] = {
+  def selectOppilaitoksenOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Seq[OppilaitoksenOsa]] = {
     val selectPart = """select oid, oppilaitos_oid, tila, kielivalinta, metadata, muokkaaja, esikatselu,
                     organisaatio_oid, teemakuva, lower(system_time) from oppilaitosten_osat"""
     selectByTimerange(startTime, endTime, selectPart, "lower(system_time)").as[OppilaitoksenOsa]
   }
 
-  def selectPistehistoria(startTime: Option[Instant], endTime: Option[Instant]): DBIO[Vector[Pistetieto]] = {
+  def selectPistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Vector[Pistetieto]] = {
     val selectPart = """select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid,
                     valintatapajono_tyyppi from pistehistoria"""
     selectByTimerange(startTime, endTime, selectPart, "updated").as[Pistetieto]

@@ -57,32 +57,32 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
   }
 
   "Save hakukohteet with given timerange" should "save hakukohteet as requested" in {
-    get("hakukohteet", dayBefore, None, 200)
+    get("hakukohteet", dayBefore, dayAfter, 200)
     verifyContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
   }
 
   "Save haut with given timerange" should "save haut as requested" in {
-    get("haut", dayBefore, dayAfter, 200)
+    get("haut", None, dayAfter, 200)
     verifyContents(Seq(hakuOid1, hakuOid2, hakuOid3), "oid")
   }
 
   "Save sorakuvaukset with given timerange" should "save sorakuvaukset as requested" in {
-    get("sorakuvaukset", None, dayAfter, 200)
+    get("sorakuvaukset", dayBefore, dayAfter, 200)
     verifyContents(Seq(sorakuvausId1.toString, sorakuvausId2.toString, sorakuvausId3.toString), "id")
   }
 
   "Save valintaperusteet with given timerange" should "save valintaperusteet as requested" in {
-    get("valintaperusteet", dayBefore, None, 200)
+    get("valintaperusteet", None, dayAfter, 200)
     verifyContents(Seq(valintaperusteId1.toString, valintaperusteId2.toString, valintaperusteId3.toString), "id")
   }
 
   "Save oppilaitokset with given timerange" should "save oppilaitokset as requested" in {
-    get("oppilaitokset", None, dayAfter, 200)
+    get("oppilaitokset", dayBefore, dayAfter, 200)
     verifyContents(Seq(oppilaitosOid1, oppilaitosOid2, oppilaitosOid3), "oid")
   }
 
   "Save oppilaitoksenosat with given timerange" should "save oppilaitoksenosat as requested" in {
-    get("oppilaitoksenosat", dayBefore, dayAfter, 200)
+    get("oppilaitoksenosat", None, dayAfter, 200)
     verifyContents(Seq(oppilaitoksenOsaOid1, oppilaitoksenOsaOid2, oppilaitoksenOsaOid3), "oid")
   }
 
