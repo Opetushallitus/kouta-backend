@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
 import fi.oph.kouta.service.RaportointiService
@@ -11,7 +12,7 @@ import org.scalatest.Assertion
 
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.time.{Duration, Instant}
+import java.time.{Duration, Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 
 trait RaportointiFixture
@@ -27,9 +28,9 @@ trait RaportointiFixture
 
   this: KoutaIntegrationSpec =>
   val RaportointiPath = "/raportointi"
-  val dayBefore       = Some(Instant.now.minus(Duration.of(1, ChronoUnit.DAYS)))
-  val twoDaysBefore   = Some(Instant.now.minus(Duration.of(2, ChronoUnit.DAYS)))
-  val dayAfter        = Some(Instant.now.plus(Duration.of(1, ChronoUnit.DAYS)))
+  val dayBefore       = Some(LocalDateTime.now.minus(Duration.of(1, ChronoUnit.DAYS)))
+  val twoDaysBefore   = Some(LocalDateTime.now.minus(Duration.of(2, ChronoUnit.DAYS)))
+  val dayAfter        = Some(LocalDateTime.now.plus(Duration.of(1, ChronoUnit.DAYS)))
 
   val siirtotiedostoPalveluClient = new MockSiirtotiedostoPalveluClient()
   def raportointiService: RaportointiService =
@@ -46,7 +47,7 @@ trait RaportointiFixture
     addServlet(new RaportointiServlet(raportointiService), RaportointiPath)
   }
 
-  def get(entityPath: String, startTime: Option[Instant], endTime: Option[Instant], expectedStatusCode: Int): String = {
+  def get(entityPath: String, startTime: Option[LocalDateTime], endTime: Option[LocalDateTime], expectedStatusCode: Int): String = {
     val queryParams = (startTime, endTime) match {
       case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"
       case (Some(startTime), None)          => s"?startTime=${dateParam(startTime)}"
@@ -78,5 +79,7 @@ trait RaportointiFixture
   def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
   def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
 
-  def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)
+  //def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)
+
+  def dateParam(dateTime: LocalDateTime): String = URLEncoder.encode(RaportointiDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)
 }

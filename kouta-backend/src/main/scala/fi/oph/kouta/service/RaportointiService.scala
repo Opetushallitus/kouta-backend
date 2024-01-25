@@ -8,7 +8,7 @@ import fi.oph.kouta.repository.RaportointiDAO
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.NameHelper
 
-import java.time.Instant
+import java.time.LocalDateTime
 
 object RaportointiService
     extends RaportointiService(KoulutusService, ToteutusService, HakukohdeService, OppijanumerorekisteriClient, SiirtotiedostoPalveluClient) {
@@ -29,7 +29,7 @@ class RaportointiService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
 ) {
-  def saveKoulutukset(startTime: Option[Instant], endTime: Option[Instant]) (implicit
+  def saveKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]) (implicit
       authenticated: Authenticated
   ): String = {
     val koulutukset           = RaportointiDAO.listKoulutukset(startTime, endTime).map(k => koulutusService.enrichKoulutus(k))
@@ -38,7 +38,7 @@ class RaportointiService(
 
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "koulutukset", koulutusRaporttiItems)
   }
-  def saveToteutukset(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val toteutukset           = RaportointiDAO.listToteutukset(startTime, endTime).map(t => toteutusService.enrichToteutus(t))
@@ -47,7 +47,7 @@ class RaportointiService(
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "toteutukset", toteutusRaporttiItems)
   }
 
-  def saveHakukohteet(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val hakukohteet = RaportointiDAO
@@ -74,7 +74,7 @@ class RaportointiService(
     Some(NameHelper.generateMuokkaajanNimi(muokkaaja))
   }
 
-  def saveHaut(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val haut = RaportointiDAO
@@ -86,7 +86,7 @@ class RaportointiService(
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "haut", hakuRaporttiItems)
   }
 
-  def saveValintaperusteet(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveValintaperusteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val valintaPerusteet = RaportointiDAO
@@ -95,7 +95,7 @@ class RaportointiService(
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "valintaperusteet", valintaPerusteet)
   }
 
-  def saveSorakuvaukset(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val sorakuvaukset = RaportointiDAO
@@ -112,7 +112,7 @@ class RaportointiService(
     )
   }
 
-  def saveOppilaitokset(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveOppilaitokset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val oppilaitokset = RaportointiDAO
@@ -128,7 +128,7 @@ class RaportointiService(
     )
   }
 
-  def saveOppilaitoksenOsat(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def saveOppilaitoksenOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val oppilaitoksenOsat = RaportointiDAO
@@ -144,7 +144,7 @@ class RaportointiService(
     )
   }
 
-  def savePistehistoria(startTime: Option[Instant], endTime: Option[Instant])(implicit
+  def savePistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
     val pisteHistoria = RaportointiDAO
