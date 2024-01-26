@@ -1,11 +1,11 @@
 package fi.oph.kouta.integration.fixture
 
+import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
 import fi.oph.kouta.service.RaportointiService
 import fi.oph.kouta.servlet.RaportointiServlet
-import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.JsonAST.JArray
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatest.Assertion
@@ -27,6 +27,9 @@ trait RaportointiFixture
     with KeywordFixture {
 
   this: KoutaIntegrationSpec =>
+
+  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+
   val RaportointiPath = "/raportointi"
   val dayBefore       = Some(LocalDateTime.now.minus(Duration.of(1, ChronoUnit.DAYS)))
   val twoDaysBefore   = Some(LocalDateTime.now.minus(Duration.of(2, ChronoUnit.DAYS)))
