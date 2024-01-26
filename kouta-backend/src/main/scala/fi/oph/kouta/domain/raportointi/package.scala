@@ -8,7 +8,7 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 package object raportointi {
-  val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm")
+  val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
   case class YhteyshenkiloRaporttiItem(
       nimi: Kielistetty = Map(),

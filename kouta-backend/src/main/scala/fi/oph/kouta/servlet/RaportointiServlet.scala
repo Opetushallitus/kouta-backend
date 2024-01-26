@@ -65,7 +65,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -73,7 +73,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -100,7 +100,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -108,7 +108,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -136,7 +136,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -144,7 +144,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -172,7 +172,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -180,7 +180,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -208,7 +208,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -216,7 +216,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -244,7 +244,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -252,7 +252,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -280,7 +280,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -288,7 +288,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -316,7 +316,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -324,7 +324,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
@@ -352,7 +352,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            type: string
        |            format: date-time
        |          required: false
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |        - in: query
        |          name: endTime
        |          schema:
@@ -360,7 +360,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |            format: date-time
        |          required: false
        |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: ${DateTimeExample}
+       |          example: '${DateTimeExample}'
        |      responses:
        |        '200':
        |          description: Ok
