@@ -1,6 +1,8 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestOids.{AmmOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, YoOid}
 import fi.oph.kouta.integration.fixture.RaportointiFixture
+
 import java.util.UUID
 
 class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
@@ -10,11 +12,16 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
   var toteutusOid1, toteutusOid2, toteutusOid3: String                         = _
   var hakuOid1, hakuOid2, hakuOid3: String                                     = _
   var hakukohdeOid1, hakukohdeOid2, hakukohdeOid3: String                      = _
-  var oppilaitosOid1, oppilaitosOid2, oppilaitosOid3: String                   = _
-  var oppilaitoksenOsaOid1, oppilaitoksenOsaOid2, oppilaitoksenOsaOid3: String = _
+  val oppilaitosOid1                                                           = YoOid
+  val oppilaitosOid2                                                           = AmmOid
+  val oppilaitosOid3                                                           = LukioOid
+  val oppilaitoksenOsaOid1                                                     = EvilChildOid
+  val oppilaitoksenOsaOid2                                                     = GrandChildOid
+  val oppilaitoksenOsaOid3                                                     = EvilGrandChildOid
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+
     sorakuvausId1 = put(sorakuvaus, ophSession)
     sorakuvausId2 = put(sorakuvaus, ophSession)
     sorakuvausId3 = put(sorakuvaus, ophSession)
@@ -36,12 +43,12 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
       put(withValintaperusteenValintakokeet(hakukohde(toteutusOid2, hakuOid2, valintaperusteId2)), ophSession)
     hakukohdeOid3 =
       put(withValintaperusteenValintakokeet(hakukohde(toteutusOid3, hakuOid3, valintaperusteId3)), ophSession)
-    oppilaitosOid1 = put(oppilaitos, ophSession);
-    oppilaitosOid2 = put(oppilaitos, ophSession);
-    oppilaitosOid3 = put(oppilaitos, ophSession);
-    oppilaitoksenOsaOid1 = put(oppilaitoksenOsa(oppilaitosOid1), ophSession)
-    oppilaitoksenOsaOid2 = put(oppilaitoksenOsa(oppilaitosOid2), ophSession)
-    oppilaitoksenOsaOid3 = put(oppilaitoksenOsa(oppilaitosOid3), ophSession)
+    put(oppilaitos(oppilaitosOid1.s), ophSession)
+    put(oppilaitos(oppilaitosOid2.s), ophSession)
+    put(oppilaitos(oppilaitosOid3.s), ophSession)
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid1.s, oppilaitosOid1.s), ophSession)
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid2.s, oppilaitosOid2.s), ophSession)
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid3.s, oppilaitosOid3.s), ophSession)
     storeAsiasanat()
     storeAmmattinimikkeet()
   }
@@ -78,12 +85,12 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
 
   "Save oppilaitokset with given timerange" should "save oppilaitokset as requested" in {
     get("oppilaitokset", dayBefore, dayAfter, 200)
-    verifyContents(Seq(oppilaitosOid1, oppilaitosOid2, oppilaitosOid3), "oid")
+    verifyContents(Seq(oppilaitosOid1.s, oppilaitosOid2.s, oppilaitosOid3.s), "oid")
   }
 
   "Save oppilaitoksenosat with given timerange" should "save oppilaitoksenosat as requested" in {
     get("oppilaitoksenosat", None, dayAfter, 200)
-    verifyContents(Seq(oppilaitoksenOsaOid1, oppilaitoksenOsaOid2, oppilaitoksenOsaOid3), "oid")
+    verifyContents(Seq(oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s, oppilaitoksenOsaOid3.s), "oid")
   }
 
   "Save ammattinimikkeet" should "save ammattinimikkeet as requested" in {
