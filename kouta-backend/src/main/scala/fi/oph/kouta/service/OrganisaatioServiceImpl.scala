@@ -62,19 +62,17 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     OrganisaatioHierarkia(organisaatiot = filtered)
   }
 
-  private def flattenChildren(organisaatio: Organisaatio): List[Organisaatio] = {
+  private def listDescendants(organisaatio: Organisaatio): List[Organisaatio] = {
     organisaatio.children match {
       case Some(children) =>
-        children ::: children.flatMap(flattenChildren)
+        children ::: children.flatMap(listDescendants)
       case None =>
         List()
     }
   }
 
-  private def flattenOrganisaatiotWithChildren(organisaatiot: List[Organisaatio]): List[(OrganisaatioOid, Organisaatio)] = {
-    organisaatiot.map(organisaatio =>
-      (OrganisaatioOid(organisaatio.oid), organisaatio.copy(children = Some(flattenChildren(organisaatio))))
-    )
+  private def flattenOrganisaatioWithChildren(organisaatio: Organisaatio): (OrganisaatioOid, Organisaatio) = {
+    (OrganisaatioOid(organisaatio.oid), organisaatio.copy(children = Some(listDescendants(organisaatio))))
   }
 
   def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
@@ -82,9 +80,9 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
       organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
     } match {
       case Success(organisaatioHierarkia: OrganisaatioHierarkia) =>
-        val orgs = flattenOrganisaatiotWithChildren(organisaatioHierarkia.organisaatiot)
-
-        val children = if (orgs.nonEmpty) orgs.head._2.children.getOrElse(List()) else List()
+        val children = if (organisaatioHierarkia.organisaatiot.nonEmpty) {
+          flattenOrganisaatioWithChildren(organisaatioHierarkia.organisaatiot.head)._2.children.getOrElse(List())
+        } else List()
 
         Right(children)
       case Failure(exception) => Left(exception)
