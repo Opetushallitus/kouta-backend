@@ -87,9 +87,8 @@ object OppijanumerorekisteriClient
     try {
       OppijanumeroCache.get(oid, oid => getHenkilö(oid))
     } catch {
-      case e: Throwable =>
-        logger.error(s"Error fetching henkilö data from oppijarekisteri-service: $e")
-        Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+      case _: CasClientException => Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
+      case error: Throwable => throw error
     }
   }
 }
