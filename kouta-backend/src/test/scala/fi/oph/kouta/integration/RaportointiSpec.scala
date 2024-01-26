@@ -1,6 +1,8 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.TestOids.{AmmOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, YoOid}
+import fi.oph.kouta.TestData
+import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, OphOid, ParentOid, YoOid}
+import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.fixture.RaportointiFixture
 
 import java.util.UUID
@@ -12,12 +14,12 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
   var toteutusOid1, toteutusOid2, toteutusOid3: String                         = _
   var hakuOid1, hakuOid2, hakuOid3: String                                     = _
   var hakukohdeOid1, hakukohdeOid2, hakukohdeOid3: String                      = _
-  val oppilaitosOid1                                                           = YoOid
+  val oppilaitosOid1                                                           = ChildOid
   val oppilaitosOid2                                                           = AmmOid
   val oppilaitosOid3                                                           = LukioOid
-  val oppilaitoksenOsaOid1                                                     = EvilChildOid
-  val oppilaitoksenOsaOid2                                                     = GrandChildOid
-  val oppilaitoksenOsaOid3                                                     = EvilGrandChildOid
+  val oppilaitoksenOsaOid1                                                     = EvilChildOid.s
+  val oppilaitoksenOsaOid2                                                     = GrandChildOid.s
+  val oppilaitoksenOsaOid3                                                     = EvilGrandChildOid.s
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -46,9 +48,22 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
     put(oppilaitos(oppilaitosOid1.s), ophSession)
     put(oppilaitos(oppilaitosOid2.s), ophSession)
     put(oppilaitos(oppilaitosOid3.s), ophSession)
-    put(oppilaitoksenOsa(oppilaitoksenOsaOid1.s, oppilaitosOid1.s), ophSession)
-    put(oppilaitoksenOsa(oppilaitoksenOsaOid2.s, oppilaitosOid2.s), ophSession)
-    put(oppilaitoksenOsa(oppilaitoksenOsaOid3.s, oppilaitosOid3.s), ophSession)
+
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid1))).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid1))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid2))).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid2))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid3))).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid3))
+    val oph = TestData.organisaatioServiceOrg.copy(oid = OphOid.s)
+    val parent = TestData.organisaatioServiceOrg.copy(oid = ParentOid.s)
+    val child = TestData.organisaatioServiceOrg.copy(oid = ChildOid.s)
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(Seq(ChildOid, ParentOid, OphOid))).
+      thenReturn(Seq(child, parent, oph))
+
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid1).copy(oppilaitosOid = Some(oppilaitosOid1)), ophSession)
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid2).copy(oppilaitosOid = Some(oppilaitosOid2)), ophSession)
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid3).copy(oppilaitosOid = Some(oppilaitosOid3)), ophSession)
     storeAsiasanat()
     storeAmmattinimikkeet()
   }
@@ -90,7 +105,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
 
   "Save oppilaitoksenosat with given timerange" should "save oppilaitoksenosat as requested" in {
     get("oppilaitoksenosat", None, dayAfter, 200)
-    verifyContents(Seq(oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s, oppilaitoksenOsaOid3.s), "oid")
+    verifyContents(Seq(oppilaitoksenOsaOid1, oppilaitoksenOsaOid2, oppilaitoksenOsaOid3), "oid")
   }
 
   "Save ammattinimikkeet" should "save ammattinimikkeet as requested" in {
