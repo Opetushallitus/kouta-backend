@@ -269,7 +269,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
 
   def selectPistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]): DBIO[Vector[Pistetieto]] = {
     val selectPart = """select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid,
-                    valintatapajono_tyyppi from pistehistoria"""
+                    valintatapajono_tyyppi, aloituspaikat, ensisijaisesti_hakeneet from pistehistoria"""
     selectByTimerange(startTime, endTime, selectPart, "updated").as[Pistetieto]
   }
 
