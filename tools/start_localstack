@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 id_file="$HOME/.kouta_localstack"
-localstack_version=1.0.4
+localstack_version=2.3.0
 
 wait_for_ready () {
     echo "Wait for services to be started..."
@@ -40,7 +40,7 @@ create_queues () {
 
 start_container() {
     echo "Starting Localstack container"
-    docker run -d -p 4566:4566 localstack/localstack:${localstack_version} > ${id_file}
+    docker run -e "SKIP_SSL_CERT_DOWNLOAD=1" -e "SKIP_INFRA_DOWNLOADS=1" -e "DISABLE_EVENTS=1" -d -p 4566:4566 localstack/localstack:${localstack_version} > ${id_file}
     echo "Container started"
 }
 

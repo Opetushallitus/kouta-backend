@@ -80,7 +80,6 @@ object OppijanumerorekisteriClient
       case error: CasClientException =>
         logger.error(s"Authentication to CAS failed: ${error}")
         throw error
-
     }
   }
 

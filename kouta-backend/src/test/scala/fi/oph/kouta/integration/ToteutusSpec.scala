@@ -1124,7 +1124,7 @@ class ToteutusSpec
 
     val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
 
-    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid))
+    val lastModified = get(julkaistuToteutusOid2, toteutus(julkaistuToteutusOid2, koulutusOid))
     val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, ophSession, 200)
 
     val arkistoituToteutus1 = julkaistuToteutus1.copy(

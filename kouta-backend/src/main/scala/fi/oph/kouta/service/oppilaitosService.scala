@@ -10,7 +10,7 @@ import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.{NameHelper, OppilaitosServiceUtil, ServiceUtils}
+import fi.oph.kouta.util.{NameHelper, OrganisaatioServiceUtil, ServiceUtils}
 import slick.dbio.DBIO
 
 import java.time.Instant
@@ -34,23 +34,37 @@ class OppilaitosService(
   val teemakuvaPrefix = "oppilaitos-teemakuva"
   val logoPrefix = "oppilaitos-logo"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(Oppilaitos, Instant)] = {
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
+    val organisaatio = organisaatioService.getOrganisaatio(oid) match {
+      case Right(organisaatio) =>
+        val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
+        Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
+      case Left(_) => None
+    }
 
-    val enrichedOppilaitos = oppilaitosWithTime match {
-      case Some((o, i)) => {
+    oppilaitosWithTime match {
+      case Some((o, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
-      }
-      case None => None
+        val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
+          muokkaajanNimi = Some(muokkaajanNimi),
+          organisaatio = organisaatio))), i))
+        authorized match {
+          case Some((o: Oppilaitos, i: Instant)) => Some((o, Some(i)))
+          case _ => None
+        }
+      case None =>
+        Some(OppilaitosWithOrganisaatioData(
+          oid = oid,
+          _enrichedData = Some(
+            OppilaitosEnrichedData(organisaatio = organisaatio))), None)
     }
-    authorizeGet(enrichedOppilaitos)
   }
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
     val hierarkia = organisaatioService.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
-    val oids = OppilaitosServiceUtil.getHierarkiaOids(hierarkia)
+    val oids = OrganisaatioServiceUtil.getHierarkiaOids(hierarkia)
     val oppilaitokset = oppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
 
     val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
@@ -163,7 +177,7 @@ class OppilaitoksenOsaService(
   sqsInTransactionService: SqsInTransactionService,
   val s3ImageService: S3ImageService,
   auditLog: AuditLog,
-  val organisaatioService: OrganisaatioService,
+  val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
   kayttooikeusClient: KayttooikeusClient,
   oppilaitosServiceValidation: OppilaitosServiceValidation,
@@ -175,18 +189,32 @@ class OppilaitoksenOsaService(
 
   val teemakuvaPrefix = "oppilaitoksen-osa-teemakuva"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitoksenOsa, Instant)] = {
+  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
+    val organisaatio = organisaatioService.getOrganisaatio(oid) match {
+      case Right(organisaatio) =>
+        val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
+        Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
+      case Left(_) => None
+    }
 
-    val enrichedOppilaitoksenOsa = oppilaitoksenOsaWithTime match {
-      case Some((o, i)) => {
+    oppilaitoksenOsaWithTime match {
+      case Some((o, i)) =>
         val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(o.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some(muokkaajanNimi)))), i)
-      }
-      case None => None
+        val authorized = authorizeGet(Some(o.copy(_enrichedData = Some(OppilaitosEnrichedData(
+          muokkaajanNimi = Some(muokkaajanNimi),
+          organisaatio = organisaatio))), i))
+        authorized match {
+          case Some((o: OppilaitoksenOsa, i: Instant)) => Some((o, Some(i)))
+          case _ => None
+        }
+      case None =>
+        Some(OppilaitosWithOrganisaatioData(
+          oid = oid,
+          _enrichedData = Some(
+            OppilaitosEnrichedData(organisaatio = organisaatio))), None)
     }
-    authorizeGet(enrichedOppilaitoksenOsa)
   }
 
   private def enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa: OppilaitoksenOsa) : Option[OppilaitoksenOsaMetadata] = {
@@ -200,8 +228,25 @@ class OppilaitoksenOsaService(
   }
 
   def put(oppilaitoksenOsa: OppilaitoksenOsa)(implicit authenticated: Authenticated): OrganisaatioOid = {
+    val organisaatio = organisaatioService.getOrganisaatio(oppilaitoksenOsa.oid) match {
+      case Right(organisaatio: OrganisaatioServiceOrg) =>
+        val parentOrgOids = OrganisaatioServiceUtil.getParentOids(organisaatio.parentOidPath)
+        val parentOrgs = organisaatioService.getOrganisaatiot(parentOrgOids)
+        parentOrgs match {
+          case Right(organisaatiot) =>
+            organisaatiot.find(_.isOppilaitos)
+          case Left(e) =>
+            logger.error(s"Error when getting data from organisaatio-service: $e")
+            throw e
+        }
+
+      case Left(e) =>
+        logger.error(s"Error when getting data from organisaatio-service: $e")
+        throw e
+    }
+
     val enrichedMetadata: Option[OppilaitoksenOsaMetadata] = enrichOppilaitoksenOsaMetadata(oppilaitoksenOsa)
-    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(metadata = enrichedMetadata)
+    val enrichedOppilaitoksenOsa = oppilaitoksenOsa.copy(oppilaitosOid = Some(OrganisaatioOid(organisaatio.get.oid)), metadata = enrichedMetadata)
 
     authorizePut(enrichedOppilaitoksenOsa) { o =>
       oppilaitoksenOsaServiceValidation.withValidation(o, None, authenticated) { o =>

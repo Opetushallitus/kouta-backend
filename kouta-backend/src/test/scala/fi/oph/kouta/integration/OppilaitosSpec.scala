@@ -1,7 +1,9 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.{organisaatio, organisaatioServiceOrgWithOid}
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
@@ -9,30 +11,57 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+import org.json4s.jackson.Serialization.read
 
 import java.time.LocalDateTime
 import java.util.UUID
 
 class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with OppilaitosFixture with OppilaitoksenOsaFixture with UploadFixture {
   override val roleEntities     = Seq(Role.Oppilaitos)
+  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+
+  override def beforeAll(): Unit = {
+    super.beforeAll()
+
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(any[OrganisaatioOid])).thenReturn(OrganisaatioHierarkia(organisaatiot = List()))
+  }
 
   def organisaatioHierarkia(oid: String) = OrganisaatioHierarkia(
     List(
       Organisaatio(
         oid,
-        s"""${oid}/1.2.246.562.10.47941294986/1.2.246.562.10.00000000001""",
-        Some("oppilaitostyyppi_63#1"),
+        List(OrganisaatioOid(oid), OrganisaatioOid("1.2.246.562.10.47941294986"), OrganisaatioOid("1.2.246.562.10.00000000001")),
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
-        "AKTIIVINEN",
-        Some("kunta_837"),
-        List(),
-        List("organisaatiotyyppi_02"))))
+        kieletUris = List(),
+        yhteystiedot = None,
+        kotipaikkaUri = None,
+        children = None,
+        oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
+        Some(List("organisaatiotyyppi_02")))))
 
-  "Get oppilaitos by oid" should "return 404 if oppilaitos not found" in {
-    get(s"$OppilaitosPath/${UUID.randomUUID()}", headers = defaultHeaders) {
-      status should equal (404)
-      body should include ("Unknown organisaatio oid")
+  val notSavedInKoutaOrgOid = OrganisaatioOid("1.2.246.562.10.404")
+
+  "Get oppilaitos by oid" should "return only oid and yhteystiedot in _enrichedData for oppilaitos that hasn't been stored in kouta" in {
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(notSavedInKoutaOrgOid)).
+      thenReturn(organisaatioServiceOrgWithOid.copy(oid = notSavedInKoutaOrgOid.s))
+
+    val expected = OppilaitosWithOrganisaatioData(
+      oid = notSavedInKoutaOrgOid,
+      _enrichedData = Some(OppilaitosEnrichedData(
+        muokkaajanNimi = None,
+        organisaatio = Some(TestData.organisaatio.copy(oid = notSavedInKoutaOrgOid.s)))))
+
+    get(s"$OppilaitosPath/${notSavedInKoutaOrgOid.toString()}", headers = Seq(sessionHeader(defaultSessionId))) {
+      read[OppilaitosWithOrganisaatioData](body) should equal(expected)
     }
+  }
+
+  it should "return oppilaitos without organisaatio data if organisaatio not found" in {
+    val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenThrow(new RuntimeException())
+
+    get(oid, oppilaitos(oid))
   }
 
   it should "return 401 if no session is found" in {
@@ -43,42 +72,90 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "allow a user of the oppilaitos organization to read the oppilaitos" in {
     val oid = put(oppilaitos)
-    get(oid, crudSessions(oppilaitos.organisaatioOid), oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, crudSessions(oppilaitos.organisaatioOid), oppilaitosWithEnrichedData)
   }
 
   it should "deny a user without access to the oppilaitos organization" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
     get(s"$OppilaitosPath/$oid", crudSessions(LonelyOid), 403)
   }
 
   it should "allow a user of an ancestor organization to read the oppilaitos" in {
     val oid = put(oppilaitos)
-    get(oid, crudSessions(ParentOid), oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, crudSessions(ParentOid), oppilaitosWithEnrichedData)
   }
 
   it should "deny a user with only access to a descendant organization" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
     get(s"$OppilaitosPath/$oid", crudSessions(GrandChildOid), 403)
   }
 
   it should "deny a user with the wrong role" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
     get(s"$OppilaitosPath/$oid", otherRoleSession, 403)
   }
 
   it should "allow indexer access" in {
     val oid = put(oppilaitos)
-    get(oid, indexerSession, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio.copy(children = Some(List(TestData.organisaatioChild))))))
+
+    get(oid, indexerSession, oppilaitosWithEnrichedData)
   }
 
   "Create oppilaitos" should "store oppilaitos" in {
     val oid = put(oppilaitos)
-    get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(
+        organisaatio = Some(organisaatio.copy(children = Some(List(TestData.organisaatioChild))))))
+
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "read muokkaaja from the session" in {
     val oid = put(oppilaitos.copy(muokkaaja = UserOid("random")))
-    get(oid, oppilaitos(oid).copy(muokkaaja = testUser.oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).
+      thenReturn(OrganisaatioHierarkia(organisaatiot = List(TestData.organisaatio.copy(oid = oid, children = Some(List(TestData.organisaatioChild))))))
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .copy(muokkaaja = testUser.oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(
+        organisaatio = Some(organisaatio.copy(children = Some(List(TestData.organisaatioChild))))))
+
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "write create oppilaitos to audit log" in {
@@ -129,9 +206,17 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "copy a temporary teemakuva to a permanent location while creating the oppilaitos" in {
     saveLocalPng("temp/image.png")
-    val oid = put(oppilaitos.withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
+    val oppilaitosWithTeemakuva = oppilaitos.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
+    val oid = put(oppilaitosWithTeemakuva)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    when(mockOrganisaatioServiceClient.getOrganisaatioChildrenFromCache(OrganisaatioOid(oid))).thenReturn(OrganisaatioHierarkia(List()))
 
-    get(oid, oppilaitos(oid).withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png")))
+    val oppilaitosWithEnrichedData = oppilaitosWithTeemakuva
+      .withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png"))
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, oppilaitosWithEnrichedData)
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
@@ -140,15 +225,28 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "not touch a teemakuva that's not in the temporary location" in {
     val oppilaitosWithImage = oppilaitos.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(oppilaitosWithImage)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitosWithImage
+      .copy(oid = OrganisaatioOid(oid))
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
     MockS3Client.storage shouldBe empty
-    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "copy a temporary logo to a permanent location while creating the oppilaitos" in {
     saveLocalPng("temp/image.png")
     val oid = put(oppilaitos.copy(logo = Some(s"$PublicImageServer/temp/image.png")))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
 
-    get(oid, oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png")))
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png"))
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, oppilaitosWithEnrichedData)
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/image.png"))
     MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
@@ -157,47 +255,102 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "not touch a logo that's not in the temporary location" in {
     val oppilaitosWithImage = oppilaitos.copy(logo = Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(oppilaitosWithImage)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitosWithImage
+      .copy(oid = OrganisaatioOid(oid))
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
     MockS3Client.storage shouldBe empty
-    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   "Update oppilaitos" should "update oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
-    update(oppilaitos(oid, Arkistoitu), lastModified)
-    get(oid, oppilaitos(oid, Arkistoitu))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
+    val arkistoituOppilaitos = oppilaitos(oid, Arkistoitu)
+    update(arkistoituOppilaitos, lastModified)
+
+    oppilaitosWithEnrichedData = arkistoituOppilaitos
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "read muokkaaja from the session" in {
     val oid = put(oppilaitos, crudSessions(ChildOid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val userOid = userOidForTestSessionId(crudSessions(ChildOid))
-    val lastModified = get(oid, oppilaitos(oid).copy(muokkaaja = userOid))
-    update(oppilaitos(oid, Arkistoitu).copy(muokkaaja = userOid), lastModified)
-    get(oid, oppilaitos(oid, Arkistoitu).copy(muokkaaja = testUser.oid))
+
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .copy(muokkaaja = userOid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
+
+    val arkistoituOppilaitos = oppilaitos(oid, Arkistoitu)
+    update(arkistoituOppilaitos.copy(muokkaaja = userOid), lastModified)
+
+    oppilaitosWithEnrichedData = arkistoituOppilaitos
+      .copy(muokkaaja = testUser.oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "write oppilaitos update to audit log" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
     MockAuditLogger.clean()
-    update(oppilaitos(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00")), lastModified)
-    get(oid, oppilaitos(oid, Arkistoitu))
+
+    val arkistoituOppilaitos = oppilaitos(oid, Arkistoitu).withModified(LocalDateTime.parse("1000-01-01T12:00:00"))
+    update(arkistoituOppilaitos, lastModified)
+
+    oppilaitosWithEnrichedData = arkistoituOppilaitos
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    get(oid, oppilaitosWithEnrichedData)
     MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", oid, "oppilaitos_update") shouldBe defined
     MockAuditLogger.find("1000-01-01") should not be defined
   }
 
   it should "not update oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
     MockAuditLogger.clean()
-    update(oppilaitos(oid), lastModified, false)
+    update(oppilaitosWithEnrichedData, lastModified, false)
     MockAuditLogger.logs shouldBe empty
-    get(oid, oppilaitos(oid)) should equal (lastModified)
+    get(oid, oppilaitosWithEnrichedData) should equal (lastModified)
   }
 
   it should "return 401 if no session is found" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
     post(OppilaitosPath, bytes(oppilaitos(oid)), Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified)) {
       status should equal (401)
     }
@@ -205,42 +358,60 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "allow a user of the oppilaitos organization to update the oppilaitos" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, false, crudSessions(oppilaitos.organisaatioOid))
   }
 
   it should "deny a user without access to the oppilaitos organization" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, 403, crudSessions(LonelyOid))
   }
 
   it should "allow a user of an ancestor organization to create the oppilaitos" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, false, crudSessions(ParentOid))
   }
 
   it should "deny a user with only access to a descendant organization" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, 403, crudSessions(GrandChildOid))
   }
 
   it should "deny a user with the wrong role" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, 403, readSessions(oppilaitos.organisaatioOid))
   }
 
   it should "deny indexer access" in {
     val oid = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
     val thisOppilaitoksenOsa = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
     val lastModified = get(oid, thisOppilaitoksenOsa)
     update(thisOppilaitoksenOsa, lastModified, 403, indexerSession)
   }
@@ -255,9 +426,19 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "fail update if modified in between get and update" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
     Thread.sleep(1500)
-    update(oppilaitos(oid, Arkistoitu), lastModified)
+
+    val arkistoituOppilaitos = oppilaitos(oid, Arkistoitu)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    update(arkistoituOppilaitos, lastModified)
     post(OppilaitosPath, bytes(oppilaitos(oid)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)
     }
@@ -266,15 +447,28 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
   it should "store and update unfinished oppilaitos" in {
     val unfinishedOppilaitos = TestData.MinOppilaitos
     val oid = put(unfinishedOppilaitos)
-    val lastModified = get(oid, unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), _enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val unfinishedOppilaitosWithYhteystiedot = unfinishedOppilaitos
+      .copy(oid = OrganisaatioOid(oid))
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(muokkaajanNimi = Some("Testi Muokkaaja"), organisaatio = Some(organisaatio)))
+
+    val lastModified = get(oid, unfinishedOppilaitosWithYhteystiedot)
     val newUnfinishedOppilaitos = unfinishedOppilaitos.copy(oid = OrganisaatioOid(oid), organisaatioOid = LonelyOid)
     update(newUnfinishedOppilaitos, lastModified)
-    get(oid, newUnfinishedOppilaitos.copy(_enrichedData = Some(OppilaitosEnrichedData(muokkaajanNimi = Some("Testi Muokkaaja")))))
+
+    val newUnfinishedOppilaitosWithYhteystiedot = newUnfinishedOppilaitos
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(muokkaajanNimi = Some("Testi Muokkaaja"), organisaatio = Some(organisaatio)))
+    get(oid, newUnfinishedOppilaitosWithYhteystiedot)
   }
 
   it should "validate updated oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val lastModified = get(oid, oppilaitos(oid).withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio))))
     post(OppilaitosPath, bytes(oppilaitos(oid).copy(organisaatioOid = OrganisaatioOid("saippua"))), headersIfUnmodifiedSince(lastModified)) {
       withClue(body) {
         status should equal(400)
@@ -285,68 +479,104 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "copy a temporary teemakuva to a permanent location while updating the oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
 
     saveLocalPng("temp/image.png")
-    val oppilaitosWithImage = oppilaitos(oid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
+    update(oppilaitosWithEnrichedData, lastModified)
 
-    update(oppilaitosWithImage, lastModified)
-    get(oid, oppilaitosWithImage.withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png")))
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData
+      .withTeemakuva(Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/image.png"))
+    get(oid, oppilaitosWithEnrichedData)
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/image.png"))
   }
 
   it should "not touch a teemakuva that's not in the temporary location" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
-    val oppilaitosWithImage = oppilaitos(oid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
 
-    update(oppilaitosWithImage, lastModified)
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
+
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+    update(oppilaitosWithEnrichedData, lastModified)
+
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.copy(oid = OrganisaatioOid(oid))
 
     MockS3Client.storage shouldBe empty
-    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "copy a temporary logo to a permanent location while updating the oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
 
     saveLocalPng("temp/image.png")
-    val oppilaitosWithLogo = oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/temp/image.png"))
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.copy(logo = Some(s"$PublicImageServer/temp/image.png"))
+    update(oppilaitosWithEnrichedData, lastModified)
 
-    update(oppilaitosWithLogo, lastModified)
-    get(oid, oppilaitosWithLogo.copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png")))
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData
+      .copy(logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/image.png"))
+    get(oid, oppilaitosWithEnrichedData)
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/image.png"))
   }
 
   it should "not touch a logo that's not in the temporary location" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
-    val oppilaitosWithImage = oppilaitos(oid).copy(logo = Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
 
-    update(oppilaitosWithImage, lastModified)
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
+
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.copy(logo = Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
+    update(oppilaitosWithEnrichedData, lastModified)
+
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData
+      .copy(oid = OrganisaatioOid(oid))
 
     MockS3Client.storage shouldBe empty
-    get(oid, oppilaitosWithImage.copy(oid = OrganisaatioOid(oid)))
+    get(oid, oppilaitosWithEnrichedData)
   }
 
   it should "copy both, a temporary teemakuva and a temporary logo, to a permanent location while updating the oppilaitos" in {
     val oid = put(oppilaitos)
-    val lastModified = get(oid, oppilaitos(oid))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    var oppilaitosWithEnrichedData = oppilaitos(oid)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+    val lastModified = get(oid, oppilaitosWithEnrichedData)
 
     saveLocalPng("temp/teemakuva.png")
     saveLocalPng("temp/logo.png")
-    val oppilaitosWithImages = oppilaitos(oid).copy(
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData.copy(
       teemakuva = Some(s"$PublicImageServer/temp/teemakuva.png"),
       logo = Some(s"$PublicImageServer/temp/logo.png")
     )
+    update(oppilaitosWithEnrichedData, lastModified)
 
-    update(oppilaitosWithImages, lastModified)
-    get(oid, oppilaitosWithImages.copy(
-      teemakuva = Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/teemakuva.png"),
-      logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/logo.png")
-    ))
+    oppilaitosWithEnrichedData = oppilaitosWithEnrichedData
+      .copy(
+        teemakuva = Some(s"$PublicImageServer/oppilaitos-teemakuva/$oid/teemakuva.png"),
+        logo = Some(s"$PublicImageServer/oppilaitos-logo/$oid/logo.png")
+      )
+    get(oid, oppilaitosWithEnrichedData)
 
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-logo/$oid/logo.png"))
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitos-teemakuva/$oid/teemakuva.png"))
@@ -354,8 +584,18 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
 
   it should "not change other oppilaitos while updating teemakuva and logo" in {
     val oid1 = put(oppilaitos)
-    val lastModified1 = get(oid1, oppilaitos(oid1))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid1))).
+      thenReturn(organisaatioServiceOrgWithOid)
+    val createdOppilaitos1 = oppilaitos(oid1)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
+
+    val lastModified1 = get(oid1, createdOppilaitos1)
     val oid2 = put(oppilaitos)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oid2))).
+      thenReturn(organisaatioServiceOrgWithOid)
+
+    val createdOppilaitos2 = oppilaitos(oid2)
+      .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
 
     saveLocalPng("temp/teemakuva.png")
     saveLocalPng("temp/logo.png")
@@ -363,10 +603,9 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       teemakuva = Some(s"$PublicImageServer/temp/teemakuva.png"),
       logo = Some(s"$PublicImageServer/temp/logo.png")
     )
-
     update(oppilaitosWithImages, lastModified1)
 
-    get(oid2, oppilaitos(oid2))
+    get(oid2, createdOppilaitos2)
   }
 
   "Get oppilaitokset by oids" should "not return oppilaitos data for oppilaitos not in kouta" in {

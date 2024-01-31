@@ -132,8 +132,16 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
       parse(response).extract[EPeruste]}
   }
 
-  def getEPerusteCached(ePerusteId: Long): EPeruste = {
-    ePerusteCache.get(ePerusteId, id => getEPeruste(id))
+  def getEPerusteCached(ePerusteId: Long): Option[EPeruste] = {
+    Try[EPeruste] {
+      ePerusteCache.get(ePerusteId, id => getEPeruste(id))
+    } match {
+      case Success(ePeruste: EPeruste) => Some(ePeruste)
+      case Failure(e: KoodistoQueryException) if e.status == 404 =>
+        logger.error(s"Eperuste $ePerusteId was not found from eperusteet-service")
+        None
+      case Failure(e: Exception) => throw e
+    }
   }
 
   private def getKoulutusKoodiUritForEPerusteFromEPerusteetService(ePerusteId: Long): Seq[KoodiUri] = {

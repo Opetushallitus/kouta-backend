@@ -1,10 +1,13 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
+import fi.oph.kouta.client.OrganisaatioServiceQueryException
 import fi.oph.kouta.domain.{OppilaitoksenOsa, Oppilaitos}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OppilaitoksenOsaService, OppilaitosService}
 import org.scalatra.{NotFound, Ok}
+
+import scala.util.{Failure, Success, Try}
 
 class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServlet {
 
@@ -39,7 +42,12 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
 
     oppilaitosService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
+      case Some((oppilaitos, maybeInstant)) =>
+        maybeInstant match {
+          case Some(instant) =>
+            Ok(oppilaitos, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(instant)))
+          case None => Ok(oppilaitos)
+        }
     }
   }
 
@@ -219,7 +227,12 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
 
     oppilaitoksenOsaService.get(OrganisaatioOid(params("oid"))) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
-      case Some((k, l)) => Ok(k, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(l)))
+      case Some((oppilaitoksenOsa, maybeInstant)) =>
+        maybeInstant match {
+          case Some(instant) =>
+            Ok(oppilaitoksenOsa, headers = Map(KoutaServlet.LastModifiedHeader -> createLastModifiedHeader(instant)))
+          case None => Ok(oppilaitoksenOsa)
+        }
     }
   }
 
@@ -255,8 +268,14 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    oppilaitoksenOsaService.put(parsedBody.extract[OppilaitoksenOsa]) match {
-      case oid => Ok("oid" -> oid)
+    Try[OrganisaatioOid] {
+      oppilaitoksenOsaService.put(parsedBody.extract[OppilaitoksenOsa])
+    } match {
+      case Success(oid) => Ok("oid" -> oid)
+      case Failure(exception: OrganisaatioServiceQueryException) if exception.status == 404 =>
+        NotFound("error" -> exception.message)
+      case Failure(e) =>
+        throw e
     }
   }
 
