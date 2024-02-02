@@ -249,13 +249,13 @@ case class Toteutus(
   def withMuokkaaja(oid: UserOid): Toteutus = this.copy(muokkaaja = oid)
 
   def withEnrichedData(enrichedData: ToteutusEnrichedData): Toteutus = this.copy(_enrichedData = Some(enrichedData))
-  def withoutRelatedData(): Toteutus = this.copy(koulutusMetadata = None)
+  def withoutRelatedData(): Toteutus                                 = this.copy(koulutusMetadata = None)
 
   def getEntityDescriptionAllative(): String = "toteutukselle"
   def isAvoinKorkeakoulutus(): Boolean = (metadata match {
-    case Some(m: KkOpintojaksoToteutusMetadata) => m.isAvoinKorkeakoulutus
+    case Some(m: KkOpintojaksoToteutusMetadata)       => m.isAvoinKorkeakoulutus
     case Some(m: KkOpintokokonaisuusToteutusMetadata) => m.isAvoinKorkeakoulutus
-    case _ => None
+    case _                                            => None
   }).getOrElse(false)
 }
 
@@ -296,7 +296,7 @@ object MaybeToteutus {
       t.teemakuva,
       t.modified,
       t.koulutusMetadata,
-      t.koulutuksetKoodiUri,
+      t.koulutuksetKoodiUri
     )
   }
 }
@@ -332,3 +332,13 @@ case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi:
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest
 
 case class OidAndNimi(oid: ToteutusOid, nimi: Kielistetty)
+
+case class ToteutusEnrichmentSourceData(
+    toteutusNimi: Kielistetty = Map(),
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    muokkaaja: UserOid,
+    isLukioToteutus: Boolean = false,
+    lukioLinjat: Seq[LukiolinjaTieto] = Seq(),
+    hasLukioYleislinja: Boolean = false,
+    opintojenLaajuusNumero: Option[Double] = None
+)

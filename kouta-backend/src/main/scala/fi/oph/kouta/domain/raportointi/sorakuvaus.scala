@@ -1,7 +1,17 @@
 package fi.oph.kouta.domain.raportointi
 
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Julkaisutila, Kieli, Kielistetty, Koulutustyyppi, Modified, Sorakuvaus, SorakuvausEnrichedData, SorakuvausMetadata, Tallennettu}
+import fi.oph.kouta.domain.{
+  Julkaisutila,
+  Kieli,
+  Kielistetty,
+  Koulutustyyppi,
+  Modified,
+  Sorakuvaus,
+  SorakuvausEnrichedData,
+  SorakuvausMetadata,
+  Tallennettu
+}
 
 import java.util.UUID
 
@@ -15,36 +25,15 @@ case class SorakuvausRaporttiItem(
     koulutustyyppi: Koulutustyyppi,
     kielivalinta: Seq[Kieli] = Seq(),
     metadata: Option[SorakuvausMetadataRaporttiItem] = None,
-    organisaatioOid: OrganisaatioOid,
+    organisaatioOid: Option[OrganisaatioOid],
     muokkaaja: UserOid,
-    modified: Modified,
-    _enrichedData: Option[SorakuvausEnrichedDataRaporttiItem] = None
-) {
-  def this(s: Sorakuvaus) = this(
-    s.id.getOrElse(UUID.fromString("")),
-    s.externalId,
-    s.tila,
-    s.nimi,
-    s.koulutustyyppi,
-    s.kielivalinta,
-    s.metadata.map(new SorakuvausMetadataRaporttiItem(_)),
-    s.organisaatioOid,
-    s.muokkaaja,
-    s.modified.get,
-    s._enrichedData.map(e => new SorakuvausEnrichedDataRaporttiItem(e.muokkaajanNimi))
-  )
-}
+    modified: Option[Modified],
+    enrichedData: Option[SorakuvausEnrichedDataRaporttiItem] = None
+)
 
 case class SorakuvausMetadataRaporttiItem(
     kuvaus: Kielistetty = Map(),
     koulutusalaKoodiUri: Option[String] = None,
     koulutusKoodiUrit: Seq[String] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) {
-  def this(m: SorakuvausMetadata) = this(
-    m.kuvaus,
-    m.koulutusalaKoodiUri,
-    m.koulutusKoodiUrit,
-    m.isMuokkaajaOphVirkailija
-  )
-}
+)
