@@ -12,80 +12,49 @@ sealed trait KoulutusMetadataRaporttiItem {
   val isMuokkaajaOphVirkailija: Option[Boolean]
 }
 
-case class KoulutusEnrichedDataRaporttiItem(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+case class KoulutusEnrichedDataRaporttiItem(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None) {
+  def this(e: KoulutusEnrichedData) = this(
+    esitysnimi = e.esitysnimi,
+    muokkaajanNimi = e.muokkaajanNimi
+  )
+}
 
 case class KoulutusRaporttiItem(
     oid: KoulutusOid,
     externalId: Option[String] = None,
-    johtaaTutkintoon: Boolean,
+    johtaaTutkintoon: Option[Boolean],
     koulutustyyppi: Koulutustyyppi,
     koulutuksetKoodiUri: Seq[String] = Seq(),
     tila: Julkaisutila = Tallennettu,
-    esikatselu: Boolean = false,
+    esikatselu: Option[Boolean] = None,
     tarjoajat: List[OrganisaatioOid] = List(),
     nimi: Kielistetty = Map(),
     sorakuvausId: Option[UUID] = None,
     metadata: Option[KoulutusMetadataRaporttiItem] = None,
-    julkinen: Boolean = false,
+    julkinen: Option[Boolean] = None,
     muokkaaja: UserOid,
-    organisaatioOid: OrganisaatioOid,
+    organisaatioOid: Option[OrganisaatioOid],
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
     ePerusteId: Option[Long] = None,
-    modified: Modified,
-    _enrichedData: Option[KoulutusEnrichedDataRaporttiItem] = None
-) {
-  def this(k: Koulutus) = {
-    this(
-      k.oid.getOrElse(KoulutusOid("")),
-      k.externalId,
-      k.johtaaTutkintoon,
-      k.koulutustyyppi,
-      k.koulutuksetKoodiUri,
-      k.tila,
-      k.esikatselu,
-      k.tarjoajat,
-      k.nimi,
-      k.sorakuvausId,
-      k.metadata match {
-        case Some(metadata) =>
-          Some(metadata match {
-            case m: AmmatillinenKoulutusMetadata => new AmmatillinenKoulutusMetadataRaporttiItem(m)
-            case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
-              new AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(m)
-            case m: AmmatillinenOsaamisalaKoulutusMetadata => new AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(m)
-            case m: AmmatillinenMuuKoulutusMetadata        => new AmmatillinenMuuKoulutusMetadataRaporttiItem(m)
-            case m: YliopistoKoulutusMetadata              => new YliopistoKoulutusMetadataRaporttiItem(m)
-            case m: AmmattikorkeakouluKoulutusMetadata     => new AmmattikorkeakouluKoulutusMetadataRaporttiItem(m)
-            case m: AmmOpeErityisopeJaOpoKoulutusMetadata  => new AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(m)
-            case m: OpePedagOpinnotKoulutusMetadata        => new OpePedagOpinnotKoulutusMetadataRaporttiItem(m)
-            case m: KkOpintojaksoKoulutusMetadata          => new KkOpintojaksoKoulutusMetadataRaporttiItem(m)
-            case m: KkOpintokokonaisuusKoulutusMetadata    => new KkOpintokokonaisuusKoulutusMetadataRaporttiItem(m)
-            case m: LukioKoulutusMetadata                  => new LukioKoulutusMetadataRaporttiItem(m)
-            case m: TuvaKoulutusMetadata                   => new TuvaKoulutusMetadataRaporttiItem(m)
-            case m: TelmaKoulutusMetadata                  => new TelmaKoulutusMetadataRaporttiItem(m)
-            case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
-              new VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(m)
-            case m: VapaaSivistystyoMuuKoulutusMetadata  => new VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(m)
-            case m: AikuistenPerusopetusKoulutusMetadata => new AikuistenPerusopetusKoulutusMetadataRaporttiItem(m)
-            case m: ErikoislaakariKoulutusMetadata       => new ErikoislaakariKoulutusMetadataRaporttiItem(m)
-            case m: ErikoistumiskoulutusMetadata         => new ErikoistumiskoulutusMetadataRaporttiItem(m)
-            case m: TaiteenPerusopetusKoulutusMetadata   => new TaiteenPerusopetusKoulutusMetadataRaporttiItem(m)
-            case m: MuuKoulutusMetadata                  => new MuuKoulutusMetadataRaporttiItem(m)
+    modified: Option[Modified] = None,
+    enrichedData: Option[KoulutusEnrichedDataRaporttiItem] = None
+)
 
-          })
-        case _ => None
-      },
-      k.julkinen,
-      k.muokkaaja,
-      k.organisaatioOid,
-      k.kielivalinta,
-      k.teemakuva,
-      k.ePerusteId,
-      k.modified.get,
-      k._enrichedData.map(e => KoulutusEnrichedDataRaporttiItem(e.esitysnimi, e.muokkaajanNimi))
-    )
-  }
+case class KoulutusEnrichmentData(
+    oid: KoulutusOid,
+    koulutuksetKoodiUri: Seq[String] = Seq(),
+    metadata: Option[KoulutusMetadata]
+) {
+  def opintojenLaajuusNumero(): Option[Double] =
+    metadata match {
+      case Some(metadata) =>
+        metadata match {
+          case lukioKoulutusMetadata: LukioKoulutusMetadata => lukioKoulutusMetadata.opintojenLaajuusNumero
+          case _ => None
+        }
+      case _ => None
+    }
 }
 
 trait KorkeakoulutusKoulutusMetadataRaporttiItem extends KoulutusMetadataRaporttiItem with LaajuusSingle {
@@ -106,20 +75,7 @@ case class AmmatillinenKoulutusMetadataRaporttiItem(
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None
-) extends KoulutusMetadataRaporttiItem {
-  def this(m: AmmatillinenKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.isMuokkaajaOphVirkailija,
-      m.koulutusalaKoodiUrit,
-      m.tutkintonimikeKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri
-    )
-  }
-}
+) extends KoulutusMetadataRaporttiItem
 
 case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
@@ -127,17 +83,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     tutkinnonOsat: Seq[TutkinnonOsaRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadataRaporttiItem {
-  def this(m: AmmatillinenTutkinnonOsaKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.tutkinnonOsat.map(t => new TutkinnonOsaRaporttiItem(t)),
-      m.isMuokkaajaOphVirkailija
-    )
-  }
-}
+) extends KoulutusMetadataRaporttiItem
 
 case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
@@ -145,17 +91,7 @@ case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     osaamisalaKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadataRaporttiItem {
-  def this(m: AmmatillinenOsaamisalaKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.osaamisalaKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-  }
-}
+) extends KoulutusMetadataRaporttiItem
 
 case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmMuu,
@@ -166,19 +102,7 @@ case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: AmmatillinenMuuKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.kuvaus,
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.opintojenLaajuusNumero,
-      m.isMuokkaajaOphVirkailija
-    )
-  }
-}
+    with LaajuusSingle
 
 case class YliopistoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Yo,
@@ -189,20 +113,7 @@ case class YliopistoKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KorkeakoulutusKoulutusMetadataRaporttiItem {
-  def this(m: YliopistoKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.tutkintonimikeKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-  }
-}
+) extends KorkeakoulutusKoulutusMetadataRaporttiItem
 
 case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amk,
@@ -213,20 +124,7 @@ case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KorkeakoulutusKoulutusMetadataRaporttiItem {
-  def this(m: AmmattikorkeakouluKoulutusMetadata) = {
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.tutkintonimikeKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-  }
-}
+) extends KorkeakoulutusKoulutusMetadataRaporttiItem
 
 case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
@@ -237,19 +135,7 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KorkeakoulutusKoulutusMetadataRaporttiItem {
-  def this(m: AmmOpeErityisopeJaOpoKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.tutkintonimikeKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+) extends KorkeakoulutusKoulutusMetadataRaporttiItem
 
 case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = OpePedagOpinnot,
@@ -260,19 +146,7 @@ case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KorkeakoulutusKoulutusMetadataRaporttiItem {
-  def this(m: OpePedagOpinnotKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.tutkintonimikeKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+) extends KorkeakoulutusKoulutusMetadataRaporttiItem
 
 case class KkOpintojaksoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintojakso,
@@ -287,23 +161,7 @@ case class KkOpintojaksoKoulutusMetadataRaporttiItem(
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None,
     korkeakoulutustyypit: Seq[Korkeakoulutustyyppi] = Seq()
-) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem {
-  def this(m: KkOpintojaksoKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusNumeroMin,
-      m.opintojenLaajuusNumeroMax,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija,
-      m.isAvoinKorkeakoulutus,
-      m.tunniste,
-      m.opinnonTyyppiKoodiUri,
-      m.korkeakoulutustyypit
-    )
-}
+) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem
 
 case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
@@ -318,23 +176,7 @@ case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None,
     korkeakoulutustyypit: Seq[Korkeakoulutustyyppi] = Seq()
-) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem {
-  def this(m: KkOpintokokonaisuusKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusNumeroMin,
-      m.opintojenLaajuusNumeroMax,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija,
-      m.isAvoinKorkeakoulutus,
-      m.tunniste,
-      m.opinnonTyyppiKoodiUri,
-      m.korkeakoulutustyypit
-    )
-}
+) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem
 
 case class LukioKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Lk,
@@ -345,18 +187,7 @@ case class LukioKoulutusMetadataRaporttiItem(
     koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: LukioKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.koulutusalaKoodiUrit,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+    with LaajuusSingle
 
 case class TuvaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Tuva,
@@ -367,18 +198,7 @@ case class TuvaKoulutusMetadataRaporttiItem(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: TuvaKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.linkkiEPerusteisiin,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+    with LaajuusSingle
 
 case class TelmaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Telma,
@@ -389,18 +209,7 @@ case class TelmaKoulutusMetadataRaporttiItem(
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: TelmaKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.linkkiEPerusteisiin,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+    with LaajuusSingle
 
 trait VapaaSivistystyoKoulutusMetadataRaporttiItem extends KoulutusMetadataRaporttiItem with LaajuusSingle {
   val kuvaus: Kielistetty
@@ -417,19 +226,7 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends VapaaSivistystyoKoulutusMetadataRaporttiItem {
-  def this(m: VapaaSivistystyoOpistovuosiKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.kuvaus,
-      m.linkkiEPerusteisiin,
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+) extends VapaaSivistystyoKoulutusMetadataRaporttiItem
 
 case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -440,19 +237,7 @@ case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends VapaaSivistystyoKoulutusMetadataRaporttiItem {
-  def this(m: VapaaSivistystyoMuuKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.kuvaus,
-      m.linkkiEPerusteisiin,
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusNumero,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+) extends VapaaSivistystyoKoulutusMetadataRaporttiItem
 
 case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
@@ -463,18 +248,7 @@ case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumero: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: AikuistenPerusopetusKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.linkkiEPerusteisiin,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.opintojenLaajuusNumero,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+    with LaajuusSingle
 
 case class ErikoislaakariKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoislaakari,
@@ -483,17 +257,7 @@ case class ErikoislaakariKoulutusMetadataRaporttiItem(
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadataRaporttiItem {
-  def this(m: ErikoislaakariKoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.tutkintonimikeKoodiUrit,
-      m.koulutusalaKoodiUrit,
-      m.isMuokkaajaOphVirkailija
-    )
-}
+) extends KoulutusMetadataRaporttiItem
 
 case class ErikoistumiskoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
@@ -506,21 +270,7 @@ case class ErikoistumiskoulutusMetadataRaporttiItem(
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     korkeakoulutustyypit: Seq[Korkeakoulutustyyppi] = Seq()
-) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem {
-  def this(m: ErikoistumiskoulutusMetadata) =
-    this(
-      m.tyyppi,
-      m.kuvaus,
-      m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-      m.erikoistumiskoulutusKoodiUri,
-      m.koulutusalaKoodiUrit,
-      m.opintojenLaajuusyksikkoKoodiUri,
-      m.opintojenLaajuusNumeroMin,
-      m.opintojenLaajuusNumeroMax,
-      m.isMuokkaajaOphVirkailija,
-      m.korkeakoulutustyypit
-    )
-}
+) extends KorkeakoulutusRelatedKoulutusMetadataRaporttiItem
 
 case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
@@ -528,15 +278,7 @@ case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
-) extends KoulutusMetadataRaporttiItem {
-  def this(m: TaiteenPerusopetusKoulutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-    m.linkkiEPerusteisiin,
-    m.isMuokkaajaOphVirkailija
-  )
-}
+) extends KoulutusMetadataRaporttiItem
 
 case class MuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Muu,
@@ -548,15 +290,4 @@ case class MuuKoulutusMetadataRaporttiItem(
     opintojenLaajuusNumeroMax: Option[Double] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadataRaporttiItem
-    with LaajuusMinMax {
-  def this(m: MuuKoulutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-    m.koulutusalaKoodiUrit,
-    m.opintojenLaajuusyksikkoKoodiUri,
-    m.opintojenLaajuusNumeroMin,
-    m.opintojenLaajuusNumeroMax,
-    m.isMuokkaajaOphVirkailija
-  )
-}
+    with LaajuusMinMax

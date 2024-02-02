@@ -1,15 +1,18 @@
 package fi.oph.kouta.integration
 
+import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids.{AmmOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, YoOid}
+import fi.oph.kouta.domain.oid.KoulutusOid
 import fi.oph.kouta.integration.fixture.RaportointiFixture
+import fi.oph.kouta.mocks.LokalisointiServiceMock
 
 import java.util.UUID
 
-class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
+class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with LokalisointiServiceMock {
   var sorakuvausId1, sorakuvausId2, sorakuvausId3: UUID                        = _
   var valintaperusteId1, valintaperusteId2, valintaperusteId3: UUID            = _
-  var koulutusOid1, koulutusOid2, koulutusOid3: String                         = _
-  var toteutusOid1, toteutusOid2, toteutusOid3: String                         = _
+  var koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid: String       = _
+  var toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid: String       = _
   var hakuOid1, hakuOid2, hakuOid3: String                                     = _
   var hakukohdeOid1, hakukohdeOid2, hakukohdeOid3: String                      = _
   val oppilaitosOid1                                                           = YoOid
@@ -21,6 +24,8 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    mockLokalisointiResponse("yleiset.opintopistetta")
+    mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
 
     sorakuvausId1 = put(sorakuvaus, ophSession)
     sorakuvausId2 = put(sorakuvaus, ophSession)
@@ -28,9 +33,11 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
     koulutusOid1 = put(koulutus.copy(sorakuvausId = Some(sorakuvausId1)), ophSession)
     koulutusOid2 = put(koulutus.copy(sorakuvausId = Some(sorakuvausId2)), ophSession)
     koulutusOid3 = put(koulutus.copy(sorakuvausId = Some(sorakuvausId3)), ophSession)
+    lukioKoulutusOid = put(TestData.LukioKoulutus, ophSession)
     toteutusOid1 = put(toteutus(koulutusOid1), ophSession)
     toteutusOid2 = put(toteutus(koulutusOid2), ophSession)
     toteutusOid3 = put(toteutus(koulutusOid3), ophSession)
+    lukioToteutusOid = put(TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioKoulutusOid), nimi = Map()), ophSession)
     hakuOid1 = put(haku, ophSession);
     hakuOid2 = put(haku, ophSession);
     hakuOid3 = put(haku, ophSession);
@@ -55,12 +62,13 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
 
   "Save koulutukset with given timerange" should "save koulutukset as requested" in {
     get("koulutukset", dayBefore, dayAfter, 200)
-    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3), "oid")
+    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
   }
 
   "Save toteutukset with given timerange" should "save toteutukset as requested" in {
     get("toteutukset", None, dayAfter, 200)
-    verifyContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3), "oid")
+    verifyContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
+    println("!!!!!!!!!!!!!!!!!!! " + lastRaporttiContent())
   }
 
   "Save hakukohteet with given timerange" should "save hakukohteet as requested" in {
@@ -83,14 +91,9 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
     verifyContents(Seq(valintaperusteId1.toString, valintaperusteId2.toString, valintaperusteId3.toString), "id")
   }
 
-  "Save oppilaitokset with given timerange" should "save oppilaitokset as requested" in {
-    get("oppilaitokset", dayBefore, dayAfter, 200)
-    verifyContents(Seq(oppilaitosOid1.s, oppilaitosOid2.s, oppilaitosOid3.s), "oid")
-  }
-
-  "Save oppilaitoksenosat with given timerange" should "save oppilaitoksenosat as requested" in {
-    get("oppilaitoksenosat", None, dayAfter, 200)
-    verifyContents(Seq(oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s, oppilaitoksenOsaOid3.s), "oid")
+  "Save oppilaitokset and osat with given timerange" should "save oppilaitokset and osat as requested" in {
+    get("oppilaitoksetJaOsat", dayBefore, dayAfter, 200)
+    verifyContents(Seq(oppilaitosOid1.s, oppilaitosOid2.s, oppilaitosOid3.s, oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s, oppilaitoksenOsaOid3.s), "oid")
   }
 
   "Save ammattinimikkeet" should "save ammattinimikkeet as requested" in {
@@ -105,7 +108,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture {
 
   "Save entities without timerange" should "save entities ok" in {
     get("koulutukset", None, None, 200)
-    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3), "oid")
+    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
   }
 
   "Save entities with invalid time definition" should "return error" in {
