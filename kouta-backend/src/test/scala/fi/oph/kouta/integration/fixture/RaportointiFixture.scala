@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockSiirtotiedostoPalveluClient}
 import fi.oph.kouta.service.RaportointiService
 import fi.oph.kouta.servlet.RaportointiServlet
 import org.json4s.JsonAST.JArray
@@ -50,7 +50,12 @@ trait RaportointiFixture
     addServlet(new RaportointiServlet(raportointiService), RaportointiPath)
   }
 
-  def get(entityPath: String, startTime: Option[LocalDateTime], endTime: Option[LocalDateTime], expectedStatusCode: Int): String = {
+  def get(
+      entityPath: String,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime],
+      expectedStatusCode: Int
+  ): String = {
     val queryParams = (startTime, endTime) match {
       case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"
       case (Some(startTime), None)          => s"?startTime=${dateParam(startTime)}"
@@ -65,24 +70,27 @@ trait RaportointiFixture
 
   def verifyContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
     val reportJson = parse(lastRaporttiContent())
-    val contentIds = (0 until reportJson.asInstanceOf[JArray].values.size).map(idx => (reportJson(idx) \ idFieldName).extract[String])
+    val contentIds =
+      reportJson.asInstanceOf[JArray].values.indices.map(idx => (reportJson(idx) \ idFieldName).extract[String])
     contentIds should contain theSameElementsAs checkedIds
   }
 
   def verifyKeywordContents(rawList: List[String]): Assertion = {
-    val allLowercase = rawList.map(_.toLowerCase)
-    val sv = allLowercase.map(k => s"${k}_sv")
+    val allLowercase     = rawList.map(_.toLowerCase)
+    val sv               = allLowercase.map(k => s"${k}_sv")
     val searchedKeywords = allLowercase ::: sv
-    val reportJson = parse(lastRaporttiContent())
-    val contentIds = (0 until reportJson.asInstanceOf[JArray].values.size).map(idx => (reportJson(idx) \ "arvo").extract[String])
+    val reportJson       = parse(lastRaporttiContent())
+    val contentIds =
+      reportJson.asInstanceOf[JArray].values.indices.map(idx => (reportJson(idx) \ "arvo").extract[String])
     contentIds.intersect(searchedKeywords) should contain theSameElementsAs searchedKeywords
   }
 
-  def nbrOfContentItems(): Int = siirtotiedostoPalveluClient.numberOfContentItems
+  def nbrOfContentItems(): Int      = siirtotiedostoPalveluClient.numberOfContentItems
   def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
   def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
 
   //def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)
 
-  def dateParam(dateTime: LocalDateTime): String = URLEncoder.encode(RaportointiDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)
+  def dateParam(dateTime: LocalDateTime): String =
+    URLEncoder.encode(RaportointiDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)
 }

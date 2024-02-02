@@ -5,7 +5,7 @@ import fi.oph.kouta.client._
 import fi.oph.kouta.client.KoodistoUtils.getVersio
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
@@ -412,14 +412,12 @@ class KoulutusService(
     }
   }
 
-  def enrichKoulutus(koulutus: Koulutus): Koulutus = {
-    val peruste        = koulutus.ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
-    val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(koulutus.nimi, peruste)
-    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(koulutus.muokkaaja)
+  def enrichKoulutus(ePerusteId: Option[Long], nimi: Kielistetty, muokkaajaOid: UserOid): KoulutusEnrichedData = {
+    val peruste        = ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
+    val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(nimi, peruste)
+    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(muokkaajaOid)
     val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-    koulutus.copy(_enrichedData =
-      Some(KoulutusEnrichedData(esitysnimi = enrichedNimi, muokkaajanNimi = Some(muokkaajanNimi)))
-    )
+    KoulutusEnrichedData(esitysnimi = enrichedNimi, muokkaajanNimi = Some(muokkaajanNimi))
   }
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit
@@ -428,7 +426,7 @@ class KoulutusService(
     val koulutusWithTime: Option[(Koulutus, Instant)] = KoulutusDAO.get(oid, tilaFilter)
 
     val enrichedKoulutus = koulutusWithTime match {
-      case Some((k, i)) => Some(enrichKoulutus(k), i)
+      case Some((k, i)) => Some(k.copy(_enrichedData = Some(enrichKoulutus(k.ePerusteId, k.nimi, k.muokkaaja))), i)
       case None => None
     }
 

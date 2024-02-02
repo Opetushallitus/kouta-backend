@@ -2,6 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client._
+import fi.oph.kouta.domain.ToteutusEnrichmentSourceData
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid, UserOid}
@@ -73,42 +74,32 @@ class ToteutusService(
 
   val teemakuvaPrefix: String = "toteutus-teemakuva"
 
-  def generateToteutusEsitysnimi(toteutus: Toteutus): Kielistetty = {
-    val koulutuksetKoodiUri = toteutus.koulutuksetKoodiUri
-    if (
-      !koulutuksetKoodiUri.isEmpty && (isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(
-        koulutuksetKoodiUri
-      ))
-    ) {
-      toteutus.nimi
+  def generateToteutusEsitysnimi(source: ToteutusEnrichmentSourceData): Kielistetty = {
+    val koulutuksetKoodiUri = source.koulutuksetKoodiUri
+    if (isDIAlukiokoulutus(koulutuksetKoodiUri) || isEBlukiokoulutus(koulutuksetKoodiUri)) {
+      source.toteutusNimi
+    } else if (source.isLukioToteutus) {
+      val kaannokset = Map(
+        "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.opintopistetta"),
+        "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKeyFromCache(
+          "toteutuslomake.lukionYleislinjaNimiOsa"
+        )
+      )
+      val painotuksetKaannokset = koodistoService.getKoodistoKaannokset("lukiopainotukset")
+      val koulutustehtavatKaannokset =
+        koodistoService.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
+      val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
+      NameHelper.generateLukioToteutusDisplayName(
+        source,
+        kaannokset,
+        koodistoKaannokset
+      )
     } else {
-      (toteutus.metadata, toteutus.koulutusMetadata) match {
-        case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
-          (toteutusMetadata, koulutusMetadata) match {
-            case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) => {
-              val kaannokset = Map(
-                "yleiset.opintopistetta" -> lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.opintopistetta"),
-                "toteutuslomake.lukionYleislinjaNimiOsa" -> lokalisointiClient.getKaannoksetWithKeyFromCache(
-                  "toteutuslomake.lukionYleislinjaNimiOsa"
-                )
-              )
-              val painotuksetKaannokset = koodistoService.getKoodistoKaannokset("lukiopainotukset")
-              val koulutustehtavatKaannokset =
-                koodistoService.getKoodistoKaannokset("lukiolinjaterityinenkoulutustehtava")
-              val koodistoKaannokset = (painotuksetKaannokset.toSeq ++ koulutustehtavatKaannokset.toSeq).toMap
-              NameHelper.generateLukioToteutusDisplayName(
-                lukioToteutusMetadata,
-                lukioKoulutusMetadata,
-                kaannokset,
-                koodistoKaannokset
-              )
-            }
-            case _ => toteutus.nimi
-          }
-        case _ => toteutus.nimi
-      }
+      source.toteutusNimi
     }
   }
+
+  def generateToteutusEsitysnimi(t: Toteutus): Kielistetty = generateToteutusEsitysnimi(toteutusEnrichmentSourceData(t))
 
   private def withMData(toteutus: Toteutus, toteutusMetadata: ToteutusMetadata): Toteutus =
     toteutus.copy(metadata = Some(toteutusMetadata))
@@ -167,6 +158,7 @@ class ToteutusService(
                     opintojenLaajuusyksikkoKoodiUri = koulutus.get._1.metadata match {
                       case Some(kkOpintojaksoKoulutusMetadata: KkOpintojaksoKoulutusMetadata) =>
                         kkOpintojaksoKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
+                      case _ => None
                     }
                   )
                 )
@@ -185,6 +177,7 @@ class ToteutusService(
                     opintojenLaajuusyksikkoKoodiUri = koulutus.get._1.metadata match {
                       case Some(kkOpintokokonaisuusKoulutusMetadata: KkOpintokokonaisuusKoulutusMetadata) =>
                         kkOpintokokonaisuusKoulutusMetadata.opintojenLaajuusyksikkoKoodiUri
+                      case _ => None
                     }
                   )
                 )
@@ -217,13 +210,34 @@ class ToteutusService(
     }
   }
 
-  def enrichToteutus(toteutus: Toteutus): Toteutus = {
-    val esitysnimi     = generateToteutusEsitysnimi(toteutus)
-    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(toteutus.muokkaaja)
-    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-    toteutus.withEnrichedData(ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))).withoutRelatedData()
-
+  def toteutusEnrichmentSourceData(t: Toteutus): ToteutusEnrichmentSourceData = (t.metadata, t.koulutusMetadata) match {
+    case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
+      (toteutusMetadata, koulutusMetadata) match {
+        case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
+          ToteutusEnrichmentSourceData(
+            t.nimi,
+            t.koulutuksetKoodiUri,
+            t.muokkaaja,
+            isLukioToteutus = true,
+            lukioToteutusMetadata.painotukset ++ lukioToteutusMetadata.erityisetKoulutustehtavat,
+            lukioToteutusMetadata.yleislinja,
+            lukioKoulutusMetadata.opintojenLaajuusNumero
+          )
+        case _ => ToteutusEnrichmentSourceData(t.nimi, t.koulutuksetKoodiUri, t.muokkaaja)
+      }
+    case _ => ToteutusEnrichmentSourceData(t.nimi, t.koulutuksetKoodiUri, t.muokkaaja)
   }
+
+  def enrichToteutus(source: ToteutusEnrichmentSourceData): ToteutusEnrichedData = {
+    val esitysnimi     = generateToteutusEsitysnimi(source)
+    val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(source.muokkaaja)
+    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+    ToteutusEnrichedData(esitysnimi, Some(muokkaajanNimi))
+  }
+
+  private def enrichToteutus(t: Toteutus): Toteutus =
+    t.withEnrichedData(enrichToteutus(toteutusEnrichmentSourceData(t))).withoutRelatedData()
+
   def get(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Toteutus, Instant)] = {

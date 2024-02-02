@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.OidAndChildren
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
@@ -9,7 +8,6 @@ import fi.vm.sade.utils.slf4j.Logging
 import java.time.{Instant, LocalDateTime, ZoneId}
 import java.util.UUID
 import scala.util.Try
-import fi.oph.kouta.service.OrganisaatioService
 
 trait MigrationHelpers extends Logging {
   import org.json4s._
