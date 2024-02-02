@@ -15,6 +15,7 @@ case class OppilaitosOrOsaEnrichedDataRaporttiItem(muokkaajanNimi: Option[String
 
 sealed trait OppilaitosOrOsaMetadataRaporttiItem {
   val wwwSivu: Option[NimettyLinkki]
+  val esittelyvideo: Option[NimettyLinkki]
   val hakijapalveluidenYhteystiedot: Option[YhteystietoRaporttiItem]
   val opiskelijoita: Option[Int]
   val esittely: Kielistetty
@@ -40,6 +41,7 @@ case class OppilaitosOrOsaRaporttiItem(
 case class OppilaitosMetadataRaporttiItem(
     tietoaOpiskelusta: Seq[TietoaOpiskelustaRaporttiItem] = Seq(),
     wwwSivu: Option[NimettyLinkki] = None,
+    esittelyvideo: Option[NimettyLinkki] = None,
     some: Map[String, Option[String]] = Map(),
     hakijapalveluidenYhteystiedot: Option[YhteystietoRaporttiItem] = None,
     esittely: Kielistetty = Map(),
@@ -56,6 +58,7 @@ case class OppilaitosMetadataRaporttiItem(
 
 case class OppilaitoksenOsaMetadataRaporttiItem(
     wwwSivu: Option[NimettyLinkki] = None,
+    esittelyvideo: Option[NimettyLinkki] = None,
     hakijapalveluidenYhteystiedot: Option[YhteystietoRaporttiItem] = None,
     esittely: Kielistetty = Map(),
     kampus: Kielistetty = Map(),
