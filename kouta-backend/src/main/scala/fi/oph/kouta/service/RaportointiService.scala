@@ -1,7 +1,7 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
-import fi.oph.kouta.domain.Hakukohde
+import fi.oph.kouta.domain.{LukiolinjaTieto, ToteutusEnrichmentSourceData}
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.raportointi._
 import fi.oph.kouta.repository.RaportointiDAO
@@ -11,7 +11,13 @@ import fi.oph.kouta.util.NameHelper
 import java.time.LocalDateTime
 
 object RaportointiService
-    extends RaportointiService(KoulutusService, ToteutusService, HakukohdeService, OppijanumerorekisteriClient, SiirtotiedostoPalveluClient) {
+    extends RaportointiService(
+      KoulutusService,
+      ToteutusService,
+      HakukohdeService,
+      OppijanumerorekisteriClient,
+      SiirtotiedostoPalveluClient
+    ) {
   def apply(
       koulutusService: KoulutusService,
       toteutusService: ToteutusService,
@@ -19,7 +25,13 @@ object RaportointiService
       oppijanumerorekisteriClient: OppijanumerorekisteriClient,
       siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
   ): RaportointiService = {
-    new RaportointiService(koulutusService, toteutusService, hakukohdeService, oppijanumerorekisteriClient, siirtotiedostoPalveluClient)
+    new RaportointiService(
+      koulutusService,
+      toteutusService,
+      hakukohdeService,
+      oppijanumerorekisteriClient,
+      siirtotiedostoPalveluClient
+    )
   }
 }
 class RaportointiService(
@@ -29,44 +41,90 @@ class RaportointiService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
 ) {
-  def saveKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime]) (implicit
+  def saveKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val koulutukset           = RaportointiDAO.listKoulutukset(startTime, endTime).map(k => koulutusService.enrichKoulutus(k))
-    val koulutusRaporttiItems = koulutukset.map(k => new KoulutusRaporttiItem(k))
-
-
+    val koulutusRaporttiItems = RaportointiDAO
+      .listKoulutukset(startTime, endTime)
+      .map(k =>
+        k.copy(enrichedData =
+          Some(new KoulutusEnrichedDataRaporttiItem(koulutusService.enrichKoulutus(k.ePerusteId, k.nimi, k.muokkaaja)))
+        )
+      )
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "koulutukset", koulutusRaporttiItems)
   }
+
+  private def lukioLinjat(lukioToteutusMetadata: LukioToteutusMetadataRaporttiItem) =
+    (lukioToteutusMetadata.painotukset ++ lukioToteutusMetadata.erityisetKoulutustehtavat).map(l =>
+      LukiolinjaTieto(l.koodiUri, l.kuvaus)
+    )
+
+  private def toteutusEnrichmentSourceData(t: ToteutusRaporttiItem, k: Option[KoulutusEnrichmentData]) = {
+    val m = t.lukioToteutusMetadata()
+    (k, m) match {
+      case (Some(k), Some(m)) =>
+        ToteutusEnrichmentSourceData(
+          t.nimi,
+          k.koulutuksetKoodiUri,
+          t.muokkaaja.get,
+          isLukioToteutus = true,
+          lukioLinjat(m),
+          m.yleislinja,
+          k.opintojenLaajuusNumero()
+        )
+      case (Some(k), _) => ToteutusEnrichmentSourceData(t.nimi, k.koulutuksetKoodiUri, t.muokkaaja.get)
+      case (_, Some(m)) =>
+        ToteutusEnrichmentSourceData(
+          t.nimi,
+          Seq(),
+          t.muokkaaja.get,
+          isLukioToteutus = true,
+          lukioLinjat(m),
+          m.yleislinja,
+          None
+        )
+      case (_, _) => ToteutusEnrichmentSourceData(t.nimi, Seq(), t.muokkaaja.get)
+    }
+  }
+
   def saveToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val toteutukset           = RaportointiDAO.listToteutukset(startTime, endTime).map(t => toteutusService.enrichToteutus(t))
-    val toteutusRaporttiItems = toteutukset.map(t => new ToteutusRaporttiItem(t))
+    val toteutusRaporttiItems            = RaportointiDAO.listToteutukset(startTime, endTime)
+    val lukioKoulutusOids                = toteutusRaporttiItems.filter(_.isLukioToteutus).map(_.koulutusOid)
+    val lukioKoulutusEnrichmentDataItems = RaportointiDAO.listKoulutusEnrichmentDataItems(lukioKoulutusOids)
+    val toteutusRaporttiItemsEnriched = toteutusRaporttiItems.map(t => {
+      val koulutusEnrichmentData =
+        if (t.isLukioToteutus)
+          lukioKoulutusEnrichmentDataItems.find(_.oid.s == t.koulutusOid.s)
+        else None
+      t.copy(enrichedData =
+        Some(
+          new ToteutusEnrichedDataRaporttiItem(
+            toteutusService.enrichToteutus(toteutusEnrichmentSourceData(t, koulutusEnrichmentData))
+          )
+        )
+      )
+    })
 
-    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "toteutukset", toteutusRaporttiItems)
+    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "toteutukset", toteutusRaporttiItemsEnriched)
   }
 
   def saveHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val hakukohteet = RaportointiDAO
+    val hakukohdeRaporttiItems = RaportointiDAO
       .listHakukohteet(startTime, endTime)
-      .map(hri => {
-        val hakuKohde = Hakukohde(
-          toteutusOid = hri.toteutusOid,
-          nimi = hri.nimi,
-          hakuOid = hri.hakuOid,
-          muokkaaja = hri.muokkaaja,
-          organisaatioOid = hri.organisaatioOid
+      .map(hri =>
+        hri.copy(enrichedData =
+          Some(
+            new HakukohdeEnrichedDataRaporttiItem(
+              hakukohdeService.enrichHakukohde(hri.muokkaaja, hri.nimi, hri.toteutusOid)
+            )
+          )
         )
-        val enrichedData = hakukohdeService.enrichHakukohde(hakuKohde)._enrichedData
-        hri.copy(_enrichedData =
-          enrichedData.map(e => HakukohdeEnrichedDataRaporttiItem(e.esitysnimi, e.muokkaajanNimi))
-        )
-      })
-
-    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "hakukohteet", hakukohteet)
+      )
+    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "hakukohteet", hakukohdeRaporttiItems)
   }
 
   private def getMuokkaajanNimi(userOid: UserOid): Option[String] = {
@@ -77,33 +135,27 @@ class RaportointiService(
   def saveHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val haut = RaportointiDAO
+    val hakuRaporttiItems = RaportointiDAO
       .listHaut(startTime, endTime)
-    val hakuRaporttiItems = haut.map(h =>
-      new HakuRaporttiItem(h).copy(_enrichedData = Some(HakuEnrichedDataRaporttiItem(getMuokkaajanNimi(h.muokkaaja))))
-    )
-
+      .map(h => h.copy(enrichedData = Some(HakuEnrichedDataRaporttiItem(getMuokkaajanNimi(h.muokkaaja)))))
     siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "haut", hakuRaporttiItems)
   }
 
   def saveValintaperusteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val valintaPerusteet = RaportointiDAO
+    val valintaPerusteRaporttiItems = RaportointiDAO
       .listValintaperusteet(startTime, endTime)
-      .map(v => v.copy(_enrichedData = Some(ValintaperusteEnrichedDataRaporttiItem(getMuokkaajanNimi(v.muokkaaja)))))
-    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "valintaperusteet", valintaPerusteet)
+      .map(v => v.copy(enrichedData = Some(ValintaperusteEnrichedDataRaporttiItem(getMuokkaajanNimi(v.muokkaaja)))))
+    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "valintaperusteet", valintaPerusteRaporttiItems)
   }
 
   def saveSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val sorakuvaukset = RaportointiDAO
+    val sorakuvausRaporttiItems = RaportointiDAO
       .listSorakuvaukset(startTime, endTime)
-    val sorakuvausRaporttiItems = sorakuvaukset.map(s =>
-      new SorakuvausRaporttiItem(s)
-        .copy(_enrichedData = Some(SorakuvausEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja))))
-    )
+      .map(s => s.copy(enrichedData = Some(SorakuvausEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja)))))
     siirtotiedostoPalveluClient.saveSiirtotiedosto(
       startTime,
       endTime,
@@ -112,45 +164,26 @@ class RaportointiService(
     )
   }
 
-  def saveOppilaitokset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
+  def saveOppilaitoksetJaOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val oppilaitokset = RaportointiDAO
-      .listOppilaitokset(startTime, endTime)
-    val oppilaitosRaporttiItems = oppilaitokset.map(s =>
-      new OppilaitosRaporttiItem(s)
-        .copy(_enrichedData = Some(OppilaitosEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja))))
-    )
+    val oppilaitosTaiOsaRaporttiItems = RaportointiDAO
+      .listOppilaitoksetAndOsat(startTime, endTime)
+      .map(o => o.copy(enrichedData = Some(OppilaitosOrOsaEnrichedDataRaporttiItem(getMuokkaajanNimi(o.muokkaaja)))))
     siirtotiedostoPalveluClient.saveSiirtotiedosto(
       startTime,
       endTime,
-      "oppilaitokset",oppilaitosRaporttiItems
-    )
-  }
-
-  def saveOppilaitoksenOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    val oppilaitoksenOsat = RaportointiDAO
-      .listOppilaitoksenOsat(startTime, endTime)
-    val oppilaitoksenOsaRaporttiItems = oppilaitoksenOsat.map(s =>
-      new OppilaitoksenOsaRaporttiItem(s)
-        .copy(_enrichedData = Some(OppilaitosEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja))))
-    )
-    siirtotiedostoPalveluClient.saveSiirtotiedosto(
-      startTime,
-      endTime,
-      "oppilaitoksenosat",oppilaitoksenOsaRaporttiItems
+      "oppilaitoksetJaOsat",
+      oppilaitosTaiOsaRaporttiItems
     )
   }
 
   def savePistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    val pisteHistoria = RaportointiDAO
+    val pistetietoRaporttiItems = RaportointiDAO
       .listPistehistoria(startTime, endTime)
-      .map(new PistetietoRaporttiItem(_))
-    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "pistehistoria", pisteHistoria)
+    siirtotiedostoPalveluClient.saveSiirtotiedosto(startTime, endTime, "pistehistoria", pistetietoRaporttiItems)
   }
 
   def saveAmmattinimikkeet()(implicit

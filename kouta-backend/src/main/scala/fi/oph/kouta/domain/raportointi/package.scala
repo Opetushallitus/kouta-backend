@@ -17,30 +17,16 @@ package object raportointi {
       puhelinnumero: Kielistetty = Map(),
       wwwSivu: Kielistetty = Map(),
       wwwSivuTeksti: Kielistetty = Map()
-  ) {
-    def this(y: Yhteyshenkilo) = this(
-      y.nimi,
-      y.titteli,
-      y.sahkoposti,
-      y.puhelinnumero,
-      y.wwwSivu,
-      y.wwwSivuTeksti
-    )
-  }
+  )
 
-  case class LisatietoRaporttiItem(otsikkoKoodiUri: String, teksti: Kielistetty) {
-    def this(l: Lisatieto) = this(l.otsikkoKoodiUri, l.teksti)
-  }
+  case class LisatietoRaporttiItem(otsikkoKoodiUri: String, teksti: Kielistetty)
+
   case class TutkinnonOsaRaporttiItem(
       ePerusteId: Option[Long] = None,
       koulutusKoodiUri: Option[String] = None,
       tutkinnonosaId: Option[Long] = None,
       tutkinnonosaViite: Option[Long] = None
-  ) {
-    def this(t: TutkinnonOsa) = {
-      this(t.ePerusteId, t.koulutusKoodiUri, t.tutkinnonosaId, t.tutkinnonosaViite)
-    }
-  }
+  )
 
   case class ValintakoeMetadataRaporttiItem(
       tietoja: Kielistetty = Map(),
@@ -65,30 +51,21 @@ package object raportointi {
       nimi: Kielistetty = Map(),
       metadata: Option[ValintakoeMetadataRaporttiItem] = None,
       tilaisuudet: Seq[ValintakoetilaisuusRaporttiItem] = Seq(),
-      muokkaaja: String
+      muokkaaja: Option[String]
   )
 
   case class PistetietoRaporttiItem(
-      tarjoaja: OrganisaatioOid,
-      hakukohdekoodi: String,
+      tarjoaja: Option[OrganisaatioOid],
+      hakukohdekoodi: Option[String],
       pisteet: Option[Double],
-      vuosi: String,
+      vuosi: Option[String],
       valintatapajonoOid: Option[String],
-      hakukohdeOid: HakukohdeOid,
-      hakuOid: HakuOid,
-      valintatapajonoTyyppi: Option[String]
-  ) {
-    def this(p: Pistetieto) = this(
-      p.tarjoaja,
-      p.hakukohdekoodi,
-      p.pisteet,
-      p.vuosi,
-      p.valintatapajonoOid,
-      p.hakukohdeOid,
-      p.hakuOid,
-      p.valintatapajonoTyyppi
-    )
-  }
+      hakukohdeOid: Option[HakukohdeOid],
+      hakuOid: Option[HakuOid],
+      valintatapajonoTyyppi: Option[String],
+      aloituspaikat: Option[Int],
+      ensisijaisestiHakeneet: Option[Int]
+  )
 
   case class KoulutuksenAlkamiskausiRaporttiItem(
       alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
@@ -97,14 +74,15 @@ package object raportointi {
       koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
       koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
       koulutuksenAlkamisvuosi: Option[String] = None
-  ) {
-    def this(k: KoulutuksenAlkamiskausi) = this(
-      k.alkamiskausityyppi,
-      k.henkilokohtaisenSuunnitelmanLisatiedot,
-      k.koulutuksenAlkamispaivamaara,
-      k.koulutuksenPaattymispaivamaara,
-      k.koulutuksenAlkamiskausiKoodiUri,
-      k.koulutuksenAlkamisvuosi
-    )
+  )
+
+  sealed trait Organisaatiotyyppi extends EnumType
+
+  object Organisaatiotyyppi extends Enum[Organisaatiotyyppi] {
+    override def name: String = "organisaatiotyyppi"
+    val values = List(Oppilaitos, OppilaitoksenOsa)
   }
+
+  case object Oppilaitos extends Organisaatiotyyppi { val name = "oppilaitos" }
+  case object OppilaitoksenOsa extends Organisaatiotyyppi { val name = "oppilaitoksenOsa" }
 }

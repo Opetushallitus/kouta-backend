@@ -1,8 +1,8 @@
 package fi.oph.kouta.domain.raportointi
 
-import fi.oph.kouta.domain.{AikuistenPerusopetus, AikuistenPerusopetusToteutusMetadata, Ajanjakso, Amk, Amm, AmmMuu, AmmOpeErityisopeJaOpo, AmmOpeErityisopeJaOpoToteutusMetadata, AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisala, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmattikorkeakouluToteutusMetadata, Apuraha, Apurahayksikko, Erikoislaakari, ErikoislaakariToteutusMetadata, Erikoistumiskoulutus, ErikoistumiskoulutusToteutusMetadata, Hakulomaketyyppi, Hakutermi, Julkaisutila, Kieli, Kielistetty, Kielivalikoima, KkOpintojakso, KkOpintojaksoToteutusMetadata, KkOpintokokonaisuus, KkOpintokokonaisuusToteutusMetadata, KoulutuksenAlkamiskausi, Koulutustyyppi, LaajuusMinMax, LaajuusSingle, Lisatieto, Lk, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Maksullisuustyyppi, Modified, Muu, MuuToteutusMetadata, OpePedagOpinnotToteutusMetadata, Opetus, TaiteenPerusopetus, TaiteenPerusopetusToteutusMetadata, Tallennettu, Telma, TelmaToteutusMetadata, Toteutus, Tuva, TuvaToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOpistovuosiToteutusMetadata, Yhteyshenkilo, YliopistoToteutusMetadata, Yo}
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain._
 
 import java.util.UUID
 
@@ -15,71 +15,46 @@ sealed trait ToteutusMetadataRaporttiItem {
   val yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem]
   val isMuokkaajaOphVirkailija: Option[Boolean]
   val hasJotpaRahoitus: Option[Boolean]
-  val isTaydennyskoulutus: Boolean
-  val isTyovoimakoulutus: Boolean
+  val isTaydennyskoulutus: Option[Boolean]
+  val isTyovoimakoulutus: Option[Boolean]
 }
 
-case class ToteutusEnrichedDataRaporttiItem(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+case class ToteutusEnrichedDataRaporttiItem(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None) {
+  def this(e: ToteutusEnrichedData) = this(
+    e.esitysnimi,
+    e.muokkaajanNimi
+  )
+}
 
 case class ToteutusRaporttiItem(
     oid: ToteutusOid,
     externalId: Option[String] = None,
     koulutusOid: KoulutusOid,
     tila: Julkaisutila = Tallennettu,
-    esikatselu: Boolean = false,
+    esikatselu: Option[Boolean] = None,
     tarjoajat: List[OrganisaatioOid] = List(),
     nimi: Kielistetty = Map(),
     metadata: Option[ToteutusMetadataRaporttiItem] = None,
     sorakuvausId: Option[UUID] = None,
-    muokkaaja: UserOid,
-    organisaatioOid: OrganisaatioOid,
+    muokkaaja: Option[UserOid] = None,
+    organisaatioOid: Option[OrganisaatioOid],
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
-    modified: Modified,
-    _enrichedData: Option[ToteutusEnrichedDataRaporttiItem] = None
+    modified: Option[Modified] = None,
+    enrichedData: Option[ToteutusEnrichedDataRaporttiItem] = None
 ) {
-  def this(t: Toteutus) = this(
-    t.oid.getOrElse(ToteutusOid("")),
-    t.externalId,
-    t.koulutusOid,
-    t.tila,
-    t.esikatselu,
-    t.tarjoajat,
-    t.nimi,
-    t.metadata match {
+  def lukioToteutusMetadata(): Option[LukioToteutusMetadataRaporttiItem] =
+    metadata match {
       case Some(metadata) =>
-        Some(metadata match {
-          case m: AmmatillinenToteutusMetadata => new AmmatillinenToteutusMetadataRaporttiItem(m)
-          case m: AmmatillinenTutkinnonOsaToteutusMetadata => new AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem(m)
-          case m: AmmatillinenOsaamisalaToteutusMetadata => new AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(m)
-          case m: AmmatillinenMuuToteutusMetadata => new AmmatillinenMuuToteutusMetadataRaporttiItem(m)
-          case m: YliopistoToteutusMetadata => new YliopistoToteutusMetadataRaporttiItem(m)
-          case m: AmmattikorkeakouluToteutusMetadata => new AmmattikorkeakouluToteutusMetadataRaporttiItem(m)
-          case m: AmmOpeErityisopeJaOpoToteutusMetadata => new AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(m)
-          case m: OpePedagOpinnotToteutusMetadata => new OpePedagOpinnotToteutusMetadataRaporttiItem(m)
-          case m: KkOpintojaksoToteutusMetadata => new KkOpintojaksoToteutusMetadataRaporttiItem(m)
-          case m: KkOpintokokonaisuusToteutusMetadata => new KkOpintokokonaisuusToteutusMetadataRaporttiItem(m)
-          case m: LukioToteutusMetadata => new LukioToteutusMetadataRaporttiItem(m)
-          case m: TuvaToteutusMetadata => new TuvaToteutusMetadataRaporttiItem(m)
-          case m: TelmaToteutusMetadata => new TelmaToteutusMetadataRaporttiItem(m)
-          case m: VapaaSivistystyoOpistovuosiToteutusMetadata => new VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(m)
-          case m: VapaaSivistystyoMuuToteutusMetadata => new VapaaSivistystyoMuuToteutusMetadataRaporttiItem(m)
-          case m: AikuistenPerusopetusToteutusMetadata => new AikuistenPerusopetusToteutusMetadataRaporttiItem(m)
-          case m: ErikoislaakariToteutusMetadata => new ErikoislaakariToteutusMetadataRaporttiItem(m)
-          case m: ErikoistumiskoulutusToteutusMetadata => new ErikoistumiskoulutusToteutusMetadataRaporttiItem(m)
-          case m: TaiteenPerusopetusToteutusMetadata => new TaiteenPerusopetusToteutusMetadataRaporttiItem(m)
-          case m: MuuToteutusMetadata => new MuuToteutusMetadataRaporttiItem(m)
-        })
+        metadata match {
+          case lukioToteutusMetadataRaporttiItem: LukioToteutusMetadataRaporttiItem =>
+            Some(lukioToteutusMetadataRaporttiItem)
+          case _ => None
+        }
       case _ => None
-    },
-    t.sorakuvausId,
-    t.muokkaaja,
-    t.organisaatioOid,
-    t.kielivalinta,
-    t.teemakuva,
-    t.modified.get,
-    t._enrichedData.map(e => ToteutusEnrichedDataRaporttiItem(e.esitysnimi, e.muokkaajanNimi))
-  )
+    }
+
+  def isLukioToteutus: Boolean = lukioToteutusMetadata().isDefined
 }
 
 case class AmmatillinenToteutusMetadataRaporttiItem(
@@ -93,24 +68,9 @@ case class AmmatillinenToteutusMetadataRaporttiItem(
     ammatillinenPerustutkintoErityisopetuksena: Option[Boolean] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: AmmatillinenToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.osaamisalat.map(o => new AmmatillinenOsaamisalaRaporttiItem(o)),
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.ammatillinenPerustutkintoErityisopetuksena,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 trait TutkintoonJohtamatonToteutusMetadataRaporttiItem extends ToteutusMetadataRaporttiItem {
   def isHakukohteetKaytossa: Option[Boolean]
@@ -142,31 +102,9 @@ case class AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: AmmatillinenTutkinnonOsaToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
@@ -186,31 +124,9 @@ case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: AmmatillinenOsaamisalaToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AmmatillinenMuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmMuu,
@@ -230,31 +146,9 @@ case class AmmatillinenMuuToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: AmmatillinenMuuToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class YliopistoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Yo,
@@ -265,22 +159,9 @@ case class YliopistoToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: YliopistoToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amk,
@@ -291,22 +172,9 @@ case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: AmmattikorkeakouluToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
@@ -317,22 +185,9 @@ case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: AmmOpeErityisopeJaOpoToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class OpePedagOpinnotToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
@@ -343,22 +198,9 @@ case class OpePedagOpinnotToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: OpePedagOpinnotToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class KkOpintojaksoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintojakso,
@@ -380,40 +222,13 @@ case class KkOpintojaksoToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false,
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None,
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: KkOpintojaksoToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opintojenLaajuusyksikkoKoodiUri,
-    m.opintojenLaajuusNumero,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus,
-    m.isAvoinKorkeakoulutus,
-    m.tunniste,
-    m.opinnonTyyppiKoodiUri
-  )
-}
+    with LaajuusSingle
 
 case class KkOpintokokonaisuusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
@@ -435,42 +250,14 @@ case class KkOpintokokonaisuusToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false,
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None,
     liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
     isAvoinKorkeakoulutus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
-    with LaajuusSingle {
-  def this(m: KkOpintokokonaisuusToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opintojenLaajuusyksikkoKoodiUri,
-    m.opintojenLaajuusNumero,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus,
-    m.liitetytOpintojaksot,
-    m.isAvoinKorkeakoulutus,
-    m.tunniste,
-    m.opinnonTyyppiKoodiUri
-  )
-}
+    with LaajuusSingle
 
 case class LukioToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Lk,
@@ -486,27 +273,9 @@ case class LukioToteutusMetadataRaporttiItem(
     diplomit: Seq[LukiodiplomiTietoRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: LukioToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.kielivalikoima.map(new KielivalikoimaRaporttiItem(_)),
-    m.yleislinja,
-    m.painotukset.map(p => new LukiolinjaTietoRaporttiItem(p)),
-    m.erityisetKoulutustehtavat.map(e => new LukiolinjaTietoRaporttiItem(e)),
-    m.diplomit.map(d => new LukiodiplomiTietoRaporttiItem(d)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class TuvaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Tuva,
@@ -518,23 +287,9 @@ case class TuvaToteutusMetadataRaporttiItem(
     jarjestetaanErityisopetuksena: Boolean = false,
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: TuvaToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.jarjestetaanErityisopetuksena,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class TelmaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Telma,
@@ -545,44 +300,22 @@ case class TelmaToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: TelmaToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
-case class AmmatillinenOsaamisalaRaporttiItem(koodiUri: String, linkki: Kielistetty = Map(), otsikko: Kielistetty = Map()) {
-  def this(a: AmmatillinenOsaamisala) = this(
-    a.koodiUri,
-    a.linkki,
-    a.otsikko
-  )
-}
+case class AmmatillinenOsaamisalaRaporttiItem(
+    koodiUri: String,
+    linkki: Kielistetty = Map(),
+    otsikko: Kielistetty = Map()
+)
 
 case class ApurahaRaporttiItem(
     min: Option[Int] = None,
     max: Option[Int] = None,
     yksikko: Option[Apurahayksikko] = None,
     kuvaus: Kielistetty = Map()
-) {
-  def this(a: Apuraha) = this(
-    a.min,
-    a.max,
-    a.yksikko,
-    a.kuvaus
-  )
-}
+)
 
 case class OpetusRaporttiItem(
     opetuskieliKoodiUrit: Seq[String] = Seq(),
@@ -601,26 +334,7 @@ case class OpetusRaporttiItem(
     suunniteltuKestoVuodet: Option[Int] = None,
     suunniteltuKestoKuukaudet: Option[Int] = None,
     suunniteltuKestoKuvaus: Kielistetty = Map()
-) {
-  def this(o: Opetus) = this(
-    o.opetuskieliKoodiUrit,
-    o.opetuskieletKuvaus,
-    o.opetusaikaKoodiUrit,
-    o.opetusaikaKuvaus,
-    o.opetustapaKoodiUrit,
-    o.opetustapaKuvaus,
-    o.maksullisuustyyppi,
-    o.maksullisuusKuvaus,
-    o.maksunMaara,
-    o.koulutuksenAlkamiskausi.map(new KoulutuksenAlkamiskausiRaporttiItem(_)),
-    o.lisatiedot.map(l => new LisatietoRaporttiItem(l)),
-    o.onkoApuraha,
-    o.apuraha.map(new ApurahaRaporttiItem(_)),
-    o.suunniteltuKestoVuodet,
-    o.suunniteltuKestoKuukaudet,
-    o.maksullisuusKuvaus
-  )
-}
+)
 
 case class KielivalikoimaRaporttiItem(
     A1Kielet: Seq[String] = Seq(),
@@ -630,25 +344,15 @@ case class KielivalikoimaRaporttiItem(
     B3Kielet: Seq[String] = Seq(),
     aidinkielet: Seq[String] = Seq(),
     muutKielet: Seq[String] = Seq()
-) {
-  def this(k: Kielivalikoima) = this(
-    k.A1Kielet,
-    k.A2Kielet,
-    k.B1Kielet,
-    k.B2Kielet,
-    k.B3Kielet,
-    k.aidinkielet,
-    k.muutKielet
-  )
-}
+)
 
-case class LukiolinjaTietoRaporttiItem(koodiUri: String, kuvaus: Kielistetty) {
-  def this(l: LukiolinjaTieto) = this(l.koodiUri, l.kuvaus)
-}
+case class LukiolinjaTietoRaporttiItem(koodiUri: String, kuvaus: Kielistetty)
 
-case class LukiodiplomiTietoRaporttiItem(koodiUri: String, linkki: Kielistetty = Map(), linkinAltTeksti: Kielistetty = Map()) {
-  def this(l: LukiodiplomiTieto) = this(l.koodiUri, l.linkki, l.linkinAltTeksti)
-}
+case class LukiodiplomiTietoRaporttiItem(
+    koodiUri: String,
+    linkki: Kielistetty = Map(),
+    linkinAltTeksti: Kielistetty = Map()
+)
 
 case class VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
@@ -659,22 +363,9 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: VapaaSivistystyoOpistovuosiToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -694,31 +385,9 @@ case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: VapaaSivistystyoMuuToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
@@ -738,31 +407,9 @@ case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: AikuistenPerusopetusToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class ErikoislaakariToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoislaakari,
@@ -773,22 +420,9 @@ case class ErikoislaakariToteutusMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadataRaporttiItem {
-  def this(m: ErikoislaakariToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends ToteutusMetadataRaporttiItem
 
 case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
@@ -808,31 +442,9 @@ case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem {
-  def this(m: ErikoistumiskoulutusToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
@@ -856,36 +468,10 @@ case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
-    with LaajuusMinMax {
-  def this(m: TaiteenPerusopetusToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opintojenLaajuusyksikkoKoodiUri,
-    m.opintojenLaajuusNumeroMin,
-    m.opintojenLaajuusNumeroMax,
-    m.taiteenalaKoodiUrit,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
+    with LaajuusMinMax
 
 case class MuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Muu,
@@ -908,33 +494,7 @@ case class MuuToteutusMetadataRaporttiItem(
     aloituspaikkakuvaus: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
-    isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
-    with LaajuusMinMax {
-  def this(m: MuuToteutusMetadata) = this(
-    m.tyyppi,
-    m.kuvaus,
-    m.opintojenLaajuusyksikkoKoodiUri,
-    m.opintojenLaajuusNumeroMin,
-    m.opintojenLaajuusNumeroMax,
-    m.opetus.map(new OpetusRaporttiItem(_)),
-    m.asiasanat,
-    m.ammattinimikkeet,
-    m.yhteyshenkilot.map(y => new YhteyshenkiloRaporttiItem(y)),
-    m.isHakukohteetKaytossa,
-    m.hakutermi,
-    m.hakulomaketyyppi,
-    m.hakulomakeLinkki,
-    m.lisatietoaHakeutumisesta,
-    m.lisatietoaValintaperusteista,
-    m.hakuaika,
-    m.aloituspaikat,
-    m.aloituspaikkakuvaus,
-    m.isMuokkaajaOphVirkailija,
-    m.hasJotpaRahoitus,
-    m.isTaydennyskoulutus,
-    m.isTyovoimakoulutus
-  )
-}
-
+    with LaajuusMinMax

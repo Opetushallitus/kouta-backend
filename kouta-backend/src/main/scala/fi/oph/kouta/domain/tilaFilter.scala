@@ -30,6 +30,10 @@ object TilaFilter {
     TilaFilter(Set(Tallennettu, Julkaistu))
   }
 
+  def kaytossaOlevat(): TilaFilter = {
+    TilaFilter(Set(Julkaistu, Arkistoitu))
+  }
+
   def vainJulkaistutOrVainOlemassaolevat(vainJulkaistut: Boolean, vainOlemassaolevat: Boolean): TilaFilter = {
     (vainJulkaistut, vainOlemassaolevat) match {
       case (true, _) => onlyJulkaistut

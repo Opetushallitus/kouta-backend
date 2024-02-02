@@ -51,6 +51,10 @@ trait OppilaitoksenOsaFixture extends AccessControlSpec {
     oppilaitoksenOsa.copy(oid = OrganisaatioOid(oid))
   }
 
+  def oppilaitoksenOsa(oid: String, oppilaitosOid: String): OppilaitoksenOsa = {
+    oppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), oppilaitosOid = Some(OrganisaatioOid(oppilaitosOid)))
+  }
+
   def oppilaitoksenOsa(oid: String, tila: Julkaisutila): OppilaitoksenOsa =
     oppilaitoksenOsa.copy(oid = OrganisaatioOid(oid), tila = tila)
 

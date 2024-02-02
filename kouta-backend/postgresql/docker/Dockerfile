@@ -1,9 +1,9 @@
 # Based on <https://hub.docker.com/_/postgres/>
 
-FROM postgres:12.12
+FROM postgres:15.4
 
 RUN apt-get update \
-      && apt-get install -y postgresql-12-cron \
+      && apt-get install -y postgresql-15-cron \
       && rm -rf /var/lib/apt/lists/*
 
 COPY ./1-configure-kouta-database.sh /docker-entrypoint-initdb.d/

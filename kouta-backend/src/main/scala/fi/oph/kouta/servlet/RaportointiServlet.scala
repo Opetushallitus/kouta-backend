@@ -266,11 +266,12 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   }
 
   registerPath(
-    "/raportointi/oppilaitokset",
+    "/raportointi/oppilaitoksetJaOsat",
     s"""    get:
-       |      summary: Tallentaa oppilaitokset siirtotiedostoon
-       |      operationId: reportOppilaitokset
-       |      description: Hakee annetulla aikavälillä luodut/modifioidut oppilaitokset ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
+       |      summary: Tallentaa oppilaitokset ja niiden osat siirtotiedostoon
+       |      operationId: reportOppilaitoksetJaOsat
+       |      description: Hakee annetulla aikavälillä luodut/modifioidut oppilaitokset ja osat,
+       |        ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
        |        - Raportointi
        |      parameters:
@@ -294,47 +295,11 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
        |          description: Ok
        |""".stripMargin
   )
-  get("/oppilaitokset") {
+  get("/oppilaitoksetJaOsat") {
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveOppilaitokset(startTime, endTime))
-  }
-
-  registerPath(
-    "/raportointi/oppilaitoksenosat",
-    s"""    get:
-       |      summary: Tallentaa oppilaitoksen osat siirtotiedostoon
-       |      operationId: reportOppilaitoksenOsat
-       |      description: Hakee annetulla aikavälillä luodut/modifioidut oppilaitoksen osat ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
-       |      tags:
-       |        - Raportointi
-       |      parameters:
-       |        - in: query
-       |          name: startTime
-       |          schema:
-       |            type: string
-       |            format: date-time
-       |          required: false
-       |          example: '${DateTimeExample}'
-       |        - in: query
-       |          name: endTime
-       |          schema:
-       |            type: string
-       |            format: date-time
-       |          required: false
-       |          description: Jos arvoa ei ole annettu, asetetaan loppuajaksi nykyinen ajankohta.
-       |          example: '${DateTimeExample}'
-       |      responses:
-       |        '200':
-       |          description: Ok
-       |""".stripMargin
-  )
-  get("/oppilaitoksenosat") {
-    implicit val authenticated: Authenticated = authenticate()
-    val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-    Ok(raportointiService.saveOppilaitoksenOsat(startTime, endTime))
+    Ok(raportointiService.saveOppilaitoksetJaOsat(startTime, endTime))
   }
 
   registerPath(
