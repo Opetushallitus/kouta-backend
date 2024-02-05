@@ -219,9 +219,20 @@ package object domain {
       |          description: Osoite eri kielillä. Kielet on määritetty kielivalinnassa.
       |          $ref: '#/components/schemas/Teksti'
       |        postinumeroKoodiUri:
-      |          type: string
-      |          description: Postinumero. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/posti/2)
-      |          example: "posti_04230#2"
+      |          type: object
+      |          properties:
+      |            fi:
+      |              type: string
+      |              example: "posti_04230#2"
+      |              description: "Suomenkielisen osoitteen postinumero, jos kielivalinnassa on 'fi'"
+      |            sv:
+      |              type: string
+      |              example: "posti_04231#2"
+      |              description: "Ruotsinkielisen osoitteen postinumero, jos kielivalinnassa on 'sv'"
+      |            en:
+      |              type: string
+      |              example: "posti_04232#2"
+      |              description: "Englanninkielisen osoitteen postinumero, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
   val ValintakokeenLisatilaisuudetModel: String =
