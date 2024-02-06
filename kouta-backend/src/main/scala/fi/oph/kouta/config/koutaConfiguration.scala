@@ -37,7 +37,7 @@ case class SecurityConfiguration(
 
 case class IndexingConfiguration(priorityQueue: String, endpoint: Option[String], region: Option[String])
 
-case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, transferFileBucket: String, region: Option[String])
+case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, transferFileBucket: String, region: Option[String], transferFileSaveRetryCount: Int)
 
 case class OhjausparametritClientConfiguration(username: String, password: String)
 
@@ -86,7 +86,8 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     config.getString("kouta-backend.s3.imageBucket"),
     config.getString("kouta-backend.s3.imageBucketPublicUrl"),
     config.getString("kouta-backend.s3.transferFileBucket"),
-    Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption
+    Try(config.getString("kouta-backend.s3.region")).filter(_.trim.nonEmpty).toOption,
+    config.getInt("kouta-backend.s3.transferFileSaveRetryCount")
   )
 
   val securityConfiguration: SecurityConfiguration = SecurityConfiguration(
