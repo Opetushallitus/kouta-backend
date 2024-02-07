@@ -31,6 +31,13 @@ object OrganisaatioServiceUtil {
   }
 
   def toOsoite(osoitteet: List[OrgOsoite]): Option[Osoite] = {
+    def hasPostinumero(postinumero: Option[String]): Boolean = {
+      postinumero match {
+        case None => false
+        case Some(postinro) => postinro.nonEmpty
+      }
+    }
+
     val kielistettyOsoite = osoitteet.map(osoite => {
       (osoite.kieli, osoite.osoite)
     }).toMap
@@ -38,12 +45,12 @@ object OrganisaatioServiceUtil {
     kielistettyOsoite match {
       case _ if kielistettyOsoite.isEmpty => None
       case _ =>
-        val postinumero = osoitteet.map(_.postinumeroUri) match {
-          case Nil => None
-          case x :: _ => Some(x)
+        val postinumero = osoitteet.find((osoite: OrgOsoite) => osoite.kieli == Fi && hasPostinumero(osoite.postinumeroUri)) match {
+          case Some(orgOsoite: OrgOsoite) => orgOsoite.postinumeroUri
+          case None => None
         }
 
-        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = postinumero.get))
+        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = postinumero))
     }
   }
 
