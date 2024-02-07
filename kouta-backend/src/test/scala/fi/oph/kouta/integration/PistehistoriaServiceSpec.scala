@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData.{LukioHakukohteenLinja, LukioKoulutus}
 import fi.oph.kouta.TestOids.OphOid
 import fi.oph.kouta.client.{JononAlimmatPisteet, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
-import fi.oph.kouta.domain.Aloituspaikat
+import fi.oph.kouta.domain.{Aloituspaikat, Julkaistu}
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockHakemusPalveluClient, SpecWithMocks}
@@ -66,6 +66,7 @@ class PistehistoriaServiceSpec
     val lkToteutusOid = put(lukioToteutus(put(LukioKoulutus, ophSession)))
     val lkHakukohde = hakukohde(lkToteutusOid, hakuOid).copy(
       nimi = Map(),
+      tila = Julkaistu,
       metadata = Some(
         hakukohde.metadata.get
           .copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq(),

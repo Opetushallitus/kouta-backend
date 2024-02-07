@@ -87,7 +87,7 @@ class PistehistoriaService(
     val rawPistetiedot: Seq[JononAlimmatPisteet] = valintaTulosServiceClient.fetchPisteet(hakuOid)
     logger.info(s"Saatiin ${rawPistetiedot.size} pistetietoa Valinta-tulos-servicestä kouta-haulle $hakuOid")
 
-    val hakukohteet = HakukohdeDAO.getHakukohteetByHakuOid(hakuOid, TilaFilter.all())
+    val hakukohteet = HakukohdeDAO.getHakukohteetByHakuOid(hakuOid, TilaFilter.kaytossaOlevat())
 
     val haku = HakuDAO
       .get(hakuOid, TilaFilter.all())
