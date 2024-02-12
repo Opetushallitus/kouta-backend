@@ -34,11 +34,11 @@ class OppilaitosService(
   val teemakuvaPrefix = "oppilaitos-teemakuva"
   val logoPrefix = "oppilaitos-logo"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
+  def get(oid: OrganisaatioOid, yhteystiedotForOsat: Boolean)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitosWithTime = OppilaitosDAO.get(oid)
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
-        val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
+        val children = organisaatioService.getOrganisaatioChildren(oid, yhteystiedotForOsat).getOrElse(List())
         Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
@@ -189,11 +189,11 @@ class OppilaitoksenOsaService(
 
   val teemakuvaPrefix = "oppilaitoksen-osa-teemakuva"
 
-  def get(oid: OrganisaatioOid)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
+  def get(oid: OrganisaatioOid, yhteystiedotForOsat: Boolean)(implicit authenticated: Authenticated): Option[(OppilaitosBase, Option[Instant])] = {
     val oppilaitoksenOsaWithTime = OppilaitoksenOsaDAO.get(oid)
     val organisaatio = organisaatioService.getOrganisaatio(oid) match {
       case Right(organisaatio) =>
-        val children = organisaatioService.getOrganisaatioChildren(oid).getOrElse(List())
+        val children = organisaatioService.getOrganisaatioChildren(oid, yhteystiedotForOsat).getOrElse(List())
         Some(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio, children))
       case Left(_) => None
     }
