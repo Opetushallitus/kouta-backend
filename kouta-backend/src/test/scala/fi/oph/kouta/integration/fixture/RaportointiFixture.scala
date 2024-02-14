@@ -6,6 +6,7 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockSiirtotiedostoPalveluClient}
 import fi.oph.kouta.service.RaportointiService
 import fi.oph.kouta.servlet.RaportointiServlet
+import org.json4s.JValue
 import org.json4s.JsonAST.JArray
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatest.Assertion
@@ -36,6 +37,7 @@ trait RaportointiFixture
   val dayAfter        = Some(LocalDateTime.now.plus(Duration.of(1, ChronoUnit.DAYS)))
 
   val siirtotiedostoPalveluClient = new MockSiirtotiedostoPalveluClient()
+  val maxNumberOfItemsInOneWrite = 40
   def raportointiService: RaportointiService =
     new RaportointiService(
       koulutusService,
@@ -43,7 +45,10 @@ trait RaportointiFixture
       hakukohdeService,
       mockOppijanumerorekisteriClient,
       siirtotiedostoPalveluClient
-    )
+    ) {
+      override val maxNumberOfItemsInFile: Int = maxNumberOfItemsInOneWrite
+    }
+
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -68,10 +73,19 @@ trait RaportointiFixture
     }
   }
 
-  def verifyContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
+  def verifyLatestContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
     val reportJson = parse(lastRaporttiContent())
+    verifyContents(reportJson, checkedIds, idFieldName)
+  }
+
+  def verifyFirstContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
+    val reportJson = parse(firstRaporttiContent())
+    verifyContents(reportJson, checkedIds, idFieldName)
+  }
+
+  private def verifyContents(json: JValue, checkedIds: Seq[String], idFieldName: String): Assertion = {
     val contentIds =
-      reportJson.asInstanceOf[JArray].values.indices.map(idx => (reportJson(idx) \ idFieldName).extract[String])
+      json.asInstanceOf[JArray].values.indices.map(idx => (json(idx) \ idFieldName).extract[String])
     contentIds should contain theSameElementsAs checkedIds
   }
 
@@ -87,6 +101,7 @@ trait RaportointiFixture
 
   def nbrOfContentItems(): Int      = siirtotiedostoPalveluClient.numberOfContentItems
   def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
+  def firstRaporttiContent(): String = siirtotiedostoPalveluClient.head()
   def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
 
   //def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)

@@ -22,10 +22,21 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
   val oppilaitoksenOsaOid2                                                     = GrandChildOid
   val oppilaitoksenOsaOid3                                                     = EvilGrandChildOid
 
+  val nbrOfInitialOppilaitokset = maxNumberOfItemsInOneWrite - 5;
+  val initialOppilaitosOids = (1 to nbrOfInitialOppilaitokset).map(i => s"1.2.246.562.10.000000000${i + 10}")
+
   override def beforeAll(): Unit = {
     super.beforeAll()
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
+
+    // Lisätään kantaan ensin alustavaa dataa niin että kantahaku / bukettiin kirjoitus tapahtuu useassa osassa
+    // Tämä tehdään koulutuksille, toteutuksille ja oppilaitoksille + osille
+    for (i <- 1 to maxNumberOfItemsInOneWrite) {
+      val koulutusOid = put(koulutus, ophSession)
+      put(toteutus(koulutusOid), ophSession)
+    }
+    initialOppilaitosOids.foreach(oid => put(oppilaitos(oid), ophSession))
 
     sorakuvausId1 = put(sorakuvaus, ophSession)
     sorakuvausId2 = put(sorakuvaus, ophSession)
@@ -72,39 +83,45 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
     storeAmmattinimikkeet()
   }
 
-  "Save koulutukset with given timerange" should "save koulutukset as requested" in {
+  "Save koulutukset with given timerange" should "save koulutukset in bulks according to max limit" in {
     get("koulutukset", dayBefore, dayAfter, 200)
-    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
+    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
+    nbrOfContentItems() should equal(2)
   }
 
-  "Save toteutukset with given timerange" should "save toteutukset as requested" in {
+  "Save toteutukset with given timerange" should "save toteutukset in bulks according to max limit" in {
+    clearRaporttiContents()
     get("toteutukset", None, dayAfter, 200)
-    verifyContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
+    verifyLatestContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
+    nbrOfContentItems() should equal(2)
   }
 
   "Save hakukohteet with given timerange" should "save hakukohteet as requested" in {
     get("hakukohteet", dayBefore, dayAfter, 200)
-    verifyContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
+    verifyLatestContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
   }
 
   "Save haut with given timerange" should "save haut as requested" in {
     get("haut", None, dayAfter, 200)
-    verifyContents(Seq(hakuOid1, hakuOid2, hakuOid3), "oid")
+    verifyLatestContents(Seq(hakuOid1, hakuOid2, hakuOid3), "oid")
   }
 
   "Save sorakuvaukset with given timerange" should "save sorakuvaukset as requested" in {
     get("sorakuvaukset", dayBefore, dayAfter, 200)
-    verifyContents(Seq(sorakuvausId1.toString, sorakuvausId2.toString, sorakuvausId3.toString), "id")
+    verifyLatestContents(Seq(sorakuvausId1.toString, sorakuvausId2.toString, sorakuvausId3.toString), "id")
   }
 
   "Save valintaperusteet with given timerange" should "save valintaperusteet as requested" in {
     get("valintaperusteet", None, dayAfter, 200)
-    verifyContents(Seq(valintaperusteId1.toString, valintaperusteId2.toString, valintaperusteId3.toString), "id")
+    verifyLatestContents(Seq(valintaperusteId1.toString, valintaperusteId2.toString, valintaperusteId3.toString), "id")
   }
 
-  "Save oppilaitokset and osat with given timerange" should "save oppilaitokset and osat as requested" in {
+  "Save oppilaitokset and osat with given timerange" should "save oppilaitokset and osat in bulks according to max limit" in {
+    clearRaporttiContents()
     get("oppilaitoksetJaOsat", dayBefore, dayAfter, 200)
-    verifyContents(Seq(oppilaitosOid1.s, oppilaitosOid2.s, oppilaitosOid3.s, oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s, oppilaitoksenOsaOid3.s), "oid")
+    verifyFirstContents(initialOppilaitosOids ++ Seq(oppilaitosOid1.s,oppilaitosOid2.s, oppilaitosOid3.s, oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s), "oid")
+    verifyLatestContents(Seq(oppilaitoksenOsaOid3.s), "oid")
+    nbrOfContentItems() should equal(2)
   }
 
   "Save ammattinimikkeet" should "save ammattinimikkeet as requested" in {
@@ -119,7 +136,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
 
   "Save entities without timerange" should "save entities ok" in {
     get("koulutukset", None, None, 200)
-    verifyContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
+    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
   }
 
   "Save entities with invalid time definition" should "return error" in {
