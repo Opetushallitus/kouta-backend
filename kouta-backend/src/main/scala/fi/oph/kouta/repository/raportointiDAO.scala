@@ -1,24 +1,10 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.raportointi.{
-  HakuRaporttiItem,
-  HakukohdeLiiteRaporttiItem,
-  HakukohdeRaporttiItem,
-  KoulutusEnrichmentData,
-  KoulutusRaporttiItem,
-  OppilaitoksenOsa,
-  Oppilaitos,
-  OppilaitosOrOsaRaporttiItem,
-  PistetietoRaporttiItem,
-  SorakuvausRaporttiItem,
-  ToteutusRaporttiItem,
-  ValintakoeRaporttiItem,
-  ValintaperusteRaporttiItem
-}
+import fi.oph.kouta.domain.raportointi.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
 import fi.oph.kouta.domain.Ajanjakso
 import fi.oph.kouta.domain.oid.KoulutusOid
-import slick.dbio.DBIO
+import slick.dbio.{DBIO, DBIOAction}
 import slick.jdbc.PostgresProfile.api._
 
 import java.time.LocalDateTime
@@ -112,9 +98,9 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
   ): Seq[HakukohdeRaporttiItem] = {
     KoutaDatabase
       .runBlockingTransactionally(for {
-        hakukohteet <- selectHakukohteet(startTime, endTime, limit, offset)
-        hakuajat    <- selectHakukohteidenHakuajat(hakukohteet)
-        liitteet    <- selectHakukohteidenLiitteet(hakukohteet)
+        hakukohteet   <- selectHakukohteet(startTime, endTime, limit, offset)
+        hakuajat      <- selectHakukohteidenHakuajat(hakukohteet)
+        liitteet      <- selectHakukohteidenLiitteet(hakukohteet)
         valintakokeet <- selectHakukohteidenValintakokeet(hakukohteet)
       } yield (hakukohteet, hakuajat, liitteet, valintakokeet))
       .map { case (hakukohteet, hakuajat, liitteet, valintakokeet) =>
@@ -241,7 +227,8 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
       k.kielivalinta, k.teemakuva, k.eperuste_id, k.last_modified
       from koulutukset k
       left join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid"""
-    selectByTimerange(startTime, endTime, selectPart, "k.last_modified", limit, offset, "k.oid").as[KoulutusRaporttiItem]
+    selectByTimerange(startTime, endTime, selectPart, "k.last_modified", limit, offset, "k.oid")
+      .as[KoulutusRaporttiItem]
   }
 
   def selectKoulutusEnrichmentDataItems(oids: Seq[KoulutusOid]): DBIO[Seq[KoulutusEnrichmentData]] = {
@@ -265,7 +252,8 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
                         t.sorakuvaus_id, t.last_modified
                         from toteutukset t
                         left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid"""
-    selectByTimerange(startTime, endTime, selectPart, "t.last_modified", limit, offset, "t.oid").as[ToteutusRaporttiItem]
+    selectByTimerange(startTime, endTime, selectPart, "t.last_modified", limit, offset, "t.oid")
+      .as[ToteutusRaporttiItem]
   }
 
   def selectHakukohteet(
@@ -347,18 +335,14 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   def selectValintaperusteidenValintakokeet(
       valintaperusteet: Seq[ValintaperusteRaporttiItem]
   ): DBIO[Seq[ValintakoeRaporttiItem]] = {
-    // Postgres-kysely failaa jos valintaperuste_id in -lauseeseen antaa tyhjän ('')
-    val valintaperusteIdInCondition =
-      if (valintaperusteet.nonEmpty)
-        s"""where valintaperuste_id in (${createUUIDInParams(valintaperusteet.map(_.id))})"""
-      else
-        "where valintaperuste_id in ('00000000-0000-0000-0000-000000000000')"
-
-
-    sql"""select id, valintaperuste_id as parentOidOrUUID, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja
+    if (valintaperusteet.nonEmpty) {
+      sql"""select id, valintaperuste_id as parentOidOrUUID, tyyppi_koodi_uri, nimi, metadata, tilaisuudet, muokkaaja
                 from valintaperusteiden_valintakokeet
-                #$valintaperusteIdInCondition
+                where valintaperuste_id in (#${createUUIDInParams(valintaperusteet.map(_.id))})
            """.as[ValintakoeRaporttiItem]
+
+    }
+    else DBIOAction.successful[Seq[ValintakoeRaporttiItem]](Seq())
   }
 
   def selectSorakuvaukset(
@@ -381,7 +365,8 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     val selectPart =
       s"""select oid, '${Oppilaitos.name}' as tyyppi, null, tila, esikatselu, metadata, kielivalinta, organisaatio_oid, muokkaaja, teemakuva,
                     logo, lower(system_time) from oppilaitokset"""
-    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)", limit, offset).as[OppilaitosOrOsaRaporttiItem]
+    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)", limit, offset)
+      .as[OppilaitosOrOsaRaporttiItem]
   }
 
   def selectOppilaitoksenOsat(
@@ -393,7 +378,8 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     val selectPart =
       s"""select oid, '${OppilaitoksenOsa.name}' as tyyppi, oppilaitos_oid, tila, esikatselu, metadata, kielivalinta, organisaatio_oid, muokkaaja,
                     teemakuva, null, lower(system_time) from oppilaitosten_osat"""
-    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)", limit, offset).as[OppilaitosOrOsaRaporttiItem]
+    selectByTimerange(startTime, endTime, selectPart, "lower(system_time)", limit, offset)
+      .as[OppilaitosOrOsaRaporttiItem]
   }
 
   def selectPistehistoria(
