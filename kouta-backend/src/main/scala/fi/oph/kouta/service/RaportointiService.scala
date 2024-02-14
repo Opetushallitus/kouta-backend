@@ -43,7 +43,7 @@ class RaportointiService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
 ) {
-  val maxNumberOfItemsInFile = KoutaConfigurationFactory.configuration.s3Configuration.transferFileMaxItemNumber;
+  val maxNumberOfItemsInFile = KoutaConfigurationFactory.configuration.s3Configuration.transferFileMaxItemCount;
   val NO_RESULTS_MESSAGE     = "Ei hakutuloksia annetuilla aikarajoilla"
 
   private def hakutulosMessage(totalSize: Int, entityDesc: String, keys: Seq[String]) = {
