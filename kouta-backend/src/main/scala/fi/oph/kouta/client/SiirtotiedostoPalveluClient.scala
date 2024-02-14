@@ -21,24 +21,22 @@ object SiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient
 class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
   val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration;
   val siirtotiedostoPalvelu   = new SiirtotiedostoPalvelu(config.region.getOrElse("eu-west-1"), config.transferFileBucket)
-  val saveRetryCount = config.transferFileSaveRetryCount
+  val saveRetryCount          = config.transferFileSaveRetryCount
 
   def saveSiirtotiedosto[T](
       contentStartTime: Option[LocalDateTime],
       contentEndTime: Option[LocalDateTime],
       contentType: String,
       content: Seq[T]
-  ): String = {
-    if (content.isEmpty) return "Ei hakutuloksia annetuilla aikarajoilla"
-
-    val objectMetadata = siirtotiedostoPalvelu.saveSiirtotiedosto(
-      contentStartTime.map(RaportointiDateTimeFormat.format(_)).orNull,
-      contentEndTime.map(RaportointiDateTimeFormat.format(_)).orNull,
-      "kouta",
-      contentType,
-      new ByteArrayInputStream(writePretty(content).getBytes()),
-      saveRetryCount
-    )
-    s"$contentType, yhteensä ${content.size} kpl tallennettu S3 buckettiin avaimella ${objectMetadata.key}"
-  }
+  ): String =
+    siirtotiedostoPalvelu
+      .saveSiirtotiedosto(
+        contentStartTime.map(RaportointiDateTimeFormat.format(_)).orNull,
+        contentEndTime.map(RaportointiDateTimeFormat.format(_)).orNull,
+        "kouta",
+        contentType,
+        new ByteArrayInputStream(writePretty(content).getBytes()),
+        saveRetryCount
+      )
+      .key
 }

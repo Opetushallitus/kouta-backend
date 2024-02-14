@@ -82,7 +82,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/koulutukset") {
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-    Ok(raportointiService.saveKoulutukset(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveKoulutukset(startTime, endTime)))
   }
 
   registerPath(
@@ -118,7 +118,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveToteutukset(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveToteutukset(startTime, endTime)))
   }
 
   registerPath(
@@ -154,7 +154,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveHakukohteet(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveHakukohteet(startTime, endTime)))
   }
 
   registerPath(
@@ -190,7 +190,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveHaut(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveHaut(startTime, endTime)))
   }
 
   registerPath(
@@ -226,7 +226,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveValintaperusteet(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveValintaperusteet(startTime, endTime)))
   }
 
   registerPath(
@@ -262,7 +262,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveSorakuvaukset(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveSorakuvaukset(startTime, endTime)))
   }
 
   registerPath(
@@ -299,7 +299,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.saveOppilaitoksetJaOsat(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.saveOppilaitoksetJaOsat(startTime, endTime)))
   }
 
   registerPath(
@@ -335,7 +335,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(raportointiService.savePistehistoria(startTime, endTime))
+    Ok(Map("msg" -> raportointiService.savePistehistoria(startTime, endTime)))
   }
 
   registerPath(
@@ -354,7 +354,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/ammattinimikkeet") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(raportointiService.saveAmmattinimikkeet())
+    Ok(Map("msg" -> raportointiService.saveAmmattinimikkeet()))
   }
 
   registerPath(
@@ -373,6 +373,6 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/asiasanat") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(raportointiService.saveAsiasanat())
+    Ok(Map("msg" -> raportointiService.saveAsiasanat()))
   }
 }

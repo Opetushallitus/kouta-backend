@@ -20,6 +20,7 @@ class MockSiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient {
   }
 
   def last(): String = contentBuffer.last
+  def head(): String = contentBuffer.head
   def clearContents() = contentBuffer.clear()
   def numberOfContentItems = contentBuffer.size
 }
