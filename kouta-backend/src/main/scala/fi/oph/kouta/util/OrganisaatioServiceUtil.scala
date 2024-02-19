@@ -113,6 +113,7 @@ object OrganisaatioServiceUtil {
       parentOids = getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
       yhteystiedot = getYhteystiedot(organisaatio),
+      status = organisaatio.status,
       kotipaikkaUri = organisaatio.kotipaikkaUri match {
         case Some(kotipaikkaUri) => Some(MiscUtils.withoutKoodiVersion(kotipaikkaUri))
         case None => None

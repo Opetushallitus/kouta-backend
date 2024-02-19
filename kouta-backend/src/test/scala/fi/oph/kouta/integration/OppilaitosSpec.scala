@@ -34,6 +34,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
         kieletUris = List(),
         yhteystiedot = None,
+        status = "AKTIIVINEN",
         kotipaikkaUri = None,
         children = None,
         oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),

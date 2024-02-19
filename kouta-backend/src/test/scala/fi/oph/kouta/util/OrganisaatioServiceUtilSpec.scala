@@ -9,6 +9,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
     oid = TestOids.GrandChildOid.toString,
     parentOids = List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
+    status = "AKTIIVINEN",
     children = None,
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
@@ -17,6 +18,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
     parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+    status = "AKTIIVINEN",
     children = None,
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
@@ -207,12 +209,14 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
       oppilaitostyyppiUri = Some("oppilaitostyyppi_64"),
       nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+      status = "AKTIIVINEN",
       organisaatiotyyppiUris = Some(List("organisaatiotyyppi_04")),
       children = Some(List(Organisaatio(
         oid = TestOids.GrandChildOid.toString,
         parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
         oppilaitostyyppiUri =  Some("oppilaitostyyppi_63"),
         nimi = Map(Fi -> "Oppilaitoksen osa fi", Sv -> "Oppilaitoksen osa sv", En -> "Oppilaitoksen osa en"),
+        status = "AKTIIVINEN",
         organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")),
         children = None
       )))))
