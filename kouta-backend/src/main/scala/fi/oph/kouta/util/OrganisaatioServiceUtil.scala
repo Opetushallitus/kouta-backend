@@ -110,6 +110,7 @@ object OrganisaatioServiceUtil {
   def organisaatioServiceOrgToOrganisaatio(organisaatio: OrganisaatioServiceOrg, children: Seq[Organisaatio] = List()): Organisaatio = {
     Organisaatio(
       oid = organisaatio.oid,
+      parentOid = organisaatio.parentOid.map(oid => OrganisaatioOid(oid)),
       parentOids = getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
       yhteystiedot = getYhteystiedot(organisaatio),
