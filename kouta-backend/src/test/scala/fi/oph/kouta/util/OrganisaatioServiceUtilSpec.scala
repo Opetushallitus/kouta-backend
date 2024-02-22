@@ -33,6 +33,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
 
   val orgServiceHierarkiaOrganisaatio: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = TestOids.ChildOid.toString,
+    parentOid = Some(TestOids.ParentOid.toString),
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_64#1"),
     status = "AKTIIVINEN",
@@ -206,6 +207,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
   "organisaatioServiceOrgToOrganisaatio" should "return basic organisaatio data with children" in {
     assert(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(orgServiceHierarkiaOrganisaatio) == Organisaatio(
       oid = TestOids.ChildOid.toString,
+      parentOid = Some(TestOids.ParentOid),
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
       oppilaitostyyppiUri = Some("oppilaitostyyppi_64"),
       nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),

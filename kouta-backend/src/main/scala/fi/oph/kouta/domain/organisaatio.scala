@@ -102,6 +102,7 @@ sealed trait OrganisaatioBase {
 }
 
 case class OrganisaatioServiceOrg(oid: String,
+                                  parentOid: Option[String] = None,
                                   parentOidPath: String,
                                   oppilaitostyyppi: Option[String] = None,
                                   nimi: Kielistetty,
@@ -120,6 +121,7 @@ case class OrganisaatioServiceOrg(oid: String,
 case class OrgServiceOrganisaatioHierarkia(organisaatiot: List[OrganisaatioServiceOrg])
 
 case class Organisaatio(oid: String,
+                        parentOid: Option[OrganisaatioOid] = None,
                         parentOids: List[OrganisaatioOid] = List(),
                         nimi: Kielistetty,
                         kieletUris: List[String] = List(),

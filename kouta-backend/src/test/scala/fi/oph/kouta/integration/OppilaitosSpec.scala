@@ -30,6 +30,7 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     List(
       Organisaatio(
         oid,
+        Some(OrganisaatioOid("1.2.246.562.10.47941294986")),
         List(OrganisaatioOid(oid), OrganisaatioOid("1.2.246.562.10.47941294986"), OrganisaatioOid("1.2.246.562.10.00000000001")),
         Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
         kieletUris = List(),
