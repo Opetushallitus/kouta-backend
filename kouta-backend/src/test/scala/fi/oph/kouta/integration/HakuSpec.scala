@@ -54,6 +54,11 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     get(oid, crudSessions(GrandChildOid), haku(oid))
   }
 
+  it should "persist hakukohteen liittajaorganisaatiot" in {
+    val oid = put(haku.copy(hakukohteenLiittajaOrganisaatiot = Seq(OrganisaatioOid("1.2.246.562.10.71396759145"))))
+    get(oid, crudSessions(GrandChildOid), haku(oid).copy(hakukohteenLiittajaOrganisaatiot = Seq(OrganisaatioOid("1.2.246.562.10.71396759145"))))
+  }
+
   it should "deny a user with the wrong role" in {
     val oid = put(haku)
     get(s"$HakuPath/$oid", otherRoleSession, 403)
@@ -264,6 +269,14 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val thisHaku     = haku(oid).copy(organisaatioOid = HkiYoOid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(organisaatioOid = YoOid), lastModified, expectUpdate = true, yliopistotSession)
+  }
+
+  it should "update the list of organizations which are able to attach study programmes for given admission" in {
+    val oid          = put(haku)
+    val thisHaku = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    update(thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(KuopionKansalaisopistoOid)), lastModified)
+    get(oid, thisHaku.copy(hakukohteenLiittajaOrganisaatiot = Seq(KuopionKansalaisopistoOid)))
   }
 
   it should "fail organisaatioOid change if user doesn't have rights to new organisaatio" in {

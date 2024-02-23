@@ -5,7 +5,7 @@ import fi.oph.kouta.client.{HakemusPalveluClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.repository.HakukohdeDAO
-import fi.oph.kouta.service.{HakuServiceValidation, KoodistoService}
+import fi.oph.kouta.service.{HakuServiceValidation, KoodistoService, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.itemFound
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{BaseServiceValidationSpec, ValidationError}
@@ -17,6 +17,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   val koodistoService      = mock[KoodistoService]
   val hakemusPalveluClient = mock[HakemusPalveluClient]
   val hakukohdeDao         = mock[HakukohdeDAO]
+  val organisaatioSevice   = mock[OrganisaatioService]
 
   val ataruId            = UUID.randomUUID()
   val hakuOid            = HakuOid("1.2.246.562.29.0000000001")
@@ -28,7 +29,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   val maxWithOidMetadata = maxWithOid.metadata.get
 
   override val validator =
-    new HakuServiceValidation(koodistoService, hakemusPalveluClient, hakukohdeDao)
+    new HakuServiceValidation(koodistoService, hakemusPalveluClient, hakukohdeDao, organisaatioSevice)
 
   override def beforeEach(): Unit = {
     super.beforeEach()

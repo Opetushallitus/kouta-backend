@@ -757,6 +757,7 @@ object TestData {
     hakutapaKoodiUri = Some("hakutapa_03#1"),
     hakukohteenLiittamisenTakaraja = Some(inFuture()),
     hakukohteenMuokkaamisenTakaraja = Some(inFuture()),
+    hakukohteenLiittajaOrganisaatiot = List(),
     ajastettuJulkaisu = Some(inFuture()),
     ajastettuHaunJaHakukohteidenArkistointi = Some(inFourMonths()),
     ajastettuHaunJaHakukohteidenArkistointiAjettu = None,
