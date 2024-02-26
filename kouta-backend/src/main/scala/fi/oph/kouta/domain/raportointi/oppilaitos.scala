@@ -74,5 +74,6 @@ case class YhteystietoRaporttiItem(
     postiosoite: Option[Osoite] = None,
     kayntiosoite: Option[Osoite] = None,
     puhelinnumero: Kielistetty = Map(),
-    sahkoposti: Kielistetty = Map()
+    sahkoposti: Kielistetty = Map(),
+    www: Kielistetty = Map()
 )
