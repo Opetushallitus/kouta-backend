@@ -307,10 +307,11 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
       offset: Int
   ): DBIO[Seq[HakuRaporttiItem]] = {
     val selectPart = s"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja,
-                    hakukohteen_muokkaamisen_takaraja, ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi,
-                    ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri,
-                    kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus,
-                    hakulomake_linkki, metadata, organisaatio_oid, muokkaaja, kielivalinta, last_modified from haut"""
+                    hakukohteen_muokkaamisen_takaraja, hakukohteen_liittaja_organisaatiot, ajastettu_julkaisu,
+                    ajastettu_haun_ja_hakukohteiden_arkistointi, ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu,
+                    kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri, hakulomaketyyppi, hakulomake_ataru_id,
+                    hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid, muokkaaja, kielivalinta,
+                    last_modified from haut"""
     selectByTimerange(startTime, endTime, selectPart, "last_modified", limit, offset).as[HakuRaporttiItem]
   }
 

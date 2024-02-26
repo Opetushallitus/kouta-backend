@@ -28,6 +28,7 @@ case class HakuRaporttiItem(
     hakutapaKoodiUri: Option[String] = None,
     hakukohteenLiittamisenTakaraja: Option[LocalDateTime] = None,
     hakukohteenMuokkaamisenTakaraja: Option[LocalDateTime] = None,
+    hakukohteenLiittajaOrganisaatiot: Seq[OrganisaatioOid] = Seq(),
     ajastettuJulkaisu: Option[LocalDateTime] = None,
     ajastettuHaunJaHakukohteidenArkistointi: Option[LocalDateTime] = None,
     ajastettuHaunJaHakukohteidenArkistointiAjettu: Option[LocalDateTime] = None,
