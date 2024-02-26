@@ -51,7 +51,7 @@ case class KoulutusEnrichmentData(
       case Some(metadata) =>
         metadata match {
           case lukioKoulutusMetadata: LukioKoulutusMetadata => lukioKoulutusMetadata.opintojenLaajuusNumero
-          case _                                            => None
+          case _ => None
         }
       case _ => None
     }

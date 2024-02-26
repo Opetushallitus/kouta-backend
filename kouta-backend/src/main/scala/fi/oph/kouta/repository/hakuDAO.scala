@@ -91,6 +91,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                              hakutapa_koodi_uri,
                              hakukohteen_liittamisen_takaraja,
                              hakukohteen_muokkaamisen_takaraja,
+                             hakukohteen_liittaja_organisaatiot,
                              ajastettu_julkaisu,
                              ajastettu_haun_ja_hakukohteiden_arkistointi,
                              ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu,
@@ -110,6 +111,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
                      ${haku.hakutapaKoodiUri},
                      ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
                      ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
+                     ${toJsonParam(haku.hakukohteenLiittajaOrganisaatiot)}::jsonb,
                      ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp,
                      ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp,
                      ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp,
@@ -138,7 +140,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
   }
 
   def selectHaku(oid: HakuOid, tilaFilter: TilaFilter): DBIO[Option[Haku]] = {
-    sql"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja,
+    sql"""select oid, external_id, tila, nimi, hakutapa_koodi_uri, hakukohteen_liittamisen_takaraja, hakukohteen_muokkaamisen_takaraja, hakukohteen_liittaja_organisaatiot,
                  ajastettu_julkaisu, ajastettu_haun_ja_hakukohteiden_arkistointi, ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu, kohdejoukko_koodi_uri, kohdejoukon_tarkenne_koodi_uri,
                  hakulomaketyyppi, hakulomake_ataru_id, hakulomake_kuvaus, hakulomake_linkki, metadata, organisaatio_oid,
                  muokkaaja, kielivalinta, last_modified from haut where oid = $oid
@@ -156,6 +158,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
               hakutapa_koodi_uri = ${haku.hakutapaKoodiUri},
               hakukohteen_liittamisen_takaraja = ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp,
               hakukohteen_muokkaamisen_takaraja = ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp,
+              hakukohteen_liittaja_organisaatiot = ${toJsonParam(haku.hakukohteenLiittajaOrganisaatiot)}::jsonb,
               ajastettu_julkaisu = ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp,
               ajastettu_haun_ja_hakukohteiden_arkistointi = ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp,
               ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu = ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp,
@@ -182,6 +185,7 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
             or hakulomake_linkki is distinct from ${toJsonParam(haku.hakulomakeLinkki)}::jsonb
             or hakukohteen_liittamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenLiittamisenTakaraja)}::timestamp
             or hakukohteen_muokkaamisen_takaraja is distinct from ${formatTimestampParam(haku.hakukohteenMuokkaamisenTakaraja)}::timestamp
+            or hakukohteen_liittaja_organisaatiot is distinct from ${toJsonParam(haku.hakukohteenLiittajaOrganisaatiot)}::jsonb
             or ajastettu_julkaisu is distinct from ${formatTimestampParam(haku.ajastettuJulkaisu)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointi)}::timestamp
             or ajastettu_haun_ja_hakukohteiden_arkistointi_ajettu is distinct from ${formatTimestampParam(haku.ajastettuHaunJaHakukohteidenArkistointiAjettu)}::timestamp
@@ -227,9 +231,10 @@ sealed trait HakuSQL extends HakuExtractors with HakuModificationSQL with SQLHel
     }
 
     sql"""#$selectHakuListSql
-          where ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          where (ha.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
+          or ha.hakukohteen_liittaja_organisaatiot ??| array[#${createOidInParams(organisaatioOids)}])
           #$includeYhteishaut
-          #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
+            #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakuListItem]
   }
 
   def selectByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): DBIO[Vector[HakuListItem]] = {

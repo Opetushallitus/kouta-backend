@@ -1,6 +1,14 @@
 package fi.oph.kouta.domain.raportointi
 
-import fi.oph.kouta.domain.{Julkaisutila, Kieli, Kielistetty, Modified, NimettyLinkki, Osoite, Tallennettu}
+import fi.oph.kouta.domain.{
+  Julkaisutila,
+  Kieli,
+  Kielistetty,
+  Modified,
+  NimettyLinkki,
+  Osoite,
+  Tallennettu,
+}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
 
 case class OppilaitosOrOsaEnrichedDataRaporttiItem(muokkaajanNimi: Option[String] = None)
@@ -66,5 +74,6 @@ case class YhteystietoRaporttiItem(
     postiosoite: Option[Osoite] = None,
     kayntiosoite: Option[Osoite] = None,
     puhelinnumero: Kielistetty = Map(),
-    sahkoposti: Kielistetty = Map()
+    sahkoposti: Kielistetty = Map(),
+    www: Kielistetty = Map()
 )

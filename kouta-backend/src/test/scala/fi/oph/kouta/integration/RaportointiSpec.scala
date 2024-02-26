@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, OphOid, ParentOid}
+import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, OphOid, ParentOid, YoOid}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.integration.fixture.RaportointiFixture
 import fi.oph.kouta.mocks.LokalisointiServiceMock

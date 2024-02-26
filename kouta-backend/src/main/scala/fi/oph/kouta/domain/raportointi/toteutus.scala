@@ -1,8 +1,8 @@
 package fi.oph.kouta.domain.raportointi
 
+import fi.oph.kouta.domain.{AikuistenPerusopetus, AikuistenPerusopetusToteutusMetadata, Ajanjakso, Amk, Amm, AmmMuu, AmmOpeErityisopeJaOpo, AmmOpeErityisopeJaOpoToteutusMetadata, AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisala, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmattikorkeakouluToteutusMetadata, Apuraha, Apurahayksikko, Erikoislaakari, ErikoislaakariToteutusMetadata, Erikoistumiskoulutus, ErikoistumiskoulutusToteutusMetadata, Hakulomaketyyppi, Hakutermi, Julkaisutila, Kieli, Kielistetty, Kielivalikoima, KkOpintojakso, KkOpintojaksoToteutusMetadata, KkOpintokokonaisuus, KkOpintokokonaisuusToteutusMetadata, KoulutuksenAlkamiskausi, Koulutustyyppi, LaajuusMinMax, LaajuusSingle, Lisatieto, Lk, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Maksullisuustyyppi, Modified, Muu, MuuToteutusMetadata, OpePedagOpinnotToteutusMetadata, Opetus, TaiteenPerusopetus, TaiteenPerusopetusToteutusMetadata, Tallennettu, Telma, TelmaToteutusMetadata, Toteutus, ToteutusEnrichedData, Tuva, TuvaToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOpistovuosiToteutusMetadata, Yhteyshenkilo, YliopistoToteutusMetadata, Yo}
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
-import fi.oph.kouta.domain._
 
 import java.util.UUID
 

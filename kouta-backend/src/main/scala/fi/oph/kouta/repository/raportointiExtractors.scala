@@ -129,6 +129,7 @@ trait RaportointiExtractors extends ExtractorBase {
       hakutapaKoodiUri = r.nextStringOption(),
       hakukohteenLiittamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
       hakukohteenMuokkaamisenTakaraja = r.nextTimestampOption().map(_.toLocalDateTime),
+      hakukohteenLiittajaOrganisaatiot = read[Seq[OrganisaatioOid]](r.nextString()),
       ajastettuJulkaisu = r.nextTimestampOption().map(_.toLocalDateTime),
       ajastettuHaunJaHakukohteidenArkistointi = r.nextTimestampOption().map(_.toLocalDateTime),
       ajastettuHaunJaHakukohteidenArkistointiAjettu = r.nextTimestampOption().map(_.toLocalDateTime),
@@ -182,9 +183,9 @@ trait RaportointiExtractors extends ExtractorBase {
   )
 
   private def oppilaitosOrOsaMetadata(
-                                       organisaatiotyyppi: Organisaatiotyyppi,
-                                       metadataStr: String
-                                     ): OppilaitosOrOsaMetadataRaporttiItem =
+      organisaatiotyyppi: Organisaatiotyyppi,
+      metadataStr: String
+  ): OppilaitosOrOsaMetadataRaporttiItem =
     if (organisaatiotyyppi == OppilaitoksenOsa) read[OppilaitoksenOsaMetadataRaporttiItem](metadataStr)
     else read[OppilaitosMetadataRaporttiItem](metadataStr)
 

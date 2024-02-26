@@ -1,10 +1,10 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
-import fi.oph.kouta.domain.{LukiolinjaTieto, ToteutusEnrichmentSourceData}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.raportointi._
+import fi.oph.kouta.domain.{LukiolinjaTieto, ToteutusEnrichmentSourceData}
 import fi.oph.kouta.repository.RaportointiDAO
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.NameHelper
@@ -231,15 +231,15 @@ class RaportointiService(
   def saveOppilaitoksetJaOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
       authenticated: Authenticated
   ): String = {
-    var totalOppilaitosSize, totalOsaSize: Int = 0
+    var olSize, osaSize: Int = 0
     val keyList: ListBuffer[String]            = ListBuffer()
     var queriedTypes                           = Seq(Oppilaitos, OppilaitoksenOsa)
     var oppilaitoksetAndOsat =
-      queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, totalOppilaitosSize, totalOsaSize)
+      queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, olSize, osaSize)
     while (oppilaitoksetAndOsat._1.nonEmpty || oppilaitoksetAndOsat._2.nonEmpty) {
-      totalOppilaitosSize += oppilaitoksetAndOsat._1.size
-      totalOsaSize += oppilaitoksetAndOsat._2.size
-      if (totalOsaSize > 0) {
+      olSize += oppilaitoksetAndOsat._1.size
+      osaSize += oppilaitoksetAndOsat._2.size
+      if (osaSize > 0) {
         // Jos kysely palauttaa oppilaitoksen osia > 0, kaikki oppilaitokset on siinä vaiheessa saatu haettua
         queriedTypes = Seq(OppilaitoksenOsa)
       }
@@ -253,12 +253,12 @@ class RaportointiService(
         enriched
       )
       oppilaitoksetAndOsat =
-        queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, totalOppilaitosSize, totalOsaSize)
+        queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, olSize, osaSize)
     }
-    if (totalOppilaitosSize > 0 || totalOsaSize > 0)
-      s"""Yhteensä $totalOppilaitosSize oppilaitosta,
-         |$totalOsaSize oppilaitoksen osaa tallennettu S3 buckettiin, avaimet ${keyList.mkString(", ")}""".stripMargin
-    else NO_RESULTS_MESSAGE
+    if (olSize > 0 || osaSize > 0) {
+      val keyText = if (keyList.size > 1) s"avaimet ${keyList.mkString(", ")}" else s"avain ${keyList.head}"
+      s"""Yhteensä $olSize oppilaitosta, $osaSize oppilaitoksen osaa tallennettu S3 buckettiin, $keyText"""
+    } else NO_RESULTS_MESSAGE
   }
 
   private def queryOppilaitoksetAndOrOsatUpToMaxLimit(
