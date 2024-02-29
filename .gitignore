@@ -5,6 +5,8 @@
 kouta-temp-db/
 target/
 embedded-jetty-vars.yml
+.bloop/
+.metals/
 
 kouta_backend.sql
 .DS_Store
