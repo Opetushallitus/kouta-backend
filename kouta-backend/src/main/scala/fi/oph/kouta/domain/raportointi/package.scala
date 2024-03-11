@@ -3,12 +3,13 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid}
 import fi.oph.kouta.service.Pistetieto
 
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
 package object raportointi {
   val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+  val SiirtotiedostoTimezone = ZoneId.of("Europe/Helsinki")
 
   case class YhteyshenkiloRaporttiItem(
       nimi: Kielistetty = Map(),

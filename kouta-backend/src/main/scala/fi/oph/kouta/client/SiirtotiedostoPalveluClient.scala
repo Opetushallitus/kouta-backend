@@ -13,7 +13,7 @@ import software.amazon.awssdk.services.s3.presigner.S3Presigner
 
 import java.io.ByteArrayInputStream
 import java.net.URI
-import java.time.{Duration, Instant, LocalDateTime}
+import java.time.{Duration, Instant, LocalDateTime, ZonedDateTime}
 import java.util.{Date, Optional}
 
 object SiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient
@@ -24,17 +24,16 @@ class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
   val saveRetryCount          = config.transferFileSaveRetryCount
 
   def saveSiirtotiedosto[T](
-      contentStartTime: Option[LocalDateTime],
-      contentEndTime: Option[LocalDateTime],
+      contentCreationTime: ZonedDateTime,
       contentType: String,
       content: Seq[T]
   ): String =
     siirtotiedostoPalvelu
       .saveSiirtotiedosto(
-        contentStartTime.map(RaportointiDateTimeFormat.format(_)).orNull,
-        contentEndTime.map(RaportointiDateTimeFormat.format(_)).orNull,
+        RaportointiDateTimeFormat.format(contentCreationTime),
         "kouta",
         contentType,
+        "",
         new ByteArrayInputStream(writePretty(content).getBytes()),
         saveRetryCount
       )
