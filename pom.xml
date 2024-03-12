@@ -44,7 +44,7 @@
         <!-- Database related properties -->
         <flyway.version>8.5.12</flyway.version>
         <slick.version>3.4.1</slick.version>
-        <jdbc.version>42.2.5</jdbc.version>
+        <jdbc.version>42.7.2</jdbc.version>
 
         <!-- Test properties -->
         <scalatest.version>3.2.0-M4</scalatest.version>
