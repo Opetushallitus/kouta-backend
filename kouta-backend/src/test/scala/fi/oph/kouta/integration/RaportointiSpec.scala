@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestOids.{AmmOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, YoOid}
+import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, OphOid, ParentOid, YoOid}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.integration.fixture.RaportointiFixture
 import fi.oph.kouta.mocks.LokalisointiServiceMock
@@ -15,7 +15,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
   var toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid: String       = _
   var hakuOid1, hakuOid2, hakuOid3: String                                     = _
   var hakukohdeOid1, hakukohdeOid2, hakukohdeOid3: String                      = _
-  val oppilaitosOid1                                                           = YoOid
+  val oppilaitosOid1                                                           = ChildOid
   val oppilaitosOid2                                                           = AmmOid
   val oppilaitosOid3                                                           = LukioOid
   val oppilaitoksenOsaOid1                                                     = EvilChildOid
@@ -64,6 +64,18 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
     put(oppilaitos(oppilaitosOid1.s), ophSession)
     put(oppilaitos(oppilaitosOid2.s), ophSession)
     put(oppilaitos(oppilaitosOid3.s), ophSession)
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(oppilaitoksenOsaOid1)).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid1.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(oppilaitoksenOsaOid2)).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid2.s))
+    when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(oppilaitoksenOsaOid3)).
+      thenReturn(TestData.organisaatioServiceOrgChild.copy(oid = oppilaitoksenOsaOid3.s))
+    val oph = TestData.organisaatioServiceOrg.copy(oid = OphOid.s)
+    val parent = TestData.organisaatioServiceOrg.copy(oid = ParentOid.s)
+    val child = TestData.organisaatioServiceOrg.copy(oid = ChildOid.s)
+    when(mockOrganisaatioServiceClient.getOrganisaatiotWithOidsFromCache(Seq(ChildOid, ParentOid, OphOid))).
+      thenReturn(Seq(child, parent, oph))
+
     put(oppilaitoksenOsa(oppilaitoksenOsaOid1.s, oppilaitosOid1.s), ophSession)
     put(oppilaitoksenOsa(oppilaitoksenOsaOid2.s, oppilaitosOid2.s), ophSession)
     put(oppilaitoksenOsa(oppilaitoksenOsaOid3.s, oppilaitosOid3.s), ophSession)

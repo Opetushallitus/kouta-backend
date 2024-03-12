@@ -413,7 +413,7 @@ class KoulutusService(
   }
 
   def enrichKoulutus(ePerusteId: Option[Long], nimi: Kielistetty, muokkaajaOid: UserOid): KoulutusEnrichedData = {
-    val peruste        = ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
+    val peruste        = if (ePerusteId.isDefined) ePerusteKoodiClient.getEPerusteCached(ePerusteId.get) else None
     val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(nimi, peruste)
     val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(muokkaajaOid)
     val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
