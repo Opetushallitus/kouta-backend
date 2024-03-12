@@ -24,13 +24,11 @@ class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
   val saveRetryCount          = config.transferFileSaveRetryCount
 
   def saveSiirtotiedosto[T](
-      contentCreationTime: ZonedDateTime,
       contentType: String,
       content: Seq[T]
   ): String =
     siirtotiedostoPalvelu
       .saveSiirtotiedosto(
-        RaportointiDateTimeFormat.format(contentCreationTime),
         "kouta",
         contentType,
         "",

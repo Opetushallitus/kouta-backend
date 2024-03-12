@@ -10,7 +10,6 @@ import scala.collection.mutable.ListBuffer
 class MockSiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient {
   val contentBuffer: ListBuffer[String] = new ListBuffer[String]();
   override def saveSiirtotiedosto[T](
-      contentCreationTime: ZonedDateTime,
       contentType: String,
       content: Seq[T]
   ): String = {
