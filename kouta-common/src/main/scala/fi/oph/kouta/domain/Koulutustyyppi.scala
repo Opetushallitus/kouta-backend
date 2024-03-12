@@ -73,6 +73,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     //
   )
 
+  // TODO: Tarvitaanko oppilaitostyyppiureissa versionumeroa? Nyt joudutaan poistamaan ne kouta-uin puolella
   def oppilaitostyyppi2koulutustyyppi: Map[String, Seq[Koulutustyyppi]] = Map(
     "oppilaitostyyppi_01#1" -> Seq(TaiteenPerusopetus), //Taiteen perusopetuksen oppilaitokset (ei musiikki)
     "oppilaitostyyppi_11#1" -> Seq(Tuva, AikuistenPerusopetus, TaiteenPerusopetus), //Peruskoulut

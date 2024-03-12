@@ -2,6 +2,7 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.security.{ExternalSession, Session}
+import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
 import org.json4s.JsonAST.{JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
@@ -18,7 +19,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     toteutusMetadataSerializer,
     sisaltoSerializer,
     valintaperusteMetadataSerializer,
-    sessionSerializer
+    sessionSerializer,
+    organisaationYhteystietoSerializer
   )
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ =>
@@ -108,7 +110,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           Koulutustyyppi.withName(tyyppi)
         }.getOrElse(Amm) match {
           case kt if Koulutustyyppi.values contains kt => s.extract[GenericValintaperusteMetadata]
-          case kt                                     => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
+          case kt                                      => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
         }
       },
       { case j: ValintaperusteMetadata =>
@@ -157,6 +159,105 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         implicit def formats: Formats = genericKoutaFormats
 
         Extraction.decompose(j)
+      }
+    )
+  )
+
+  def toPostinumeroKoodiuri(jsonObject: JObject): Option[String] = {
+    Try(jsonObject \ "postinumeroUri").collect { case JString(postinumerokoodiuri) =>
+      postinumerokoodiuri
+    }.toOption
+  }
+
+  private def organisaationYhteystietoSerializer = new CustomSerializer[OrganisaationYhteystieto](_ =>
+    (
+      { case s: JObject =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        s \ "kieli" match {
+          case JString(kieliKoodiUri) =>
+            val kieli = toKieli(withoutKoodiVersion(kieliKoodiUri)).get
+
+            s \ "osoiteTyyppi" match {
+              case JString("kaynti") =>
+                val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+
+                OrgOsoite(
+                  osoiteTyyppi = "kaynti",
+                  kieli = kieli,
+                  osoite = (s \ "osoite").extract[String],
+                  postinumeroUri = postinumerokoodiuri
+                )
+
+              case JString("posti") =>
+                val postinumerokoodiuri = toPostinumeroKoodiuri(s)
+
+                OrgOsoite(
+                  osoiteTyyppi = "posti",
+                  kieli = kieli,
+                  osoite = (s \ "osoite").extract[String],
+                  postinumeroUri = postinumerokoodiuri
+                )
+
+              case _ =>
+                s \ "email" match {
+                  case JString(email) =>
+                    Email(
+                      kieli = kieli,
+                      email = email
+                    )
+                  case _ =>
+                    s \ "tyyppi" match {
+                      case JString("puhelin") =>
+                        Puhelin(
+                          kieli = kieli,
+                          numero = (s \ "numero").extract[String]
+                        )
+                      case _ =>
+                        s \ "www" match {
+                          case JString(www) =>
+                            Www(
+                              kieli = kieli,
+                              www = www
+                            )
+                          case _ => null
+                        }
+                    }
+                }
+            }
+          case _ => null
+        }
+      },
+      {
+        case o: OrgOsoite =>
+          implicit def formats: Formats = genericKoutaFormats
+
+          val kieli = toKieliKoodiUri(o.kieli)
+          JObject(List(
+            "osoiteTyyppi" -> Extraction.decompose(o.osoiteTyyppi),
+            "kieli" -> JString(kieli),
+            "osoite" -> Extraction.decompose(o.osoite),
+            "postinumeroUri" -> Extraction.decompose(o.postinumeroUri))
+          )
+
+        case p: Puhelin =>
+          implicit def formats: Formats = genericKoutaFormats
+
+          val kieli = toKieliKoodiUri(p.kieli)
+          JObject(List(
+            "tyyppi" -> JString("puhelin"),
+            "numero" -> Extraction.decompose(p.numero),
+            "kieli" -> JString(kieli))
+          )
+
+        case e: Email =>
+          implicit def formats: Formats = genericKoutaFormats
+
+          val kieli = toKieliKoodiUri(e.kieli)
+          JObject(List(
+            "kieli" -> JString(kieli),
+            "email" -> Extraction.decompose(e.email))
+          )
       }
     )
   )

@@ -24,6 +24,11 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
 
   def dockerConfig: LocalstackDockerConfiguration = {
     LocalstackDockerConfiguration.builder()
+      .environmentVariables(Map(
+        "SKIP_SSL_CERT_DOWNLOAD" -> "1",
+        "SKIP_INFRA_DOWNLOADS" -> "1",
+        "DISABLE_EVENTS" -> "1"
+      ).asJava)
       .randomizePorts(false)
       .pullNewImage(false)
       .imageTag("1.0.4")

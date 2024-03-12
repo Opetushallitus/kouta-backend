@@ -68,11 +68,6 @@ trait ExtractorBase extends KoutaJsonFormats {
   })
 }
 
-trait MigrationExtractors extends ExtractorBase {
-  implicit val findResult: GetResult[Option[String]] = GetResult(r => r.nextStringOption())
-  implicit val getResult: GetResult[String] = GetResult(r => r.nextString())
-}
-
 trait KoulutusExtractors extends ExtractorBase {
   implicit val getKoulutusResult: GetResult[Koulutus] = GetResult(r => Koulutus(
     oid = r.nextStringOption().map(KoulutusOid),
@@ -475,7 +470,7 @@ trait OppilaitosExtractors extends ExtractorBase {
     if (osaOid != null) {
       osa = Some(OppilaitoksenOsa(
         oid = OrganisaatioOid(osaOid),
-        oppilaitosOid = OrganisaatioOid(r.nextString()),
+        oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
         tila = Julkaisutila.withName(r.nextString()),
         kielivalinta = extractKielivalinta(r.nextStringOption()),
         metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),
@@ -495,7 +490,7 @@ trait OppilaitosExtractors extends ExtractorBase {
 trait OppilaitoksenOsaExtractors extends ExtractorBase {
   implicit val getOppilaitoksenOsaResult: GetResult[OppilaitoksenOsa] = GetResult(r => OppilaitoksenOsa(
     oid = OrganisaatioOid(r.nextString()),
-    oppilaitosOid = OrganisaatioOid(r.nextString()),
+    oppilaitosOid = r.nextStringOption().map(OrganisaatioOid),
     tila = Julkaisutila.withName(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     metadata = r.nextStringOption().map(read[OppilaitoksenOsaMetadata]),

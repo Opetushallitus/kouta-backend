@@ -1709,7 +1709,7 @@ object TestData {
 
   val JulkaistuOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
-    oppilaitosOid = ChildOid,
+    oppilaitosOid = Some(ChildOid),
     tila = Julkaistu,
     esikatselu = true,
     metadata = Some(
@@ -1744,42 +1744,116 @@ object TestData {
 
   val MinOppilaitoksenOsa: OppilaitoksenOsa = OppilaitoksenOsa(
     oid = GrandChildOid,
-    oppilaitosOid = ChildOid,
+    oppilaitosOid = Some(ChildOid),
     tila = Tallennettu,
     organisaatioOid = ChildOid,
     kielivalinta = Seq(Fi, Sv),
     muokkaaja = TestUserOid
   )
 
-  val organisaationOsa: Organisaatio = Organisaatio(
+  val organisaatioServiceOrgOrganisaationOsa: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = GrandChildOid.toString,
     parentOidPath =
-      s"${GrandChildOid.toString}/${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
-    nimi = Map(Fi -> "Organisation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+      s"${ChildOid.toString}/1.2.246.562.10.97036773279/1.2.246.562.10.00000000001",
+    nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     kotipaikkaUri = Some("kunta_123"),
+    yhteystiedot = Some(List(
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      Puhelin(kieli = Fi, numero = "044 0909090"),
+    )),
     status = "AKTIIVINEN",
-    children = List(),
-    organisaatiotyypit = List("organisaatiotyyppi_1")
+    children = None,
+    organisaatiotyypit = Some(List("organisaatiotyyppi_1")),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
+  )
+
+  val organisaatioServiceOrg: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
+    oid = ChildOid.toString,
+    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
+    oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
+    nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+    yhteystiedot = Some(List(
+      Puhelin(kieli = Fi, numero = "044 0909090"),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501")),
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502")),
+      Puhelin(kieli = Sv, numero = "044 0101010"),
+      Email(kieli = Fi, email = "virkailija@opisto.fi"))),
+    status = "AKTIIVINEN",
+    kotipaikkaUri = Some("kunta_123"),
+    children = Some(List(organisaatioServiceOrgOrganisaationOsa)),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    tyypit = Some(List("organisaatiotyyppi_02"))
+  )
+
+  // organisaatio.with.oid, organisaatiot.with.oids
+  val organisaatioServiceOrgWithOid: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
+    oid = ChildOid.toString,
+    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
+    nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+    yhteystiedot = Some(List(
+      Puhelin(kieli = Fi, numero = "044 0909090"),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Fi, osoite = "PL 1", postinumeroUri = Some("posti_90501")),
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      OrgOsoite(osoiteTyyppi = "posti", kieli = Sv, osoite = "PB 2", postinumeroUri = Some("posti_90502")),
+      Puhelin(kieli = Sv, numero = "044 0101010"),
+      Email(kieli = Fi, email = "virkailija@opisto.fi"))),
+    status = "AKTIIVINEN",
+    kotipaikkaUri = Some("kunta_123"),
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    tyypit = Some(List("organisaatiotyyppi_02"))
   )
 
   val organisaatio: Organisaatio = Organisaatio(
     oid = ChildOid.toString,
-    parentOidPath = s"${ChildOid.toString}/${ParentOid.toString}/1.2.246.562.10.00000000001",
-    oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
+    parentOids = List(ChildOid, ParentOid, OphOid),
     nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
-    status = "AKTIIVINEN",
+    yhteystiedot = Some(Yhteystieto(
+      nimi = Map(Fi -> "Organisaatio", Sv -> "Organisation", En -> "Organization"),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
+      postiosoite = Some(Osoite(osoite = Map(Fi -> "PL 1", Sv -> "PB 2"), postinumeroKoodiUri = Some("posti_90501"))) ,
+      puhelinnumero = Map(Fi -> "044 0909090", Sv -> "044 0101010"),
+      sahkoposti = Map(Fi -> "virkailija@opisto.fi")
+    )),
     kotipaikkaUri = Some("kunta_123"),
-    children = List(organisaationOsa)
+    oppilaitostyyppiUri = Some("oppilaitostyyppi_63"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_02"))
   )
 
-  val parentOrganisaatio: Organisaatio = Organisaatio(
-    oid = ParentOid.toString,
-    parentOidPath = s"${ParentOid.toString}/1.2.246.562.10.00000000001",
-    oppilaitostyyppi = Some("oppilaitostyyppi_43#1"),
-    nimi = Map(Fi -> "Parent Organisaatio", Sv -> "Parent Organisation", En -> "Parent Organization"),
-    status = "AKTIIVINEN",
+  // organisaatio.children
+  val organisaatioServiceOrgChild: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
+    oid = GrandChildOid.toString,
+    parentOidPath =
+      s"${ChildOid.toString}/${ParentOid.toString}/${OphOid.toString}",
+    nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
     kotipaikkaUri = Some("kunta_123"),
-    children = List(organisaatio)
+    yhteystiedot = Some(List(
+      OrgOsoite(osoiteTyyppi = "kaynti", kieli = Fi, osoite = "Opistokatu 1", postinumeroUri = Some("posti_90500")),
+      Puhelin(kieli = Fi, numero = "044 0909090"),
+    )),
+    status = "AKTIIVINEN",
+    oppilaitosTyyppiUri = Some("oppilaitostyyppi_63#1"),
+    tyypit = Some(List("organisaatiotyyppi_1")),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2")
+  )
+
+  val organisaatioChild: Organisaatio = Organisaatio(
+    oid = GrandChildOid.toString,
+    parentOids = List(ChildOid, ParentOid, OphOid),
+    nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+    yhteystiedot = Some(Yhteystieto(
+      nimi = Map(Fi -> "Organisaation osa", Sv -> "Barn Organisation", En -> "Child Organization"),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Opistokatu 1"), postinumeroKoodiUri = Some("posti_90500"))),
+      puhelinnumero = Map(Fi -> "044 0909090"),
+    )),
+    kotipaikkaUri = Some("kunta_123"),
+    oppilaitostyyppiUri = Some("oppilaitostyyppi_63"),
+    kieletUris = List("oppilaitoksenopetuskieli_1#2"),
+    organisaatiotyyppiUris = Some(List("organisaatiotyyppi_1"))
   )
 
   val inPastAikaleima             = inPast(1000)

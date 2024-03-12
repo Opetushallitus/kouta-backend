@@ -419,7 +419,7 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) =>
-        val peruste        = k.ePerusteId.map(ePerusteKoodiClient.getEPerusteCached)
+        val peruste        = k.ePerusteId.flatMap(ePerusteKoodiClient.getEPerusteCached)
         val enrichedNimi   = enrichKoulutusNimiWithEPerusteVoimaantulo(k.nimi, peruste)
         val muokkaaja      = oppijanumerorekisteriClient.getHenkilöFromCache(k.muokkaaja)
         val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
