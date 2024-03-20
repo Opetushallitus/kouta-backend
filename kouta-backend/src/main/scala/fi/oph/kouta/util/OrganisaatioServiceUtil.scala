@@ -37,6 +37,7 @@ object OrganisaatioServiceUtil {
 
     val kielistettyPostinumero = osoitteet.flatMap(osoite => {
       osoite.postinumeroUri match {
+        case Some(postinumeroUri) if postinumeroUri.isEmpty => None
         case Some(postinumeroUri) => Some(osoite.kieli, postinumeroUri)
         case None => None
       }
