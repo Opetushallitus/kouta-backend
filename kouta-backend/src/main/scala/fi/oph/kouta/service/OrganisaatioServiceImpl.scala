@@ -85,7 +85,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
           flattenOrganisaatioWithChildren(organisaatioHierarkia.organisaatiot.head)._2.children.getOrElse(List())
         } else List()
 
-        val childrenWithYhteystiedot = if (yhteystiedotForOsat) {
+        val updatedChildren = if (yhteystiedotForOsat) {
           children.map(child => {
             getOrganisaatio(OrganisaatioOid(child.oid)) match {
               case Right(organisaatio: OrganisaatioServiceOrg) =>
@@ -96,7 +96,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
           children
         }
 
-        Right(childrenWithYhteystiedot)
+        Right(updatedChildren)
       case Failure(exception) => Left(exception)
     }
   }
