@@ -122,7 +122,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
   "toOsoite" should "return käyntiosoite in Fi and postinumerokoodiuri" in {
     val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")))
 
-    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228"), Some(Map(Fi -> "posti_15110")))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228"), Map(Fi -> "posti_15110"))))
   }
 
   it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri" in {
@@ -130,7 +130,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
       OrgOsoite("kaynti", Sv, "Högskolavägen 228", Some("posti_15111")))
 
-    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some(Map(Fi -> "posti_15110", Sv -> "posti_15111")))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map(Fi -> "posti_15110", Sv -> "posti_15111"))))
   }
 
   it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri only for Fi" in {
@@ -138,7 +138,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
       OrgOsoite("kaynti", Sv, "Högskolavägen 228", None))
 
-    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some(Map(Fi -> "posti_15110")))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map(Fi -> "posti_15110"))))
   }
 
   it should "return käyntiosoite without postinumero" in {
@@ -147,7 +147,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       OrgOsoite("kaynti", Sv, "Högskolavägen 228", None))
 
     assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(
-      Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), None)))
+      Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map())))
   }
 
   it should "return None if there is no osoite" in {
@@ -168,8 +168,8 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
       postiosoite = Some(Osoite(
         osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"),
-        postinumeroKoodiUri = Some(Map(Fi -> "posti_15110", Sv -> "posti_15111")))),
-      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some(Map(Fi -> "posti_15110")))),
+        postinumeroKoodiUri = Map(Fi -> "posti_15110", Sv -> "posti_15111"))),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Map(Fi -> "posti_15110"))),
       puhelinnumero = Map(Fi -> "050 44042961"),
       sahkoposti = Map(Fi -> "koulutus@opisto.fi"),
       www = Map(Fi -> "http://www.salpaus.fi")

@@ -46,8 +46,7 @@ object OrganisaatioServiceUtil {
     kielistettyOsoite match {
       case _ if kielistettyOsoite.isEmpty => None
       case _ =>
-        val kielistettyPnro = if (kielistettyPostinumero.nonEmpty) Some(kielistettyPostinumero) else None
-        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = kielistettyPnro))
+        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = kielistettyPostinumero))
     }
   }
 

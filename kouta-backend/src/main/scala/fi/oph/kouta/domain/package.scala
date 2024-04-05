@@ -913,14 +913,14 @@ package object domain {
     )
   }
 
-  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Option[Kielistetty]) {
+  case class Osoite(osoite: Kielistetty = Map(), postinumeroKoodiUri: Kielistetty = Map()) {
     def validate(
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
         koodistoCheckFunc: String => ExternalQueryResult
     ): IsValid = {
-      val koodiurit = entityWithNewValues.flatMap(_.postinumeroKoodiUri)
+      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
         .flatMap((k: Kielistetty) => Some(k.values.toList))
 
       and(
@@ -937,7 +937,7 @@ package object domain {
           vCtx.tila,
           and(
             validateKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
-            assertNotOptional(postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+            validateKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
           )
         )
       )

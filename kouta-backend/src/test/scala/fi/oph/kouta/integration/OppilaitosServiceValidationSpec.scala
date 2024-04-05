@@ -31,7 +31,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
   val max         = TestData.JulkaistuOppilaitos
   val maxMetadata = max.metadata.get
 
-  val invalidOsoite = Some(Osoite1.copy(postinumeroKoodiUri = Some(Map(Fi -> "puppu"))))
+  val invalidOsoite = Some(Osoite1.copy(postinumeroKoodiUri = Map(Fi -> "puppu")))
   def minWithYhteystieto(yt: Yhteystieto): Oppilaitos =
     min.copy(metadata = Some(OppilaitosMetadata(hakijapalveluidenYhteystiedot = Some(yt))))
 
