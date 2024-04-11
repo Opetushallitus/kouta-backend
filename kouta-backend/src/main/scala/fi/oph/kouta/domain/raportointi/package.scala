@@ -9,7 +9,6 @@ import java.util.UUID
 
 package object raportointi {
   val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
-  val SiirtotiedostoTimezone = ZoneId.of("Europe/Helsinki")
 
   case class YhteyshenkiloRaporttiItem(
       nimi: Kielistetty = Map(),
@@ -65,7 +64,8 @@ package object raportointi {
       hakuOid: Option[HakuOid],
       valintatapajonoTyyppi: Option[String],
       aloituspaikat: Option[Int],
-      ensisijaisestiHakeneet: Option[Int]
+      ensisijaisestiHakeneet: Option[Int],
+      modified: Option[Modified]
   )
 
   case class KoulutuksenAlkamiskausiRaporttiItem(

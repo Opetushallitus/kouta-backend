@@ -20,7 +20,7 @@ object SiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient
 
 class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
   val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration;
-  val siirtotiedostoPalvelu   = new SiirtotiedostoPalvelu(config.region.getOrElse("eu-west-1"), config.transferFileBucket)
+  val siirtotiedostoPalvelu   = new SiirtotiedostoPalvelu(config.region.getOrElse("eu-west-1"), config.transferFileBucket, config.transferFileTargetRoleArn)
   val saveRetryCount          = config.transferFileSaveRetryCount
 
   def saveSiirtotiedosto[T](

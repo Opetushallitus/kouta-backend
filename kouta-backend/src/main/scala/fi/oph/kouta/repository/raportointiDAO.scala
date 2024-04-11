@@ -391,7 +391,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   ): DBIO[Vector[PistetietoRaporttiItem]] = {
     val selectPart =
       """select tarjoaja_oid, hakukohdekoodi, pisteet, vuosi, valintatapajono_oid, hakukohde_oid, haku_oid,
-                    valintatapajono_tyyppi, aloituspaikat, ensisijaisesti_hakeneet from pistehistoria"""
+                    valintatapajono_tyyppi, aloituspaikat, ensisijaisesti_hakeneet, updated from pistehistoria"""
     selectByTimerange(startTime, endTime, selectPart, "updated", limit, offset).as[PistetietoRaporttiItem]
   }
 

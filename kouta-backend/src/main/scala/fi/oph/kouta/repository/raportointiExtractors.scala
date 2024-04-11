@@ -217,7 +217,8 @@ trait RaportointiExtractors extends ExtractorBase {
       hakuOid = r.nextStringOption().map(HakuOid),
       valintatapajonoTyyppi = r.nextStringOption(),
       aloituspaikat = r.nextIntOption(),
-      ensisijaisestiHakeneet = r.nextIntOption()
+      ensisijaisestiHakeneet = r.nextIntOption(),
+      modified = r.nextTimestampOption().map(timeStampToModified)
     )
   )
 }

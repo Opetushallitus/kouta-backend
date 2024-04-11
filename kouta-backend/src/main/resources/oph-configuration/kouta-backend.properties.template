@@ -28,6 +28,7 @@ kouta-backend.s3.region={{kouta_backend_s3_region}}
 kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
 kouta-backend.s3.imageBucketPublicUrl={{kouta_backend_s3_image_bucket_public_url}}
 kouta-backend.s3.transferFileBucket={{kouta_backend_s3_transfer_file_bucket}}
+kouta-backend.s3.transferFileTargetRoleArn={{kouta_backend_s3_transfer_file_target_role_arn}}
 kouta-backend.s3.transferFileSaveRetryCount={{kouta_backend_s3_transfer_file_save_retry_count}}
 kouta-backend.s3.transferFileMaxItemCount={{kouta_backend_s3_transfer_file_max_item_count}}
 
