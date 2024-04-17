@@ -35,6 +35,7 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
         Telma,
         VapaaSivistystyoOpistovuosi,
         VapaaSivistystyoMuu,
+        VapaaSivistystyoOsaamismerkki,
         AikuistenPerusopetus,
         TaiteenPerusopetus
       )
@@ -60,6 +61,7 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
         Telma,
         VapaaSivistystyoOpistovuosi,
         VapaaSivistystyoMuu,
+        VapaaSivistystyoOsaamismerkki,
         AikuistenPerusopetus,
         TaiteenPerusopetus
       )
