@@ -1,12 +1,11 @@
 package fi.oph.kouta.images
 
-import java.io.{ByteArrayInputStream, DataInputStream, InputStream}
-
 import fi.oph.kouta.servlet._
+
+import java.io.{ByteArrayInputStream, DataInputStream, InputStream}
 import javax.imageio.ImageIO
 import javax.imageio.stream.ImageInputStream
 import javax.xml.parsers.SAXParser
-
 import scala.util.{Failure, Try}
 import scala.xml.Elem
 import scala.xml.factory.XMLLoader
@@ -84,7 +83,7 @@ trait ImageServlet {
     imageData.get
   }
 
-  private def checkImageFormatAndSize(image: Image, sizeSpecs: ImageSizeSpecs): Unit = {
+  private def checkImageFormat(image: Image) = {
     ImageIO.setUseCache(false)
     val mimeReaders = ImageIO.getImageReadersByMIMEType(image.format.contentType)
     val reader = mimeReaders.next()
@@ -103,12 +102,49 @@ trait ImageServlet {
     }
     reader.dispose()
 
+    bufferedImage
+  }
+
+  private def checkImageFormatAndSize(image: Image, sizeSpecs: ImageSizeSpecs): Unit = {
+    val bufferedImage = checkImageFormat(image)
+
     val (width, height) = (bufferedImage.get.getWidth, bufferedImage.get.getHeight)
 
-    if (width < sizeSpecs.minWidth || height < sizeSpecs.minHeight) {
-      throw new IllegalArgumentException(
-        s"Kuva on väärän kokoinen ($width x $height), kun minimikoko on ${sizeSpecs.minWidth} x ${sizeSpecs.minHeight}"
-      )
+    def erroMessagePrefix(width: Int, height: Int) = {
+      s"Kuva on väärän kokoinen ($width x $height)"
     }
+
+    def tooSmallImageMessage(specs: ImageSizeSpecs) = {
+      s"minimikoko on ${specs.minWidth} x ${specs.minHeight}"
+    }
+
+    def tooLargeImageMessage(specs: ImageWithMaxSizeSpecs) =
+      s"maksimikoko on ${specs.maxWidth} x ${specs.maxHeight}"
+
+    sizeSpecs match {
+      case specs: ImageWithMinSizeSpecs => {
+        if (width < specs.minWidth || height < specs.minHeight) {
+          throw new IllegalArgumentException(
+            s"${erroMessagePrefix(width, height)}, kun ${tooSmallImageMessage(specs)}"
+          )
+        }
+      }
+      case specs: ImageWithMaxSizeSpecs =>
+        val tooLarge = if (width > specs.maxWidth || height > specs.maxHeight) Some(tooLargeImageMessage(specs)) else None
+        val tooSmall = if (width < specs.minWidth || height < specs.minHeight) Some(tooSmallImageMessage(specs)) else None
+        if (tooLarge.isDefined || tooSmall.isDefined) {
+          val errorMessage = tooLarge match {
+            case Some(largeMessage) => largeMessage
+            case None => tooSmall match {
+              case Some(smallMessage) => smallMessage
+            }
+          }
+
+          throw new IllegalArgumentException(
+            s"${erroMessagePrefix(width, height)}, kun $errorMessage"
+          )
+        }
+    }
+
   }
 }
