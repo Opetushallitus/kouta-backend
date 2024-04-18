@@ -683,6 +683,18 @@ object TestData {
     )
   )
 
+  val VapaaSivistystyoOsaamismerkkiKoulutus: Koulutus = VapaaSivistystyoOpistovuosiKoulutus.copy(
+    koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    muokkaaja = OphUserOid,
+    metadata = Some(
+      VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+        osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+        isMuokkaajaOphVirkailija = Some(false)
+      )
+    )
+  )
+
   val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,

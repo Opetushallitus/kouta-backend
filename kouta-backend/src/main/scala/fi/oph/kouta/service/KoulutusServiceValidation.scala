@@ -96,7 +96,7 @@ class KoulutusServiceValidation(
             koulutus.johtaaTutkintoon == Koulutustyyppi.isTutkintoonJohtava(tyyppi),
             "johtaaTutkintoon",
             invalidTutkintoonjohtavuus(tyyppi.toString)
-          ),
+          )
         )
       ),
       validateImageUrlWithConfig(koulutus.teemakuva, "teemakuva")
@@ -204,6 +204,12 @@ class KoulutusServiceValidation(
           assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
           assertNotDefined(koulutus.ePerusteId, "ePerusteId")
         )
+      case VapaaSivistystyoOsaamismerkki =>
+        and(
+          assertNotDefined(koulutus.sorakuvausId, "sorakuvausId"),
+          assertEmpty(koulutus.koulutuksetKoodiUri, "koulutuksetKoodiUri"),
+          assertNotDefined(koulutus.ePerusteId, "ePerusteId")
+        )
       // TODO: Lisättävä näille koulutustyypeille validointi koulutuksetKoodiUri-kentälle
       case Tuva | Telma | VapaaSivistystyoOpistovuosi =>
         and(
@@ -277,6 +283,7 @@ class KoulutusServiceValidation(
         Telma,
         VapaaSivistystyoOpistovuosi,
         VapaaSivistystyoMuu,
+        VapaaSivistystyoOsaamismerkki,
         AikuistenPerusopetus,
         TaiteenPerusopetus
       )
@@ -368,6 +375,12 @@ class KoulutusServiceValidation(
         )
       case m: VapaaSivistystyoMuuKoulutusMetadata =>
         validateVapaaSivistystyoMuuKoulutus(
+          validationContext,
+          koulutusDiffResolver,
+          m
+        )
+      case m: VapaaSivistystyoOsaamismerkkiKoulutusMetadata =>
+        validateVapaaSivistystyoOsaamismerkkiKoulutus(
           validationContext,
           koulutusDiffResolver,
           m
@@ -757,6 +770,32 @@ class KoulutusServiceValidation(
         validationContext
       )
     )
+
+  private def validateVapaaSivistystyoOsaamismerkkiKoulutus(
+      validationContext: ValidationContext,
+      koulutusDiffResolver: KoulutusDiffResolver,
+      metadata: VapaaSivistystyoOsaamismerkkiKoulutusMetadata
+  ): IsValid = {
+    and(
+      assertNotOptional(metadata.osaamismerkkiKoodiUri, "metadata.osaamismerkkiKoodiUri"),
+      validateIfDefined[String](
+        metadata.osaamismerkkiKoodiUri,
+        uri =>
+          assertKoodistoQueryResult(
+            uri,
+            koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, _),
+            "metadata.osaamismerkkiKoodiUri",
+            validationContext,
+            invalidKoodiuri(uri, "osaamismerkit")
+          )
+      ),
+      assertEmptyKielistetty(metadata.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin"),
+      assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
+      assertNotDefined(metadata.opintojenLaajuusNumero, "metadata.opintojenLaajuusNumero"),
+      assertNotDefined(metadata.opintojenLaajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri"),
+      assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
+    )
+  }
 
   private def assertOpinnonTyyppiKoodiUri(koodiUri: Option[String], validationContext: ValidationContext): IsValid = {
     validateIfDefined[String](

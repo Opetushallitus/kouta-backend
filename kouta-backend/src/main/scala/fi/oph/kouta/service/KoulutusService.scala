@@ -260,6 +260,8 @@ class KoulutusService(
             vapaaSivistystyoKoulutusMetadata match {
               case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
                 Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOsaamismerkkiMetadata: VapaaSivistystyoOsaamismerkkiKoulutusMetadata =>
+                Some(vapaaSivistystyoOsaamismerkkiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
                 Some(
                   m.copy(
@@ -381,6 +383,25 @@ class KoulutusService(
             }
           case _ => koulutus
         }
+      case VapaaSivistystyoOsaamismerkki =>
+        koulutus.metadata match {
+          case Some(m: VapaaSivistystyoOsaamismerkkiKoulutusMetadata) =>
+            val osaamismerkinKaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.osaamismerkki")
+            val nimenKaannokset =
+              if (m.osaamismerkkiKoodiUri.isDefined) {
+                getKaannokset(m.osaamismerkkiKoodiUri.get) match {
+                  case Right(kaannokset) => kaannokset
+                  case Left(exp) => throw exp
+                }
+              } else {
+                Map(Fi -> "", Sv -> "", En -> "")
+              }
+            val osaamismerkinNimi = NameHelper.concatAsEntityName(osaamismerkinKaannokset, Some(":"), nimenKaannokset, koulutus.kielivalinta)
+
+            koulutus.copy(nimi = osaamismerkinNimi)
+          case _ => koulutus
+        }
+
       case OpePedagOpinnot =>
         koulutus.copy(koulutuksetKoodiUri =
           getKoodiUriVersionAsStrSeqIfEmpty(koulutus.koulutuksetKoodiUri, "koulutus_919999")

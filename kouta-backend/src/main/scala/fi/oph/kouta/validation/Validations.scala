@@ -95,6 +95,11 @@ object Validations {
     id = "invalidOpinnonTyyppiKoodiuri"
   )
 
+  def invalidKoodiuri(koodiUri: String, tyyppi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua $tyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = s"invalid${tyyppi.capitalize}Koodiuri"
+  )
+
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
       laajuusMin: Option[Double],
       laajuusMax: Option[Double],

@@ -803,6 +803,7 @@ case class VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    osaamismerkkiKoodiUri: Option[String],
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends VapaaSivistystyoKoulutusMetadata
 
