@@ -28,6 +28,13 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
       |          required: true
       |          description: Oppilaitoksen organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: yhteystiedotForOsat
+      |          schema:
+      |            type: boolean
+      |            default: false
+      |          required: false
+      |          description: Palautetaanko yhteystiedot myös oppilaitoksen osille?
       |      responses:
       |        '200':
       |          description: Ok
@@ -40,7 +47,8 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
 
     implicit val authenticated: Authenticated = authenticate()
 
-    oppilaitosService.get(OrganisaatioOid(params("oid"))) match {
+    val yhteystiedotForOsat = params.getOrElse("yhteystiedotForOsat", "false").toBoolean
+    oppilaitosService.get(OrganisaatioOid(params("oid")), yhteystiedotForOsat) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
       case Some((oppilaitos, maybeInstant)) =>
         maybeInstant match {
@@ -213,6 +221,13 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
       |          required: true
       |          description: Oppilaitoksen organisaatio-oid
       |          example: 1.2.246.562.10.00101010101
+      |        - in: query
+      |          name: yhteystiedotForOsat
+      |          schema:
+      |            type: boolean
+      |            default: false
+      |          required: false
+      |          description: Palautetaanko yhteystiedot myös oppilaitoksen osien osille?
       |      responses:
       |        '200':
       |          description: Ok
@@ -225,7 +240,8 @@ class OppilaitoksenOsaServlet(oppilaitoksenOsaService: OppilaitoksenOsaService) 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    oppilaitoksenOsaService.get(OrganisaatioOid(params("oid"))) match {
+    val yhteystiedotForOsat = params.getOrElse("yhteystiedotForOsat", "false").toBoolean
+    oppilaitoksenOsaService.get(OrganisaatioOid(params("oid")), yhteystiedotForOsat) match {
       case None => NotFound("error" -> "Unknown organisaatio oid")
       case Some((oppilaitoksenOsa, maybeInstant)) =>
         maybeInstant match {
