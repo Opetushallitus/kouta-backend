@@ -8,12 +8,12 @@ import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
 
 import java.sql.JDBCType
-import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId}
+import java.time.{Instant, LocalDateTime, OffsetDateTime, ZoneId, ZoneOffset}
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
 
 trait SQLHelpers extends KoutaJsonFormats with Logging {
-
+  val timeZoneId = ZoneId.of("Europe/Helsinki")
   def createOidInParams(x: Seq[Oid]): String = x.find(!_.isValid) match {
     case None if x.isEmpty => s"''"
     case Some(i) => throw new IllegalArgumentException(s"$i ei ole validi oid.")
@@ -57,7 +57,13 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
 
   implicit object SetInstant extends SetParameter[Instant] {
     def apply(v: Instant, pp: PositionedParameters): Unit = {
-      pp.setObject(OffsetDateTime.ofInstant(v, ZoneId.of("Europe/Helsinki")), JDBCType.TIMESTAMP_WITH_TIMEZONE.getVendorTypeNumber)
+      pp.setObject(OffsetDateTime.ofInstant(v, timeZoneId), JDBCType.TIMESTAMP_WITH_TIMEZONE.getVendorTypeNumber)
+    }
+  }
+
+  implicit object SetLocalDateTime extends SetParameter[LocalDateTime] {
+    override def apply(v: LocalDateTime, pp: PositionedParameters): Unit = {
+      SetInstant.apply(v.atZone(timeZoneId).toInstant(), pp)
     }
   }
 

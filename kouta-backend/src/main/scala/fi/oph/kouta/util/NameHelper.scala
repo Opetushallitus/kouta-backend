@@ -8,6 +8,7 @@ import fi.oph.kouta.domain.{
   LukioKoulutusMetadata,
   LukioToteutusMetadata,
   Sv,
+  ToteutusEnrichmentSourceData,
   ToteutusMetadata
 }
 import fi.oph.kouta.client.Henkilo
@@ -31,26 +32,19 @@ object NameHelper {
     }
   }
 
-  def getLukioKoulutusLaajuusNumero(lukioKoulutusMetadata: LukioKoulutusMetadata): Option[String] = {
-    lukioKoulutusMetadata.opintojenLaajuusNumero.map(_.toInt.toString)
-  }
-
   def generateLukioToteutusDisplayName(
-      toteutusMetadata: LukioToteutusMetadata,
-      koulutusMetadata: LukioKoulutusMetadata,
+      source: ToteutusEnrichmentSourceData,
       kaannokset: Map[String, Kielistetty],
       koodiKaannokset: Map[String, Kielistetty]
   ): Kielistetty = {
     val yleislinjaNimiOsa = kaannokset.get("toteutuslomake.lukionYleislinjaNimiOsa")
     val opintopistetta    = kaannokset.get("yleiset.opintopistetta")
-    val lukiolinjat       = toteutusMetadata.painotukset ++ toteutusMetadata.erityisetKoulutustehtavat
 
-    val hasYleislinja = toteutusMetadata.yleislinja
+    val lukiolinjaKaannokset =
+      (if (source.hasLukioYleislinja && yleislinjaNimiOsa.nonEmpty) Seq(yleislinjaNimiOsa) else Seq()) ++
+        source.lukioLinjat.map(l => koodiKaannokset.get(l.koodiUri.split("#").head))
 
-    val lukiolinjaKaannokset = (if (hasYleislinja && yleislinjaNimiOsa.nonEmpty) Seq(yleislinjaNimiOsa) else Seq()) ++
-      lukiolinjat.map(l => koodiKaannokset.get(l.koodiUri.split("#").head))
-
-    val laajuusNumero = getLukioKoulutusLaajuusNumero(koulutusMetadata)
+    val laajuusNumero = source.opintojenLaajuusNumero.map(_.toInt.toString)
 
     List(Fi, Sv, En)
       .map(lng =>
@@ -109,7 +103,7 @@ object NameHelper {
   }
 
   def kielistettyWoNullValues(kielistetty: Kielistetty): Kielistetty =
-    kielistetty.filter({case (_, valueStr) => valueStr != null})
+    kielistetty.filter({ case (_, valueStr) => valueStr != null })
 
   def mergeNames(source: Kielistetty, target: Kielistetty, kielivalinta: Seq[Kieli]): Kielistetty = {
     val targetWoNulls = kielistettyWoNullValues(target)

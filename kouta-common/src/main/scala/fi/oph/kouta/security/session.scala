@@ -16,7 +16,7 @@ sealed abstract class RoleEntity(val entity: String) {
   val roles: Seq[Role] = Seq(Read, Update, Crud)
 
   def createRoles: Seq[Role] = Seq(Crud, Role.Paakayttaja, Role.External)
-  def readRoles: Seq[Role] = Seq(Crud, Role.Indexer, Read, Update, Role.Paakayttaja, Role.External)
+  def readRoles: Seq[Role] = Seq(Crud, Role.Indexer, Read, Update, Role.Paakayttaja, Role.External, Role.Reporter)
   def updateRoles: Seq[Role] = Seq(Crud, Update, Role.Paakayttaja, Role.External)
   def deleteRoles: Seq[Role] = Seq(Crud, Role.Paakayttaja)
 }
@@ -29,6 +29,7 @@ object Role {
   case object Indexer extends Role("APP_KOUTA_INDEKSOINTI")
   case object Paakayttaja extends Role("APP_KOUTA_OPHPAAKAYTTAJA")
   case object External extends Role("APP_KOUTA_EXTERNAL")
+  case object Reporter extends Role("APP_KOUTA_REPORTER")
 
   object Koulutus extends RoleEntity("KOULUTUS")
   object Toteutus extends RoleEntity("TOTEUTUS")
@@ -39,7 +40,7 @@ object Role {
 
   case class UnknownRole(override val name: String) extends Role(name)
 
-  val all: Map[String, Role] = (Paakayttaja :: Indexer :: External :: RoleEntity.all.flatMap(_.roles)).map(r => r.name -> r).toMap
+  val all: Map[String, Role] = (Paakayttaja :: Indexer :: External :: Reporter :: RoleEntity.all.flatMap(_.roles)).map(r => r.name -> r).toMap
 
   def apply(s: String): Role = all.getOrElse(s, UnknownRole(s))
 }
