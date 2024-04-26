@@ -427,6 +427,31 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
+  val VapaaSivistystyoOsaamismerkkiKoulutusMetadataModel: String =
+    """    VapaaSivistystyoOsaamismerkkiKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-osaamismerkki
+      |              enum:
+      |                - vapaa-sivistystyo-osaamismerkki
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            osaamismerkkiKoodiUri:
+      |              type: string
+      |              description: Osaamismerkki. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/osaamismerkit/1)
+      |              example: osaamismerkit_1009#1
+      |""".stripMargin
+
   val AikuistenPerusopetusKoulutusMetadataModel: String =
     """    AikuistenPerusopetusKoulutusMetadata:
       |      allOf:
@@ -585,6 +610,7 @@ package object koulutusMetadata {
     TuvaKoulutusMetadataModel,
     TelmaKoulutusMetadataModel,
     VapaaSivistystyoKoulutusMetadataModel,
+    VapaaSivistystyoOsaamismerkkiKoulutusMetadataModel,
     AikuistenPerusopetusKoulutusMetadataModel,
     ErikoislaakariKoulutusMetadataModel,
     KkOpintokokonaisuusKoulutusMetadataModel,
