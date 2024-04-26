@@ -563,6 +563,9 @@ object Validations {
       id = "onlyTeemakuvaOrEsittelyvideo"
     )
 
+  def hakukohteenLiittaminenNotAllowed(koulutustyyppi: Koulutustyyppi): ErrorMessage =
+    ErrorMessage(msg = s"Hakukohteita ei voi liittää tälle koulutustyypille: $koulutustyyppi", id = "hakukohteenLiittaminenNotAllowed")
+
   val KoulutusKoodiPattern: Pattern                 = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
   val PostinumeroKoodiPattern: Pattern              = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")

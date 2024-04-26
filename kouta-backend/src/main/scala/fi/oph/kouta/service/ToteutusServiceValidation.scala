@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{KoodistoElement}
+import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -23,15 +23,14 @@ object ToteutusServiceValidation
       ToteutusDAO
     )
 
-class ToteutusServiceValidation(
-                                 val koodistoService: KoodistoService,
-                                 val organisaatioService: OrganisaatioService,
-                                 koulutusDAO: KoulutusDAO,
-                                 hakukohdeDAO: HakukohdeDAO,
-                                 val sorakuvausDAO: SorakuvausDAO,
-                                 toteutusDAO: ToteutusDAO
-) extends KoulutusToteutusValidatingService[Toteutus]
-    with RoleEntityAuthorizationService[Toteutus] {
+class ToteutusServiceValidation(val koodistoService: KoodistoService,
+                                val organisaatioService: OrganisaatioService,
+                                koulutusDAO: KoulutusDAO,
+                                hakukohdeDAO: HakukohdeDAO,
+                                val sorakuvausDAO: SorakuvausDAO,
+                                toteutusDAO: ToteutusDAO
+                               ) extends KoulutusToteutusValidatingService[Toteutus]
+  with RoleEntityAuthorizationService[Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -72,11 +71,10 @@ class ToteutusServiceValidation(
 
     val vCtx                 = ValidationContext(toteutus.tila, toteutus.kielivalinta, if (oldToteutus.isDefined) update else create)
     val toteutusDiffResolver = ToteutusDiffResolver(toteutus, oldToteutus)
-
     val koulutustyyppiSpecificErrors = toteutus.metadata match {
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, KkOpintojakso)
+          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, VapaaSivistystyoOsaamismerkki, KkOpintojakso)
         val koulutusTyyppi    = metadata.tyyppi
         val koulutusKoodiUrit = koulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq())
         and(
@@ -158,6 +156,12 @@ class ToteutusServiceValidation(
                   validateTaiteenPerusopetusMetadata(m, vCtx, toteutusDiffResolver)
                 case m: MuuToteutusMetadata =>
                   and(
+                    validateTutkintoonJohtamatonMetadata(vCtx, m),
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                  )
+                case m: VapaaSivistystyoOsaamismerkkiToteutusMetadata =>
+                  and(
+                    assertFalse(m.isHakukohteetKaytossa.get, "metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(koulutusTyyppi)),
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )

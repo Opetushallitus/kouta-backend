@@ -508,6 +508,20 @@ package object toteutusMetadata {
       |                - vapaa-sivistystyo-muu
       |""".stripMargin
 
+  val VapaaSivistystyoOsaamismerkkiToteutusMetadataModel: String =
+    """    VapaaSivistystyoOsaamismerkkiToteutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/TutkintoonJohtamatonToteutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Toteutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-muu
+      |              enum:
+      |                - vapaa-sivistystyo-muu
+      |""".stripMargin
+
   val AikuistenPerusopetusToteutusMetadataModel: String =
     """    AikuistenPerusopetusToteutusMetadata:
       |      allOf:
@@ -1035,6 +1049,31 @@ case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSiv
                                                hasJotpaRahoitus: Option[Boolean] = None,
                                                isTaydennyskoulutus: Boolean = false,
                                                isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+
+  override def allowSorakuvaus: Boolean = false
+}
+
+case class VapaaSivistystyoOsaamismerkkiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+                                                         kuvaus: Kielistetty = Map(),
+                                                         opetus: Option[Opetus] = None,
+                                                         asiasanat: List[Keyword] = List(),
+                                                         ammattinimikkeet: List[Keyword] = List(),
+                                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+                                                         isHakukohteetKaytossa: Option[Boolean] = Some(false),
+                                                         hakutermi: Option[Hakutermi] = None,
+                                                         hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+                                                         hakulomakeLinkki: Kielistetty = Map(),
+                                                         lisatietoaHakeutumisesta: Kielistetty = Map(),
+                                                         lisatietoaValintaperusteista: Kielistetty = Map(),
+                                                         hakuaika: Option[Ajanjakso] = None,
+                                                         aloituspaikat: Option[Int] = None,
+                                                         aloituspaikkakuvaus: Kielistetty = Map(),
+                                                         isMuokkaajaOphVirkailija: Option[Boolean] = None,
+                                                         hasJotpaRahoitus: Option[Boolean] = None,
+                                                         isTaydennyskoulutus: Boolean = false,
+                                                         isTyovoimakoulutus: Boolean = false,
+                                                         suoritetaanNayttona: Boolean = false,
+                                                        ) extends TutkintoonJohtamatonToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }

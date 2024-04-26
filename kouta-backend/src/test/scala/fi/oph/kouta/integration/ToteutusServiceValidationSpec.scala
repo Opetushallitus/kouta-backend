@@ -67,6 +67,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     koulutusOid = pelastusalanAmmKoulutus.oid.get,
     metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = List()))
   )
+  val vstOsaamismerkkiKoulutus = VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.144")))
+  val vstOsaamismerkkiToteutus = VapaaSivistystyoOsaamismerkkiToteutus.copy(koulutusOid = vstOsaamismerkkiKoulutus.oid.get)
+
   val sorakuvausId                  = UUID.randomUUID()
   val sorakuvausId2                 = UUID.randomUUID()
   val sorakuvausId3                 = UUID.randomUUID()
@@ -241,7 +244,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // yleiset
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmmOid)).thenAnswer(
       Seq(AmmOid),
-      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, TaiteenPerusopetus)
+      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOsaamismerkki, TaiteenPerusopetus)
     )
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid))
@@ -304,6 +307,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(pelastusalanAmmKoulutus.oid.get)).thenAnswer(Some(pelastusalanAmmKoulutus))
     when(koulutusDao.get(yoTohtoriKoulutus.oid.get))
       .thenAnswer(Some(YoKoulutus.copy(tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_855101#12"))))
+    when(koulutusDao.get(vstOsaamismerkkiKoulutus.oid.get)).thenAnswer(Some(vstOsaamismerkkiKoulutus))
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri)))
@@ -605,6 +609,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failSorakuvausValidation(telmaToteutus)
     failSorakuvausValidation(vstOpistovuosiToteutus)
     failSorakuvausValidation(VapaaSivistystyoMuuToteutus)
+    failSorakuvausValidation(vstOsaamismerkkiToteutus)
   }
 
   it should "fail if sorakuvaus doesn't exist" in {
@@ -903,6 +908,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       Seq(
         ValidationError("nimi.fi", illegalNameForFixedlyNamedEntityMsg("nimi", "koulutuksessa")),
         ValidationError("nimi.sv", illegalNameForFixedlyNamedEntityMsg("nimi sv", "koulutuksessa"))
+      )
+    )
+  }
+
+  "Vapaa sivistystyö osaamismerkki" should "pass validation" in {
+    passesValidation(vstOsaamismerkkiToteutus)
+  }
+
+  "Vapaa sivistystyö osaamismerkki" should "fail if isHakukohteetKaytossa is true and kuvaus is empty" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(isHakukohteetKaytossa = Some(true), kuvaus = Map()))),
+      Seq(
+        ValidationError("metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(VapaaSivistystyoOsaamismerkki)),
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
       )
     )
   }

@@ -1437,6 +1437,29 @@ object TestData {
   val VapaaSivistystyoMuuToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoMuuToteutusMetatieto))
 
+
+  val VapaaSivistystyoOsaamismerkkiToteutusMetatieto: VapaaSivistystyoOsaamismerkkiToteutusMetadata = VapaaSivistystyoOsaamismerkkiToteutusMetadata(
+    tyyppi = VapaaSivistystyoOsaamismerkki,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    isHakukohteetKaytossa = Some(false),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = None,
+    aloituspaikkakuvaus = Map(),
+    hasJotpaRahoitus = Some(false),
+    suoritetaanNayttona = true,
+  )
+
+  val VapaaSivistystyoOsaamismerkkiToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto))
+
   val AikuistenPerusopetusToteutusMetatieto: AikuistenPerusopetusToteutusMetadata =
     AikuistenPerusopetusToteutusMetadata(
       tyyppi = AikuistenPerusopetus,

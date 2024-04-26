@@ -178,6 +178,7 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
       Tuva,
       Telma,
       VapaaSivistystyoOpistovuosi,
+      VapaaSivistystyoOsaamismerkki,
       VapaaSivistystyoMuu,
       AikuistenPerusopetus,
       TaiteenPerusopetus
