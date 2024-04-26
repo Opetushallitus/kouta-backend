@@ -517,9 +517,13 @@ package object toteutusMetadata {
       |            tyyppi:
       |              type: string
       |              description: Toteutuksen metatiedon tyyppi
-      |              example: vapaa-sivistystyo-muu
+      |              example: vapaa-sivistystyo-osaamismerkki
       |              enum:
-      |                - vapaa-sivistystyo-muu
+      |                - vapaa-sivistystyo-osaamismerkki
+      |            suoritetaanNayttona:
+      |              type: boolean
+      |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
+      |              example: false
       |""".stripMargin
 
   val AikuistenPerusopetusToteutusMetadataModel: String =
@@ -734,7 +738,7 @@ package object toteutusMetadata {
   val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, OpePedagOpinnotToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
     AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel,
+    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, VapaaSivistystyoOsaamismerkkiToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel,
     ErikoistumiskoulutusToteutusMetadataModel, TaiteenPerusopetusToteutusMetadataModel, MuuToteutusMetadataModel)
 }
 
