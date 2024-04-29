@@ -105,6 +105,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/TuvaKoulutusMetadata'
       |            - $ref: '#/components/schemas/TelmaKoulutusMetadata'
       |            - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoOsaamismerkkiKoulutusMetadata'
       |            - $ref: '#/components/schemas/AikuistenPerusopetusKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoislaakariKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoistumiskoulutusMetadata'
