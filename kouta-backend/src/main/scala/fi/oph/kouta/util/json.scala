@@ -84,7 +84,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           case Telma                       => s.extract[TelmaToteutusMetadata]
           case VapaaSivistystyoOpistovuosi => s.extract[VapaaSivistystyoOpistovuosiToteutusMetadata]
           case VapaaSivistystyoMuu         => s.extract[VapaaSivistystyoMuuToteutusMetadata]
-          case VapaaSivistystyoMuu         => s.extract[VapaaSivistystyoOsaamismerkkiToteutusMetadata]
+          case VapaaSivistystyoOsaamismerkki => s.extract[VapaaSivistystyoOsaamismerkkiToteutusMetadata]
           case AmmOpeErityisopeJaOpo       => s.extract[AmmOpeErityisopeJaOpoToteutusMetadata]
           case OpePedagOpinnot             => s.extract[OpePedagOpinnotToteutusMetadata]
           case AikuistenPerusopetus        => s.extract[AikuistenPerusopetusToteutusMetadata]
