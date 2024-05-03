@@ -683,14 +683,21 @@ object TestData {
     )
   )
 
+  val VapaaSivistystyoOsaamismerkkiKoulutusMetatieto = VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+    osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    isMuokkaajaOphVirkailija = Some(true)
+  )
+
   val VapaaSivistystyoOsaamismerkkiKoulutus: Koulutus = VapaaSivistystyoOpistovuosiKoulutus.copy(
     koulutustyyppi = VapaaSivistystyoOsaamismerkki,
     muokkaaja = OphUserOid,
-    metadata = Some(
-      VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
-        osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
-        koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
-        isMuokkaajaOphVirkailija = Some(false)
+    nimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+    metadata = Some(VapaaSivistystyoOsaamismerkkiKoulutusMetatieto),
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        esitysnimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+        muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
   )
@@ -1455,10 +1462,11 @@ object TestData {
     aloituspaikkakuvaus = Map(),
     hasJotpaRahoitus = Some(false),
     suoritetaanNayttona = true,
+    isMuokkaajaOphVirkailija = Some(false)
   )
 
   val VapaaSivistystyoOsaamismerkkiToteutus: Toteutus =
-    JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto))
+    JulkaistuAmmToteutus.copy(koulutuksetKoodiUri = List(), metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto))
 
   val AikuistenPerusopetusToteutusMetatieto: AikuistenPerusopetusToteutusMetadata =
     AikuistenPerusopetusToteutusMetadata(

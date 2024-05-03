@@ -171,6 +171,8 @@ class ToteutusService(
                   ))
               case vapaaSivistystyoMuuToteutusMetadata: VapaaSivistystyoMuuToteutusMetadata =>
                 withMData(t, vapaaSivistystyoMuuToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOsaamismerkkiToteutusMetadata: VapaaSivistystyoOsaamismerkkiToteutusMetadata =>
+                withMData(t, vapaaSivistystyoOsaamismerkkiToteutusMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case aikuistenPerusopetusToteutusMetadata: AikuistenPerusopetusToteutusMetadata =>
                 withMData(
                   t,

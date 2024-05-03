@@ -6,28 +6,28 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization.read
 
-import java.time.{Duration, Instant, LocalDateTime, ZoneId}
+import java.time.{Duration, Instant, LocalDateTime}
 import java.util.UUID
 import scala.util.Success
 
 class KoulutusSpec
-    extends KoutaIntegrationSpec
+  extends KoutaIntegrationSpec
     with AccessControlSpec
     with KoulutusFixture
     with ToteutusFixture
     with SorakuvausFixture
-    with UploadFixture {
+    with UploadFixture
+    with LokalisointiServiceMock {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Koulutus)
 
@@ -128,6 +128,7 @@ class KoulutusSpec
   }
 
   it should "enrich name with voimaantulo date if eperuste voimaantulo is in the future" in {
+    mockLokalisointiResponse("yleiset.eperusteVoimaantulo")
     val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
     val futureDate = new LocalDate(futureMillis)
     mockKoulutusKoodiUritForEPerusteResponse(556, voimassaoloAlkaa = Some(futureMillis),
@@ -136,7 +137,7 @@ class KoulutusSpec
     val foo: (Koulutus, Instant) = insertKoulutus(koulutus.copy(ePerusteId = Some(556)))
     get(s"$KoulutusPath/${foo._1.oid.get}", headers = defaultHeaders) {
       status should equal(200)
-      assert(body.contains(s"(voimaantulo ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
+      assert(body.contains(s"(yleiset.eperusteVoimaantulo fi ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
     }
   }
 
@@ -730,6 +731,24 @@ class KoulutusSpec
     val lastModified                = get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid))))
     update(kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified)
     get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "create, get and update vapaasivistystyo-osaamismerkkikoulutus" in {
+    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
+    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
+    mockLokalisointiResponse("yleiset.osaamismerkki")
+    val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
+    val oid = put(vapaaSivistystyoOsaamismerkkiKoulutus, ophSession)
+    val lastModified = get(oid,
+      vapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        oid = Some(KoulutusOid(oid))))
+    update(vapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified, ophSession, 200)
+    get(oid, vapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "fail to create vapaasivistystyo-osaamismerkkikoulutus when not oph user trying to create" in {
+    val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
+    put(KoulutusPath, vapaaSivistystyoOsaamismerkkiKoulutus, ammAndChildSession, 403)
   }
 
   it should "set nimi of ammatillinen koulutus nimi by koulutusKoodiUri if nimi not given for koulutus" in {
