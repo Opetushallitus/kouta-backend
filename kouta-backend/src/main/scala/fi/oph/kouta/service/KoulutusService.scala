@@ -1,8 +1,8 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client._
 import fi.oph.kouta.client.KoodistoUtils.getVersio
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
@@ -396,7 +396,12 @@ class KoulutusService(
               } else {
                 Map(Fi -> "", Sv -> "", En -> "")
               }
-            val osaamismerkinNimi = NameHelper.concatAsEntityName(osaamismerkinKaannokset, Some(":"), nimenKaannokset, koulutus.kielivalinta)
+
+            val osaamismerkinNimi = if (osaamismerkinKaannokset.nonEmpty) {
+              NameHelper.concatAsEntityName(osaamismerkinKaannokset, Some(":"), nimenKaannokset, koulutus.kielivalinta)
+            } else {
+              throw new RuntimeException("Failed to fetch translations for osaamismerkki")
+            }
 
             koulutus.copy(nimi = osaamismerkinNimi)
           case _ => koulutus
