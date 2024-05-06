@@ -708,14 +708,14 @@ class KoulutusService(
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, k) <- checkAndMaybeClearTeemakuva(koulutus)
+        (teemakuva, k) <- checkAndMaybeClearTeemakuva(koulutus)
         k          <- KoulutusDAO.getPutActions(k)
-        k          <- maybeCopyTeemakuva(teema, k)
-        k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
+        k          <- maybeCopyTeemakuva(teemakuva, k)
+        k          <- teemakuva.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
         _          <- auditLog.logCreate(k)
-      } yield (teema, k)
-    }.map { case (teema, k: Koulutus) =>
-      maybeDeleteTempImage(teema)
+      } yield (teemakuva, k)
+    }.map { case (teemakuva, k: Koulutus) =>
+      maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.oid) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
@@ -726,12 +726,12 @@ class KoulutusService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-        (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
+        (teemakuva, k) <- checkAndMaybeCopyTeemakuva(koulutus)
         k          <- KoulutusDAO.getUpdateActions(k)
         _          <- auditLog.logUpdate(before, k)
-      } yield (teema, k)
-    }.map { case (teema, k: Option[Koulutus]) =>
-      maybeDeleteTempImage(teema)
+      } yield (teemakuva, k)
+    }.map { case (teemakuva, k: Option[Koulutus]) =>
+      maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get
