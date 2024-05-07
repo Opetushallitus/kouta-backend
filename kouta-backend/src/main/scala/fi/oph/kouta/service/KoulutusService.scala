@@ -725,18 +725,19 @@ class KoulutusService(
       CreateResult(k.oid.get, warnings)
     }.get
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
-      authenticated: Authenticated
-  ): UpdateResult =
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)
+                      (implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
         (teemakuva, k) <- checkAndMaybeCopyTeemakuva(koulutus)
-        k          <- KoulutusDAO.getUpdateActions(k)
-        _          <- auditLog.logUpdate(before, k)
-      } yield (teemakuva, k)
-    }.map { case (teemakuva, k: Option[Koulutus]) =>
+        (hakutuloslistauksenKuvake, k) <- checkAndMaybeCopyKuvake(k)
+        k <- KoulutusDAO.getUpdateActions(k)
+        _ <- auditLog.logUpdate(before, k)
+      } yield (teemakuva, hakutuloslistauksenKuvake, k)
+    }.map { case (teemakuva, hakutuloslistauksenKuvake, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teemakuva)
+      maybeDeleteTempImage(hakutuloslistauksenKuvake)
       val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get

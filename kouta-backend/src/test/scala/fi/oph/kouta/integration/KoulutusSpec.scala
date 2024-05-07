@@ -658,6 +658,20 @@ class KoulutusSpec
     checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-teemakuva/$oid/image.png"))
   }
 
+  it should "copy a temporary kuvake to a permanent location while updating the koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val lastModified = get(oid, koulutus(oid))
+
+    saveLocalPng("temp/image.png")
+    val koulutusWithImage = koulutus(oid).withHakutuloslistauksenKuvake(Some(s"$PublicImageServer/temp/image.png"))
+    println(koulutusWithImage)
+
+    update(koulutusWithImage, lastModified, expectUpdate = true, ophSession)
+    get(oid, koulutusWithImage.withHakutuloslistauksenKuvake(Some(s"$PublicImageServer/koulutus-hakutuloslistauksen-kuvake/$oid/image.png")))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-hakutuloslistauksen-kuvake/$oid/image.png"))
+  }
+
   it should "not touch an image that's not in the temporary location" in {
     val oid               = put(koulutus, ophSession)
     val lastModified      = get(oid, koulutus(oid))
