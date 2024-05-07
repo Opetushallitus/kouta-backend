@@ -1032,6 +1032,12 @@ package object domain {
     def withTeemakuva(teemakuva: Option[String]): T
   }
 
+  trait HasHakutuloslistauksenKuvake[T] {
+    val hakutuloslistauksenKuvake: Option[String]
+
+    def withHakutuloslistauksenKuvake(hakutulos: Option[String]): T
+  }
+
   trait HasPrimaryId[ID, T] {
     def primaryId: Option[ID]
 

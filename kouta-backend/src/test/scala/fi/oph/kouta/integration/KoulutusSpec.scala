@@ -266,6 +266,16 @@ class KoulutusSpec
     get(oid, koulutusWithImage.copy(oid = Some(KoulutusOid(oid))))
   }
 
+  it should "copy a temporary kuvake to a permanent location while creating the koulutus" in {
+    saveLocalPng("temp/image.png")
+    val oid = put(koulutus.withHakutuloslistauksenKuvake(Some(s"$PublicImageServer/temp/image.png")), ophSession)
+
+    get(oid, koulutus(oid).withHakutuloslistauksenKuvake(Some(s"$PublicImageServer/koulutus-hakutuloslistauksen-kuvake/$oid/image.png")))
+
+    checkLocalPng(MockS3Client.getLocal("konfo-files", s"koulutus-hakutuloslistauksen-kuvake/$oid/image.png"))
+    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+  }
+
   it should "fail to store koulutus if sorakuvaus doesn't exist" in {
     val sorakuvausId = UUID.randomUUID()
     put(KoulutusPath, koulutus.copy(sorakuvausId = Some(sorakuvausId)), ophSession, 400)
