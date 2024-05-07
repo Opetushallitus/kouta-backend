@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
-import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
+import fi.oph.kouta.images.{HakutuloslistauksenKuvakeService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.repository._
@@ -84,14 +84,16 @@ class KoulutusService(
     koutaIndeksoijaClient: KoutaIndeksoijaClient,
     lokalisointiClient: LokalisointiClient
 ) extends RoleEntityAuthorizationService[Koulutus]
-    with TeemakuvaService[KoulutusOid, Koulutus]
-    with Logging {
+  with TeemakuvaService[KoulutusOid, Koulutus]
+  with HakutuloslistauksenKuvakeService
+  with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AuthorizationRules =
     AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)
 
   val teemakuvaPrefix = "koulutus-teemakuva"
+  val kuvakePrefix = "koulutus-hakutuloslistauksen-kuvake"
 
   private def authorizedForTarjoajaOids(
       oids: Set[OrganisaatioOid],
@@ -709,29 +711,33 @@ class KoulutusService(
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teemakuva, k) <- checkAndMaybeClearTeemakuva(koulutus)
-        k          <- KoulutusDAO.getPutActions(k)
-        k          <- maybeCopyTeemakuva(teemakuva, k)
-        k          <- teemakuva.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
-        _          <- auditLog.logCreate(k)
-      } yield (teemakuva, k)
-    }.map { case (teemakuva, k: Koulutus) =>
+        (hakutuloslistauksenKuvake, k) <- checkAndMaybeClearKuvake(k)
+        k <- KoulutusDAO.getPutActions(k)
+        k <- maybeCopyTeemakuva(teemakuva, k)
+        k <- maybeCopyKuvake(hakutuloslistauksenKuvake, k)
+        k <- KoulutusDAO.updateJustKoulutus(k).andFinally(DBIO.successful(k))
+        _ <- auditLog.logCreate(k)
+      } yield (teemakuva, hakutuloslistauksenKuvake, k)
+    }.map { case (teemakuva, hakutuloslistauksenKuvake, k: Koulutus) =>
       maybeDeleteTempImage(teemakuva)
+      maybeDeleteTempImage(hakutuloslistauksenKuvake)
       val warnings = quickIndex(k.oid) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
-      authenticated: Authenticated
-  ): UpdateResult =
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)
+                      (implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
         (teemakuva, k) <- checkAndMaybeCopyTeemakuva(koulutus)
-        k          <- KoulutusDAO.getUpdateActions(k)
-        _          <- auditLog.logUpdate(before, k)
-      } yield (teemakuva, k)
-    }.map { case (teemakuva, k: Option[Koulutus]) =>
+        (hakutuloslistauksenKuvake, k) <- checkAndMaybeCopyKuvake(k)
+        k <- KoulutusDAO.getUpdateActions(k)
+        _ <- auditLog.logUpdate(before, k)
+      } yield (teemakuva, hakutuloslistauksenKuvake, k)
+    }.map { case (teemakuva, hakutuloslistauksenKuvake, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teemakuva)
+      maybeDeleteTempImage(hakutuloslistauksenKuvake)
       val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get
