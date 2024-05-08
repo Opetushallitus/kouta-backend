@@ -62,10 +62,18 @@ class S3ImageService(private val s3Client: AmazonS3, auditLog: AuditLog) extends
   }
 
   def copyImage(fromKey: String, toKey: String)(implicit authenticated: Authenticated): String = {
-    s3Client.copyObject(
-      new CopyObjectRequest(config.imageBucket, fromKey, config.imageBucket, toKey)
-        .withCannedAccessControlList(CannedAccessControlList.PublicRead)
-    )
+    println(fromKey)
+    println(toKey)
+    println(config)
+    try {
+      s3Client.copyObject(
+        new CopyObjectRequest(config.imageBucket, fromKey, config.imageBucket, toKey)
+          .withCannedAccessControlList(CannedAccessControlList.PublicRead)
+      )
+    } catch {
+      case e: Exception => println(e)
+    }
+
 
     auditLog.logS3Copy(s"s3://${config.imageBucket}/$fromKey", s"s3://${config.imageBucket}/$toKey")
     getPublicUrl(toKey)
