@@ -979,6 +979,21 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "pass validation without hakuajan loppupvm for julkaistu totetutus" in {
+    val ajanjaksoEiLoppua = Ajanjakso(alkaa = LocalDateTime.now(), paattyy = None)
+    val metadataBase = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
+    passesValidation(
+      ammMuuToteutus.copy(metadata =
+        Some(
+          metadataBase.copy(
+            hakuaika = Some(ajanjaksoEiLoppua)
+          )
+        )
+      )
+    )
+  }
+
+
   "validateApuraha" should "fail if invalid apuraha" in {
     val validKuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
     failsValidation(

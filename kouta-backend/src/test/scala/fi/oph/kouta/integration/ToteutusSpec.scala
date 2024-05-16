@@ -1234,7 +1234,7 @@ class ToteutusSpec
     val aiPeToToteutus =
       TestData.AikuistenPerusopetusToteutus.copy(koulutusOid = KoulutusOid(aiPeToKoulutusOid), tila = Tallennettu,
         metadata = Some(AikuistenPerusopetusToteutusMetatieto.copy(
-          isHakukohteetKaytossa = Some(false))))
+          isHakukohteetKaytossa = Some(false),hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = None)))))
     val oid = put(aiPeToToteutus)
     val lastModified =
       get(oid, aiPeToToteutus.copy(oid = Some(ToteutusOid(oid)), koulutuksetKoodiUri = Seq("koulutus_201101#12")))
