@@ -167,7 +167,7 @@ Lisäksi pitää vielä asettaa muutama VM-parametri EmbeddedJettyLauncher.scala
 Mene Run -> Edit Configurations -> Valitse EmbeddedJettyLauncher -> Modify Options -> Add VM Options
 Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false`
 
-Vaihda myös PostgreSQL-tietokannan portti, käyttjätunnus ja salasana `dev-vars.yml`-tiedostoon.
+Vaihda myös PostgreSQL-tietokannan portti, käyttäjätunnus ja salasana `dev-vars.yml`-tiedostoon.
 
 ### Versiohallinta
 
