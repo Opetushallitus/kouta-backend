@@ -11,7 +11,9 @@ class MockSiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient {
   val contentBuffer: ListBuffer[String] = new ListBuffer[String]();
   override def saveSiirtotiedosto[T](
       contentType: String,
-      content: Seq[T]
+      content: Seq[T],
+      operationId: String,
+      operationSubId: Int
   ): String = {
     contentBuffer += write(content)
     s"$contentType, yhteensä ${content.size} kpl tallennettu S3 buckettiin avaimella kouta/kouta_entiteetit-12345.json"

@@ -1,7 +1,21 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.raportointi.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
+import fi.oph.kouta.domain.raportointi.{
+  HakuRaporttiItem,
+  HakukohdeLiiteRaporttiItem,
+  HakukohdeRaporttiItem,
+  KoulutusEnrichmentData,
+  KoulutusRaporttiItem,
+  OppilaitoksenOsa,
+  Oppilaitos,
+  OppilaitosOrOsaRaporttiItem,
+  PistetietoRaporttiItem,
+  SorakuvausRaporttiItem,
+  ToteutusRaporttiItem,
+  ValintakoeRaporttiItem,
+  ValintaperusteRaporttiItem
+}
 import fi.oph.kouta.domain.Ajanjakso
 import fi.oph.kouta.domain.oid.KoulutusOid
 import slick.dbio.{DBIO, DBIOAction}
@@ -66,8 +80,13 @@ trait RaportointiDAO {
       limit: Int,
       offset: Int
   ): Seq[PistetietoRaporttiItem]
-  def listAmmattinimikkeet(limit: Int, offset: Int): Seq[Keyword]
-  def listAsiasanat(limit: Int, offset: Int): Seq[Keyword]
+  def listAmmattinimikkeet(
+      _start: Option[LocalDateTime],
+      _end: Option[LocalDateTime],
+      limit: Int,
+      offset: Int
+  ): Seq[Keyword]
+  def listAsiasanat(_start: Option[LocalDateTime], _end: Option[LocalDateTime], limit: Int, offset: Int): Seq[Keyword]
 }
 
 object RaportointiDAO extends RaportointiDAO with EntitySQL {
@@ -185,10 +204,20 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
   ): Seq[PistetietoRaporttiItem] =
     KoutaDatabase.runBlocking(selectPistehistoria(startTime, endTime, limit, offset))
 
-  override def listAmmattinimikkeet(limit: Int, offset: Int): Seq[Keyword] =
+  override def listAmmattinimikkeet(
+      _start: Option[LocalDateTime],
+      _end: Option[LocalDateTime],
+      limit: Int,
+      offset: Int
+  ): Seq[Keyword] =
     KoutaDatabase.runBlocking(selectAmmattinimikkeet(limit, offset))
 
-  override def listAsiasanat(limit: Int, offset: Int): Seq[Keyword] =
+  override def listAsiasanat(
+      _start: Option[LocalDateTime],
+      _end: Option[LocalDateTime],
+      limit: Int,
+      offset: Int
+  ): Seq[Keyword] =
     KoutaDatabase.runBlocking(selectAsiasanat(limit, offset))
 }
 
@@ -342,8 +371,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
                 where valintaperuste_id in (#${createUUIDInParams(valintaperusteet.map(_.id))})
            """.as[ValintakoeRaporttiItem]
 
-    }
-    else DBIOAction.successful[Seq[ValintakoeRaporttiItem]](Seq())
+    } else DBIOAction.successful[Seq[ValintakoeRaporttiItem]](Seq())
   }
 
   def selectSorakuvaukset(

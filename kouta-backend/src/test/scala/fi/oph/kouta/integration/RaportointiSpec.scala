@@ -87,6 +87,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
     get("koulutukset", dayBefore, dayAfter, 200)
     verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
     nbrOfContentItems() should equal(2)
+    println("!!!!!!!!!!!!!!!!!!!!!!!!! " + lastRaporttiContent())
   }
 
   "Save toteutukset with given timerange" should "save toteutukset in bulks according to max limit" in {

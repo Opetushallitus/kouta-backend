@@ -25,13 +25,17 @@ class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
 
   def saveSiirtotiedosto[T](
       contentType: String,
-      content: Seq[T]
+      content: Seq[T],
+      operationId: String,
+      operationSubId: Int
   ): String =
     siirtotiedostoPalvelu
       .saveSiirtotiedosto(
         "kouta",
         contentType,
         "",
+        operationId,
+        operationSubId,
         new ByteArrayInputStream(writePretty(content).getBytes()),
         saveRetryCount
       )
