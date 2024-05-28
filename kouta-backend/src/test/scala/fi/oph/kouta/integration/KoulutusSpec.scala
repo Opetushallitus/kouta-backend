@@ -763,11 +763,14 @@ class KoulutusSpec
     mockLokalisointiResponse("yleiset.osaamismerkki")
     val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
     val oid = put(vapaaSivistystyoOsaamismerkkiKoulutus, ophSession)
-    val lastModified = get(oid,
-      vapaaSivistystyoOsaamismerkkiKoulutus.copy(
-        oid = Some(KoulutusOid(oid))))
+    val vstOsaamismerkkiWithOpintojenLaajuus = vapaaSivistystyoOsaamismerkkiKoulutus.copy(
+      oid = Some(KoulutusOid(oid)),
+      metadata = Some(TestData.VapaaSivistystyoOsaamismerkkiKoulutusMetatieto.copy(
+        opintojenLaajuusNumero = Some(1.0),
+        opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusKurssi))))
+    val lastModified = get(oid, vstOsaamismerkkiWithOpintojenLaajuus)
     update(vapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified, ophSession, 200)
-    get(oid, vapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+    get(oid, vstOsaamismerkkiWithOpintojenLaajuus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
   it should "fail to create vapaasivistystyo-osaamismerkkikoulutus when not oph user trying to create" in {

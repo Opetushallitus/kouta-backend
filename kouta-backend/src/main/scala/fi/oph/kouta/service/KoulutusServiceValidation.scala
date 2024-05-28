@@ -791,8 +791,20 @@ class KoulutusServiceValidation(
       ),
       assertEmptyKielistetty(metadata.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin"),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
-      assertNotDefined(metadata.opintojenLaajuusNumero, "metadata.opintojenLaajuusNumero"),
-      assertNotDefined(metadata.opintojenLaajuusyksikkoKoodiUri, "metadata.opintojenLaajuusyksikkoKoodiUri"),
+      assertNotOptional(
+        metadata.opintojenLaajuusNumero,
+        "metadata.opintojenLaajuusNumero"
+      ),
+      assertTrue(
+        metadata.opintojenLaajuusNumero.contains(1),
+        "metadata.opintojenLaajuusNumero",
+        validationMsg(metadata.opintojenLaajuusNumero.toString)
+      ),
+      assertCertainValue(
+        metadata.opintojenLaajuusyksikkoKoodiUri,
+        opintojenLaajuusKurssi,
+        "metadata.opintojenLaajuusyksikkoKoodiUri"
+      ),
       assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), validationContext),
     )
   }

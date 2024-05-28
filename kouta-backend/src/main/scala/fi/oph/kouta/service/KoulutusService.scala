@@ -263,7 +263,11 @@ class KoulutusService(
               case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
                 Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case vapaaSivistystyoOsaamismerkkiMetadata: VapaaSivistystyoOsaamismerkkiKoulutusMetadata =>
-                Some(vapaaSivistystyoOsaamismerkkiMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+                Some(vapaaSivistystyoOsaamismerkkiMetadata.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusNumero = Some(1),
+                  opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+                ))
               case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
                 Some(
                   m.copy(

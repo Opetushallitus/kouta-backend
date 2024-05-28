@@ -1801,21 +1801,34 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   }
 
   it should "succeed new valid luonnos for vapaa sivistystyo osaamismerkki -koulutus" in {
-    passesValidation(VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu))
+    passesValidation(VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+      tila = Tallennettu,
+      metadata = Some(
+      VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+        osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+        opintojenLaajuusNumero = Some(1),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4"),
+      )
+    )))
   }
 
-  it should "fail if invalid metadata for vapaa sivistystyo osaamismerkki -koulutus" in {
+  it should "fail if invalid metadata for luonnostilainen vapaa sivistystyo osaamismerkki -koulutus" in {
     failsValidation(
       VapaaSivistystyoOsaamismerkkiKoulutus.copy(
         tila = Tallennettu,
         metadata = Some(
           VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
             osaamismerkkiKoodiUri = None,
+            opintojenLaajuusNumero = Some(2),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
           )
         )
       ),
-      "metadata.osaamismerkkiKoodiUri",
-      missingMsg
+      Seq(
+        ValidationError("metadata.osaamismerkkiKoodiUri", missingMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(2.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4")))
+      )
     )
   }
 
@@ -1836,8 +1849,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError("metadata.linkkiEPerusteisiin", notEmptyMsg),
         ValidationError("metadata.kuvaus", notEmptyMsg),
-        ValidationError("metadata.opintojenLaajuusNumero", notMissingMsg(Some(10.0))),
-        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", notMissingMsg(Some("opintojenlaajuusyksikko_2#1"))),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(10.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))),
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
           invalidKoulutusAlaKoodiuri("puppu")
