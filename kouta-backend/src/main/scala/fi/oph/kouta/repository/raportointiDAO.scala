@@ -1,121 +1,59 @@
 package fi.oph.kouta.repository
 
+import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.raportointi.{
-  HakuRaporttiItem,
-  HakukohdeLiiteRaporttiItem,
-  HakukohdeRaporttiItem,
-  KoulutusEnrichmentData,
-  KoulutusRaporttiItem,
-  OppilaitoksenOsa,
-  Oppilaitos,
-  OppilaitosOrOsaRaporttiItem,
-  PistetietoRaporttiItem,
-  SorakuvausRaporttiItem,
-  ToteutusRaporttiItem,
-  ValintakoeRaporttiItem,
-  ValintaperusteRaporttiItem
-}
-import fi.oph.kouta.domain.Ajanjakso
-import fi.oph.kouta.domain.oid.KoulutusOid
+import fi.oph.kouta.domain.raportointi.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, Siirtotiedosto, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
+import fi.oph.kouta.domain.{Ajanjakso, TilaFilter, Toteutus}
+import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
+import fi.oph.kouta.repository.ToteutusDAO.getToteutusResult
 import slick.dbio.{DBIO, DBIOAction}
 import slick.jdbc.PostgresProfile.api._
 
-import java.time.LocalDateTime
+import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-trait RaportointiDAO {
+object RaportointiDAO
+    extends RaportointiDAO(
+      KoutaDatabase
+    ) {
+  def apply(databaseAccessor: KoutaDatabaseAccessor): RaportointiDAO =
+    new RaportointiDAO(databaseAccessor)
+}
+
+object SiirtotiedostoRaportointiDAO extends RaportointiDAO(SiirtotiedostoDatabaseAccessor)
+
+class RaportointiDAO(
+    databaseAccessor: KoutaDatabaseAccessor
+) extends EntitySQL {
   def listKoulutukset(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
-  ): Seq[KoulutusRaporttiItem]
-  def listKoulutusEnrichmentDataItems(oids: Seq[KoulutusOid]): Seq[KoulutusEnrichmentData]
+  ): Seq[KoulutusRaporttiItem] =
+    databaseAccessor.runBlocking(selectKoulutukset(startTime, endTime, limit, offset))
+
+  def listKoulutusEnrichmentDataItems(oids: Seq[KoulutusOid]): Seq[KoulutusEnrichmentData] =
+    databaseAccessor.runBlocking(selectKoulutusEnrichmentDataItems(oids))
+
   def listToteutukset(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
-  ): Seq[ToteutusRaporttiItem]
+  ): Seq[ToteutusRaporttiItem] =
+    databaseAccessor.runBlocking(selectToteutukset(startTime, endTime, limit, offset))
+
+  def getSingleTotetutus(oid: ToteutusOid, tilaFilter: TilaFilter): Option[Toteutus] =
+    databaseAccessor.runBlocking(selectToteutus(oid, tilaFilter)).headOption
+
   def listHakukohteet(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
-  ): Seq[HakukohdeRaporttiItem]
-  def listHaut(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[HakuRaporttiItem]
-  def listValintaperusteet(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[ValintaperusteRaporttiItem]
-  def listSorakuvaukset(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[SorakuvausRaporttiItem]
-  def listOppilaitokset(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[OppilaitosOrOsaRaporttiItem]
-  def listOppilaitostenOsat(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[OppilaitosOrOsaRaporttiItem]
-  def listPistehistoria(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[PistetietoRaporttiItem]
-  def listAmmattinimikkeet(
-      _start: Option[LocalDateTime],
-      _end: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[Keyword]
-  def listAsiasanat(_start: Option[LocalDateTime], _end: Option[LocalDateTime], limit: Int, offset: Int): Seq[Keyword]
-}
-
-object RaportointiDAO extends RaportointiDAO with EntitySQL {
-  override def listKoulutukset(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[KoulutusRaporttiItem] =
-    KoutaDatabase.runBlocking(selectKoulutukset(startTime, endTime, limit, offset))
-
-  override def listKoulutusEnrichmentDataItems(oids: Seq[KoulutusOid]): Seq[KoulutusEnrichmentData] =
-    KoutaDatabase.runBlocking(selectKoulutusEnrichmentDataItems(oids))
-
-  override def listToteutukset(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
-  ): Seq[ToteutusRaporttiItem] =
-    KoutaDatabase.runBlocking(selectToteutukset(startTime, endTime, limit, offset))
-
-  override def listHakukohteet(
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      limit: Int,
-      offset: Int
   ): Seq[HakukohdeRaporttiItem] = {
-    KoutaDatabase
+    databaseAccessor
       .runBlockingTransactionally(for {
         hakukohteet   <- selectHakukohteet(startTime, endTime, limit, offset)
         hakuajat      <- selectHakukohteidenHakuajat(hakukohteet)
@@ -136,13 +74,13 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       .get
   }
 
-  override def listHaut(
+  def listHaut(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[HakuRaporttiItem] =
-    KoutaDatabase
+    databaseAccessor
       .runBlockingTransactionally(for {
         haut     <- selectHaut(startTime, endTime, limit, offset)
         hakuajat <- selectHakujenHakuajat(haut)
@@ -156,13 +94,13 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       }
       .get
 
-  override def listValintaperusteet(
+  def listValintaperusteet(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[ValintaperusteRaporttiItem] =
-    KoutaDatabase
+    databaseAccessor
       .runBlockingTransactionally(for {
         vp   <- selectValintaperusteet(startTime, endTime, limit, offset)
         vpvk <- selectValintaperusteidenValintakokeet(vp)
@@ -172,53 +110,59 @@ object RaportointiDAO extends RaportointiDAO with EntitySQL {
       }
       .get
 
-  override def listSorakuvaukset(
+  def listSorakuvaukset(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[SorakuvausRaporttiItem] =
-    KoutaDatabase.runBlocking(selectSorakuvaukset(startTime, endTime, limit, offset))
+    databaseAccessor.runBlocking(selectSorakuvaukset(startTime, endTime, limit, offset))
 
-  override def listOppilaitokset(
+  def listOppilaitokset(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[OppilaitosOrOsaRaporttiItem] =
-    KoutaDatabase.runBlocking(selectOppilaitokset(startTime, endTime, limit, offset))
+    databaseAccessor.runBlocking(selectOppilaitokset(startTime, endTime, limit, offset))
 
-  override def listOppilaitostenOsat(
+  def listOppilaitostenOsat(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[OppilaitosOrOsaRaporttiItem] =
-    KoutaDatabase.runBlocking(selectOppilaitoksenOsat(startTime, endTime, limit, offset))
+    databaseAccessor.runBlocking(selectOppilaitoksenOsat(startTime, endTime, limit, offset))
 
-  override def listPistehistoria(
+  def listPistehistoria(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[PistetietoRaporttiItem] =
-    KoutaDatabase.runBlocking(selectPistehistoria(startTime, endTime, limit, offset))
+    databaseAccessor.runBlocking(selectPistehistoria(startTime, endTime, limit, offset))
 
-  override def listAmmattinimikkeet(
+  def listAmmattinimikkeet(
       _start: Option[LocalDateTime],
       _end: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[Keyword] =
-    KoutaDatabase.runBlocking(selectAmmattinimikkeet(limit, offset))
+    databaseAccessor.runBlocking(selectAmmattinimikkeet(limit, offset))
 
-  override def listAsiasanat(
+  def listAsiasanat(
       _start: Option[LocalDateTime],
       _end: Option[LocalDateTime],
       limit: Int,
       offset: Int
   ): Seq[Keyword] =
-    KoutaDatabase.runBlocking(selectAsiasanat(limit, offset))
+    databaseAccessor.runBlocking(selectAsiasanat(limit, offset))
+
+  def findLatestSiirtotiedostoData(): Option[Siirtotiedosto] =
+    databaseAccessor.runBlocking(selectLatestSiirtotiedostoData()).headOption
+
+  def saveSiirtotiedostoData(siirtotiedosto: Siirtotiedosto) =
+    databaseAccessor.runBlocking(persistSiirtotiedostoData(siirtotiedosto))
 }
 
 sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
@@ -234,7 +178,7 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     val groupByStr = if (!groupBy.isEmpty) s" group by $groupBy" else ""
     (startTime, endTime) match {
       case (Some(startTimeVal), Some(endTimeVal)) =>
-        sql"""#$selectPart where #$timeField between $startTimeVal and $endTimeVal#$groupByStr
+        sql"""#$selectPart where #$timeField >= $startTimeVal and #$timeField < $endTimeVal#$groupByStr
              limit #$limit offset #$offset"""
       case (Some(startTimeVal), None) =>
         sql"""#$selectPart where $startTimeVal < #$timeField#$groupByStr limit #$limit offset #$offset"""
@@ -284,6 +228,11 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
     selectByTimerange(startTime, endTime, selectPart, "t.last_modified", limit, offset, "t.oid")
       .as[ToteutusRaporttiItem]
   }
+
+  def selectToteutus(oid: ToteutusOid, tilaFilter: TilaFilter): DBIO[Seq[Toteutus]] =
+    sql"""select oid, external_id, koulutus_oid, tila, nimi, metadata, muokkaaja, esikatselu, organisaatio_oid,
+              kielivalinta, teemakuva, sorakuvaus_id, last_modified, null, null from toteutukset
+          where oid = $oid #${tilaConditions(tilaFilter)}""".as[Toteutus]
 
   def selectHakukohteet(
       startTime: Option[LocalDateTime],
@@ -431,4 +380,30 @@ sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
   def selectAsiasanat(limit: Int, offset: Int): DBIO[Seq[Keyword]] = {
     sql"""select distinct kieli, asiasana from asiasanat order by kieli limit #$limit offset #$offset""".as[Keyword]
   }
+
+  def selectLatestSiirtotiedostoData(): DBIO[Seq[Siirtotiedosto]] =
+    sql"""select id,  window_start, window_end, run_start, run_end, info, success, error_message
+          from siirtotiedostot where run_start = (select max(run_start) from siirtotiedostot)
+       """.as[Siirtotiedosto]
+
+  def persistSiirtotiedostoData(siirtotiedosto: Siirtotiedosto): DBIO[Int] =
+    sqlu"""insert into siirtotiedostot
+          (id,  window_start, window_end, run_start, run_end, info, success, error_message)
+          values
+            (${siirtotiedosto.id.toString}::uuid,
+            ${siirtotiedosto.windowStart},
+            ${siirtotiedosto.windowEnd},
+            ${formatTimestampParam(Some(siirtotiedosto.runStart))}::timestamp,
+            ${formatTimestampParam(siirtotiedosto.runEnd)}::timestamp,
+            ${toJsonParam(siirtotiedosto.info)}::jsonb,
+            ${siirtotiedosto.success},
+            ${siirtotiedosto.errorMessage}
+          ) on conflict on constraint siirtotiedostot_pkey do update set window_start = excluded.window_start,
+                                                                         window_end = excluded.window_end,
+                                                                         run_start = excluded.run_start,
+                                                                         run_end = excluded.run_end,
+                                                                         info = excluded.info,
+                                                                         success = excluded.success,
+                                                                         error_message = excluded.error_message"""
+
 }

@@ -4,6 +4,7 @@ import fi.oph.kouta.client.SiirtotiedostoPalveluClient
 import org.json4s.jackson.Serialization.write
 
 import java.time.{Instant, LocalDateTime, ZonedDateTime}
+import java.util.UUID
 import scala.collection.mutable.ListBuffer
 
 
@@ -12,7 +13,7 @@ class MockSiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient {
   override def saveSiirtotiedosto[T](
       contentType: String,
       content: Seq[T],
-      operationId: String,
+      operationId: UUID,
       operationSubId: Int
   ): String = {
     contentBuffer += write(content)
