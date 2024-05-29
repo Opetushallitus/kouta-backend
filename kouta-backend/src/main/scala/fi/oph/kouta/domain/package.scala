@@ -1116,4 +1116,5 @@ package object domain {
   val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"
   val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6"
   val opintojenLaajuusViikko       = "opintojenlaajuusyksikko_8"
+  val opintojenLaajuusKurssi       = "opintojenlaajuusyksikko_4"
 }
