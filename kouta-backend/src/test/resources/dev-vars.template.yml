@@ -16,6 +16,10 @@ kouta_backend_sqs_region:
 kouta_backend_s3_region: eu-west-1
 kouta_backend_s3_image_bucket: konfo-files.untuvaopintopolku.fi
 kouta_backend_s3_image_bucket_public_url: https://konfo-files.untuvaopintopolku.fi
+kouta_backend_s3_transfer_file_bucket: opintopolku-untuva-siirtotiedostot
+kouta_backend_s3_transfer_file_target_role_arn: arn:aws:iam::xxxxxxxxxxxx:role/opintopolku-s3-cross-account-role
+kouta_backend_s3_transfer_file_save_retry_count: 3
+kouta_backend_s3_transfer_file_max_item_count: 10000
 kouta_external_api_modify_enabled: true
 kouta_backend_elasticsearch_url: http://localhost:9200
 kouta_backend_elasticsearch_auth_enabled: false
