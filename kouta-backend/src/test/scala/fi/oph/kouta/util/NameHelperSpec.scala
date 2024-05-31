@@ -2,6 +2,7 @@ package fi.oph.kouta.util
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData._
+import fi.oph.kouta.TestOids
 import fi.oph.kouta.client.Henkilo
 import fi.oph.kouta.domain._
 
@@ -98,16 +99,23 @@ class NameHelperSpec extends UnitSpec {
   )
 
   val koulutusMetadata = LukioKoulutusMetadata(
-      opintojenLaajuusNumero = Some(40),
-      opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2"),
-      kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
-      koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
-    )
+    opintojenLaajuusNumero = Some(40),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2"),
+    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1")
+  )
 
   "generateToteutusDisplayName" should "generate Toteutus display name for lukio with yleislinja, painotus and erityinen koulutustehtävä" in {
     val esitysnimi = NameHelper.generateLukioToteutusDisplayName(
-      toteutusMetadata = LukioToteutuksenMetatieto,
-      koulutusMetadata,
+      ToteutusEnrichmentSourceData(
+        Map(),
+        Seq(),
+        TestOids.TestUserOid,
+        isLukioToteutus = true,
+        LukioToteutuksenMetatieto.painotukset ++ LukioToteutuksenMetatieto.erityisetKoulutustehtavat,
+        LukioToteutuksenMetatieto.yleislinja,
+        koulutusMetadata.opintojenLaajuusNumero
+      ),
       toteutusKaannokset,
       koodiKaannokset
     )
@@ -121,8 +129,15 @@ class NameHelperSpec extends UnitSpec {
 
   it should "generate Toteutus display name for lukio with yleislinja only" in {
     val esitysnimi = NameHelper.generateLukioToteutusDisplayName(
-      toteutusMetadata = LukioToteutuksenMetatieto.copy(painotukset = List(), erityisetKoulutustehtavat = List()),
-      koulutusMetadata,
+      ToteutusEnrichmentSourceData(
+        Map(),
+        Seq(),
+        TestOids.TestUserOid,
+        isLukioToteutus = true,
+        Seq(),
+        LukioToteutuksenMetatieto.yleislinja,
+        koulutusMetadata.opintojenLaajuusNumero
+      ),
       toteutusKaannokset,
       koodiKaannokset
     )
