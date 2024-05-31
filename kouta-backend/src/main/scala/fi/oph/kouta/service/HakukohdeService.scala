@@ -75,20 +75,21 @@ class HakukohdeService(
     }
   }
 
-  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutusOid: ToteutusOid): HakukohdeEnrichedData = {
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutusOid: ToteutusOid): HakukohdeEnrichedData =
+    enrichHakukohde(muokkaajaOid, nimi, ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1))
+
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutus: Option[Toteutus]): HakukohdeEnrichedData = {
     val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(muokkaajaOid)
     val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
     val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
-    val toteutus                                = ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat())
     toteutus match {
-      case Some((t, _)) =>
+      case Some(t) =>
         val esitysnimi = generateHakukohdeEsitysnimi(nimi, t.metadata)
         hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi)
       case None => hakukohdeEnrichedDataWithMuokkaajanNimi
     }
   }
-
-  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
+    def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Hakukohde, Instant)] = {
     val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)

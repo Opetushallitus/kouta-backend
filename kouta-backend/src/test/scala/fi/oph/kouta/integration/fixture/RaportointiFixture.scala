@@ -4,6 +4,7 @@ import fi.oph.kouta.client.OrganisaatioServiceClient
 import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockSiirtotiedostoPalveluClient}
+import fi.oph.kouta.repository.RaportointiDAO
 import fi.oph.kouta.service.RaportointiService
 import fi.oph.kouta.servlet.RaportointiServlet
 import org.json4s.JValue
@@ -40,6 +41,7 @@ trait RaportointiFixture
   val maxNumberOfItemsInOneWrite = 40
   def raportointiService: RaportointiService =
     new RaportointiService(
+      RaportointiDAO,
       koulutusService,
       toteutusService,
       hakukohdeService,
@@ -103,8 +105,6 @@ trait RaportointiFixture
   def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
   def firstRaporttiContent(): String = siirtotiedostoPalveluClient.head()
   def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
-
-  //def dateParam(dateTime: Instant): String = URLEncoder.encode(renderHttpDate(dateTime), StandardCharsets.UTF_8)
 
   def dateParam(dateTime: LocalDateTime): String =
     URLEncoder.encode(RaportointiDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)

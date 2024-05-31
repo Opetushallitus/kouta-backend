@@ -10,6 +10,7 @@ import java.util.UUID
 package object raportointi {
   val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
+
   case class YhteyshenkiloRaporttiItem(
       nimi: Kielistetty = Map(),
       titteli: Kielistetty = Map(),
@@ -81,10 +82,46 @@ package object raportointi {
 
   object Organisaatiotyyppi extends Enum[Organisaatiotyyppi] {
     override def name: String = "organisaatiotyyppi"
-    val values = List(Oppilaitos, OppilaitoksenOsa)
+    val values                = List(Oppilaitos, OppilaitoksenOsa)
   }
 
-  case object Oppilaitos extends Organisaatiotyyppi { val name = "oppilaitos" }
+  case object Oppilaitos       extends Organisaatiotyyppi { val name = "oppilaitos"       }
   case object OppilaitoksenOsa extends Organisaatiotyyppi { val name = "oppilaitoksenOsa" }
+  
+  case class SiirtotiedostoOperationResults(
+      keys: Seq[String],
+      count: Int,
+      success: Boolean
+  )
 
+  case class SiirtotiedostoCounts(
+      koulutukset: Option[Int],
+      toteutukset: Option[Int],
+      hakukohteet: Option[Int],
+      haut: Option[Int],
+      valintaperusteet: Option[Int],
+      sorakuvaukset: Option[Int],
+      oppilaitoksetJaOsat: Option[Int],
+      pistetiedot: Option[Int],
+  ) {
+    def this() = this(None, None, None, None, None, None, None, None)
+  }
+
+  case class SiirtotiedostoInfo(counts: Option[SiirtotiedostoCounts])
+  case class Siirtotiedosto(
+      id: UUID,
+      windowStart: Option[String],
+      windowEnd: String,
+      runStart: LocalDateTime,
+      runEnd: Option[LocalDateTime],
+      info: Option[SiirtotiedostoInfo],
+      success: Option[Boolean],
+      errorMessage: Option[String]
+  ) {
+    def windowStartAsLocalDate() =
+      windowStart match {
+        case Some(dateStr) => Some(LocalDateTime.parse(dateStr, RaportointiDateTimeFormat))
+        case _ => None
+      }
+  }
 }

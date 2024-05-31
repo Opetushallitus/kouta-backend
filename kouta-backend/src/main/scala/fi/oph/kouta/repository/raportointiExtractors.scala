@@ -221,4 +221,17 @@ trait RaportointiExtractors extends ExtractorBase {
       modified = r.nextTimestampOption().map(timeStampToModified)
     )
   )
+
+  implicit val getSiirtotiedostoDataResult: GetResult[Siirtotiedosto] = GetResult(r =>
+    Siirtotiedosto(
+      id = UUID.fromString(r.nextString()),
+      windowStart = r.nextStringOption(),
+      windowEnd = r.nextString(),
+      runStart = r.nextTimestamp().toLocalDateTime,
+      runEnd = r.nextTimestampOption().map(_.toLocalDateTime),
+      info = r.nextStringOption().map(read[SiirtotiedostoInfo]),
+      success = r.nextBooleanOption(),
+      errorMessage = r.nextStringOption()
+    )
+  )
 }

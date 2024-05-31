@@ -1,42 +1,41 @@
 package fi.oph.kouta.service
 
+import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.raportointi._
-import fi.oph.kouta.domain.{LukiolinjaTieto, ToteutusEnrichmentSourceData}
-import fi.oph.kouta.repository.RaportointiDAO
+import fi.oph.kouta.domain.{LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
+import fi.oph.kouta.repository.{KoutaDatabase, RaportointiDAO, SiirtotiedostoRaportointiDAO}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.NameHelper
 
 import java.time.LocalDateTime
+import java.util.UUID
 import scala.collection.mutable.ListBuffer
 
 object RaportointiService
     extends RaportointiService(
+      RaportointiDAO,
       KoulutusService,
       ToteutusService,
       HakukohdeService,
       OppijanumerorekisteriClient,
       SiirtotiedostoPalveluClient
-    ) {
-  def apply(
-      koulutusService: KoulutusService,
-      toteutusService: ToteutusService,
-      hakukohdeService: HakukohdeService,
-      oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-      siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
-  ): RaportointiService = {
-    new RaportointiService(
-      koulutusService,
-      toteutusService,
-      hakukohdeService,
-      oppijanumerorekisteriClient,
-      siirtotiedostoPalveluClient
     )
-  }
-}
+
+object SiirtotiedostoRaportointiService
+    extends RaportointiService(
+      SiirtotiedostoRaportointiDAO,
+      KoulutusService,
+      ToteutusService,
+      HakukohdeService,
+      OppijanumerorekisteriClient,
+      SiirtotiedostoPalveluClient
+    )
+
 class RaportointiService(
+    raportointiDAO: RaportointiDAO,
     koulutusService: KoulutusService,
     toteutusService: ToteutusService,
     hakukohdeService: HakukohdeService,
@@ -44,31 +43,61 @@ class RaportointiService(
     siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
 ) {
   val maxNumberOfItemsInFile = KoutaConfigurationFactory.configuration.s3Configuration.transferFileMaxItemCount;
-  val NO_RESULTS_MESSAGE     = "Ei hakutuloksia annetuilla aikarajoilla"
 
-  private def hakutulosMessage(totalSize: Int, entityDesc: String, keys: Seq[String]) = {
-    val keyText = if (keys.size > 1) "avaimet" else "avain"
-    s"Yhteensä $totalSize $entityDesc tallennettu S3 buckettiin, $keyText ${keys.mkString(", ")}"
+  def saveKoulutukset(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[KoulutusRaporttiItem](
+      "koulutus",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listKoulutukset,
+      enrichKoulutukset
+    )
   }
 
-  def saveKoulutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int = 0
-    var koulutusRaporttiItems =
-      RaportointiDAO.listKoulutukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    val keyList: ListBuffer[String] = ListBuffer()
-    while (koulutusRaporttiItems.nonEmpty) {
-      totalSize += koulutusRaporttiItems.size
-      val enriched = koulutusRaporttiItems.map(k =>
-        k.copy(enrichedData =
-          Some(new KoulutusEnrichedDataRaporttiItem(koulutusService.enrichKoulutus(k.ePerusteId, k.nimi, k.muokkaaja)))
+  private def enrichKoulutukset(koulutusItems: Seq[KoulutusRaporttiItem]): Seq[KoulutusRaporttiItem] = {
+    koulutusItems.map(k =>
+      k.copy(enrichedData =
+        Some(new KoulutusEnrichedDataRaporttiItem(koulutusService.enrichKoulutus(k.ePerusteId, k.nimi, k.muokkaaja)))
+      )
+    )
+  }
+
+  def saveToteutukset(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[ToteutusRaporttiItem](
+      "toteutus",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listToteutukset,
+      enrichToteutukset
+    )
+  }
+
+  private def enrichToteutukset(toteutusItems: Seq[ToteutusRaporttiItem]): Seq[ToteutusRaporttiItem] = {
+    val lukioKoulutusOids                = toteutusItems.filter(_.isLukioToteutus).map(_.koulutusOid)
+    val lukioKoulutusEnrichmentDataItems = raportointiDAO.listKoulutusEnrichmentDataItems(lukioKoulutusOids)
+    toteutusItems.map(t => {
+      val koulutusEnrichmentData =
+        if (t.isLukioToteutus)
+          lukioKoulutusEnrichmentDataItems.find(_.oid.s == t.koulutusOid.s)
+        else None
+      t.copy(enrichedData =
+        Some(
+          new ToteutusEnrichedDataRaporttiItem(
+            toteutusService.enrichToteutus(toteutusEnrichmentSourceData(t, koulutusEnrichmentData))
+          )
         )
       )
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("koulutus", enriched)
-      koulutusRaporttiItems = RaportointiDAO.listKoulutukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "koulutusta", keyList) else NO_RESULTS_MESSAGE
+    })
   }
 
   private def lukioLinjat(lukioToteutusMetadata: LukioToteutusMetadataRaporttiItem) =
@@ -104,62 +133,32 @@ class RaportointiService(
     }
   }
 
-  def saveToteutukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-    var toteutusRaporttiItems       = RaportointiDAO.listToteutukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (toteutusRaporttiItems.nonEmpty) {
-      totalSize += toteutusRaporttiItems.size
-
-      val lukioKoulutusOids                = toteutusRaporttiItems.filter(_.isLukioToteutus).map(_.koulutusOid)
-      val lukioKoulutusEnrichmentDataItems = RaportointiDAO.listKoulutusEnrichmentDataItems(lukioKoulutusOids)
-      val toteutusRaporttiItemsEnriched = toteutusRaporttiItems.map(t => {
-        val koulutusEnrichmentData =
-          if (t.isLukioToteutus)
-            lukioKoulutusEnrichmentDataItems.find(_.oid.s == t.koulutusOid.s)
-          else None
-        t.copy(enrichedData =
-          Some(
-            new ToteutusEnrichedDataRaporttiItem(
-              toteutusService.enrichToteutus(toteutusEnrichmentSourceData(t, koulutusEnrichmentData))
-            )
-          )
-        )
-      })
-      keyList +=
-        siirtotiedostoPalveluClient.saveSiirtotiedosto("toteutus", toteutusRaporttiItemsEnriched)
-      toteutusRaporttiItems = RaportointiDAO.listToteutukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "toteutusta", keyList) else NO_RESULTS_MESSAGE
+  def saveHakukohteet(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[HakukohdeRaporttiItem](
+      "hakukohde",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listHakukohteet,
+      enrichHakukohteet
+    )
   }
 
-  def saveHakukohteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-
-    var hakukohdeRaporttiItems = RaportointiDAO
-      .listHakukohteet(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (hakukohdeRaporttiItems.nonEmpty) {
-      totalSize += hakukohdeRaporttiItems.size
-      val enriched = hakukohdeRaporttiItems
-        .map(hri =>
-          hri.copy(enrichedData =
-            Some(
-              new HakukohdeEnrichedDataRaporttiItem(
-                hakukohdeService.enrichHakukohde(hri.muokkaaja, hri.nimi, hri.toteutusOid)
-              )
-            )
+  private def enrichHakukohteet(hakukohdeItems: Seq[HakukohdeRaporttiItem]): Seq[HakukohdeRaporttiItem] = {
+    hakukohdeItems.map(hri => {
+      val toteutusItem = raportointiDAO.getSingleTotetutus(hri.toteutusOid, TilaFilter.onlyOlemassaolevat())
+      hri.copy(enrichedData =
+        Some(
+          new HakukohdeEnrichedDataRaporttiItem(
+            hakukohdeService.enrichHakukohde(hri.muokkaaja, hri.nimi, toteutusItem)
           )
         )
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("hakukohde", enriched)
-      hakukohdeRaporttiItems = RaportointiDAO
-        .listHakukohteet(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "hakukohdetta", keyList) else NO_RESULTS_MESSAGE
+      )
+    })
   }
 
   private def getMuokkaajanNimi(userOid: UserOid): Option[String] = {
@@ -167,68 +166,76 @@ class RaportointiService(
     Some(NameHelper.generateMuokkaajanNimi(muokkaaja))
   }
 
-  def saveHaut(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-    var hakuRaporttiItems = RaportointiDAO
-      .listHaut(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (hakuRaporttiItems.nonEmpty) {
-      totalSize += hakuRaporttiItems.size
-      val enriched = hakuRaporttiItems
-        .map(h => h.copy(enrichedData = Some(HakuEnrichedDataRaporttiItem(getMuokkaajanNimi(h.muokkaaja)))))
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("haku", enriched)
-      hakuRaporttiItems = RaportointiDAO
-        .listHaut(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "hakua", keyList) else NO_RESULTS_MESSAGE
+  def saveHaut(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[HakuRaporttiItem](
+      "haku",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listHaut,
+      enrichHaut
+    )
   }
 
-  def saveValintaperusteet(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-
-    var valintaPerusteRaporttiItems = RaportointiDAO
-      .listValintaperusteet(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (valintaPerusteRaporttiItems.nonEmpty) {
-      totalSize += valintaPerusteRaporttiItems.size
-      val enriched = valintaPerusteRaporttiItems
-        .map(v => v.copy(enrichedData = Some(ValintaperusteEnrichedDataRaporttiItem(getMuokkaajanNimi(v.muokkaaja)))))
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("valintaperuste", enriched)
-      valintaPerusteRaporttiItems = RaportointiDAO
-        .listValintaperusteet(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "valintaperustetta", keyList) else NO_RESULTS_MESSAGE
+  private def enrichHaut(hakuItems: Seq[HakuRaporttiItem]): Seq[HakuRaporttiItem] = {
+    hakuItems.map(h => h.copy(enrichedData = Some(HakuEnrichedDataRaporttiItem(getMuokkaajanNimi(h.muokkaaja)))))
   }
 
-  def saveSorakuvaukset(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-    var sorakuvausRaporttiItems = RaportointiDAO
-      .listSorakuvaukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (sorakuvausRaporttiItems.nonEmpty) {
-      totalSize += sorakuvausRaporttiItems.size
-      val enriched = sorakuvausRaporttiItems.map(s =>
-        s.copy(enrichedData = Some(SorakuvausEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja))))
-      )
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("sorakuvaus", enriched)
-      sorakuvausRaporttiItems = RaportointiDAO
-        .listSorakuvaukset(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "sorakuvausta", keyList) else NO_RESULTS_MESSAGE
+  def saveValintaperusteet(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[ValintaperusteRaporttiItem](
+      "valintaperuste",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listValintaperusteet,
+      enrichValintaperusteet
+    )
   }
 
-  def saveOppilaitoksetJaOsat(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var olSize, osaSize: Int = 0
-    val keyList: ListBuffer[String]            = ListBuffer()
-    var queriedTypes                           = Seq(Oppilaitos, OppilaitoksenOsa)
+  private def enrichValintaperusteet(
+      valintaperusteItems: Seq[ValintaperusteRaporttiItem]
+  ): Seq[ValintaperusteRaporttiItem] = {
+    valintaperusteItems
+      .map(v => v.copy(enrichedData = Some(ValintaperusteEnrichedDataRaporttiItem(getMuokkaajanNimi(v.muokkaaja)))))
+  }
+
+  def saveSorakuvaukset(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[SorakuvausRaporttiItem](
+      "sorakuvaus",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listSorakuvaukset,
+      enrichSorakuvaukset
+    )
+  }
+
+  private def enrichSorakuvaukset(sorakuvausItems: Seq[SorakuvausRaporttiItem]): Seq[SorakuvausRaporttiItem] = {
+    sorakuvausItems
+      .map(s => s.copy(enrichedData = Some(SorakuvausEnrichedDataRaporttiItem(getMuokkaajanNimi(s.muokkaaja)))))
+  }
+
+  def saveOppilaitoksetJaOsat(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    var olSize, osaSize: Int        = 0
+    val keyList: ListBuffer[String] = ListBuffer()
+    var queriedTypes                = Seq(Oppilaitos, OppilaitoksenOsa)
+    var operationSubId              = 0;
     var oppilaitoksetAndOsat =
       queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, olSize, osaSize)
     while (oppilaitoksetAndOsat._1.nonEmpty || oppilaitoksetAndOsat._2.nonEmpty) {
@@ -241,14 +248,16 @@ class RaportointiService(
 
       val enriched = (oppilaitoksetAndOsat._1 ++ oppilaitoksetAndOsat._2)
         .map(o => o.copy(enrichedData = Some(OppilaitosOrOsaEnrichedDataRaporttiItem(getMuokkaajanNimi(o.muokkaaja)))))
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("oppilaitosJaOsa", enriched)
-      oppilaitoksetAndOsat =
-        queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, olSize, osaSize)
+      operationSubId += 1
+      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto(
+        "oppilaitosJaOsa",
+        enriched,
+        operationId,
+        operationSubId
+      )
+      oppilaitoksetAndOsat = queryOppilaitoksetAndOrOsatUpToMaxLimit(queriedTypes, startTime, endTime, olSize, osaSize)
     }
-    if (olSize > 0 || osaSize > 0) {
-      val keyText = if (keyList.size > 1) s"avaimet ${keyList.mkString(", ")}" else s"avain ${keyList.head}"
-      s"""Yhteensä $olSize oppilaitosta, $osaSize oppilaitoksen osaa tallennettu S3 buckettiin, $keyText"""
-    } else NO_RESULTS_MESSAGE
+    SiirtotiedostoOperationResults(keyList.toSeq, olSize + osaSize, true)
   }
 
   private def queryOppilaitoksetAndOrOsatUpToMaxLimit(
@@ -261,66 +270,79 @@ class RaportointiService(
     queriedTypes match {
       case Seq(_, _) =>
         val oppilaitokset =
-          RaportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset)
+          raportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset)
         (
           oppilaitokset,
           if (oppilaitokset.size < maxNumberOfItemsInFile)
-            RaportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile - oppilaitokset.size, 0)
+            raportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile - oppilaitokset.size, 0)
           else Seq()
         )
       case Seq(OppilaitoksenOsa) =>
-        (Seq(), RaportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile, osaOffset))
-      case _ => (RaportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset), Seq())
+        (Seq(), raportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile, osaOffset))
+      case _ => (raportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset), Seq())
     }
   }
 
-  def savePistehistoria(startTime: Option[LocalDateTime], endTime: Option[LocalDateTime])(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
+  def savePistehistoria(
+      operationId: UUID,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime]
+  ): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[PistetietoRaporttiItem](
+      "pistehistoria",
+      startTime,
+      endTime,
+      operationId,
+      raportointiDAO.listPistehistoria,
+      { (pistetietoItems: Seq[PistetietoRaporttiItem]) => pistetietoItems }
+    )
+  }
+
+  def saveAmmattinimikkeet(operationId: UUID): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[keyword.Keyword](
+      "ammattinimike",
+      None,
+      None,
+      operationId,
+      raportointiDAO.listAmmattinimikkeet,
+      { (ammattinimikkeet: Seq[keyword.Keyword]) => ammattinimikkeet }
+    )
+  }
+
+  def saveAsiasanat(operationId: UUID): SiirtotiedostoOperationResults = {
+    saveEntitiesToSiirtotiedostot[keyword.Keyword](
+      "asiasana",
+      None,
+      None,
+      operationId,
+      raportointiDAO.listAsiasanat,
+      { (asiasanat: Seq[keyword.Keyword]) => asiasanat }
+    )
+  }
+
+  private def saveEntitiesToSiirtotiedostot[T](
+      entity: String,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime],
+      operationId: UUID,
+      queryFunc: (Option[LocalDateTime], Option[LocalDateTime], Int, Int) => Seq[T],
+      enrichFunc: Seq[T] => Seq[T]
+  ): SiirtotiedostoOperationResults = {
+    var offsetCounter: Int          = 0;
+    var raporttiItems               = queryFunc(startTime, endTime, maxNumberOfItemsInFile, offsetCounter)
     val keyList: ListBuffer[String] = ListBuffer()
-    var pistetietoRaporttiItems = RaportointiDAO
-      .listPistehistoria(startTime, endTime, maxNumberOfItemsInFile, totalSize)
-    while (pistetietoRaporttiItems.nonEmpty) {
-      totalSize += pistetietoRaporttiItems.size
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("pistehistoria", pistetietoRaporttiItems)
-      pistetietoRaporttiItems = RaportointiDAO
-        .listPistehistoria(startTime, endTime, maxNumberOfItemsInFile, totalSize)
+    var operationSubId              = 0;
+    while (raporttiItems.nonEmpty) {
+      offsetCounter += raporttiItems.size
+      val enriched = enrichFunc(raporttiItems)
+      operationSubId += 1
+      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto(entity, enriched, operationId, operationSubId)
+      raporttiItems = queryFunc(startTime, endTime, maxNumberOfItemsInFile, offsetCounter)
     }
-    if (totalSize > 0) hakutulosMessage(totalSize, "pistehistoriatietoa", keyList) else NO_RESULTS_MESSAGE
+    SiirtotiedostoOperationResults(keyList.toSeq, offsetCounter, true)
   }
 
-  def saveAmmattinimikkeet()(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-
-    var ammattinimikkeet = RaportointiDAO
-      .listAmmattinimikkeet(maxNumberOfItemsInFile, totalSize)
-    while (ammattinimikkeet.nonEmpty) {
-      totalSize += ammattinimikkeet.size
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("ammattinimike", ammattinimikkeet)
-      ammattinimikkeet = RaportointiDAO
-        .listAmmattinimikkeet(maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "ammattinimikettä", keyList) else "Ei hakutuloksia"
-  }
-
-  def saveAsiasanat()(implicit
-      authenticated: Authenticated
-  ): String = {
-    var totalSize: Int              = 0
-    val keyList: ListBuffer[String] = ListBuffer()
-
-    var asiasanat = RaportointiDAO
-      .listAsiasanat(maxNumberOfItemsInFile, totalSize)
-    while (asiasanat.nonEmpty) {
-      totalSize += asiasanat.size
-      keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto("asiasana", asiasanat)
-      asiasanat = RaportointiDAO
-        .listAsiasanat(maxNumberOfItemsInFile, totalSize)
-    }
-    if (totalSize > 0) hakutulosMessage(totalSize, "asiasanaa", keyList) else "Ei hakutuloksia"
-  }
+  def findLatestSiirtotiedostoData(): Option[Siirtotiedosto] = raportointiDAO.findLatestSiirtotiedostoData()
+  def saveSiirtotiedostoData(siirtoTiedosto: Siirtotiedosto): Int =
+    raportointiDAO.saveSiirtotiedostoData(siirtoTiedosto)
 }

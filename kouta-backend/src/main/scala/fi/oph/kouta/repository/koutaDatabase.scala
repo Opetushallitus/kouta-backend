@@ -2,10 +2,11 @@ package fi.oph.kouta.repository
 
 import java.util.concurrent.TimeUnit
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.config.{KoutaConfigurationFactory, KoutaDatabaseConfiguration}
 import fi.vm.sade.utils.slf4j.Logging
 import org.apache.commons.lang3.builder.ToStringBuilder
 import org.flywaydb.core.Flyway
+import org.flywaydb.core.api.output.{CleanResult, MigrateResult}
 import org.postgresql.jdbc.AutoSave
 import org.postgresql.util.PSQLException
 import slick.dbio.DBIO
@@ -17,20 +18,17 @@ import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 import scala.util.{Failure, Success, Try}
 
-object KoutaDatabase extends Logging {
+abstract class KoutaDatabaseAccessor extends Logging {
+  val settings: KoutaDatabaseConfiguration = KoutaConfigurationFactory.configuration.databaseConfiguration
 
-  val settings = KoutaConfigurationFactory.configuration.databaseConfiguration
-
-  val hikariConfig: HikariConfig = {
+  def hikariConfig: HikariConfig = {
     val config = new HikariConfig()
     config.setJdbcUrl(settings.url)
     config.setUsername(settings.username)
     config.setPassword(settings.password)
     val maxPoolSize = settings.maxConnections.getOrElse(10)
     config.setMaximumPoolSize(maxPoolSize)
-    if (
-      KoutaConfigurationFactory.isTesting
-    ) {
+    if (KoutaConfigurationFactory.isTesting) {
       // Prevent db error "cached plan must not change result type" in migration tests
       config.addDataSourceProperty("autosave", AutoSave.CONSERVATIVE)
     }
@@ -41,15 +39,19 @@ object KoutaDatabase extends Logging {
     config
   }
 
-  private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password)
-
-  logger.warn(settings.username)
-
-  migrate()
-
-  val db = initDb(hikariConfig)
-
-  def init() = {}
+  val db = {
+    val executor = AsyncExecutor("kouta", hikariConfig.getMaximumPoolSize, 1000)
+    logger.info(
+      s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
+        s"${ToStringBuilder.reflectionToString(hikariConfig).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
+        s" and executor ${ToStringBuilder.reflectionToString(executor)}"
+    )
+    Database.forDataSource(
+      new HikariDataSource(hikariConfig),
+      maxConnections = Some(hikariConfig.getMaximumPoolSize),
+      executor
+    )
+  }
 
   def runBlocking[R](operations: DBIO[R], timeout: Duration = Duration(10, TimeUnit.MINUTES)): R = {
     Await.result(
@@ -77,25 +79,26 @@ object KoutaDatabase extends Logging {
     }
   }
 
-  def destroy() = {
+  def destroy(): Unit = {
+    db.executor.close()
     db.close()
   }
+}
 
-  private def initDb(config: HikariConfig) = {
-    val executor = AsyncExecutor("kouta", config.getMaximumPoolSize, 1000)
-    logger.info(
-      s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
-        s"${ToStringBuilder.reflectionToString(config).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
-        s" and executor ${ToStringBuilder.reflectionToString(executor)}"
-    )
-    Database.forDataSource(new HikariDataSource(config), maxConnections = Some(config.getMaximumPoolSize), executor)
-  }
+object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
+  private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password)
+
+  logger.warn(settings.username)
+
+  migrate()
+
+  def init(): Unit = {}
 
   val dataSource: javax.sql.DataSource = {
     new HikariDataSource(hikariConfig)
   }
 
-  def migrate(target: String = "latest") = flywayConfig.target(target).load.migrate
+  def migrate(target: String = "latest"): MigrateResult = flywayConfig.target(target).load.migrate
 
-  def clean() = flywayConfig.load.clean
+  def clean(): CleanResult = flywayConfig.load.clean
 }
