@@ -320,16 +320,7 @@ trait HakukohdeExtractors extends ExtractorBase {
         modified = timeStampToModified(r.nextTimestamp()),
         toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata])
       )
-      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
-        Hakukohde(
-          oid = Some(item.oid),
-          toteutusOid = item.toteutusOid,
-          hakuOid = item.hakuOid,
-          nimi = item.nimi,
-          muokkaaja = item.muokkaaja,
-          organisaatioOid = item.organisaatioOid,
-          modified = Some(item.modified)),
-        item.toteutusMetadata)
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(item.nimi, item.toteutusMetadata)
       item.copy(nimi = esitysnimi, toteutusMetadata = None)
     }
   )
@@ -569,17 +560,7 @@ trait HakutietoExtractors extends ExtractorBase {
           kynnysehto = extractKielistetty(r.nextStringOption()),
           valintakoeIds = extractArray[UUID](r.nextObjectOption()))
 
-      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(
-        Hakukohde(
-          oid = Some(ht.hakukohdeOid),
-          toteutusOid = ht.toteutusOid,
-          hakuOid = ht.hakuOid,
-          nimi = ht.nimi,
-          muokkaaja = ht.muokkaaja,
-          organisaatioOid = ht.organisaatioOid,
-          modified = ht.modified),
-        ht.toteutusMetadata
-      )
+      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(ht.nimi, ht.toteutusMetadata)
       (toteutusOid, hakuOid, ht.copy(nimi = esitysnimi, toteutusMetadata = None))
     })
 }

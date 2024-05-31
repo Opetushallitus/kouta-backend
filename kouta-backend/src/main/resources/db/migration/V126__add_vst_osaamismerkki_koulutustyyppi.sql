@@ -1,1 +1,0 @@
-alter type koulutustyyppi add value 'vapaa-sivistystyo-osaamismerkki';

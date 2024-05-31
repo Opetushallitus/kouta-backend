@@ -763,7 +763,6 @@ class KoulutusSpec
     mockLokalisointiResponse("yleiset.osaamismerkki")
     val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
     val oid = put(vapaaSivistystyoOsaamismerkkiKoulutus, ophSession)
-    val osaamismerkkiMetadata = vapaaSivistystyoOsaamismerkkiKoulutus.metadata
     val vstOsaamismerkkiWithOpintojenLaajuus = vapaaSivistystyoOsaamismerkkiKoulutus.copy(
       oid = Some(KoulutusOid(oid)),
       metadata = Some(TestData.VapaaSivistystyoOsaamismerkkiKoulutusMetatieto.copy(
