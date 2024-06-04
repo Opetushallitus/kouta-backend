@@ -1,0 +1,27 @@
+# Vaihda host_virkailija ja cas_url osoittamaan siihen ympäristöön, minkä palveluja haluat käyttää
+---
+host_postgresql_kouta: localhost
+host_postgresql_kouta_port: 3322
+postgres_app_user: app
+host_postgresql_kouta_app_password: ophoph
+host_virkailija: virkailija.untuvaopintopolku.fi
+host_alb_virkailija: alb.untuvaopintopolku.fi
+cas_url: https://virkailija.untuvaopintopolku.fi/cas
+kouta_backend_cas_username: kouta-backend
+kouta_backend_cas_password: pupethe=ic6Cai7o
+kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login
+kouta_backend_sqs_endpoint: http://localhost:4566
+kouta_backend_sqs_queue_priority: koutaIndeksoijaPriority
+kouta_backend_sqs_region:
+aws_region: eu-west-1
+kouta_backend_s3_image_bucket: konfo-files.untuvaopintopolku.fi
+kouta_backend_s3_image_bucket_public_url: https://konfo-files.untuvaopintopolku.fi
+ovara_siirtotiedosto_s3_bucket: testi-siirtotiedostot
+ovara_siirtotiedosto_s3_target_role_arn: arn:aws:iam::xxxxxxxxxxxx:role/opintopolku-s3-cross-account-role
+kouta_backend_s3_transfer_file_save_retry_count: 3
+kouta_backend_s3_transfer_file_max_item_count: 10000
+kouta_external_api_modify_enabled: true
+kouta_backend_elasticsearch_url: http://localhost:9200
+kouta_backend_elasticsearch_auth_enabled: false
+kouta_backend_elasticsearch_username: DUMMY
+kouta_backend_elasticsearch_password: DUMMY

@@ -79,13 +79,22 @@ jobs:
         run: |
           set -euo pipefail
           export ARTIFACT_NAME="kouta-backend"
+          export OVARA_EXPORTER_NAME="ovara-kouta"
+          export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
           source ci-tools/common/setup-tools.sh
+
           mv kouta-backend/target/kouta-backend-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${ARTIFACT_NAME}.jar
           cp -vr kouta-backend/src/main/resources/* $DOCKER_BUILD_DIR/config/
-          export BASE_IMAGE="baseimage-fatjar-openjdk11:master"
           ./ci-tools/common/pull-image.sh
           ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
+
+          mv ovara-kouta/target/ovara-kouta-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${OVARA_EXPORTER_NAME}.jar
+          cp -vr ovara-kouta/src/main/resources/* $DOCKER_BUILD_DIR/config/
+          ./ci-tools/common/pull-image.sh
+          ./ci-tools/github-build/build-fatjar.sh $OVARA_EXPORTER_NAME
+
           ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
+          ./ci-tools/github-build/upload-image.sh $OVARA_EXPORTER_NAME
 
   deploy_to_artifactory:
     runs-on: ubuntu-latest

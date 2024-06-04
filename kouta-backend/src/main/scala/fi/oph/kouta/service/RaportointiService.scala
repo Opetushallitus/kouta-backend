@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
