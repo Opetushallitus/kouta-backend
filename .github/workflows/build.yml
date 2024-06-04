@@ -93,7 +93,6 @@ jobs:
           ./ci-tools/github-build/build-fatjar.sh $ARTIFACT_NAME
 
           mv ovara-kouta/target/ovara-kouta-*-jar-with-dependencies.jar $DOCKER_BUILD_DIR/artifact/${OVARA_EXPORTER_NAME}.jar
-          cp -vr ovara-kouta/src/main/resources/* $DOCKER_BUILD_DIR/config/
           ./ci-tools/common/pull-image.sh
           ./ci-tools/github-build/build-fatjar.sh $OVARA_EXPORTER_NAME
 
