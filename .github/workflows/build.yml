@@ -43,7 +43,9 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
-          path: kouta-backend/target
+          path: | 
+            kouta-backend/target
+            ovara-kouta/target
           key: ${{ github.sha }}
 
       - uses: actions/cache@v3
@@ -62,7 +64,9 @@ jobs:
       - uses: actions/cache@v3
         id: restore-build
         with:
-          path: kouta-backend/target
+          path: |
+            kouta-backend/target
+            ovara-kouta/target
           key: ${{ github.sha }}
 
       - uses: actions/cache@v3
