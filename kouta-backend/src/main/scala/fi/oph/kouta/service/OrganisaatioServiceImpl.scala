@@ -4,6 +4,7 @@ import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, Organis
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatioServiceOrg, oppilaitostyypitForAvoinKorkeakoulutus}
+import fi.oph.kouta.util.OrganisaatioServiceUtil
 import fi.vm.sade.properties.OphProperties
 import org.scalatra.{MultiParams, Params}
 
@@ -75,7 +76,7 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
     (OrganisaatioOid(organisaatio.oid), organisaatio.copy(children = Some(listDescendants(organisaatio))))
   }
 
-  def getOrganisaatioChildren(oid: OrganisaatioOid): Either[Throwable, Seq[Organisaatio]] = {
+  def getOrganisaatioChildren(oid: OrganisaatioOid, yhteystiedotForOsat: Boolean = false): Either[Throwable, Seq[Organisaatio]] = {
     Try[OrganisaatioHierarkia] {
       organisaatioServiceClient.getOrganisaatioChildrenFromCache(oid)
     } match {
@@ -84,7 +85,18 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
           flattenOrganisaatioWithChildren(organisaatioHierarkia.organisaatiot.head)._2.children.getOrElse(List())
         } else List()
 
-        Right(children)
+        val updatedChildren = if (yhteystiedotForOsat) {
+          children.map(child => {
+            getOrganisaatio(OrganisaatioOid(child.oid)) match {
+              case Right(organisaatio: OrganisaatioServiceOrg) =>
+                OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(organisaatio)
+            }
+          })
+        } else {
+          children
+        }
+
+        Right(updatedChildren)
       case Failure(exception) => Left(exception)
     }
   }

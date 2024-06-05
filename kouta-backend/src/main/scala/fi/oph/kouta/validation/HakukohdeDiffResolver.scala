@@ -32,11 +32,11 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
 
   def liitteidenToimitusosoiteWithNewValues(): Option[Osoite] = {
     val postinumeroKoodiUri =
-      hakukohde.liitteidenToimitusosoite.map(_.osoite).flatMap(_.postinumeroKoodiUri)
+      hakukohde.liitteidenToimitusosoite.map(_.osoite).map(_.postinumeroKoodiUri).getOrElse(Map())
     val oldPostinumeroKoodiUri = oldHakukohde
       .flatMap(_.liitteidenToimitusosoite)
       .map(_.osoite)
-      .flatMap(_.postinumeroKoodiUri)
+      .map(_.postinumeroKoodiUri).getOrElse(Map())
     if (postinumeroKoodiUri != oldPostinumeroKoodiUri) Some(Osoite(postinumeroKoodiUri = postinumeroKoodiUri))
     else None
   }
@@ -96,7 +96,7 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
 
   def liitteenOsoiteWithNewValues(liite: Option[Liite]): Option[Osoite] = {
     val postinumeroKoodiUri =
-      liite.flatMap(_.toimitusosoite).map(_.osoite).flatMap(_.postinumeroKoodiUri)
-    if (postinumeroKoodiUri.isDefined) Some(Osoite(postinumeroKoodiUri = postinumeroKoodiUri)) else None
+      liite.flatMap(_.toimitusosoite).map(_.osoite).map(_.postinumeroKoodiUri).getOrElse(Map())
+    if (postinumeroKoodiUri.nonEmpty) Some(Osoite(postinumeroKoodiUri = postinumeroKoodiUri)) else None
   }
 }
