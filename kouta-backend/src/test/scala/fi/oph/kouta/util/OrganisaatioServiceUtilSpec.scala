@@ -5,22 +5,24 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
 class OrganisaatioServiceUtilSpec extends UnitSpec {
-  val organisaationOsa = Organisaatio(
+  val organisaationOsa: Organisaatio = Organisaatio(
     oid = TestOids.GrandChildOid.toString,
     parentOids = List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
     nimi = Map(Fi -> "Oppilaitoksen osa 1 fi", Sv -> "Oppilaitoksen osa 1 sv", En -> "Oppilaitoksen osa 1 en"),
+    status = "AKTIIVINEN",
     children = None,
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
-  val hierarkiaorganisaatio = Organisaatio(
+  val hierarkiaorganisaatio: Organisaatio = Organisaatio(
     oid = TestOids.ChildOid.toString,
     parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
     oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
     nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+    status = "AKTIIVINEN",
     children = None,
     organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")))
 
-  val orgServiceHierarkiaOrganisaationOsa = OrganisaatioServiceOrg(
+  val orgServiceHierarkiaOrganisaationOsa: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = TestOids.GrandChildOid.toString,
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_63#1"),
@@ -29,8 +31,9 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
     children = None,
     organisaatiotyypit = Some(List("organisaatiotyyppi_03")))
 
-  val orgServiceHierarkiaOrganisaatio = OrganisaatioServiceOrg(
+  val orgServiceHierarkiaOrganisaatio: OrganisaatioServiceOrg = OrganisaatioServiceOrg(
     oid = TestOids.ChildOid.toString,
+    parentOid = Some(TestOids.ParentOid.toString),
     parentOidPath = s"${TestOids.ChildOid}/${TestOids.ParentOid}/${TestOids.OphOid}",
     oppilaitostyyppi = Some("oppilaitostyyppi_64#1"),
     status = "AKTIIVINEN",
@@ -87,7 +90,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       List(TestOids.GrandChildOid, TestOids.ChildOid, TestOids.EvilGrandChildOid, TestOids.EvilGrandGrandChildOid, TestOids.GrandGrandChildOid, TestOids.EvilChildOid))
   }
 
-  val yhteystiedot = List(
+  val yhteystiedot: List[OrganisaationYhteystieto] = List(
     Email(Fi, "koulutus@opisto.fi"),
     OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
     Puhelin(Fi, "050 44042961"),
@@ -119,17 +122,36 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
   "toOsoite" should "return käyntiosoite in Fi and postinumerokoodiuri" in {
     val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")))
 
-    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228"), Some("posti_15110"))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228"), Map(Fi -> "posti_15110"))))
   }
 
   it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri" in {
-    val kayntiosoitteet = List(OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")), OrgOsoite("kaynti", Sv, "Högskolavägen 228", Some("posti_15110")))
+    val kayntiosoitteet = List(
+      OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
+      OrgOsoite("kaynti", Sv, "Högskolavägen 228", Some("posti_15111")))
 
-    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet) == Some(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Some("posti_15110"))))
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map(Fi -> "posti_15110", Sv -> "posti_15111"))))
+  }
+
+  it should "return käyntiosoite in Fi and Sv and postinumerokoodiuri only for Fi" in {
+    val kayntiosoitteet = List(
+      OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
+      OrgOsoite("kaynti", Sv, "Högskolavägen 228", None))
+
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map(Fi -> "posti_15110"))))
+  }
+
+  it should "return käyntiosoite without postinumero" in {
+    val kayntiosoitteet = List(
+      OrgOsoite("kaynti", Fi, "Hankalankuja 228", None),
+      OrgOsoite("kaynti", Sv, "Högskolavägen 228", None))
+
+    assert(OrganisaatioServiceUtil.toOsoite(kayntiosoitteet).contains(
+      Osoite(Map(Fi -> "Hankalankuja 228", Sv -> "Högskolavägen 228"), Map())))
   }
 
   it should "return None if there is no osoite" in {
-    assert(OrganisaatioServiceUtil.toOsoite(List()) == None)
+    assert(OrganisaatioServiceUtil.toOsoite(List()).isEmpty)
   }
 
   "toYhteystieto" should "return Yhteystieto when given organisaation yhteystiedot from organisaatio-service" in {
@@ -139,18 +161,19 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
       OrgOsoite("kaynti", Fi, "Hankalankuja 228", Some("posti_15110")),
       Puhelin(Fi, "050 44042961"),
       OrgOsoite("posti", Fi, "Jalanluiskahtamavaarankuja 580", Some("posti_15110")),
-      OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15110")),
+      OrgOsoite("posti", Sv, "Jalanluiskahtamavaaravägen 581", Some("posti_15111")),
       Www(Fi, "http://www.salpaus.fi"))
 
-    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot) ==
-      Some(Yhteystieto(
-        nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
-        postiosoite = Some(Osoite(osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"), postinumeroKoodiUri = Some("posti_15110"))),
-        kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Some("posti_15110"))),
-        puhelinnumero = Map(Fi -> "050 44042961"),
-        sahkoposti = Map(Fi -> "koulutus@opisto.fi"),
-        www = Map(Fi -> "http://www.salpaus.fi")
-      ))
+    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot).contains(Yhteystieto(
+      nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en"),
+      postiosoite = Some(Osoite(
+        osoite = Map(Fi -> "Jalanluiskahtamavaarankuja 580", Sv -> "Jalanluiskahtamavaaravägen 581"),
+        postinumeroKoodiUri = Map(Fi -> "posti_15110", Sv -> "posti_15111"))),
+      kayntiosoite = Some(Osoite(osoite = Map(Fi -> "Hankalankuja 228"), postinumeroKoodiUri = Map(Fi -> "posti_15110"))),
+      puhelinnumero = Map(Fi -> "050 44042961"),
+      sahkoposti = Map(Fi -> "koulutus@opisto.fi"),
+      www = Map(Fi -> "http://www.salpaus.fi")
+    ))
     )
   }
 
@@ -158,7 +181,7 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
     val nimi = Map(Fi -> "Koulutuskeskus fi", Sv -> "Koulutuskeskus sv", En -> "Koulutuskeskus en")
     val yhteystiedot = List()
 
-    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot) == None)
+    assert(OrganisaatioServiceUtil.toYhteystieto(nimi, yhteystiedot).isEmpty)
   }
 
   "getParentOids" should "return empty list when parentOidPath is empty string" in {
@@ -184,15 +207,18 @@ class OrganisaatioServiceUtilSpec extends UnitSpec {
   "organisaatioServiceOrgToOrganisaatio" should "return basic organisaatio data with children" in {
     assert(OrganisaatioServiceUtil.organisaatioServiceOrgToOrganisaatio(orgServiceHierarkiaOrganisaatio) == Organisaatio(
       oid = TestOids.ChildOid.toString,
+      parentOid = Some(TestOids.ParentOid),
       parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
       oppilaitostyyppiUri = Some("oppilaitostyyppi_64"),
       nimi = Map(Fi -> "Oppilaitos fi", Sv -> "Oppilaitos sv", En -> "Oppilaitos en"),
+      status = "AKTIIVINEN",
       organisaatiotyyppiUris = Some(List("organisaatiotyyppi_04")),
       children = Some(List(Organisaatio(
         oid = TestOids.GrandChildOid.toString,
         parentOids = List(TestOids.ChildOid, TestOids.ParentOid, TestOids.OphOid),
         oppilaitostyyppiUri =  Some("oppilaitostyyppi_63"),
         nimi = Map(Fi -> "Oppilaitoksen osa fi", Sv -> "Oppilaitoksen osa sv", En -> "Oppilaitoksen osa en"),
+        status = "AKTIIVINEN",
         organisaatiotyyppiUris = Some(List("organisaatiotyyppi_03")),
         children = None
       )))))
