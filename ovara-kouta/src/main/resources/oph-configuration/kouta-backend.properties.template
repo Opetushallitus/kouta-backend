@@ -3,6 +3,9 @@ kouta-backend.cas.service={{kouta_backend_cas_service}}
 kouta-backend.cas.username={{kouta_backend_cas_username}}
 kouta-backend.cas.password={{kouta_backend_cas_password}}
 
+kouta-backend.quick-index-timeout-seconds=5
+kouta-backend.test-environment=false
+
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.port={{host_postgresql_kouta_port}}
 kouta-backend.db.user={{postgres_app_user}}
@@ -17,9 +20,9 @@ kouta-backend.db.initializationFailTimeout=1000
 kouta-backend.db.timeoutSeconds=20
 kouta-backend.db.leakDetectionThresholdMillis=1800000
 
-kouta-backend.sqs.queue.priority={{kouta_backend_sqs_queue_priority}}
-kouta-backend.sqs.endpoint={{kouta_backend_sqs_endpoint}}
-kouta-backend.sqs.region={{kouta_backend_sqs_region}}
+kouta-backend.sqs.queue.priority=not_used
+kouta-backend.sqs.endpoint=not_used
+kouta-backend.sqs.region=not_used
 
 kouta-backend.s3.region={{aws_region}}
 kouta-backend.s3.imageBucket={{kouta_backend_s3_image_bucket}}
@@ -64,8 +67,24 @@ hakemuspalvelu-service.forms=https://{{host_virkailija}}/lomake-editori/api/form
 hakemuspalvelu-service.hakukohde-info=https://{{host_virkailija}}/lomake-editori/api/external/kouta/hakukohde/$1
 hakemuspalvelu-service.haku-ensisijainen-counts=https://{{host_virkailija}}/lomake-editori/api/external/kouta/haku/$1/hakukohde-ensisijainen-application-counts
 
+kouta.external-api.modify.enabled=false
+
+kouta-backend.elasticsearch.url=not_used
+kouta-backend.elasticsearch.auth-enabled=false
+kouta-backend.elasticsearch.username=not_used
+kouta-backend.elasticsearch.password=not_used
+
 valintaperusteet-service=https://{{host_virkailija}}/valintaperusteet-service
 valintaperusteet-service.valintatapajono.oid=https://{{host_virkailija}}/valintaperusteet-service/resources/valintatapajono/$1
 
 valinta-tulos-service=https://{{host_virkailija}}/valinta-tulos-service
 valinta-tulos-service.haku.alimmatpisteet=https://{{host_virkailija}}/valinta-tulos-service/auth/sijoittelu/$1/sijoitteluajo/latest/alimmatPisteet
+
+legacy-tarjonta-service.hakukohde.oid=not_used
+legacy-tarjonta-service.haku.oid=not_used
+
+kouta-indeksoija.koulutus.quick=not_used
+kouta-indeksoija.toteutus.quick=not_used
+kouta-indeksoija.hakukohde.quick=not_used
+kouta-indeksoija.haku.quick=not_used
+kouta-indeksoija.valintaperuste.quick=not_used
