@@ -207,7 +207,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     }
 
   "Osoite validation" should "Succeed if postinumeroKoodiUri not changed in modify operation" in {
-    Osoite(postinumeroKoodiUri = Some("posti_99999#2")).validate(
+    Osoite(postinumeroKoodiUri = Map(Fi -> "posti_99999#2")).validate(
       "path",
       None,
       ValidationContext(Tallennettu, kielet, update),
@@ -220,17 +220,17 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   it should "fail if unknown postinumeroKoodiUri" in {
     failsValidation(
-      Osoite(postinumeroKoodiUri = Some("posti_99999#2")),
+      Osoite(postinumeroKoodiUri = Map(Fi -> "posti_99999#2")),
       Tallennettu,
-      Seq(ValidationError("path.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("posti_99999#2")))
+      Seq(ValidationError("path.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("posti_99999#2")))
     )
   }
 
   it should "fail if values missing from julkaistu Osoite" in {
     failsValidation(
-      Osoite(osoite = vainSuomeksi, postinumeroKoodiUri = None),
+      Osoite(osoite = vainSuomeksi, postinumeroKoodiUri = Map(Fi -> "posti_04230#2")),
       Julkaistu,
-      Seq(ValidationError("path.osoite", kielistettyWoSvenska), ValidationError("path.postinumeroKoodiUri", missingMsg))
+      Seq(ValidationError("path.osoite", kielistettyWoSvenska), ValidationError("path.postinumeroKoodiUri", kielistettyWoSvenska))
     )
   }
 
@@ -369,7 +369,7 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     }
 
   "Valintakoetilaisuus validation" should "Succeed if postinumeroKoodiUri not changed in modify operation" in {
-    Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_99999#2")))).validate(
+    Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Map(Fi -> "posti_99999#2")))).validate(
       "path",
       None,
       ValidationContext(Tallennettu, kielet, create),
@@ -382,9 +382,9 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
 
   it should "fail if invalid osoite" in {
     failsValidation(
-      Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("puppu")))),
+      Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Map(Fi -> "puppu")))),
       Tallennettu,
-      Seq(ValidationError("path.osoite.postinumeroKoodiUri", invalidPostiosoiteKoodiUri("puppu")))
+      Seq(ValidationError("path.osoite.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("puppu")))
     )
   }
 

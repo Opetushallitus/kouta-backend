@@ -31,26 +31,22 @@ object OrganisaatioServiceUtil {
   }
 
   def toOsoite(osoitteet: List[OrgOsoite]): Option[Osoite] = {
-    def hasPostinumero(postinumero: Option[String]): Boolean = {
-      postinumero match {
-        case None => false
-        case Some(postinro) => postinro.nonEmpty
-      }
-    }
-
     val kielistettyOsoite = osoitteet.map(osoite => {
       (osoite.kieli, osoite.osoite)
+    }).toMap
+
+    val kielistettyPostinumero = osoitteet.flatMap(osoite => {
+      osoite.postinumeroUri match {
+        case Some(postinumeroUri) if postinumeroUri.isEmpty => None
+        case Some(postinumeroUri) => Some(osoite.kieli, postinumeroUri)
+        case None => None
+      }
     }).toMap
 
     kielistettyOsoite match {
       case _ if kielistettyOsoite.isEmpty => None
       case _ =>
-        val postinumero = osoitteet.find((osoite: OrgOsoite) => osoite.kieli == Fi && hasPostinumero(osoite.postinumeroUri)) match {
-          case Some(orgOsoite: OrgOsoite) => orgOsoite.postinumeroUri
-          case None => None
-        }
-
-        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = postinumero))
+        Some(Osoite(osoite = kielistettyOsoite, postinumeroKoodiUri = kielistettyPostinumero))
     }
   }
 
@@ -114,9 +110,11 @@ object OrganisaatioServiceUtil {
   def organisaatioServiceOrgToOrganisaatio(organisaatio: OrganisaatioServiceOrg, children: Seq[Organisaatio] = List()): Organisaatio = {
     Organisaatio(
       oid = organisaatio.oid,
+      parentOid = organisaatio.parentOid.map(oid => OrganisaatioOid(oid)),
       parentOids = getParentOids(organisaatio.parentOidPath),
       nimi = organisaatio.nimi,
       yhteystiedot = getYhteystiedot(organisaatio),
+      status = organisaatio.status,
       kotipaikkaUri = organisaatio.kotipaikkaUri match {
         case Some(kotipaikkaUri) => Some(MiscUtils.withoutKoodiVersion(kotipaikkaUri))
         case None => None

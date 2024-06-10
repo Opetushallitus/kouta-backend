@@ -536,7 +536,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
   }
 
   it should "succeed when liitteidentoimitusosoite not changed in modify operation, eventhough postinumeroKoodiUri unknown" in {
-    val osoite = Some(LiitteenToimitusosoite(osoite = Osoite(postinumeroKoodiUri = Some("posti_12345#1"))))
+    val osoite = Some(LiitteenToimitusosoite(osoite = Osoite(postinumeroKoodiUri = Map(Fi -> "posti_12345#1"))))
     passesValidation(
       initMockSeq(
         maxWithIds.copy(
@@ -619,7 +619,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       Seq(
         ValintakokeenLisatilaisuudet(
           id = Some(valintaperusteenValintakoeId1),
-          tilaisuudet = Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Some("posti_12345#1")))))
+          tilaisuudet = Seq(Valintakoetilaisuus(osoite = Some(Osoite(postinumeroKoodiUri = Map(Fi -> "posti_12345#1")))))
         )
       )
     )
@@ -779,7 +779,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         liitteidenToimitustapa = Some(MuuOsoite),
         liitteidenToimitusosoite = Some(
           LiitteenToimitusosoite(
-            osoite = Osoite(osoite = vainSuomeksi, postinumeroKoodiUri = None),
+            osoite = Osoite(osoite = vainSuomeksi, postinumeroKoodiUri = Map(Fi -> "posti_04230#2")),
             sahkoposti = Some("puppu"),
             verkkosivu = Some("huttu")
           )
@@ -787,7 +787,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       ),
       Seq(
         ValidationError("liitteidenToimitusosoite.osoite", kielistettyWoSvenska),
-        ValidationError("liitteidenToimitusosoite.postinumeroKoodiUri", missingMsg),
+        ValidationError("liitteidenToimitusosoite.postinumeroKoodiUri", kielistettyWoSvenska),
         ValidationError("liitteidenToimitusosoite.sahkoposti", invalidEmail("puppu")),
         ValidationError("liitteidenToimitusosoite.verkkosivu", invalidUrl("huttu"))
       )

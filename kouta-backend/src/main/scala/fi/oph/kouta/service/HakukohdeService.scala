@@ -75,24 +75,27 @@ class HakukohdeService(
     }
   }
 
-  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutusOid: ToteutusOid): HakukohdeEnrichedData =
+    enrichHakukohde(muokkaajaOid, nimi, ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1))
+
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutus: Option[Toteutus]): HakukohdeEnrichedData = {
+    val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(muokkaajaOid)
+    val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
+    val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
+    toteutus match {
+      case Some(t) =>
+        val esitysnimi = generateHakukohdeEsitysnimi(nimi, t.metadata)
+        hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi)
+      case None => hakukohdeEnrichedDataWithMuokkaajanNimi
+    }
+  }
+    def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Hakukohde, Instant)] = {
-    val hakukohde = HakukohdeDAO.get(oid, tilaFilter)
+    val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)
 
-    val enrichedHakukohde = hakukohde match {
-      case Some((h, i)) =>
-        val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(h.muokkaaja)
-        val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-        val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
-        val toteutus                                = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat())
-        toteutus match {
-          case Some((t, _)) =>
-            val esitysnimi = generateHakukohdeEsitysnimi(h, t.metadata)
-            Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi))), i)
-          case None => Some(h.copy(_enrichedData = Some(hakukohdeEnrichedDataWithMuokkaajanNimi)), i)
-        }
-
+    val enrichedHakukohde = hakukohdeWithTime match {
+      case Some((h, i)) => Some(h.copy(_enrichedData = Some(enrichHakukohde(h.muokkaaja, h.nimi, h.toteutusOid))), i)
       case None => None
     }
 
@@ -102,12 +105,12 @@ class HakukohdeService(
     )
   }
 
-  def generateHakukohdeEsitysnimi(hakukohde: Hakukohde, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
+  def generateHakukohdeEsitysnimi(hakukohdeNimi: Kielistetty, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
     toteutusMetadata match {
       case Some(metadata) if metadata.tyyppi == Tuva =>
         val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
-        NameHelper.generateHakukohdeDisplayNameForTuva(hakukohde.nimi, toteutusMetadata.get, kaannokset)
-      case _ => hakukohde.nimi
+        NameHelper.generateHakukohdeDisplayNameForTuva(hakukohdeNimi, toteutusMetadata.get, kaannokset)
+      case _ => hakukohdeNimi
     }
 
   def populateNimiFromToteutusAsNeeded(hakukohde: Hakukohde): Hakukohde = {
