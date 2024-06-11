@@ -139,25 +139,35 @@ jää paikoilleen, vaikka docker on jo sammunut. Silloin kannattaa ajaa `tools/s
 ### Ajo testiympäristöä vasten
 
 Mikäli tulee tarve tutkia testiympäristön kantaa tai ajaa kouta-backendia jonkin testiympäristön kantaa vasten, yksi keino tähän on
-SSH-porttiohjaus joka onnistuu seuraavilla komennoilla:
+SSH-porttiohjaus joka onnistuu seuraavalla komennolla (halutun ympäristön mukaan):
 
-- ssh -N -L 5432:kouta.db.untuvaopintopolku.fi:5432 testityy@bastion.untuvaopintopolku.fi
-- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 testityy@bastion.hahtuvaopintopolku.fi
-- ssh -N -L 5432:kouta.db.testiopintopolku.fi:5432 testityy@bastion.testiopintopolku.fi
+- ssh -N -L 5432:kouta.db.hahtuvaopintopolku.fi:5432 bastion.hahtuva
 
-Missä bastionin edessä oleva käyttäjätunnus muodostuu AWS IAM-tunnuksesi kahdeksasta ensimmäisestä kirjaimesta.
-Esim. `testi.tyyppi@firma.com`: `testityy`
+tai jos on ssh.configissa tarvittava porttiforwardointi, yksinkertaisemmin
+
+- ssh bastion.hahtuva
+
+Olettaen, että ssh-konfiguraatiot ovat pilviylläpidon ohjeistuksen mukaiset ja sieltä löytyy kuvatun mukainen Host-alias
+ks. https://github.com/Opetushallitus/cloud-base/blob/master/tools/user-management/ssh.config.template
+ja porttiforwardoinneille https://github.com/Opetushallitus/local-environment/blob/master/templates/ssh_config.template
 
 Tämän lisäksi pitää vaihtaa `dev-vars.yml` tai `EmbeddedJettyLauncher.scala` tiedostoon postgresin salasana
 vastaamaan testiympäristön kannan salasanaa. Salasanat löytyvät samasta paikasta kuin muutkin OPH:n palvelujen 
 salaisuudet. Lisätietoja ylläpidolta.
+
+Jos käytät muuta kuin templatessa oletuksena olevaa hahtuva-ympäristöä, vaihda ympäristön osoitteisiin viittaavat konfiguraatiot haluttuun ympristöön:
+`host_virkailija`
+`host_alb_virkailija`
+`cas_url`
+`kouta_backend_s3_image_bucket`
+`kouta_backend_elasticsearch_url`
 
 Lisäksi pitää vielä asettaa muutama VM-parametri EmbeddedJettyLauncher.scala:n ajokonfiguraatiohin:
 
 Mene Run -> Edit Configurations -> Valitse EmbeddedJettyLauncher -> Modify Options -> Add VM Options
 Ja lisää `-Dkouta-backend.config-profile=template -Dkouta-backend.embedded=false`
 
-Vaihda myös PostgreSQL-tietokannan portti, käyttjätunnus ja salasana `dev-vars.yml`-tiedostoon.
+Vaihda myös PostgreSQL-tietokannan portti, käyttäjätunnus ja salasana `dev-vars.yml`-tiedostoon.
 
 ### Versiohallinta
 

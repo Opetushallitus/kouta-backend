@@ -639,7 +639,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if opetus missing from julkaistu totetutus" in {
+  it should "fail if opetus missing from julkaistu toteutus" in {
     failsValidation(
       JulkaistuAmmToteutus.copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = None))),
       "metadata.opetus",
@@ -931,7 +931,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if missing values for julkaistu totetutus" in {
+  it should "fail if missing values for julkaistu toteutus" in {
     val metadataBase = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
     failsValidation(
       ammMuuToteutus.copy(metadata =
@@ -978,6 +978,21 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       missingMsg
     )
   }
+
+  it should "pass validation without hakuajan loppupvm for julkaistu toteutus" in {
+    val ajanjaksoEiLoppua = Ajanjakso(alkaa = LocalDateTime.now(), paattyy = None)
+    val metadataBase = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
+    passesValidation(
+      ammMuuToteutus.copy(metadata =
+        Some(
+          metadataBase.copy(
+            hakuaika = Some(ajanjaksoEiLoppua)
+          )
+        )
+      )
+    )
+  }
+
 
   "validateApuraha" should "fail if invalid apuraha" in {
     val validKuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
