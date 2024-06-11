@@ -104,9 +104,6 @@ object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
 }
 
 object SimpleDatabaseAccessor extends KoutaDatabaseAccessor {
-  println("!!!!!!!!!!!!!!!")
-  println(settings.url)
-  println(settings.username)
   override def hikariConfig: HikariConfig = {
     val config = super.hikariConfig
     config.setMaximumPoolSize(1)
