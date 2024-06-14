@@ -1,5 +1,5 @@
 # Logger
-log4j.rootLogger={{env_loglevel}}, FILE
+log4j.rootLogger=INFO, STDOUT
 {# raw-endraw -välillä template engine ei tee mitään! #}
 {% raw %}
 # Console output
@@ -7,15 +7,6 @@ log4j.appender.STDOUT=org.apache.log4j.ConsoleAppender
 log4j.appender.STDOUT.Threshold=INFO
 log4j.appender.STDOUT.layout=org.apache.log4j.PatternLayout
 log4j.appender.STDOUT.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
-# File output
-log4j.appender.FILE.Threshold=DEBUG
-log4j.appender.FILE.File=${user.home}/logs/oph-kouta-backend.log
-log4j.appender.FILE=org.apache.log4j.RollingFileAppender
-log4j.appender.FILE.Append=true
-log4j.appender.FILE.layout=org.apache.log4j.PatternLayout
-log4j.appender.FILE.layout.ConversionPattern=%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n
-log4j.appender.FILE.MaxFileSize=10MB
-log4j.appender.FILE.MaxBackupIndex=100
 {% endraw %}
 # By default hide these spammers by default
 log4j.logger.org.apache.cxf=ERROR
@@ -27,14 +18,3 @@ log4j.logger.org.apache.activemq.spring={{env_loglevel}}
 # cas session + singlelogout tracing
 log4j.logger.org.jasig.cas.client.session=INFO
 log4j.logger.org.flywaydb=INFO
-# Audit loggin
-log4j.additivity.fi.vm.sade.auditlog.Audit=false
-log4j.logger.fi.vm.sade.auditlog.Audit=INFO, AUDIT
-log4j.appender.AUDIT=org.apache.log4j.RollingFileAppender
-log4j.appender.AUDIT.File=${user.home}/logs/auditlog_kouta-backend.log
-log4j.appender.AUDIT.Append=true
-log4j.appender.AUDIT.MaxFileSize=20MB
-log4j.appender.AUDIT.MaxBackupIndex=20
-log4j.appender.AUDIT.layout=org.apache.log4j.PatternLayout
-log4j.appender.AUDIT.layout.ConversionPattern=%m%n
-log4j.appender.AUDIT.encoding=UTF-8
