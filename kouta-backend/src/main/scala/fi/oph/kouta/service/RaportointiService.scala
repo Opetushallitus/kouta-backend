@@ -249,7 +249,7 @@ class RaportointiService(
         .map(o => o.copy(enrichedData = Some(OppilaitosOrOsaEnrichedDataRaporttiItem(getMuokkaajanNimi(o.muokkaaja)))))
       operationSubId += 1
       keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto(
-        "oppilaitosJaOsa",
+        "oppilaitoksetjaosat",
         enriched,
         operationId,
         operationSubId
