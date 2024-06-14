@@ -81,20 +81,28 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
     Try[SiirtotiedostoCounts] {
       val koulutusResult = SiirtotiedostoRaportointiService.saveKoulutukset(operationId, windowStart, windowEnd)
       koulutukset = Some(koulutusResult.count)
+      logger.info("Koulutuksia {}", koulutukset.getOrElse(0))
       val toteutusResult = SiirtotiedostoRaportointiService.saveToteutukset(operationId, windowStart, windowEnd)
       toteutukset = Some(toteutusResult.count)
+      logger.info("Toteutuksia {}", toteutukset.getOrElse(0))
       val hakukohdeResult = SiirtotiedostoRaportointiService.saveHakukohteet(operationId, windowStart, windowEnd)
       hakukohteet = Some(hakukohdeResult.count)
+      logger.info("Hakukohteita {}", hakukohteet.getOrElse(0))
       val hakuResult = SiirtotiedostoRaportointiService.saveHaut(operationId, windowStart, windowEnd)
       haut = Some(hakuResult.count)
+      logger.info("Hakuja {}", haut.getOrElse(0))
       val valintaperusteResult = SiirtotiedostoRaportointiService.saveValintaperusteet(operationId, windowStart, windowEnd)
       valintaperusteet = Some(valintaperusteResult.count)
+      logger.info("Valintaperusteita {}", valintaperusteet.getOrElse(0))
       val sorakuvausResult = SiirtotiedostoRaportointiService.saveSorakuvaukset(operationId, windowStart, windowEnd)
       sorakuvaukset = Some(sorakuvausResult.count)
+      logger.info("Sorakuvauksia {}", sorakuvaukset.getOrElse(0))
       val oppilaitosJaOsaResult = SiirtotiedostoRaportointiService.saveOppilaitoksetJaOsat(operationId, windowStart, windowEnd)
       oppilaitoksetJaOsat = Some(oppilaitosJaOsaResult.count)
+      logger.info("Oppilaitoksia ja osia {}", oppilaitoksetJaOsat.getOrElse(0))
       val pistehistoriaResult = SiirtotiedostoRaportointiService.savePistehistoria(operationId, windowStart, windowEnd)
       pistetiedot = Some(pistehistoriaResult.count)
+      logger.info("Pistetietoja {}", pistetiedot.getOrElse(0))
       SiirtotiedostoCounts(
         koulutukset,
         toteutukset,
