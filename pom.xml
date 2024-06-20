@@ -13,6 +13,7 @@
     <modules>
         <module>kouta-common</module>
         <module>kouta-backend</module>
+        <module>ovara-kouta</module>
     </modules>
 
     <properties>

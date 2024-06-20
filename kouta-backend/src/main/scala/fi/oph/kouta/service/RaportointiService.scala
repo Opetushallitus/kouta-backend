@@ -1,6 +1,5 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
@@ -250,7 +249,7 @@ class RaportointiService(
         .map(o => o.copy(enrichedData = Some(OppilaitosOrOsaEnrichedDataRaporttiItem(getMuokkaajanNimi(o.muokkaaja)))))
       operationSubId += 1
       keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto(
-        "oppilaitosJaOsa",
+        "oppilaitoksetjaosat",
         enriched,
         operationId,
         operationSubId

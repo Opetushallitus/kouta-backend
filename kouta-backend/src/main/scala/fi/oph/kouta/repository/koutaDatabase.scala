@@ -102,3 +102,12 @@ object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
 
   def clean(): CleanResult = flywayConfig.load.clean
 }
+
+object SimpleDatabaseAccessor extends KoutaDatabaseAccessor {
+  override def hikariConfig: HikariConfig = {
+    val config = super.hikariConfig
+    config.setMaximumPoolSize(1)
+    config.setMinimumIdle(0)
+    config
+  }
+}
