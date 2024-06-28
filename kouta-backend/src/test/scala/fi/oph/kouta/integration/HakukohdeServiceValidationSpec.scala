@@ -1284,6 +1284,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(TaiteenPerusopetusToteutusMetatieto)
   }
 
+  it should "fail for osaamismerkkihakukohde as hakukohteetKaytossa is false" in {
+    assertFailureForLomaketyyppiNotAtaruAndNotHakukohteetKaytossa(VapaaSivistystyoOsaamismerkkiToteutusMetatieto)
+  }
+
   it should "fail when valintaperusteId not defined for toisen asteen yhteishaku" in {
     val hk = max.copy(
       hakuOid = yhteisHakuHakuOid,

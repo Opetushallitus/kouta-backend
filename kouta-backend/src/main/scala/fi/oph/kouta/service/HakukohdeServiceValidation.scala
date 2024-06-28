@@ -743,6 +743,12 @@ class HakukohdeServiceValidation(
                   assertNimiNotHakukohdeKoodiuri(hk),
                   assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
                 )
+              case m: VapaaSivistystyoOsaamismerkkiToteutusMetadata =>
+                and(
+                  assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
+                  assertNimiNotHakukohdeKoodiuri(hk),
+                  assertHakulomaketyyppiAtaruTaiHakukohteetKaytossaValittu(m.hakulomaketyyppi, m.isHakukohteetKaytossa, toteutusOid)
+                )
               case m: AmmatillinenMuuToteutusMetadata =>
                 and(
                   assertNotDefined(hk.metadata.flatMap(_.hakukohteenLinja), "metadata.hakukohteenLinja"),
