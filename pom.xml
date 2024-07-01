@@ -249,7 +249,7 @@
             <dependency>
                 <groupId>org.http4s</groupId>
                 <artifactId>http4s-json4s-jackson_2.12</artifactId>
-                <version>0.16.6a</version>
+                <version>0.21.34</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
