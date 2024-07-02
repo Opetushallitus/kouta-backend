@@ -67,6 +67,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     koulutusOid = pelastusalanAmmKoulutus.oid.get,
     metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = List()))
   )
+  val vstOsaamismerkkiKoulutus = VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.144")))
+  val vstOsaamismerkkiToteutus = VapaaSivistystyoOsaamismerkkiToteutus.copy(koulutusOid = vstOsaamismerkkiKoulutus.oid.get)
+
   val sorakuvausId                  = UUID.randomUUID()
   val sorakuvausId2                 = UUID.randomUUID()
   val sorakuvausId3                 = UUID.randomUUID()
@@ -241,7 +244,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // yleiset
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmmOid)).thenAnswer(
       Seq(AmmOid),
-      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, TaiteenPerusopetus)
+      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOsaamismerkki, TaiteenPerusopetus)
     )
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid))
@@ -304,6 +307,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     when(koulutusDao.get(pelastusalanAmmKoulutus.oid.get)).thenAnswer(Some(pelastusalanAmmKoulutus))
     when(koulutusDao.get(yoTohtoriKoulutus.oid.get))
       .thenAnswer(Some(YoKoulutus.copy(tila = Julkaistu, koulutuksetKoodiUri = Seq("koulutus_855101#12"))))
+    when(koulutusDao.get(vstOsaamismerkkiKoulutus.oid.get)).thenAnswer(Some(vstOsaamismerkkiKoulutus))
 
     when(sorakuvausDao.getTilaTyyppiAndKoulutusKoodit(sorakuvausId))
       .thenAnswer(Some(Julkaistu), Some(Amm), Some(Seq(validKoulutuksetKoodiUri)))
@@ -605,6 +609,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failSorakuvausValidation(telmaToteutus)
     failSorakuvausValidation(vstOpistovuosiToteutus)
     failSorakuvausValidation(VapaaSivistystyoMuuToteutus)
+    failSorakuvausValidation(vstOsaamismerkkiToteutus)
   }
 
   it should "fail if sorakuvaus doesn't exist" in {
@@ -907,6 +912,38 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  "Vapaa sivistystyö osaamismerkki" should "pass validation" in {
+    passesValidation(vstOsaamismerkkiToteutus)
+  }
+
+  it should "fail if isHakukohteetKaytossa is true and kuvaus is empty" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(isHakukohteetKaytossa = Some(true), kuvaus = Map()))),
+      Seq(
+        ValidationError("metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(VapaaSivistystyoOsaamismerkki)),
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
+      )
+    )
+  }
+
+  it should "fail if toteutuksen hakulomaketyyppi is ataru" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))),
+      Seq(
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(Ataru))),
+      )
+    )
+  }
+
+  it should "fail if toteutuksen hakulomaketyyppi is haku-app" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(HakuApp)))),
+      Seq(
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(HakuApp))),
+      )
+    )
+  }
+
   "Tutkintoon johtamaton toteutus validation" should "fail if invalid values for luonnos" in {
     val ajanjakso = Ajanjakso(alkaa = LocalDateTime.now(), paattyy = Some(LocalDateTime.now().minusDays(1)))
     failsValidation(
@@ -970,7 +1007,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ammMuuToteutus.copy(metadata =
         Some(
           metadataBase.copy(
-            hakulomaketyyppi = None
+            hakulomaketyyppi = None,
           )
         )
       ),

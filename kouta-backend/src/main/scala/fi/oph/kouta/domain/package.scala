@@ -1066,6 +1066,12 @@ package object domain {
     def withTeemakuva(teemakuva: Option[String]): T
   }
 
+  trait HasHakutuloslistauksenKuvake[T] {
+    val hakutuloslistauksenKuvake: Option[String]
+
+    def withHakutuloslistauksenKuvake(hakutulos: Option[String]): T
+  }
+
   trait HasPrimaryId[ID, T] {
     def primaryId: Option[ID]
 
@@ -1110,4 +1116,5 @@ package object domain {
   val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"
   val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6"
   val opintojenLaajuusViikko       = "opintojenlaajuusyksikko_8"
+  val opintojenLaajuusKurssi       = "opintojenlaajuusyksikko_4"
 }

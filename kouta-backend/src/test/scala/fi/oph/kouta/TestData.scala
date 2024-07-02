@@ -683,6 +683,25 @@ object TestData {
     )
   )
 
+  val VapaaSivistystyoOsaamismerkkiKoulutusMetatieto = VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+    osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+    koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
+    isMuokkaajaOphVirkailija = Some(true)
+  )
+
+  val VapaaSivistystyoOsaamismerkkiKoulutus: Koulutus = VapaaSivistystyoOpistovuosiKoulutus.copy(
+    koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    muokkaaja = OphUserOid,
+    nimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+    metadata = Some(VapaaSivistystyoOsaamismerkkiKoulutusMetatieto),
+    _enrichedData = Some(
+      KoulutusEnrichedData(
+        esitysnimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+        muokkaajanNimi = Some(muokkaajanNimi)
+      )
+    )
+  )
+
   val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(
     oid = None,
     johtaaTutkintoon = false,
@@ -1425,6 +1444,30 @@ object TestData {
   val VapaaSivistystyoMuuToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(VapaaSivistystyoMuuToteutusMetatieto))
 
+
+  val VapaaSivistystyoOsaamismerkkiToteutusMetatieto: VapaaSivistystyoOsaamismerkkiToteutusMetadata = VapaaSivistystyoOsaamismerkkiToteutusMetadata(
+    tyyppi = VapaaSivistystyoOsaamismerkki,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    isHakukohteetKaytossa = Some(false),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    aloituspaikat = None,
+    aloituspaikkakuvaus = Map(),
+    hasJotpaRahoitus = Some(false),
+    suoritetaanNayttona = true,
+    isMuokkaajaOphVirkailija = Some(false)
+  )
+
+  val VapaaSivistystyoOsaamismerkkiToteutus: Toteutus =
+    JulkaistuAmmToteutus.copy(koulutuksetKoodiUri = List(), metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto))
+
   val AikuistenPerusopetusToteutusMetatieto: AikuistenPerusopetusToteutusMetadata =
     AikuistenPerusopetusToteutusMetadata(
       tyyppi = AikuistenPerusopetus,
@@ -1605,7 +1648,7 @@ object TestData {
       yhteyshenkilot = Seq(Yhteystieto1),
       isHakukohteetKaytossa = Some(true),
       hakutermi = Some(Hakeutuminen),
-      hakulomaketyyppi = Some(Ataru),
+      hakulomaketyyppi = None,
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
