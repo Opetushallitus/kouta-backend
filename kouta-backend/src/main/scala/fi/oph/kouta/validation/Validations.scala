@@ -566,6 +566,9 @@ object Validations {
   def hakukohteenLiittaminenNotAllowed(koulutustyyppi: Koulutustyyppi): ErrorMessage =
     ErrorMessage(msg = s"Hakukohteita ei voi liittää tälle koulutustyypille: $koulutustyyppi", id = "hakukohteenLiittaminenNotAllowed")
 
+  def notAllowedHakulomaketyyppi(hakulomaketyyppi: Option[Hakulomaketyyppi]): ErrorMessage =
+    ErrorMessage(msg = s"Hakulomaketyyppiä ${hakulomaketyyppi.getOrElse("")} ei voi käyttää tutkintoon johtamattomille koulutuksille", id = "hakulomaketyyppiNotAllowed")
+
   val KoulutusKoodiPattern: Pattern                 = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")
   val PostinumeroKoodiPattern: Pattern              = Pattern.compile("""posti_\d{5}(#\d{1,2})?""")

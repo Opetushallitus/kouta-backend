@@ -1648,7 +1648,7 @@ object TestData {
       yhteyshenkilot = Seq(Yhteystieto1),
       isHakukohteetKaytossa = Some(true),
       hakutermi = Some(Hakeutuminen),
-      hakulomaketyyppi = Some(Ataru),
+      hakulomaketyyppi = None,
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),

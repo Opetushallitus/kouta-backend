@@ -916,12 +916,30 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(vstOsaamismerkkiToteutus)
   }
 
-  "Vapaa sivistystyö osaamismerkki" should "fail if isHakukohteetKaytossa is true and kuvaus is empty" in {
+  it should "fail if isHakukohteetKaytossa is true and kuvaus is empty" in {
     failsValidation(
       vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(isHakukohteetKaytossa = Some(true), kuvaus = Map()))),
       Seq(
         ValidationError("metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(VapaaSivistystyoOsaamismerkki)),
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
+      )
+    )
+  }
+
+  it should "fail if toteutuksen hakulomaketyyppi is ataru" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))),
+      Seq(
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(Ataru))),
+      )
+    )
+  }
+
+  it should "fail if toteutuksen hakulomaketyyppi is haku-app" in {
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(HakuApp)))),
+      Seq(
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(HakuApp))),
       )
     )
   }
@@ -950,7 +968,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if missing values for julkaistu totetutus" in {
+  it should "fail if missing values for julkaistu toteutus" in {
     val metadataBase = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
     failsValidation(
       ammMuuToteutus.copy(metadata =
@@ -989,7 +1007,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ammMuuToteutus.copy(metadata =
         Some(
           metadataBase.copy(
-            hakulomaketyyppi = None
+            hakulomaketyyppi = None,
           )
         )
       ),

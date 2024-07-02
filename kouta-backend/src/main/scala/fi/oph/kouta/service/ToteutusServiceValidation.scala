@@ -446,26 +446,36 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       validateIfDefined[Int](m.aloituspaikat, assertNotNegative(_, "metadata.aloituspaikat")),
       validateOptionalKielistetty(vCtx.kielivalinta, m.aloituspaikkakuvaus, "metadata.aloituspaikkakuvaus"),
       validateIfTrue(
-        vCtx.tila == Julkaistu && !m.isHakukohteetKaytossa.exists(_ == true),
+        vCtx.tila == Julkaistu,
         and(
-          assertNotOptional(m.hakutermi, "metadata.hakutermi"),
-          assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
           validateIfTrue(
-            m.hakulomaketyyppi.contains(MuuHakulomake),
+            vCtx.crudOperation == create,
+            assertFalse(
+              m.hakulomaketyyppi.contains(Ataru) || m.hakulomaketyyppi.contains(HakuApp),
+              "metadata.hakulomaketyyppi",
+              notAllowedHakulomaketyyppi(m.hakulomaketyyppi))),
+          validateIfTrue(!m.isHakukohteetKaytossa.contains(true),
             and(
-              validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
-              validateKielistetty(vCtx.kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
-              validateOptionalKielistetty(
-                vCtx.kielivalinta,
-                m.lisatietoaValintaperusteista,
-                "metadata.lisatietoaValintaperusteista"
+              assertNotOptional(m.hakutermi, "metadata.hakutermi"),
+              assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
+              validateIfTrue(
+                m.hakulomaketyyppi.contains(MuuHakulomake),
+                and(
+                  validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
+                  validateKielistetty(vCtx.kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
+                  validateOptionalKielistetty(
+                    vCtx.kielivalinta,
+                    m.lisatietoaValintaperusteista,
+                    "metadata.lisatietoaValintaperusteista"
+                  ),
+                  assertNotOptional(m.hakuaika, "metadata.hakuaika")
+                )
               ),
-              assertNotOptional(m.hakuaika, "metadata.hakuaika")
+              validateIfTrue(
+                m.hakulomaketyyppi.contains(EiSähköistä),
+                validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta")
+              )
             )
-          ),
-          validateIfTrue(
-            m.hakulomaketyyppi.contains(EiSähköistä),
-            validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta")
           )
         )
       )
