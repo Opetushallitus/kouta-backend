@@ -3,7 +3,7 @@ package fi.oph.kouta.domain
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity, NoErrors, ValidatableSubEntity}
+import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity}
 
 package object toteutusMetadata {
 
@@ -735,11 +735,38 @@ package object toteutusMetadata {
       |              - kieli_FI#1
       |""".stripMargin
 
-  val models = List(OpetusModel, ApurahaModel, KielivalikoimaModel, ToteutusMetadataModel, KorkeakouluOsaamisalaModel, OsaamisalaModel,
-    AmmattikorkeaToteutusMetadataModel, AmmOpeErityisopeJaOpoToteutusMetadataModel, OpePedagOpinnotToteutusMetadataModel, KkOpintojaksoToteutusMetadataModel, YliopistoToteutusMetadataModel, AmmatillinenToteutusMetadataModel, TutkintoonJohtamatonToteutusMetadataModel,
-    AmmatillinenTutkinnonOsaToteutusMetadataModel, AmmatillinenOsaamisalaToteutusMetadataModel, AmmatillinenMuuToteutusMetadataModel, TuvaToteutusMetadataModel, LukiolinjaTietoModel, LukioToteutusMetadataModel,
-    LukiodiplomiTietoModel, VapaaSivistystyoOpistovuosiToteutusMetadataModel, VapaaSivistystyoMuuToteutusMetadataModel, VapaaSivistystyoOsaamismerkkiToteutusMetadataModel, TelmaToteutusMetadataModel, AikuistenPerusopetusToteutusMetadataModel, ErikoislaakariToteutusMetadataModel, KkOpintokokonaisuusToteutusMetadataModel,
-    ErikoistumiskoulutusToteutusMetadataModel, TaiteenPerusopetusToteutusMetadataModel, MuuToteutusMetadataModel)
+  val models = List(
+    OpetusModel,
+    ApurahaModel,
+    KielivalikoimaModel,
+    ToteutusMetadataModel,
+    KorkeakouluOsaamisalaModel,
+    OsaamisalaModel,
+    AmmattikorkeaToteutusMetadataModel,
+    AmmOpeErityisopeJaOpoToteutusMetadataModel,
+    OpePedagOpinnotToteutusMetadataModel,
+    KkOpintojaksoToteutusMetadataModel,
+    YliopistoToteutusMetadataModel,
+    AmmatillinenToteutusMetadataModel,
+    TutkintoonJohtamatonToteutusMetadataModel,
+    AmmatillinenTutkinnonOsaToteutusMetadataModel,
+    AmmatillinenOsaamisalaToteutusMetadataModel,
+    AmmatillinenMuuToteutusMetadataModel,
+    TuvaToteutusMetadataModel,
+    LukiolinjaTietoModel,
+    LukioToteutusMetadataModel,
+    LukiodiplomiTietoModel,
+    VapaaSivistystyoOpistovuosiToteutusMetadataModel,
+    VapaaSivistystyoMuuToteutusMetadataModel,
+    VapaaSivistystyoOsaamismerkkiToteutusMetadataModel,
+    TelmaToteutusMetadataModel,
+    AikuistenPerusopetusToteutusMetadataModel,
+    ErikoislaakariToteutusMetadataModel,
+    KkOpintokokonaisuusToteutusMetadataModel,
+    ErikoistumiskoulutusToteutusMetadataModel,
+    TaiteenPerusopetusToteutusMetadataModel,
+    MuuToteutusMetadataModel
+  )
 }
 
 sealed trait ToteutusMetadata {
@@ -757,18 +784,20 @@ sealed trait ToteutusMetadata {
   def allowSorakuvaus: Boolean = false
 }
 
-case class AmmatillinenToteutusMetadata(tyyppi: Koulutustyyppi = Amm,
-                                        kuvaus: Kielistetty = Map(),
-                                        osaamisalat: List[AmmatillinenOsaamisala] = List(),
-                                        opetus: Option[Opetus] = None,
-                                        asiasanat: List[Keyword] = List(),
-                                        ammattinimikkeet: List[Keyword] = List(),
-                                        yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                        ammatillinenPerustutkintoErityisopetuksena: Option[Boolean] = None,
-                                        isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                        hasJotpaRahoitus: Option[Boolean] = None,
-                                        isTaydennyskoulutus: Boolean = false,
-                                        isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class AmmatillinenToteutusMetadata(
+    tyyppi: Koulutustyyppi = Amm,
+    kuvaus: Kielistetty = Map(),
+    osaamisalat: List[AmmatillinenOsaamisala] = List(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    ammatillinenPerustutkintoErityisopetuksena: Option[Boolean] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
 trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
   def isHakukohteetKaytossa: Option[Boolean]
@@ -785,401 +814,450 @@ trait TutkintoonJohtamatonToteutusMetadata extends ToteutusMetadata {
     hakulomaketyyppi.contains(MuuHakulomake)
 }
 
-case class AmmatillinenTutkinnonOsaToteutusMetadata(tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
-                                                    kuvaus: Kielistetty = Map(),
-                                                    opetus: Option[Opetus] = None,
-                                                    asiasanat: List[Keyword] = List(),
-                                                    ammattinimikkeet: List[Keyword] = List(),
-                                                    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                    isHakukohteetKaytossa: Option[Boolean] = None,
-                                                    hakutermi: Option[Hakutermi] = None,
-                                                    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                    hakulomakeLinkki: Kielistetty = Map(),
-                                                    lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                    lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                    hakuaika: Option[Ajanjakso] = None,
-                                                    aloituspaikat: Option[Int] = None,
-                                                    aloituspaikkakuvaus: Kielistetty = Map(),
-                                                    isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                    hasJotpaRahoitus: Option[Boolean] = None,
-                                                    isTaydennyskoulutus: Boolean = false,
-                                                    isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+case class AmmatillinenTutkinnonOsaToteutusMetadata(
+    tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
 
-case class AmmatillinenOsaamisalaToteutusMetadata(tyyppi: Koulutustyyppi = AmmOsaamisala,
-                                                  kuvaus: Kielistetty = Map(),
-                                                  opetus: Option[Opetus] = None,
-                                                  asiasanat: List[Keyword] = List(),
-                                                  ammattinimikkeet: List[Keyword] = List(),
-                                                  yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                  isHakukohteetKaytossa: Option[Boolean] = None,
-                                                  hakutermi: Option[Hakutermi] = None,
-                                                  hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                  hakulomakeLinkki: Kielistetty = Map(),
-                                                  lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                  lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                  hakuaika: Option[Ajanjakso] = None,
-                                                  aloituspaikat: Option[Int] = None,
-                                                  aloituspaikkakuvaus: Kielistetty = Map(),
-                                                  isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                  hasJotpaRahoitus: Option[Boolean] = None,
-                                                  isTaydennyskoulutus: Boolean = false,
-                                                  isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+case class AmmatillinenOsaamisalaToteutusMetadata(
+    tyyppi: Koulutustyyppi = AmmOsaamisala,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
 
-case class AmmatillinenMuuToteutusMetadata(tyyppi: Koulutustyyppi = AmmMuu,
-                                           kuvaus: Kielistetty = Map(),
-                                           opetus: Option[Opetus] = None,
-                                           asiasanat: List[Keyword] = List(),
-                                           ammattinimikkeet: List[Keyword] = List(),
-                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                           isHakukohteetKaytossa: Option[Boolean] = None,
-                                           hakutermi: Option[Hakutermi] = None,
-                                           hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                           hakulomakeLinkki: Kielistetty = Map(),
-                                           lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                           lisatietoaValintaperusteista: Kielistetty = Map(),
-                                           hakuaika: Option[Ajanjakso] = None,
-                                           aloituspaikat: Option[Int] = None,
-                                           aloituspaikkakuvaus: Kielistetty = Map(),
-                                           isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                           hasJotpaRahoitus: Option[Boolean] = None,
-                                           isTaydennyskoulutus: Boolean = false,
-                                           isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
+case class AmmatillinenMuuToteutusMetadata(
+    tyyppi: Koulutustyyppi = AmmMuu,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata {
   override def allowSorakuvaus: Boolean = false
 }
 
-case class YliopistoToteutusMetadata(tyyppi: Koulutustyyppi = Yo,
-                                     kuvaus: Kielistetty = Map(),
-                                     opetus: Option[Opetus] = None,
-                                     asiasanat: List[Keyword] = List(),
-                                     ammattinimikkeet: List[Keyword] = List(),
-                                     yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                     isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                     hasJotpaRahoitus: Option[Boolean] = None,
-                                     isTaydennyskoulutus: Boolean = false,
-                                     isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class YliopistoToteutusMetadata(
+    tyyppi: Koulutustyyppi = Yo,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class AmmattikorkeakouluToteutusMetadata(tyyppi: Koulutustyyppi = Amk,
-                                              kuvaus: Kielistetty = Map(),
-                                              opetus: Option[Opetus] = None,
-                                              asiasanat: List[Keyword] = List(),
-                                              ammattinimikkeet: List[Keyword] = List(),
-                                              yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                              isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                              hasJotpaRahoitus: Option[Boolean] = None,
-                                              isTaydennyskoulutus: Boolean = false,
-                                              isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class AmmattikorkeakouluToteutusMetadata(
+    tyyppi: Koulutustyyppi = Amk,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class AmmOpeErityisopeJaOpoToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
-                                                 kuvaus: Kielistetty = Map(),
-                                                 opetus: Option[Opetus] = None,
-                                                 asiasanat: List[Keyword] = List(),
-                                                 ammattinimikkeet: List[Keyword] = List(),
-                                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                 hasJotpaRahoitus: Option[Boolean] = None,
-                                                 isTaydennyskoulutus: Boolean = false,
-                                                 isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class AmmOpeErityisopeJaOpoToteutusMetadata(
+    tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class OpePedagOpinnotToteutusMetadata(tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
-                                           kuvaus: Kielistetty = Map(),
-                                           opetus: Option[Opetus] = None,
-                                           asiasanat: List[Keyword] = List(),
-                                           ammattinimikkeet: List[Keyword] = List(),
-                                           yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                           isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                           hasJotpaRahoitus: Option[Boolean] = None,
-                                           isTaydennyskoulutus: Boolean = false,
-                                           isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class OpePedagOpinnotToteutusMetadata(
+    tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class KkOpintojaksoToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintojakso,
-                                         kuvaus: Kielistetty = Map(),
-                                         opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                         opintojenLaajuusNumero: Option[Double] = None,
-                                         opetus: Option[Opetus] = None,
-                                         asiasanat: List[Keyword] = List(),
-                                         ammattinimikkeet: List[Keyword] = List(),
-                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                         lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                         lisatietoaValintaperusteista: Kielistetty = Map(),
-                                         isHakukohteetKaytossa: Option[Boolean] = None,
-                                         hakutermi: Option[Hakutermi] = None,
-                                         hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                         hakulomakeLinkki: Kielistetty = Map(),
-                                         hakuaika: Option[Ajanjakso] = None,
-                                         aloituspaikat: Option[Int] = None,
-                                         aloituspaikkakuvaus: Kielistetty = Map(),
-                                         isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                         hasJotpaRahoitus: Option[Boolean] = None,
-                                         isTaydennyskoulutus: Boolean = false,
-                                         isTyovoimakoulutus: Boolean = false,
-                                         isAvoinKorkeakoulutus: Option[Boolean] = None,
-                                         tunniste: Option[String] = None,
-                                         opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata with LaajuusSingle
+case class KkOpintojaksoToteutusMetadata(
+    tyyppi: Koulutustyyppi = KkOpintojakso,
+    kuvaus: Kielistetty = Map(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumero: Option[Double] = None,
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false,
+    isAvoinKorkeakoulutus: Option[Boolean] = None,
+    tunniste: Option[String] = None,
+    opinnonTyyppiKoodiUri: Option[String] = None
+) extends TutkintoonJohtamatonToteutusMetadata
+    with LaajuusSingle
 
-case class KkOpintokokonaisuusToteutusMetadata(tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
-                                               kuvaus: Kielistetty = Map(),
-                                               opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                               opintojenLaajuusNumero: Option[Double] = None,
-                                               opetus: Option[Opetus] = None,
-                                               asiasanat: List[Keyword] = List(),
-                                               ammattinimikkeet: List[Keyword] = List(),
-                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                               lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                               lisatietoaValintaperusteista: Kielistetty = Map(),
-                                               isHakukohteetKaytossa: Option[Boolean] = None,
-                                               hakutermi: Option[Hakutermi] = None,
-                                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                               hakulomakeLinkki: Kielistetty = Map(),
-                                               hakuaika: Option[Ajanjakso] = None,
-                                               aloituspaikat: Option[Int] = None,
-                                               aloituspaikkakuvaus: Kielistetty = Map(),
-                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               hasJotpaRahoitus: Option[Boolean] = None,
-                                               isTaydennyskoulutus: Boolean = false,
-                                               isTyovoimakoulutus: Boolean = false,
-                                               liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
-                                               isAvoinKorkeakoulutus: Option[Boolean] = None,
-                                               tunniste: Option[String] = None,
-                                               opinnonTyyppiKoodiUri: Option[String] = None) extends TutkintoonJohtamatonToteutusMetadata with LaajuusSingle
+case class KkOpintokokonaisuusToteutusMetadata(
+    tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
+    kuvaus: Kielistetty = Map(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumero: Option[Double] = None,
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false,
+    liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
+    isAvoinKorkeakoulutus: Option[Boolean] = None,
+    tunniste: Option[String] = None,
+    opinnonTyyppiKoodiUri: Option[String] = None
+) extends TutkintoonJohtamatonToteutusMetadata
+    with LaajuusSingle
 
-case class LukioToteutusMetadata(tyyppi: Koulutustyyppi = Lk,
-                                 kuvaus: Kielistetty = Map(),
-                                 opetus: Option[Opetus] = None,
-                                 asiasanat: List[Keyword] = List(),
-                                 ammattinimikkeet: List[Keyword] = List(),
-                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                 kielivalikoima: Option[Kielivalikoima] = None,
-                                 yleislinja: Boolean = false,
-                                 painotukset: Seq[LukiolinjaTieto] = Seq(),
-                                 erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
-                                 diplomit: Seq[LukiodiplomiTieto] = Seq(),
-                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                 hasJotpaRahoitus: Option[Boolean] = None,
-                                 isTaydennyskoulutus: Boolean = false,
-                                 isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class LukioToteutusMetadata(
+    tyyppi: Koulutustyyppi = Lk,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    kielivalikoima: Option[Kielivalikoima] = None,
+    yleislinja: Boolean = false,
+    painotukset: Seq[LukiolinjaTieto] = Seq(),
+    erityisetKoulutustehtavat: Seq[LukiolinjaTieto] = Seq(),
+    diplomit: Seq[LukiodiplomiTieto] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class TuvaToteutusMetadata(tyyppi: Koulutustyyppi = Tuva,
-                                kuvaus: Kielistetty = Map(),
-                                opetus: Option[Opetus] = None,
-                                asiasanat: List[Keyword] = List(),
-                                ammattinimikkeet: List[Keyword] = List(),
-                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                jarjestetaanErityisopetuksena: Boolean = false,
-                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                hasJotpaRahoitus: Option[Boolean] = None,
-                                isTaydennyskoulutus: Boolean = false,
-                                isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class TuvaToteutusMetadata(
+    tyyppi: Koulutustyyppi = Tuva,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    jarjestetaanErityisopetuksena: Boolean = false,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class TelmaToteutusMetadata(tyyppi: Koulutustyyppi = Telma,
-                                 kuvaus: Kielistetty = Map(),
-                                 opetus: Option[Opetus] = None,
-                                 asiasanat: List[Keyword] = List(),
-                                 ammattinimikkeet: List[Keyword] = List(),
-                                 yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                 isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                 hasJotpaRahoitus: Option[Boolean] = None,
-                                 isTaydennyskoulutus: Boolean = false,
-                                 isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class TelmaToteutusMetadata(
+    tyyppi: Koulutustyyppi = Telma,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class AmmatillinenOsaamisala(koodiUri: String,
-                                  linkki: Kielistetty = Map(),
-                                  otsikko: Kielistetty = Map())
+case class AmmatillinenOsaamisala(koodiUri: String, linkki: Kielistetty = Map(), otsikko: Kielistetty = Map())
 
-case class Apuraha(min: Option[Int] = None,
-                   max: Option[Int] = None,
-                   yksikko: Option[Apurahayksikko] = None,
-                   kuvaus: Kielistetty = Map())
+case class Apuraha(
+    min: Option[Int] = None,
+    max: Option[Int] = None,
+    yksikko: Option[Apurahayksikko] = None,
+    kuvaus: Kielistetty = Map()
+)
 
-case class Opetus(opetuskieliKoodiUrit: Seq[String] = Seq(),
-                  opetuskieletKuvaus: Kielistetty = Map(),
-                  opetusaikaKoodiUrit: Seq[String] = Seq(),
-                  opetusaikaKuvaus: Kielistetty = Map(),
-                  opetustapaKoodiUrit: Seq[String] = Seq(),
-                  opetustapaKuvaus: Kielistetty = Map(),
-                  maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
-                  maksullisuusKuvaus: Kielistetty = Map(),
-                  maksunMaara: Option[Double] = None,
-                  koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
-                  lisatiedot: Seq[Lisatieto] = Seq(),
-                  onkoApuraha: Boolean = false,
-                  apuraha: Option[Apuraha] = None,
-                  suunniteltuKestoVuodet: Option[Int] = None,
-                  suunniteltuKestoKuukaudet: Option[Int] = None,
-                  suunniteltuKestoKuvaus: Kielistetty = Map()) extends JulkaisuValidatableSubEntity {
+case class Opetus(
+    opetuskieliKoodiUrit: Seq[String] = Seq(),
+    opetuskieletKuvaus: Kielistetty = Map(),
+    opetusaikaKoodiUrit: Seq[String] = Seq(),
+    opetusaikaKuvaus: Kielistetty = Map(),
+    opetustapaKoodiUrit: Seq[String] = Seq(),
+    opetustapaKuvaus: Kielistetty = Map(),
+    maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
+    maksullisuusKuvaus: Kielistetty = Map(),
+    maksunMaara: Option[Double] = None,
+    koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    onkoApuraha: Boolean = false,
+    apuraha: Option[Apuraha] = None,
+    suunniteltuKestoVuodet: Option[Int] = None,
+    suunniteltuKestoKuukaudet: Option[Int] = None,
+    suunniteltuKestoKuvaus: Kielistetty = Map()
+) extends JulkaisuValidatableSubEntity {
   override def validateOnJulkaisu(path: String): IsValid = and(
-    validateIfDefined[KoulutuksenAlkamiskausi](koulutuksenAlkamiskausi, _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi"))
+    validateIfDefined[KoulutuksenAlkamiskausi](
+      koulutuksenAlkamiskausi,
+      _.validateOnJulkaisu(s"$path.koulutuksenAlkamiskausi")
+    )
   )
 }
 
-case class Kielivalikoima(A1Kielet: Seq[String] = Seq(),
-                          A2Kielet: Seq[String] = Seq(),
-                          B1Kielet: Seq[String] = Seq(),
-                          B2Kielet: Seq[String] = Seq(),
-                          B3Kielet: Seq[String] = Seq(),
-                          aidinkielet: Seq[String] = Seq(),
-                          muutKielet: Seq[String] = Seq())
+case class Kielivalikoima(
+    A1Kielet: Seq[String] = Seq(),
+    A2Kielet: Seq[String] = Seq(),
+    B1Kielet: Seq[String] = Seq(),
+    B2Kielet: Seq[String] = Seq(),
+    B3Kielet: Seq[String] = Seq(),
+    aidinkielet: Seq[String] = Seq(),
+    muutKielet: Seq[String] = Seq()
+)
 
 case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty)
 
 case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), linkinAltTeksti: Kielistetty = Map())
 
-case class VapaaSivistystyoOpistovuosiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
-                                                       kuvaus: Kielistetty = Map(),
-                                                       opetus: Option[Opetus] = None,
-                                                       asiasanat: List[Keyword] = List(),
-                                                       ammattinimikkeet: List[Keyword] = List(),
-                                                       yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                       isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                       hasJotpaRahoitus: Option[Boolean] = None,
-                                                       isTaydennyskoulutus: Boolean = false,
-                                                       isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+case class VapaaSivistystyoOpistovuosiToteutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class VapaaSivistystyoMuuToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
-                                               kuvaus: Kielistetty = Map(),
-                                               opetus: Option[Opetus] = None,
-                                               asiasanat: List[Keyword] = List(),
-                                               ammattinimikkeet: List[Keyword] = List(),
-                                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                               isHakukohteetKaytossa: Option[Boolean] = None,
-                                               hakutermi: Option[Hakutermi] = None,
-                                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                               hakulomakeLinkki: Kielistetty = Map(),
-                                               lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                               lisatietoaValintaperusteista: Kielistetty = Map(),
-                                               hakuaika: Option[Ajanjakso] = None,
-                                               aloituspaikat: Option[Int] = None,
-                                               aloituspaikkakuvaus: Kielistetty = Map(),
-                                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                               hasJotpaRahoitus: Option[Boolean] = None,
-                                               isTaydennyskoulutus: Boolean = false,
-                                               isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata {
-
-  override def allowSorakuvaus: Boolean = false
-}
-
-case class VapaaSivistystyoOsaamismerkkiToteutusMetadata(tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
-                                                         kuvaus: Kielistetty = Map(),
-                                                         opetus: Option[Opetus] = None,
-                                                         asiasanat: List[Keyword] = List(),
-                                                         ammattinimikkeet: List[Keyword] = List(),
-                                                         yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                         isHakukohteetKaytossa: Option[Boolean] = Some(false),
-                                                         hakutermi: Option[Hakutermi] = None,
-                                                         hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                         hakulomakeLinkki: Kielistetty = Map(),
-                                                         lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                         lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                         hakuaika: Option[Ajanjakso] = None,
-                                                         aloituspaikat: Option[Int] = None,
-                                                         aloituspaikkakuvaus: Kielistetty = Map(),
-                                                         isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                         hasJotpaRahoitus: Option[Boolean] = None,
-                                                         isTaydennyskoulutus: Boolean = false,
-                                                         isTyovoimakoulutus: Boolean = false,
-                                                         suoritetaanNayttona: Boolean = false,
-                                                        ) extends TutkintoonJohtamatonToteutusMetadata {
+case class VapaaSivistystyoMuuToteutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }
 
-case class AikuistenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = AikuistenPerusopetus,
-                                                kuvaus: Kielistetty = Map(),
-                                                opetus: Option[Opetus] = None,
-                                                asiasanat: List[Keyword] = List(),
-                                                ammattinimikkeet: List[Keyword] = List(),
-                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                isHakukohteetKaytossa: Option[Boolean] = None,
-                                                hakutermi: Option[Hakutermi] = None,
-                                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                hakulomakeLinkki: Kielistetty = Map(),
-                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                hakuaika: Option[Ajanjakso] = None,
-                                                aloituspaikat: Option[Int] = None,
-                                                aloituspaikkakuvaus: Kielistetty = Map(),
-                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                hasJotpaRahoitus: Option[Boolean] = None,
-                                                isTaydennyskoulutus: Boolean = false,
-                                                isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata
+case class VapaaSivistystyoOsaamismerkkiToteutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = Some(false),
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false,
+    suoritetaanNayttona: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata {
 
-case class ErikoislaakariToteutusMetadata(tyyppi: Koulutustyyppi = Erikoislaakari,
-                                          kuvaus: Kielistetty = Map(),
-                                          opetus: Option[Opetus] = None,
-                                          asiasanat: List[Keyword] = List(),
-                                          ammattinimikkeet: List[Keyword] = List(),
-                                          yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                          isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                          hasJotpaRahoitus: Option[Boolean] = None,
-                                          isTaydennyskoulutus: Boolean = false,
-                                          isTyovoimakoulutus: Boolean = false) extends ToteutusMetadata
+  override def allowSorakuvaus: Boolean = false
+}
 
-case class ErikoistumiskoulutusToteutusMetadata(tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
-                                                kuvaus: Kielistetty = Map(),
-                                                opetus: Option[Opetus] = None,
-                                                asiasanat: List[Keyword] = List(),
-                                                ammattinimikkeet: List[Keyword] = List(),
-                                                yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                                isHakukohteetKaytossa: Option[Boolean] = None,
-                                                hakutermi: Option[Hakutermi] = None,
-                                                hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                                hakulomakeLinkki: Kielistetty = Map(),
-                                                lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                                lisatietoaValintaperusteista: Kielistetty = Map(),
-                                                hakuaika: Option[Ajanjakso] = None,
-                                                aloituspaikat: Option[Int] = None,
-                                                aloituspaikkakuvaus: Kielistetty = Map(),
-                                                isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                                hasJotpaRahoitus: Option[Boolean] = None,
-                                                isTaydennyskoulutus: Boolean = false,
-                                                isTyovoimakoulutus: Boolean = false
-                                               ) extends TutkintoonJohtamatonToteutusMetadata
+case class AikuistenPerusopetusToteutusMetadata(
+    tyyppi: Koulutustyyppi = AikuistenPerusopetus,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
 
-case class TaiteenPerusopetusToteutusMetadata(tyyppi: Koulutustyyppi = TaiteenPerusopetus,
-                                              kuvaus: Kielistetty = Map(),
-                                              opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                                              opintojenLaajuusNumeroMin: Option[Double] = None,
-                                              opintojenLaajuusNumeroMax: Option[Double] = None,
-                                              taiteenalaKoodiUrit: Seq[String] = Seq(),
-                                              opetus: Option[Opetus] = None,
-                                              asiasanat: List[Keyword] = List(),
-                                              ammattinimikkeet: List[Keyword] = List(),
-                                              yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                                              isHakukohteetKaytossa: Option[Boolean] = None,
-                                              hakutermi: Option[Hakutermi] = None,
-                                              hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                                              hakulomakeLinkki: Kielistetty = Map(),
-                                              lisatietoaHakeutumisesta: Kielistetty = Map(),
-                                              lisatietoaValintaperusteista: Kielistetty = Map(),
-                                              hakuaika: Option[Ajanjakso] = None,
-                                              aloituspaikat: Option[Int] = None,
-                                              aloituspaikkakuvaus: Kielistetty = Map(),
-                                              isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                                              hasJotpaRahoitus: Option[Boolean] = None,
-                                              isTaydennyskoulutus: Boolean = false,
-                                              isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata with LaajuusMinMax
+case class ErikoislaakariToteutusMetadata(
+    tyyppi: Koulutustyyppi = Erikoislaakari,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends ToteutusMetadata
 
-case class MuuToteutusMetadata(tyyppi: Koulutustyyppi = Muu,
-                               kuvaus: Kielistetty = Map(),
-                               opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
-                               opintojenLaajuusNumeroMin: Option[Double] = None,
-                               opintojenLaajuusNumeroMax: Option[Double] = None,
-                               opetus: Option[Opetus] = None,
-                               asiasanat: List[Keyword] = List(),
-                               ammattinimikkeet: List[Keyword] = List(),
-                               yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
-                               isHakukohteetKaytossa: Option[Boolean] = None,
-                               hakutermi: Option[Hakutermi] = None,
-                               hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
-                               hakulomakeLinkki: Kielistetty = Map(),
-                               lisatietoaHakeutumisesta: Kielistetty = Map(),
-                               lisatietoaValintaperusteista: Kielistetty = Map(),
-                               hakuaika: Option[Ajanjakso] = None,
-                               aloituspaikat: Option[Int] = None,
-                               aloituspaikkakuvaus: Kielistetty = Map(),
-                               isMuokkaajaOphVirkailija: Option[Boolean] = None,
-                               hasJotpaRahoitus: Option[Boolean] = None,
-                               isTaydennyskoulutus: Boolean = false,
-                               isTyovoimakoulutus: Boolean = false) extends TutkintoonJohtamatonToteutusMetadata with LaajuusMinMax {
+case class ErikoistumiskoulutusToteutusMetadata(
+    tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
+
+case class TaiteenPerusopetusToteutusMetadata(
+    tyyppi: Koulutustyyppi = TaiteenPerusopetus,
+    kuvaus: Kielistetty = Map(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumeroMin: Option[Double] = None,
+    opintojenLaajuusNumeroMax: Option[Double] = None,
+    taiteenalaKoodiUrit: Seq[String] = Seq(),
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
+    with LaajuusMinMax
+
+case class MuuToteutusMetadata(
+    tyyppi: Koulutustyyppi = Muu,
+    kuvaus: Kielistetty = Map(),
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    opintojenLaajuusNumeroMin: Option[Double] = None,
+    opintojenLaajuusNumeroMax: Option[Double] = None,
+    opetus: Option[Opetus] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = None,
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Boolean = false,
+    isTyovoimakoulutus: Boolean = false
+) extends TutkintoonJohtamatonToteutusMetadata
+    with LaajuusMinMax {
 
   override def allowSorakuvaus: Boolean = false
 }
