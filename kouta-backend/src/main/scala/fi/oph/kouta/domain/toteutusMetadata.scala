@@ -492,6 +492,10 @@ package object toteutusMetadata {
       |              example: vapaa-sivistystyo-opistovuosi
       |              enum:
       |                - vapaa-sivistystyo-opistovuosi
+      |            suoritetaanNayttona:
+      |              type: boolean
+      |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
+      |              example: false
       |""".stripMargin
 
   val VapaaSivistystyoMuuToteutusMetadataModel: String =
@@ -506,6 +510,10 @@ package object toteutusMetadata {
       |              example: vapaa-sivistystyo-muu
       |              enum:
       |                - vapaa-sivistystyo-muu
+      |            suoritetaanNayttona:
+      |              type: boolean
+      |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
+      |              example: false
       |""".stripMargin
 
   val VapaaSivistystyoOsaamismerkkiToteutusMetadataModel: String =
@@ -1095,7 +1103,8 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    suoritetaanNayttona: Boolean = false
 ) extends ToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(
@@ -1117,7 +1126,8 @@ case class VapaaSivistystyoMuuToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    suoritetaanNayttona: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
