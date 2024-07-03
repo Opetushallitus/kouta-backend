@@ -1,7 +1,7 @@
 package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity}
 
@@ -1104,7 +1104,8 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
     isTyovoimakoulutus: Boolean = false,
-    suoritetaanNayttona: Boolean = false
+    suoritetaanNayttona: Boolean = false,
+    liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
 ) extends ToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(
@@ -1127,7 +1128,8 @@ case class VapaaSivistystyoMuuToteutusMetadata(
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
     isTyovoimakoulutus: Boolean = false,
-    suoritetaanNayttona: Boolean = false
+    suoritetaanNayttona: Boolean = false,
+    liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
 ) extends TutkintoonJohtamatonToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
