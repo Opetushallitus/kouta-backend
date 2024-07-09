@@ -115,8 +115,9 @@ object NameHelper {
   }
 
   def concatAsEntityName(start: Kielistetty, separator: Option[String], end: Kielistetty = Map(), kielivalinta: Seq[Kieli] = List(Fi)): Kielistetty = {
-    def concatSeparatorToEnd(separator: Option[String], kaannos: (Kieli, String)): String =
-      separator.getOrElse("") + " " + kaannos._2
+    def concatSeparatorToEnd(separator: Option[String], kaannos: (Kieli, String)): String = {
+      s"${separator.getOrElse("")} ${kaannos._2}"
+    }
 
     kielivalinta.map(kieli => {
       val startPart = start.find(kielistettyStart => kielistettyStart._1 == kieli) match {
