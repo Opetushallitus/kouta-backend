@@ -28,6 +28,10 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
       koulutustyyppi: Koulutustyyppi,
       tilaFilter: TilaFilter
   ): Seq[KoulutusListItem]
+  def listJulkaistutWithKoulutusOidsAllowedByOrganisaatiot(
+      organisaatioOids: Seq[OrganisaatioOid],
+      koulutusOids: Seq[KoulutusOid] = Seq()
+  ): Seq[KoulutusListItem]
   def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem]
   def getJulkaistutByTarjoajaOids(organisaatioOids: Seq[OrganisaatioOid]): Seq[KoulutusWithMaybeToteutus]
 
@@ -145,6 +149,19 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
           selectByCreatorOrJulkinenForSpecificKoulutustyyppi(organisaatioOids, koulutustyyppi, tilaFilter)
         }
     }
+
+  override def listJulkaistutWithKoulutusOidsAllowedByOrganisaatiot(
+      organisaatioOids: Seq[OrganisaatioOid],
+      koulutusOids: Seq[KoulutusOid] = Seq()
+  ): Seq[KoulutusListItem] = {
+    (organisaatioOids, koulutusOids) match {
+      case (Nil, _) => Seq()
+      case _ =>
+        listWithTarjoajat {
+          selectByCreatorAndNotOph(organisaatioOids, TilaFilter.onlyJulkaistut(), koulutusOids)
+        }
+    }
+  }
 
   override def listByHakuOid(hakuOid: HakuOid): Seq[KoulutusListItem] =
     listWithTarjoajat(selectByHakuOid(hakuOid))
@@ -397,10 +414,15 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
   val selectKoulutusListSql =
     s"""select distinct k.oid, k.nimi, k.tila, k.organisaatio_oid, k.muokkaaja, k.last_modified from koulutukset k"""
 
-  def selectByCreatorAndNotOph(organisaatioOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
+  def selectByCreatorAndNotOph(
+      organisaatioOids: Seq[OrganisaatioOid],
+      tilaFilter: TilaFilter,
+      koulutusOids: Seq[KoulutusOid] = Seq()
+  ) = {
     sql"""#$selectKoulutusListSql
           where (organisaatio_oid in (#${createOidInParams(organisaatioOids)}) and organisaatio_oid <> ${RootOrganisaatioOid})
               #${tilaConditions(tilaFilter)}
+              #${if (koulutusOids.nonEmpty) s"and oid in (${createOidInParams(koulutusOids)})" else ""}
       """.as[KoulutusListItem]
   }
 
@@ -457,9 +479,10 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
       """.as[String]
   }
 
-  def selectByCreatorOrTarjoaja(organisaatioOids: Seq[OrganisaatioOid],
-                                tilaFilter: TilaFilter
-                               ): DBIO[Vector[KoulutusOid]] = {
+  def selectByCreatorOrTarjoaja(
+      organisaatioOids: Seq[OrganisaatioOid],
+      tilaFilter: TilaFilter
+  ): DBIO[Vector[KoulutusOid]] = {
     sql"""select distinct k.oid
           from koulutukset k, koulutusten_tarjoajat kt
           where k.oid = kt.koulutus_oid

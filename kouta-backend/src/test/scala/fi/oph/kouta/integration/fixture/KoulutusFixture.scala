@@ -64,6 +64,7 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
   }
 
   val koulutus: Koulutus                    = TestData.AmmKoulutus
+  val koulutusListItem: KoulutusListItem    = TestData.AmmKoulutusListItem
   val yoKoulutus: Koulutus                  = TestData.YoKoulutus
   val ammOsaamisalaKoulutus: Koulutus       = TestData.AmmOsaamisalaKoulutus
   val ammTutkinnonOsaKoulutus: Koulutus     = TestData.AmmTutkinnonOsaKoulutus

@@ -8,6 +8,8 @@ import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.util.OrganisaatioServiceUtil
 import org.json4s.jackson.Serialization.read
 
+import java.time.LocalDateTime
+
 class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override val roleEntities: Seq[RoleEntity] = RoleEntity.all
@@ -224,7 +226,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2))
+      read[List[String]](body) should contain theSameElementsAs List(koulutusOid, koulutusOid2)
     }
   }
 
@@ -236,7 +238,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2, koulutusOid3))
+      read[List[String]](body) should contain theSameElementsAs List(koulutusOid, koulutusOid2, koulutusOid3)
     }
   }
 
@@ -245,7 +247,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List())
+      read[List[String]](body) should contain theSameElementsAs List()
     }
   }
 
@@ -266,5 +268,22 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
   it should "deny access without root organization access to the indexer role" in {
     val sorakuvausId = put(sorakuvaus, ophSession)
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", fakeIndexerSession, 403)
+  }
+
+  "List koulutukset by oids" should "return 404 if organisaatioOid is not defined" in {
+    val oid = put(koulutus, ophSession)
+    post(s"$IndexerPath/list-koulutukset-by-oids", body = bytes(Seq(oid)), headers = Seq(sessionHeader(indexerSession))) {
+      status should equal(404)
+    }
+  }
+
+  it should "return list element for only julkaistu koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val koulutusOid2 = put(koulutus.copy(tarjoajat = List(ChildOid), tila = Tallennettu), ophSession)
+    post(s"$IndexerPath/list-koulutukset-by-oids?organisaatioOid=$GrandChildOid", body = bytes(Seq(oid, koulutusOid2)), headers = Seq(sessionHeader(indexerSession))) {
+      status should equal(200)
+      read[List[KoulutusListItem]](body) should contain theSameElementsAs List(
+        koulutusListItem.copy(oid = KoulutusOid(oid), modified = readKoulutusModified(oid)))
+    }
   }
 }

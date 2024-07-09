@@ -176,6 +176,16 @@ object TestData {
     )
   )
 
+  val AmmKoulutusListItem: KoulutusListItem = KoulutusListItem(
+    oid = randomKoulutusOid,
+    nimi = AmmKoulutus.nimi,
+    tila = AmmKoulutus.tila,
+    tarjoajat = AmmKoulutus.tarjoajat,
+    organisaatioOid = AmmKoulutus.organisaatioOid,
+    muokkaaja = AmmKoulutus.muokkaaja,
+    modified = Modified(LocalDateTime.now().minusDays(1))
+  )
+
   val Lisatieto1: Lisatieto = Lisatieto(
     otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
     teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv")
