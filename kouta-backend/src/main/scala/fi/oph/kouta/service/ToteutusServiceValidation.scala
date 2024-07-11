@@ -2,7 +2,7 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
@@ -23,14 +23,15 @@ object ToteutusServiceValidation
       ToteutusDAO
     )
 
-class ToteutusServiceValidation(val koodistoService: KoodistoService,
-                                val organisaatioService: OrganisaatioService,
-                                koulutusDAO: KoulutusDAO,
-                                hakukohdeDAO: HakukohdeDAO,
-                                val sorakuvausDAO: SorakuvausDAO,
-                                toteutusDAO: ToteutusDAO
-                               ) extends KoulutusToteutusValidatingService[Toteutus]
-  with RoleEntityAuthorizationService[Toteutus] {
+class ToteutusServiceValidation(
+    val koodistoService: KoodistoService,
+    val organisaatioService: OrganisaatioService,
+    koulutusDAO: KoulutusDAO,
+    hakukohdeDAO: HakukohdeDAO,
+    val sorakuvausDAO: SorakuvausDAO,
+    toteutusDAO: ToteutusDAO
+) extends KoulutusToteutusValidatingService[Toteutus]
+    with RoleEntityAuthorizationService[Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -42,6 +43,8 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       toteutus.metadata match {
         case Some(metadata: KkOpintokokonaisuusToteutusMetadata) =>
           errors = validateOpintojaksotIntegrity(toteutus.tila, metadata, authenticated)
+        case Some(metadata: VapaaSivistystyoToteutusMetadata) =>
+          errors = validateOsaamismerkkiIntegrity(toteutus.tila, metadata, authenticated)
         case _ =>
       }
     }
@@ -74,7 +77,15 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     val koulutustyyppiSpecificErrors = toteutus.metadata match {
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, VapaaSivistystyoOsaamismerkki, KkOpintojakso)
+          Set(
+            AmmMuu,
+            Tuva,
+            Telma,
+            VapaaSivistystyoOpistovuosi,
+            VapaaSivistystyoMuu,
+            VapaaSivistystyoOsaamismerkki,
+            KkOpintojakso
+          )
         val koulutusTyyppi    = metadata.tyyppi
         val koulutusKoodiUrit = koulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq())
         and(
@@ -161,7 +172,11 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
                   )
                 case m: VapaaSivistystyoOsaamismerkkiToteutusMetadata =>
                   and(
-                    assertFalse(m.isHakukohteetKaytossa.get, "metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(koulutusTyyppi)),
+                    assertFalse(
+                      m.isHakukohteetKaytossa.get,
+                      "metadata.isHakukohteetKaytossa",
+                      hakukohteenLiittaminenNotAllowed(koulutusTyyppi)
+                    ),
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )
@@ -236,7 +251,7 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       toteutusDiffResolver: ToteutusDiffResolver,
       opetus: Opetus,
       koulutustyyppi: Koulutustyyppi,
-      koulutuskoodiurit: Seq[String],
+      koulutuskoodiurit: Seq[String]
   ): IsValid = {
     val path = "metadata.opetus"
     and(
@@ -319,7 +334,7 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli],
       apuraha: Apuraha,
-      opetus: Opetus,
+      opetus: Opetus
   ): IsValid = {
     val path = "metadata.opetus.apuraha"
     val min  = apuraha.min
@@ -344,9 +359,15 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     )
   }
 
-  private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, koulutuskoodiurit: Seq[String], path: String): IsValid = {
-    val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
-    val English = "oppilaitoksenopetuskieli_4"
+  private def validateMaksullisuus(
+      opetus: Opetus,
+      koulutustyyppi: Koulutustyyppi,
+      koulutuskoodiurit: Seq[String],
+      path: String
+  ): IsValid = {
+    val isTutkintoonJohtavaKorkeakoulutus =
+      Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
+    val English         = "oppilaitoksenopetuskieli_4"
     val Tohtorikoulutus = "tutkintotyyppi_16"
 
     and(
@@ -368,7 +389,8 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
             koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
               case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-                val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                val tohtorikoulutukset =
+                  tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
                 assertEmpty(
                   tohtorikoulutukset,
                   s"$path.maksullisuustyyppi",
@@ -453,15 +475,22 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
             assertFalse(
               m.hakulomaketyyppi.contains(Ataru) || m.hakulomaketyyppi.contains(HakuApp),
               "metadata.hakulomaketyyppi",
-              notAllowedHakulomaketyyppi(m.hakulomaketyyppi))),
-          validateIfTrue(!m.isHakukohteetKaytossa.contains(true),
+              notAllowedHakulomaketyyppi(m.hakulomaketyyppi)
+            )
+          ),
+          validateIfTrue(
+            !m.isHakukohteetKaytossa.contains(true),
             and(
               assertNotOptional(m.hakutermi, "metadata.hakutermi"),
               assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
               validateIfTrue(
                 m.hakulomaketyyppi.contains(MuuHakulomake),
                 and(
-                  validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
+                  validateKielistetty(
+                    vCtx.kielivalinta,
+                    m.lisatietoaHakeutumisesta,
+                    "metadata.lisatietoaHakeutumisesta"
+                  ),
                   validateKielistetty(vCtx.kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
                   validateOptionalKielistetty(
                     vCtx.kielivalinta,
@@ -533,13 +562,13 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
         errorKey,
         errorKey match {
           case "metadata.liitetytOpintojaksot.koulutustyyppi" =>
-            invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
+            invalidKoulutustyyppiForLiitetty(toteutukset, KkOpintojakso)
           case "metadata.liitetytOpintojaksot.julkaisutila" =>
-            invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
+            invalidTilaForLiitettyOnJulkaisu(toteutukset, KkOpintojakso)
           case "metadata.liitetytOpintojaksot.tila" =>
-            invalidTilaForLiitettyOpintojakso(toteutukset)
+            invalidTilaForLiitetty(toteutukset, KkOpintojakso)
           case "metadata.liitetytOpintojaksot.notFound" =>
-            unknownOpintojakso(toteutukset)
+            unknownEntity(toteutukset, KkOpintojakso)
         }
       )
     })
@@ -818,4 +847,69 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     "tila",
     integrityViolationMsg("Toteutusta", "hakukohteita")
   )
+
+  def validateOsaamismerkkiIntegrity(
+      tila: Julkaisutila,
+      metadata: VapaaSivistystyoToteutusMetadata,
+      authenticated: Authenticated
+  ): IsValid = {
+    var errors: List[ValidationError]                    = List()
+    var errorMap: Map[String, List[Option[KoulutusOid]]] = Map()
+
+    val addErrorOid = (errorKey: String, koulutusOid: Option[KoulutusOid]) => {
+      errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(koulutusOid)))
+    }
+
+    val liitetytOsaamismerkit = metadata.liitetytOsaamismerkit
+    val koulutukset           = koulutusDAO.get(liitetytOsaamismerkit.toList)
+
+    koulutukset.foreach(koulutus => {
+      authorizeGetWithType[Koulutus](koulutus)(authenticated)
+      val liitettavanKoulutuksenTyyppi = koulutus.metadata.get.tyyppi
+      val liitettavanKoulutuksenTila   = koulutus.tila
+
+      if (liitettavanKoulutuksenTyyppi != VapaaSivistystyoOsaamismerkki) {
+        addErrorOid("metadata.liitetytOsaamismerkit.koulutustyyppi", koulutus.oid)
+      }
+
+      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanKoulutuksenTila)) {
+        addErrorOid("metadata.liitetytOsaamismerkit.tila", koulutus.oid)
+      }
+    })
+
+    liitetytOsaamismerkit.foreach(oid => {
+      if (!koulutukset.exists(koulutus => koulutus.oid.get == oid)) {
+        addErrorOid("metadata.liitetytOsaamismerkit.notFound", Some(oid))
+      }
+    })
+
+    // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
+    if (tila == Julkaistu) {
+      koulutukset.foreach(koulutus => {
+        if (koulutus.tila != Julkaistu) {
+          addErrorOid(s"metadata.liitetytOsaamismerkit.julkaisutila", koulutus.oid)
+        }
+      })
+    }
+
+    errors = errorMap.toList.map(value => {
+      val errorKey    = value._1
+      val koulutukset = value._2.flatten
+      ValidationError(
+        errorKey,
+        errorKey match {
+          case "metadata.liitetytOsaamismerkit.koulutustyyppi" =>
+            invalidKoulutustyyppiForLiitetty(koulutukset, VapaaSivistystyoOsaamismerkki)
+          case "metadata.liitetytOsaamismerkit.julkaisutila" =>
+            invalidTilaForLiitettyOnJulkaisu(koulutukset, VapaaSivistystyoOsaamismerkki)
+          case "metadata.liitetytOsaamismerkit.tila" =>
+            invalidTilaForLiitetty(koulutukset, VapaaSivistystyoOsaamismerkki)
+          case "metadata.liitetytOsaamismerkit.notFound" =>
+            unknownEntity(koulutukset, VapaaSivistystyoOsaamismerkki)
+        }
+      )
+    })
+
+    if (errors.isEmpty) NoErrors else errors
+  }
 }

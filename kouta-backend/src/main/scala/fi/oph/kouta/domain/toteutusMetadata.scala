@@ -1093,6 +1093,10 @@ case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty)
 
 case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), linkinAltTeksti: Kielistetty = Map())
 
+sealed trait VapaaSivistystyoToteutusMetadata {
+  val liitetytOsaamismerkit: Seq[KoulutusOid]
+}
+
 case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
     kuvaus: Kielistetty = Map(),
@@ -1106,7 +1110,7 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     isTyovoimakoulutus: Boolean = false,
     suoritetaanNayttona: Boolean = false,
     liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
-) extends ToteutusMetadata
+) extends ToteutusMetadata with VapaaSivistystyoToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -1130,7 +1134,7 @@ case class VapaaSivistystyoMuuToteutusMetadata(
     isTyovoimakoulutus: Boolean = false,
     suoritetaanNayttona: Boolean = false,
     liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
-) extends TutkintoonJohtamatonToteutusMetadata {
+) extends TutkintoonJohtamatonToteutusMetadata with VapaaSivistystyoToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }

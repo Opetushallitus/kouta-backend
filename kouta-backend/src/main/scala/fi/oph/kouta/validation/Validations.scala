@@ -4,7 +4,7 @@ import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{GenericOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
@@ -139,38 +139,38 @@ object Validations {
     )
   }
 
-  def invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
-      id = "invalidKoulutustyyppiForLiitettyOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä koulutustyyppi. Kaikkien entiteettien tulee olla tyyppiä $koulutustyyppi.",
+      id = "invalidKoulutustyyppiForLiitetty",
+      meta = Some(Map("virheelliset entiteetit" -> entities))
     )
   }
 
-  def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
+  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
-      id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Kaikkien julkaistuun entiteettiin liitettyjen $koulutustyyppi-entiteettien tulee olla myös julkaistuja.",
+      id = "invalidTilaForLiitettyOnJulkaisu",
+      meta = Some(Map("virheelliset entiteetit" -> entities))
     )
   }
 
-  def invalidTilaForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
-      id = "invalidTilaForLiitettyOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
+      id = "invalidTilaForLiitetty",
+      meta = Some(Map("virheelliset entiteetit" -> entities))
     )
   }
 
-  def unknownOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
     ErrorMessage(
-      msg = s"Opintokokonaisuuteen liitettyä opintojaksoa ei löydy.",
-      id = "unknownOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+      msg = s"Liitettyä $koulutustyyppi-entiteettiä ei löydy.",
+      id = "unknownEntity",
+      meta = Some(Map("virheelliset entiteetit" -> entities))
     )
   }
 

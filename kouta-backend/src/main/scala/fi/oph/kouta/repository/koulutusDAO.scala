@@ -18,6 +18,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)]
   def get(oid: KoulutusOid): Option[Koulutus]
+  def get(oids: List[KoulutusOid]): Seq[Koulutus]
   def listAllowedByOrganisaatiot(
       organisaatioOids: Seq[OrganisaatioOid],
       koulutustyypit: Seq[Koulutustyyppi],
@@ -67,6 +68,10 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
     KoutaDatabase
       .runBlockingTransactionally(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption)
       .get
+  }
+
+  override def get(oids: List[KoulutusOid]) = {
+    KoutaDatabase.runBlocking(selectKoulutuksetOrderedByOids(oids).as[Koulutus])
   }
 
   override def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]] =
@@ -247,27 +252,30 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     DBIOHelpers.sumIntDBIOs(inserts)
   }
 
+  val selectKoulutusSql =
+    """select k.oid,
+              k.external_id,
+              k.johtaa_tutkintoon,
+              k.tyyppi,
+              k.koulutukset_koodi_uri,
+              k.tila,
+              k.nimi,
+              k.sorakuvaus_id,
+              k.metadata,
+              k.julkinen,
+              k.muokkaaja,
+              k.organisaatio_oid,
+              k.esikatselu,
+              k.kielivalinta,
+              k.teemakuva,
+              k.hakutuloslistauksen_kuvake,
+              k.eperuste_id,
+              k.last_modified
+       from koulutukset k"""
+
   def selectKoulutus(oid: KoulutusOid, tilaFilter: TilaFilter) = {
-    sql"""select oid,
-                 external_id,
-                 johtaa_tutkintoon,
-                 tyyppi,
-                 koulutukset_koodi_uri,
-                 tila,
-                 nimi,
-                 sorakuvaus_id,
-                 metadata,
-                 julkinen,
-                 muokkaaja,
-                 organisaatio_oid,
-                 esikatselu,
-                 kielivalinta,
-                 teemakuva,
-                 hakutuloslistauksen_kuvake,
-                 eperuste_id,
-                 last_modified
-          from koulutukset
-          where oid = $oid
+    sql"""#$selectKoulutusSql
+          where k.oid = $oid
             #${tilaConditions(tilaFilter)}
           """
   }
@@ -489,5 +497,13 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           and (k.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or kt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
               #${tilaConditions(tilaFilter, "k.tila")}""".as[KoulutusOid]
+  }
+
+  def selectKoulutuksetOrderedByOids(koulutusOids: List[KoulutusOid]) = {
+    val oidsAsStr = koulutusOids.map(oid => oid.toString())
+    sql"""#$selectKoulutusSql
+          join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
+          on k.oid = o.oid
+          order by o.ord"""
   }
 }

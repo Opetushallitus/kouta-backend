@@ -274,8 +274,8 @@ class ToteutusSpec
       withClue(body) {
         status should equal(400)
       }
-      body should include(s"""errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu""")
-      body should include(s"""toteutukset":["${opintojaksoToteutusOid}"]""")
+      body should include(s"""errorType":"invalidTilaForLiitettyOnJulkaisu""")
+      body should include(s"""virheelliset entiteetit":["$opintojaksoToteutusOid"]""")
     }
   }
 
@@ -313,8 +313,8 @@ class ToteutusSpec
       withClue(body) {
         status should equal(400)
       }
-      body should include(s"""errorType":"invalidTilaForLiitettyOpintojaksoOnJulkaisu""")
-      body should include(s"""toteutukset":["${opintojaksoToteutusOid}"]""")
+      body should include(s"""errorType":"invalidTilaForLiitettyOnJulkaisu""")
+      body should include(s"""virheelliset entiteetit":["${opintojaksoToteutusOid}"]""")
     }
   }
 
