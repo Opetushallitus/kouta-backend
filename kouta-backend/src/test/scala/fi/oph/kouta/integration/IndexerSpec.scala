@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.muokkaajanNimi
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
@@ -270,20 +271,17 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", fakeIndexerSession, 403)
   }
 
-  "List koulutukset by oids" should "return 404 if organisaatioOid is not defined" in {
-    val oid = put(koulutus, ophSession)
-    post(s"$IndexerPath/list-koulutukset-by-oids", body = bytes(Seq(oid)), headers = Seq(sessionHeader(indexerSession))) {
-      status should equal(404)
-    }
-  }
-
-  it should "return list element for only julkaistu koulutus" in {
+  "List koulutukset by oids" should "return list element for only julkaistu koulutus" in {
     val oid = put(koulutus, ophSession)
     val koulutusOid2 = put(koulutus.copy(tarjoajat = List(ChildOid), tila = Tallennettu), ophSession)
-    post(s"$IndexerPath/list-koulutukset-by-oids?organisaatioOid=$GrandChildOid", body = bytes(Seq(oid, koulutusOid2)), headers = Seq(sessionHeader(indexerSession))) {
+    post(s"$IndexerPath/koulutukset", body = bytes(Seq(oid, koulutusOid2)), headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
-      read[List[KoulutusListItem]](body) should contain theSameElementsAs List(
-        koulutusListItem.copy(oid = KoulutusOid(oid), modified = readKoulutusModified(oid)))
+      read[List[Koulutus]](body) should contain theSameElementsAs List(
+        koulutus.copy(
+          oid = Option(KoulutusOid(oid)),
+          tarjoajat = List(),
+          modified = Some(readKoulutusModified(oid)),
+          _enrichedData = None))
     }
   }
 }

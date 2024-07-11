@@ -564,11 +564,11 @@ class KoulutusService(
       KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, tilaFilter)
     }
 
-  def list(organisaatioOid: OrganisaatioOid, koulutusOids: Seq[KoulutusOid])(implicit
+  def get(koulutusOids: Seq[KoulutusOid])(implicit
       authenticated: Authenticated
-  ): Seq[KoulutusListItem] =
-    withAuthorizedOrganizationOids(organisaatioOid, readRules) { case oids =>
-      KoulutusDAO.listJulkaistutWithKoulutusOidsAllowedByOrganisaatiot(oids, koulutusOids)
+  ): Seq[Koulutus] =
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.get(koulutusOids.toList)
     }
 
   def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter)(

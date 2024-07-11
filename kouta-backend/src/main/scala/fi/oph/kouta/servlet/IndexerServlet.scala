@@ -742,21 +742,13 @@ class IndexerServlet(
   }
 
   registerPath(
-    "/indexer/list-koulutukset-by-oids",
+    "/indexer/koulutukset",
     """    post:
       |      summary: Hakee koulutukset, joiden oidit annettu requestBodyssä
-      |      operationId: indexerListKoulutuksetByOids
+      |      operationId: indexerKoulutukset
       |      description: Hakee koulutukset, joiden oidit annettu requestBodyssä. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
-      |      parameters:
-      |        - in: query
-      |          name: organisaatioOid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Organisaatio-oid
-      |          example: 1.2.246.562.10.00101010101
       |      requestBody:
       |        description: Lista koulutusOideja
       |        required: true
@@ -772,14 +764,9 @@ class IndexerServlet(
       |          description: Ok
       |""".stripMargin
   )
-  post("/list-koulutukset-by-oids") {
+  post("/koulutukset") {
     implicit val authenticated: Authenticated = authenticate()
-    (params.get("organisaatioOid").map(OrganisaatioOid), parsedBody.extract[List[KoulutusOid]]) match {
-      case (None, _) => NotFound()
-      case (Some(oid), oids) =>
-        println(oids)
-        Ok(KoulutusService.list(organisaatioOid = oid, koulutusOids = oids))
-    }
+    Ok(KoulutusService.get(koulutusOids = parsedBody.extract[List[KoulutusOid]]))
   }
 
   registerPath(
