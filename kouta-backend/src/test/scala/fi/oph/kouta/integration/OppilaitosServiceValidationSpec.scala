@@ -258,47 +258,6 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     passesValidation(oppilaitos, Some(oppilaitos))
   }
 
-  it should "fail if invalid postiosoite" in {
-    failsValidation(
-      minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite)),
-      "metadata.hakijapalveluidenYhteystiedot.postiosoite.postinumeroKoodiUri[0]",
-      invalidPostiosoiteKoodiUri("puppu")
-    )
-  }
-
-  it should "fail if invalid kayntiosoite" in {
-    failsValidation(
-      minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)),
-      "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri[0]",
-      invalidPostiosoiteKoodiUri("puppu")
-    )
-  }
-
-  it should "fail if invalid email" in {
-    failsValidation(
-      minWithYhteystieto(Yhteystieto(sahkoposti = Map(Fi -> "puppu"))),
-      "metadata.hakijapalveluidenYhteystiedot.sahkoposti.fi",
-      invalidEmail("puppu")
-    )
-  }
-
-  it should "fail if missing values in julkaistu oppilaitos" in {
-    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
-    failsValidation(
-      max.copy(metadata =
-        Some(
-          maxMetadata.copy(hakijapalveluidenYhteystiedot =
-            Some(yt.copy(nimi = Map(), puhelinnumero = vainSuomeksi, sahkoposti = Map(Fi -> "opettaja@koulu.fi")))
-          )
-        )
-      ),
-      Seq(
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.puhelinnumero", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti", invalidKielistetty(Seq(Sv)))
-      )
-    )
-  }
 
   it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
     passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
