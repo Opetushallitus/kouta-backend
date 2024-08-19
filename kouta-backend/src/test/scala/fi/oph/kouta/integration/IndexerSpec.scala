@@ -271,17 +271,26 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", fakeIndexerSession, 403)
   }
 
-  "List koulutukset by oids" should "return list element for only julkaistu koulutus" in {
+  "List koulutukset by oids" should "return list element for julkaistu and tallennettu koulutus" in {
     val oid = put(koulutus, ophSession)
-    val koulutusOid2 = put(koulutus.copy(tarjoajat = List(ChildOid), tila = Tallennettu), ophSession)
-    post(s"$IndexerPath/koulutukset", body = bytes(Seq(oid, koulutusOid2)), headers = Seq(sessionHeader(indexerSession))) {
+    val koulutus2 = koulutus.copy(tarjoajat = List(ChildOid), tila = Tallennettu)
+    val koulutusOid2 = put(koulutus2, ophSession)
+    val koulutusOid3 = put(koulutus.copy(tila = Arkistoitu), ophSession)
+    post(s"$IndexerPath/koulutukset", body = bytes(Seq(oid, koulutusOid2, koulutusOid3)), headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
       read[List[Koulutus]](body) should contain theSameElementsAs List(
         koulutus.copy(
           oid = Option(KoulutusOid(oid)),
           tarjoajat = List(),
           modified = Some(readKoulutusModified(oid)),
-          _enrichedData = None))
+          _enrichedData = None
+        ),
+        koulutus2.copy(oid = Some(KoulutusOid(koulutusOid2)),
+          tarjoajat = List(),
+          modified = Some(readKoulutusModified(oid)),
+          _enrichedData = None
+        )
+      )
     }
   }
 }

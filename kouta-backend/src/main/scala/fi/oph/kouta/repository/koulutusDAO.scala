@@ -504,7 +504,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
     sql"""#$selectKoulutusSql
           join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
           on k.oid = o.oid
-          where #${tilaConditions(TilaFilter.onlyJulkaistut(), "k.tila", "")}
+          where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "k.tila", "")}
           order by o.ord
           """
   }
