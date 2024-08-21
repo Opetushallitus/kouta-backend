@@ -221,7 +221,8 @@ case class Koulutus(
 
   override def withTeemakuva(teemakuva: Option[String]): Koulutus = this.copy(teemakuva = teemakuva)
 
-  override def withHakutuloslistauksenKuvake(hakutuloslistauksenKuvake: Option[String]): Koulutus = this.copy(hakutuloslistauksenKuvake = hakutuloslistauksenKuvake)
+  override def withHakutuloslistauksenKuvake(hakutuloslistauksenKuvake: Option[String]): Koulutus =
+    this.copy(hakutuloslistauksenKuvake = hakutuloslistauksenKuvake)
 
   override def withModified(modified: Modified): Koulutus = this.copy(modified = Some(modified))
 
@@ -257,6 +258,17 @@ case class KoulutusListItem(
     muokkaaja: UserOid,
     modified: Modified
 ) extends OidListItem
+
+case class KoulutusLiitettyListItem(
+    oid: KoulutusOid,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified,
+    koulutustyyppi: Koulutustyyppi,
+    julkinen: Boolean = false
+) extends LiitettyListItem
 
 case class KoulutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 

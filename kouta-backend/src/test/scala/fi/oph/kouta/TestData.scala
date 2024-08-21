@@ -584,6 +584,17 @@ object TestData {
     )
   )
 
+  val LukioKoulutusEntityListItem: KoulutusLiitettyListItem = KoulutusLiitettyListItem(
+    oid = randomKoulutusOid,
+    koulutustyyppi = Lk,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    julkinen = true
+  )
+
   val TuvaKoulutuksenMetatieto = TuvaKoulutusMetadata(
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
@@ -710,6 +721,17 @@ object TestData {
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
+  )
+
+  val VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem: KoulutusLiitettyListItem = KoulutusLiitettyListItem(
+    oid = randomKoulutusOid,
+    koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    muokkaaja = OphUserOid,
+    nimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+    tila = Julkaistu,
+    organisaatioOid = ChildOid,
+    julkinen = true,
+    modified = Modified(LocalDateTime.now().minusDays(1))
   )
 
   val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(
@@ -1354,6 +1376,18 @@ object TestData {
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
+
+  val KkOpintojaksoToteutusEntityListItem: ToteutusLiitettyListItem =
+    ToteutusLiitettyListItem(
+      oid = randomToteutusOid,
+      tila = Julkaistu,
+      nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      muokkaaja = TestUserOid,
+      organisaatioOid = ChildOid,
+      modified = Modified(LocalDateTime.now().minusDays(1)),
+      koulutustyyppi = KkOpintojakso
+    )
+
   val JulkaistuKkOpintokokonaisuusToteutus: Toteutus = {
     JulkaistuAmmToteutus.copy(
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto),
@@ -1582,6 +1616,16 @@ object TestData {
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
+  )
+
+  val LukioToteutusEntityListItem: ToteutusLiitettyListItem = ToteutusLiitettyListItem(
+    oid = randomToteutusOid,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    koulutustyyppi = Lk
   )
 
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu: AmmatillinenOsaamisalaToteutusMetadata =

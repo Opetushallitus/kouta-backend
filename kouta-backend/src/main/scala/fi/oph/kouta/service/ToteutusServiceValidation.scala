@@ -2,12 +2,12 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.Oid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
 import fi.oph.kouta.util.LaajuusValidationUtil
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
@@ -41,11 +41,9 @@ class ToteutusServiceValidation(
     var errors = super.validate(toteutus, oldToteutus)
     if (errors.isEmpty) {
       toteutus.metadata match {
-        case Some(metadata: KkOpintokokonaisuusToteutusMetadata) =>
-          errors = validateOpintojaksotIntegrity(toteutus.tila, metadata, authenticated)
-        case Some(metadata: VapaaSivistystyoToteutusMetadata) =>
-          errors = validateOsaamismerkkiIntegrity(toteutus.tila, metadata, authenticated)
-        case _ =>
+        case Some(metadata) =>
+          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata)
+        case None =>
       }
     }
 
@@ -511,71 +509,6 @@ class ToteutusServiceValidation(
     )
   }
 
-  def validateOpintojaksotIntegrity(
-      tila: Julkaisutila,
-      metadata: KkOpintokokonaisuusToteutusMetadata,
-      authenticated: Authenticated
-  ): IsValid = {
-    var errors: List[ValidationError]                    = List()
-    var errorMap: Map[String, List[Option[ToteutusOid]]] = Map()
-
-    val addErrorOid = (errorKey: String, toteutusOid: Option[ToteutusOid]) => {
-      errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(toteutusOid)))
-    }
-
-    val liitetytOpintojaksot = metadata.liitetytOpintojaksot
-    val toteutukset          = toteutusDAO.get(liitetytOpintojaksot.toList)
-
-    toteutukset.foreach(toteutus => {
-      authorizeGet(toteutus)(authenticated)
-      val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
-      val liitettavanToteutuksenTila   = toteutus.tila
-
-      if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
-        addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
-      }
-
-      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanToteutuksenTila)) {
-        addErrorOid("metadata.liitetytOpintojaksot.tila", toteutus.oid)
-      }
-    })
-
-    liitetytOpintojaksot.foreach(oid => {
-      if (!toteutukset.exists(toteutus => toteutus.oid.get == oid)) {
-        addErrorOid("metadata.liitetytOpintojaksot.notFound", Some(oid))
-      }
-    })
-
-    // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
-    if (tila == Julkaistu) {
-      toteutukset.foreach(toteutus => {
-        if (toteutus.tila != Julkaistu) {
-          addErrorOid(s"metadata.liitetytOpintojaksot.julkaisutila", toteutus.oid)
-        }
-      })
-    }
-
-    errors = errorMap.toList.map(value => {
-      val errorKey    = value._1
-      val toteutukset = value._2.flatten
-      ValidationError(
-        errorKey,
-        errorKey match {
-          case "metadata.liitetytOpintojaksot.koulutustyyppi" =>
-            invalidKoulutustyyppiForLiitetty(toteutukset, KkOpintojakso)
-          case "metadata.liitetytOpintojaksot.julkaisutila" =>
-            invalidTilaForLiitettyOnJulkaisu(toteutukset, KkOpintojakso)
-          case "metadata.liitetytOpintojaksot.tila" =>
-            invalidTilaForLiitetty(toteutukset, KkOpintojakso)
-          case "metadata.liitetytOpintojaksot.notFound" =>
-            unknownEntity(toteutukset, KkOpintojakso)
-        }
-      )
-    })
-
-    if (errors.isEmpty) NoErrors else errors
-  }
-
   private def validateKieliKoodit(
       koodiUrit: Seq[String],
       relativePath: String,
@@ -848,64 +781,69 @@ class ToteutusServiceValidation(
     integrityViolationMsg("Toteutusta", "hakukohteita")
   )
 
-  def validateOsaamismerkkiIntegrity(
+  def validateLiitetytEntitiesIntegrity(
       tila: Julkaisutila,
-      metadata: VapaaSivistystyoToteutusMetadata,
-      authenticated: Authenticated
+      metadata: ToteutusMetadata,
   ): IsValid = {
-    var errors: List[ValidationError]                    = List()
-    var errorMap: Map[String, List[Option[KoulutusOid]]] = Map()
+    var errors: List[ValidationError]    = List()
+    var errorMap: Map[String, List[Oid]] = Map()
 
-    val addErrorOid = (errorKey: String, koulutusOid: Option[KoulutusOid]) => {
+    val addErrorOid = (errorKey: String, koulutusOid: Oid) => {
       errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(koulutusOid)))
     }
 
-    val liitetytOsaamismerkit = metadata.liitetytOsaamismerkit
-    val koulutukset           = koulutusDAO.get(liitetytOsaamismerkit.toList)
-
-    koulutukset.foreach(koulutus => {
-      authorizeGetWithType[Koulutus](koulutus)(authenticated)
-      val liitettavanKoulutuksenTyyppi = koulutus.metadata.get.tyyppi
-      val liitettavanKoulutuksenTila   = koulutus.tila
-
-      if (liitettavanKoulutuksenTyyppi != VapaaSivistystyoOsaamismerkki) {
-        addErrorOid("metadata.liitetytOsaamismerkit.koulutustyyppi", koulutus.oid)
-      }
-
-      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanKoulutuksenTila)) {
-        addErrorOid("metadata.liitetytOsaamismerkit.tila", koulutus.oid)
-      }
-    })
-
-    liitetytOsaamismerkit.foreach(oid => {
-      if (!koulutukset.exists(koulutus => koulutus.oid.get == oid)) {
-        addErrorOid("metadata.liitetytOsaamismerkit.notFound", Some(oid))
-      }
-    })
-
-    // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
-    if (tila == Julkaistu) {
-      koulutukset.foreach(koulutus => {
-        if (koulutus.tila != Julkaistu) {
-          addErrorOid(s"metadata.liitetytOsaamismerkit.julkaisutila", koulutus.oid)
-        }
-      })
+    val (liitetytOids, entities, liitettyjenKoulutustyyppi) = metadata match {
+      case m: VapaaSivistystyoToteutusMetadata =>
+        val liitetytOids = m.liitetytOsaamismerkit
+        val koulutukset = if (liitetytOids.isEmpty) List() else koulutusDAO.get(liitetytOids.toList)
+        (liitetytOids, koulutukset, Some(VapaaSivistystyoOsaamismerkki))
+      case m: KkOpintokokonaisuusToteutusMetadata =>
+        val liitetytOids = m.liitetytOpintojaksot
+        val toteutukset = if (liitetytOids.isEmpty) List() else toteutusDAO.get(liitetytOids.toList)
+        (liitetytOids, toteutukset, Some(KkOpintojakso))
+      case _ => (List(), List(), None)
     }
 
+    entities.foreach(entity => {
+      val liitettavanEntiteetinTyyppi = entity.koulutustyyppi
+      val liitettavanEntiteetinTila   = entity.tila
+
+      if (liitettavanEntiteetinTyyppi != liitettyjenKoulutustyyppi.get) {
+        addErrorOid("metadata.liitetytEntiteetit.koulutustyyppi", entity.oid)
+      }
+
+      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanEntiteetinTila)) {
+        addErrorOid("metadata.liitetytEntiteetit.tila", entity.oid)
+      }
+
+      // Jos toteutus on julkaistu, täytyy siihen liitettyjen entiteettien olla myös julkaistuja
+      if (tila == Julkaistu) {
+        if (entity.tila != Julkaistu) {
+          addErrorOid(s"metadata.liitetytEntiteetit.julkaisutila", entity.oid)
+        }
+      }
+    })
+
+    liitetytOids.foreach(oid => {
+      if (!entities.exists(entity => entity.oid == oid)) {
+        addErrorOid("metadata.liitetytEntiteetit.notFound", oid)
+      }
+    })
+
     errors = errorMap.toList.map(value => {
-      val errorKey    = value._1
-      val koulutukset = value._2.flatten
+      val errorKey = value._1
+      val entities = value._2
       ValidationError(
         errorKey,
         errorKey match {
-          case "metadata.liitetytOsaamismerkit.koulutustyyppi" =>
-            invalidKoulutustyyppiForLiitetty(koulutukset, VapaaSivistystyoOsaamismerkki)
-          case "metadata.liitetytOsaamismerkit.julkaisutila" =>
-            invalidTilaForLiitettyOnJulkaisu(koulutukset, VapaaSivistystyoOsaamismerkki)
-          case "metadata.liitetytOsaamismerkit.tila" =>
-            invalidTilaForLiitetty(koulutukset, VapaaSivistystyoOsaamismerkki)
-          case "metadata.liitetytOsaamismerkit.notFound" =>
-            unknownEntity(koulutukset, VapaaSivistystyoOsaamismerkki)
+          case "metadata.liitetytEntiteetit.koulutustyyppi" =>
+            invalidKoulutustyyppiForLiitetty(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.julkaisutila" =>
+            invalidTilaForLiitettyOnJulkaisu(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.tila" =>
+            invalidTilaForLiitetty(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.notFound" =>
+            unknownEntity(entities, liitettyjenKoulutustyyppi)
         }
       )
     })

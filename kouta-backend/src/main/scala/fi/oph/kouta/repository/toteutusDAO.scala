@@ -16,7 +16,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)]
-  def get(oids: List[ToteutusOid]): Seq[Toteutus]
+  def get(oids: List[ToteutusOid]): Seq[ToteutusLiitettyListItem]
   def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
@@ -72,7 +72,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   override def get(oids: List[ToteutusOid]) = {
-    KoutaDatabase.runBlocking(selectToteutuksetOrderedByOids(oids).as[Toteutus])
+    KoutaDatabase.runBlocking(selectLiitetytToteutuksetOrderedByOids(oids).as[ToteutusLiitettyListItem])
   }
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
@@ -273,6 +273,24 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   def selectToteutuksetOrderedByOids(toteutusOids: List[ToteutusOid]) = {
     val oidsAsStr = toteutusOids.map(oid => oid.toString())
     sql"""#$selectToteutusSql
+          join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
+          on t.oid = o.oid
+          order by o.ord"""
+  }
+
+  val selectToteutusEntityListItemSql =
+    """select t.oid,
+              t.nimi,
+              t.tila,
+              t.organisaatio_oid,
+              t.muokkaaja,
+              t.last_modified,
+              t.metadata->>'tyyppi' as tyyppi
+       from toteutukset t"""
+
+  def selectLiitetytToteutuksetOrderedByOids(toteutusOids: List[ToteutusOid]) = {
+    val oidsAsStr = toteutusOids.map(oid => oid.toString())
+    sql"""#$selectToteutusEntityListItemSql
           join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
           on t.oid = o.oid
           order by o.ord"""

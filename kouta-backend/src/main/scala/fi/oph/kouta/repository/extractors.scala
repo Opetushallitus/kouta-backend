@@ -129,6 +129,17 @@ trait KoulutusExtractors extends ExtractorBase {
     muokkaaja = UserOid(r.nextString()),
     modified = timeStampToModified(r.nextTimestamp())
   ))
+
+  implicit val getKoulutusLiitettyListItem: GetResult[KoulutusLiitettyListItem] = GetResult(r => KoulutusLiitettyListItem(
+    oid = KoulutusOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = timeStampToModified(r.nextTimestamp()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
+    julkinen = r.nextBoolean(),
+  ))
 }
 
 trait ToteutusExtractors extends ExtractorBase {
@@ -173,6 +184,16 @@ trait ToteutusExtractors extends ExtractorBase {
   implicit val getOidAndNimiResult: GetResult[OidAndNimi] = GetResult(r => OidAndNimi(
     oid = ToteutusOid(r.nextString()),
     nimi = extractKielistetty(r.nextStringOption()),
+  ))
+
+  implicit val getToteutusLiitettyListItem: GetResult[ToteutusLiitettyListItem] = GetResult(r => ToteutusLiitettyListItem(
+    oid = ToteutusOid(r.nextString()),
+    nimi = extractKielistetty(r.nextStringOption()),
+    tila = Julkaisutila.withName(r.nextString()),
+    organisaatioOid = OrganisaatioOid(r.nextString()),
+    muokkaaja = UserOid(r.nextString()),
+    modified = timeStampToModified(r.nextTimestamp()),
+    koulutustyyppi = Koulutustyyppi.withName(r.nextString())
   ))
 }
 

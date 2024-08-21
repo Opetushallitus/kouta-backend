@@ -327,6 +327,17 @@ object ToteutusListItem {
   }
 }
 
+case class ToteutusLiitettyListItem(
+    oid: ToteutusOid,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified,
+    koulutustyyppi: Koulutustyyppi,
+    julkinen: Boolean = false
+) extends LiitettyListItem
+
 case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest

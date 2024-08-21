@@ -566,7 +566,7 @@ class KoulutusService(
 
   def get(koulutusOids: Seq[KoulutusOid])(implicit
       authenticated: Authenticated
-  ): Seq[Koulutus] =
+  ): Seq[KoulutusLiitettyListItem] =
     withRootAccess(indexerRoles) {
       KoulutusDAO.get(koulutusOids.toList)
     }

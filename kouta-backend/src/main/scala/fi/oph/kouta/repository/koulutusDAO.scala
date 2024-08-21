@@ -18,7 +18,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
   def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)]
   def get(oid: KoulutusOid): Option[Koulutus]
-  def get(oids: List[KoulutusOid]): Seq[Koulutus]
+  def get(oids: List[KoulutusOid]): Seq[KoulutusLiitettyListItem]
   def listAllowedByOrganisaatiot(
       organisaatioOids: Seq[OrganisaatioOid],
       koulutustyypit: Seq[Koulutustyyppi],
@@ -71,7 +71,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   override def get(oids: List[KoulutusOid]) = {
-    KoutaDatabase.runBlocking(selectKoulutuksetOrderedByOids(oids).as[Koulutus])
+    KoutaDatabase.runBlocking(selectKoulutuksetOrderedByOids(oids).as[KoulutusLiitettyListItem])
   }
 
   override def getUpdateActions(koulutus: Koulutus): DBIO[Option[Koulutus]] =
@@ -499,9 +499,20 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               #${tilaConditions(tilaFilter, "k.tila")}""".as[KoulutusOid]
   }
 
+  val selectKoulutusListItemSql =
+    """select k.oid,
+              k.nimi,
+              k.tila,
+              k.organisaatio_oid,
+              k.muokkaaja,
+              k.last_modified,
+              k.tyyppi,
+              k.julkinen
+       from koulutukset k"""
+
   def selectKoulutuksetOrderedByOids(koulutusOids: List[KoulutusOid]) = {
     val oidsAsStr = koulutusOids.map(oid => oid.toString())
-    sql"""#$selectKoulutusSql
+    sql"""#$selectKoulutusListItemSql
           join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
           on k.oid = o.oid
           where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "k.tila", "")}

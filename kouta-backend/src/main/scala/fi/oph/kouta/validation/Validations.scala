@@ -139,7 +139,7 @@ object Validations {
     )
   }
 
-  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
+  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä koulutustyyppi. Kaikkien entiteettien tulee olla tyyppiä $koulutustyyppi.",
@@ -148,7 +148,7 @@ object Validations {
     )
   }
 
-  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
+  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Kaikkien julkaistuun entiteettiin liitettyjen $koulutustyyppi-entiteettien tulee olla myös julkaistuja.",
@@ -157,7 +157,7 @@ object Validations {
     )
   }
 
-  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
+  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
@@ -166,7 +166,7 @@ object Validations {
     )
   }
 
-  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Koulutustyyppi) = {
+  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg = s"Liitettyä $koulutustyyppi-entiteettiä ei löydy.",
       id = "unknownEntity",

@@ -2,18 +2,13 @@ package fi.oph.kouta
 
 import fi.oph.kouta.client.TutkinnonOsaServiceItem
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.KoulutusServiceValidation.assertKoodiUritExist
+import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult}
-import fi.oph.kouta.validation.Validations.{assertKoodistoQueryResult, assertTrue, _}
-import fi.oph.kouta.validation.{
-  IsValid,
-  JulkaisuValidatableSubEntity,
-  NoErrors,
-  ValidatableSubEntity,
-  ValidationContext
-}
+import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation._
+
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
@@ -22,8 +17,8 @@ package object domain {
 
   val KoulutustyyppiModel: String =
     ("""    Koulutustyyppi:
-      |      type: string
-      |      enum:
+       |      type: string
+       |      enum:
 """ + Koulutustyyppi.valuesToSwaggerEnum() +
       "      |").stripMargin
 
@@ -808,6 +803,17 @@ package object domain {
     val modified: Modified
   }
 
+  abstract class LiitettyListItem {
+    val oid: Oid
+    val nimi: Kielistetty
+    val tila: Julkaisutila
+    val organisaatioOid: OrganisaatioOid
+    val muokkaaja: UserOid
+    val modified: Modified
+    val koulutustyyppi: Koulutustyyppi
+    val julkinen: Boolean
+  }
+
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) {
     def validate(
         path: String,
@@ -926,12 +932,13 @@ package object domain {
       and(
         validateIfDefined[List[String]](
           koodiurit,
-          koodiurit => assertPostinumerokoodiuritValid(
-            koodiurit,
-            s"$path.postinumeroKoodiUri",
-            vCtx,
-            koodistoCheckFunc
-          )
+          koodiurit =>
+            assertPostinumerokoodiuritValid(
+              koodiurit,
+              s"$path.postinumeroKoodiUri",
+              vCtx,
+              koodistoCheckFunc
+            )
         ),
         validateIfJulkaistu(
           vCtx.tila,
