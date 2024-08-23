@@ -338,6 +338,20 @@ case class ToteutusLiitettyListItem(
     julkinen: Boolean = false
 ) extends LiitettyListItem
 
+object ToteutusLiitettyListItem {
+  def apply(t: Toteutus): ToteutusLiitettyListItem = {
+    new ToteutusLiitettyListItem(
+      t.oid.get,
+      t.nimi,
+      t.tila,
+      t.organisaatioOid,
+      t.muokkaaja,
+      t.modified.get,
+      t.metadata.get.tyyppi
+    )
+  }
+}
+
 case class ToteutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
 case class ExternalToteutusRequest(authenticated: Authenticated, toteutus: Toteutus) extends ExternalRequest

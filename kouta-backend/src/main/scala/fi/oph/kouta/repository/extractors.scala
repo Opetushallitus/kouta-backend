@@ -186,15 +186,25 @@ trait ToteutusExtractors extends ExtractorBase {
     nimi = extractKielistetty(r.nextStringOption()),
   ))
 
-  implicit val getToteutusLiitettyListItem: GetResult[ToteutusLiitettyListItem] = GetResult(r => ToteutusLiitettyListItem(
-    oid = ToteutusOid(r.nextString()),
-    nimi = extractKielistetty(r.nextStringOption()),
-    tila = Julkaisutila.withName(r.nextString()),
-    organisaatioOid = OrganisaatioOid(r.nextString()),
-    muokkaaja = UserOid(r.nextString()),
-    modified = timeStampToModified(r.nextTimestamp()),
-    koulutustyyppi = Koulutustyyppi.withName(r.nextString())
-  ))
+  implicit val getToteutusLiitettyListItem: GetResult[ToteutusLiitettyListItem] =
+    GetResult(r =>
+    {
+      val t = Toteutus(
+        oid = r.nextStringOption().map(ToteutusOid),
+        koulutusOid = KoulutusOid(r.nextString()),
+        nimi = extractKielistetty(r.nextStringOption()),
+        tila = Julkaisutila.withName(r.nextString()),
+        tarjoajat = List(),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        muokkaaja = UserOid(r.nextString()),
+        modified = Some(timeStampToModified(r.nextTimestamp())),
+        metadata = r.nextStringOption().map(read[ToteutusMetadata]),
+        koulutusMetadata = r.nextStringOption().map(read[KoulutusMetadata]),
+        koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+      )
+      val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
+      ToteutusLiitettyListItem(t.copy(nimi = esitysnimi))
+    })
 }
 
 trait HakuExtractors extends ExtractorBase {

@@ -279,14 +279,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   val selectToteutusEntityListItemSql =
-    """select t.oid,
-              t.nimi,
-              t.tila,
-              t.organisaatio_oid,
-              t.muokkaaja,
-              t.last_modified,
-              t.metadata->>'tyyppi' as tyyppi
-       from toteutukset t"""
+    """select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
+              from toteutukset t
+              inner join (select oid, metadata, koulutukset_koodi_uri from koulutukset) k on k.oid = t.koulutus_oid"""
 
   def selectLiitetytToteutuksetOrderedByOids(toteutusOids: List[ToteutusOid]) = {
     val oidsAsStr = toteutusOids.map(oid => oid.toString())
