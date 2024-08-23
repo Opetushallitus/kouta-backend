@@ -269,7 +269,7 @@ class ToteutusService(
     ) { t =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
       val enrichedToteutus         = enrichToteutusMetadata(t, koulutusWithLastModified)
-      toteutusServiceValidation.withValidation(enrichedToteutus, None, authenticated) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, None) { t =>
         doPut(
           t,
           koulutusService.getUpdateTarjoajatActions(
@@ -308,7 +308,7 @@ class ToteutusService(
     authorizeUpdate(toteutusWithTime, toteutus, rules) { (oldToteutus, t) =>
       val koulutusWithLastModified = koulutusService.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())
       val enrichedToteutus         = enrichToteutusMetadata(t, koulutusWithLastModified)
-      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus), authenticated) { t =>
+      toteutusServiceValidation.withValidation(enrichedToteutus, Some(oldToteutus)) { t =>
         val deletedTarjoajat =
           if (t.tila == Poistettu) t.tarjoajat else oldToteutus.tarjoajat diff t.tarjoajat
         doUpdate(

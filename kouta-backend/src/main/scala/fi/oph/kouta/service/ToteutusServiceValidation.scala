@@ -35,7 +35,7 @@ class ToteutusServiceValidation(
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
-  def withValidation[R](toteutus: Toteutus, oldToteutus: Option[Toteutus], authenticated: Authenticated)(
+  override def withValidation[R](toteutus: Toteutus, oldToteutus: Option[Toteutus])(
       f: Toteutus => R
   ): R = {
     var errors = super.validate(toteutus, oldToteutus)

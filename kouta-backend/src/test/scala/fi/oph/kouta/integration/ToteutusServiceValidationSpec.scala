@@ -1526,7 +1526,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       oldToteutus: Toteutus,
       expected: Seq[ValidationError]
   ): Assertion =
-    Try(validator.withValidation(toteutus, Some(oldToteutus), authenticatedNonPaakayttaja)(t => t)) match {
+    Try(validator.withValidation(toteutus, Some(oldToteutus))(t => t)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
@@ -1738,7 +1738,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
     )
 
-    assert(validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus), authenticatedNonPaakayttaja)(t => t) == vstToteutus)
+    assert(validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus))(t => t) == vstToteutus)
   }
 
   it should "fail if the attached osaamismerkki does not exist" in {
