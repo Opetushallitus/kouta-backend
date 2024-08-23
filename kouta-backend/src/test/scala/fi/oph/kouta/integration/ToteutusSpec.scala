@@ -275,7 +275,7 @@ class ToteutusSpec
         status should equal(400)
       }
       body should include(s"""errorType":"invalidTilaForLiitettyOnJulkaisu""")
-      body should include(s"""virheelliset entiteetit":["$opintojaksoToteutusOid"]""")
+      body should include(s"""entiteetit":["$opintojaksoToteutusOid"]""")
     }
   }
 
@@ -314,7 +314,7 @@ class ToteutusSpec
         status should equal(400)
       }
       body should include(s"""errorType":"invalidTilaForLiitettyOnJulkaisu""")
-      body should include(s"""virheelliset entiteetit":["${opintojaksoToteutusOid}"]""")
+      body should include(s"""entiteetit":["$opintojaksoToteutusOid"]""")
     }
   }
 

@@ -144,7 +144,7 @@ object Validations {
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä koulutustyyppi. Kaikkien entiteettien tulee olla tyyppiä $koulutustyyppi.",
       id = "invalidKoulutustyyppiForLiitetty",
-      meta = Some(Map("virheelliset entiteetit" -> entities))
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
@@ -153,7 +153,7 @@ object Validations {
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Kaikkien julkaistuun entiteettiin liitettyjen $koulutustyyppi-entiteettien tulee olla myös julkaistuja.",
       id = "invalidTilaForLiitettyOnJulkaisu",
-      meta = Some(Map("virheelliset entiteetit" -> entities))
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
@@ -162,7 +162,7 @@ object Validations {
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
       id = "invalidTilaForLiitetty",
-      meta = Some(Map("virheelliset entiteetit" -> entities))
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
@@ -170,7 +170,7 @@ object Validations {
     ErrorMessage(
       msg = s"Liitettyä $koulutustyyppi-entiteettiä ei löydy.",
       id = "unknownEntity",
-      meta = Some(Map("virheelliset entiteetit" -> entities))
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
