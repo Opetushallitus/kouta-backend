@@ -288,6 +288,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
     sql"""#$selectToteutusEntityListItemSql
           join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
           on t.oid = o.oid
+          where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "t.tila", "")}
           order by o.ord"""
   }
 

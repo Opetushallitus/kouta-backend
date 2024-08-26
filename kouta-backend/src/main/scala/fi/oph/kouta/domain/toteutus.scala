@@ -2,6 +2,7 @@ package fi.oph.kouta.domain
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid.{KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
@@ -336,7 +337,11 @@ case class ToteutusLiitettyListItem(
     modified: Modified,
     koulutustyyppi: Koulutustyyppi,
     julkinen: Boolean = false
-) extends LiitettyListItem
+) extends LiitettyListItem with AuthorizableMaybeJulkinen[ToteutusLiitettyListItem] {
+
+  def withMuokkaaja(oid: UserOid): ToteutusLiitettyListItem = this.copy(muokkaaja = oid)
+}
+
 
 object ToteutusLiitettyListItem {
   def apply(t: Toteutus): ToteutusLiitettyListItem = {

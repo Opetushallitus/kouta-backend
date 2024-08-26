@@ -35,14 +35,14 @@ class ToteutusServiceValidation(
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
-  override def withValidation[R](toteutus: Toteutus, oldToteutus: Option[Toteutus])(
+  def withValidation[R](toteutus: Toteutus, oldToteutus: Option[Toteutus], authenticated: Authenticated)(
       f: Toteutus => R
   ): R = {
     var errors = super.validate(toteutus, oldToteutus)
     if (errors.isEmpty) {
       toteutus.metadata match {
         case Some(metadata) =>
-          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata)
+          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, authenticated)
         case None =>
       }
     }
@@ -784,6 +784,7 @@ class ToteutusServiceValidation(
   def validateLiitetytEntitiesIntegrity(
       tila: Julkaisutila,
       metadata: ToteutusMetadata,
+      authenticated: Authenticated
   ): IsValid = {
     var errors: List[ValidationError]    = List()
     var errorMap: Map[String, List[Oid]] = Map()
@@ -805,6 +806,10 @@ class ToteutusServiceValidation(
     }
 
     entities.foreach(entity => {
+      entity match {
+        case t: ToteutusLiitettyListItem => authorizeGetWithType[ToteutusLiitettyListItem](t)(authenticated)
+        case t: KoulutusLiitettyListItem => authorizeGetWithType[KoulutusLiitettyListItem](t)(authenticated)
+      }
       val liitettavanEntiteetinTyyppi = entity.koulutustyyppi
       val liitettavanEntiteetinTila   = entity.tila
 
@@ -818,7 +823,7 @@ class ToteutusServiceValidation(
 
       // Jos toteutus on julkaistu, täytyy siihen liitettyjen entiteettien olla myös julkaistuja
       if (tila == Julkaistu) {
-        if (entity.tila != Julkaistu) {
+        if (liitettavanEntiteetinTila != Julkaistu) {
           addErrorOid(s"metadata.liitetytEntiteetit.julkaisutila", entity.oid)
         }
       }

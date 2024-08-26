@@ -1526,7 +1526,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       oldToteutus: Toteutus,
       expected: Seq[ValidationError]
   ): Assertion =
-    Try(validator.withValidation(toteutus, Some(oldToteutus))(t => t)) match {
+    Try(validator.withValidation(toteutus, Some(oldToteutus), authenticatedNonPaakayttaja)(t => t)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _                                      => fail("Expecting validation failure, but it succeeded")
     }
@@ -1645,6 +1645,41 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "fail if one of the attached opintojaksot does not belong to the same organization as opintokokonaisuus" in {
+    val opintojaksoOppilaitosOid = GrandChildOid
+    val opintojaksoToteutusWithOid =
+      kkOpintojaksoToteutus.copy(oid = Some(toteutusOid), organisaatioOid = opintojaksoOppilaitosOid)
+    val lukioOid = ChildOid
+    val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(toteutusOid2), organisaatioOid = lukioOid)
+
+    when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
+      .thenAnswer(
+        Seq(
+          ToteutusLiitettyListItem(lukioToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))),
+          ToteutusLiitettyListItem(opintojaksoToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))))
+      )
+
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(opintojaksoOppilaitosOid))
+      .thenAnswer(
+        (Seq(opintojaksoOppilaitosOid), Seq(Amk))
+      )
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(lukioOid))
+      .thenAnswer(
+        (Seq(lukioOid), Seq(Lk))
+      )
+
+    val opintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(oid = Some(toteutusOid3))
+    assertThrows[OrganizationAuthorizationFailedException] {
+      validator.withValidation(
+        opintokokonaisuusToteutus.copy(metadata =
+          Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(toteutusOid2, toteutusOid)))
+        ),
+        Some(opintokokonaisuusToteutus),
+        authenticatedNonPaakayttaja
+      )(t => t)
+    }
+  }
+
   "validateOsaamismerkkiIntegrity" should "fail if trying to attach koulutus that is not osaamismerkki to vst-opistovuosi" in {
     val lukioOppilaitosOid = ChildOid
     val lukioKoulutusOid = koulutusOid2
@@ -1738,7 +1773,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
     )
 
-    assert(validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus))(t => t) == vstToteutus)
+    assert(validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus), authenticatedNonPaakayttaja)(t => t) == vstToteutus)
   }
 
   it should "fail if the attached osaamismerkki does not exist" in {
@@ -1758,6 +1793,45 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("metadata.liitetytEntiteetit.notFound", unknownEntity(Seq(koulutusOid2), Some(VapaaSivistystyoOsaamismerkki)))
       )
     )
+  }
+
+  it should "fail if one of the attached osaamismerkit does not belong to the same organization as vst-toteutus" in {
+    val oppilaitos1Oid = GrandChildOid
+    val oppilaitos2Oid = ChildOid
+
+    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+      oid = koulutusOid1,
+      modified = Modified(LocalDateTime.now().minusDays(1)),
+      organisaatioOid = oppilaitos1Oid)
+    val osaamismerkkiKoulutus2 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+      oid = koulutusOid2,
+      modified = Modified(LocalDateTime.now().minusDays(1)),
+      organisaatioOid = oppilaitos2Oid)
+
+    when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
+      .thenAnswer(
+        Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
+      )
+
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(oppilaitos1Oid))
+      .thenAnswer(
+        (Seq(oppilaitos1Oid), Seq(VapaaSivistystyoOsaamismerkki, VapaaSivistystyoMuu, VapaaSivistystyoOpistovuosi))
+      )
+    when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(oppilaitos2Oid))
+      .thenAnswer(
+        (Seq(oppilaitos2Oid), Seq(VapaaSivistystyoOsaamismerkki, VapaaSivistystyoMuu, VapaaSivistystyoOpistovuosi))
+      )
+
+    val vstToteutus = vstOpistovuosiToteutus.copy(oid = Some(toteutusOid3))
+    assertThrows[OrganizationAuthorizationFailedException] {
+      validator.withValidation(
+        vstToteutus.copy(metadata =
+          Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
+        ),
+        Some(vstToteutus),
+        authenticatedNonPaakayttaja
+      )(t => t)
+    }
   }
 
   "Muu validation" should "fail if ammattinimikkeet given" in {

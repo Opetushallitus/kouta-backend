@@ -803,7 +803,7 @@ package object domain {
     val modified: Modified
   }
 
-  abstract class LiitettyListItem {
+  trait LiitettyListItem {
     val oid: Oid
     val nimi: Kielistetty
     val tila: Julkaisutila
