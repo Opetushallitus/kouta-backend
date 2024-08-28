@@ -1,6 +1,5 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.raportointi.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, Siirtotiedosto, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
 import fi.oph.kouta.domain.{Ajanjakso, TilaFilter, Toteutus}
@@ -20,7 +19,7 @@ object RaportointiDAO
     new RaportointiDAO(databaseAccessor)
 }
 
-object SiirtotiedostoRaportointiDAO extends RaportointiDAO(SiirtotiedostoDatabaseAccessor)
+object SiirtotiedostoRaportointiDAO extends RaportointiDAO(SimpleDatabaseAccessor)
 
 class RaportointiDAO(
     databaseAccessor: KoutaDatabaseAccessor
