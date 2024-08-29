@@ -2,7 +2,6 @@ package fi.oph.kouta
 
 import fi.oph.kouta.client.TutkinnonOsaServiceItem
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
@@ -812,6 +811,11 @@ package object domain {
     val modified: Modified
     val koulutustyyppi: Koulutustyyppi
     val julkinen: Boolean
+  }
+
+  trait LiitettyEntity {
+    val tila: Julkaisutila
+    val oid: Option[LiitettyOid]
   }
 
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) {

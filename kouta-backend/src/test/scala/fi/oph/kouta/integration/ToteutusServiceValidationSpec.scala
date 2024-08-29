@@ -67,8 +67,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     koulutusOid = pelastusalanAmmKoulutus.oid.get,
     metadata = Some(AmmToteutuksenMetatieto.copy(osaamisalat = List()))
   )
-  val vstOsaamismerkkiKoulutus = VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.144")))
-  val vstOsaamismerkkiToteutus = VapaaSivistystyoOsaamismerkkiToteutus.copy(koulutusOid = vstOsaamismerkkiKoulutus.oid.get)
+  val vstOsaamismerkkiKoulutus =
+    VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.144")))
+  val vstOsaamismerkkiToteutus =
+    VapaaSivistystyoOsaamismerkkiToteutus.copy(koulutusOid = vstOsaamismerkkiKoulutus.oid.get)
 
   val sorakuvausId                  = UUID.randomUUID()
   val sorakuvausId2                 = UUID.randomUUID()
@@ -245,7 +247,17 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     // yleiset
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(AmmOid)).thenAnswer(
       Seq(AmmOid),
-      Seq(Amm, AmmTutkinnonOsa, AmmOsaamisala, AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOsaamismerkki, TaiteenPerusopetus)
+      Seq(
+        Amm,
+        AmmTutkinnonOsa,
+        AmmOsaamisala,
+        AmmMuu,
+        Tuva,
+        Telma,
+        VapaaSivistystyoOpistovuosi,
+        VapaaSivistystyoOsaamismerkki,
+        TaiteenPerusopetus
+      )
     )
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(LukioOid)).thenAnswer(Seq(LukioOid), Seq(Lk))
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(YoOid))
@@ -919,28 +931,37 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "fail if isHakukohteetKaytossa is true and kuvaus is empty" in {
     failsValidation(
-      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(isHakukohteetKaytossa = Some(true), kuvaus = Map()))),
+      vstOsaamismerkkiToteutus.copy(metadata =
+        Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(isHakukohteetKaytossa = Some(true), kuvaus = Map()))
+      ),
       Seq(
-        ValidationError("metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(VapaaSivistystyoOsaamismerkki)),
-        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError(
+          "metadata.isHakukohteetKaytossa",
+          hakukohteenLiittaminenNotAllowed(VapaaSivistystyoOsaamismerkki)
+        ),
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
       )
     )
   }
 
   it should "fail if toteutuksen hakulomaketyyppi is ataru" in {
     failsValidation(
-      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))),
+      vstOsaamismerkkiToteutus.copy(metadata =
+        Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(Ataru)))
+      ),
       Seq(
-        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(Ataru))),
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(Ataru)))
       )
     )
   }
 
   it should "fail if toteutuksen hakulomaketyyppi is haku-app" in {
     failsValidation(
-      vstOsaamismerkkiToteutus.copy(metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(HakuApp)))),
+      vstOsaamismerkkiToteutus.copy(metadata =
+        Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(hakulomaketyyppi = Some(HakuApp)))
+      ),
       Seq(
-        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(HakuApp))),
+        ValidationError("metadata.hakulomaketyyppi", notAllowedHakulomaketyyppi(Some(HakuApp)))
       )
     )
   }
@@ -1008,7 +1029,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ammMuuToteutus.copy(metadata =
         Some(
           metadataBase.copy(
-            hakulomaketyyppi = None,
+            hakulomaketyyppi = None
           )
         )
       ),
@@ -1019,7 +1040,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "pass validation without hakuajan loppupvm for julkaistu toteutus" in {
     val ajanjaksoEiLoppua = Ajanjakso(alkaa = LocalDateTime.now(), paattyy = None)
-    val metadataBase = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
+    val metadataBase      = ammMuuToteutus.metadata.get.asInstanceOf[AmmatillinenMuuToteutusMetadata]
     passesValidation(
       ammMuuToteutus.copy(metadata =
         Some(
@@ -1030,7 +1051,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       )
     )
   }
-
 
   "validateApuraha" should "fail if invalid apuraha" in {
     val validKuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
@@ -1532,9 +1552,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     }
 
   it should "fail if attached toteutus is not opintojakso" in {
-    val lukioOppilaitosOid   = ChildOid
-    val lukioToteutusOid     = toteutusOid2
-    val lukioToteutusWithOid = LukioToteutusEntityListItem.copy(oid = lukioToteutusOid, organisaatioOid = lukioOppilaitosOid)
+    val lukioOppilaitosOid = ChildOid
+    val lukioToteutusOid   = toteutusOid2
+    val lukioToteutusWithOid =
+      LukioToteutusEntityListItem.copy(oid = lukioToteutusOid, organisaatioOid = lukioOppilaitosOid)
     when(toteutusDao.get(List(lukioToteutusOid)))
       .thenAnswer(
         Seq(lukioToteutusWithOid)
@@ -1579,8 +1600,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail if attached toteutus is Arkistoitu or Poistettu" in {
-    val organisaatioOid      = ChildOid
-    val opintojaksoToteutus1 = KkOpintojaksoToteutusEntityListItem.copy(oid = toteutusOid, organisaatioOid = organisaatioOid)
+    val organisaatioOid = ChildOid
+    val opintojaksoToteutus1 =
+      KkOpintojaksoToteutusEntityListItem.copy(oid = toteutusOid, organisaatioOid = organisaatioOid)
     val opintojaksoToteutus2 =
       KkOpintojaksoToteutusEntityListItem.copy(oid = toteutusOid2, organisaatioOid = organisaatioOid, tila = Arkistoitu)
     val opintojaksoToteutus3 =
@@ -1649,14 +1671,19 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val opintojaksoOppilaitosOid = GrandChildOid
     val opintojaksoToteutusWithOid =
       kkOpintojaksoToteutus.copy(oid = Some(toteutusOid), organisaatioOid = opintojaksoOppilaitosOid)
-    val lukioOid = ChildOid
+    val lukioOid             = ChildOid
     val lukioToteutusWithOid = lukioToteutus.copy(oid = Some(toteutusOid2), organisaatioOid = lukioOid)
 
     when(toteutusDao.get(List(toteutusOid2, toteutusOid)))
       .thenAnswer(
         Seq(
-          ToteutusLiitettyListItem(lukioToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))),
-          ToteutusLiitettyListItem(opintojaksoToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))))
+          ToteutusLiitettyListItem(
+            lukioToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))
+          ),
+          ToteutusLiitettyListItem(
+            opintojaksoToteutusWithOid.copy(modified = Some(Modified(LocalDateTime.now().minusDays(1))))
+          )
+        )
       )
 
     when(organisaatioService.getAllChildOidsAndKoulutustyypitFlat(opintojaksoOppilaitosOid))
@@ -1682,8 +1709,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   "validateOsaamismerkkiIntegrity" should "fail if trying to attach koulutus that is not osaamismerkki to vst-opistovuosi" in {
     val lukioOppilaitosOid = ChildOid
-    val lukioKoulutusOid = koulutusOid2
-    val lukioKoulutusWithOid = LukioKoulutusEntityListItem.copy(oid = lukioKoulutusOid, organisaatioOid = lukioOppilaitosOid)
+    val lukioKoulutusOid   = koulutusOid2
+    val lukioKoulutusWithOid =
+      LukioKoulutusEntityListItem.copy(oid = lukioKoulutusOid, organisaatioOid = lukioOppilaitosOid)
     when(koulutusDao.get(List(lukioKoulutusOid)))
       .thenAnswer(
         Seq(lukioKoulutusWithOid)
@@ -1704,9 +1732,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if one of the attached koulutus is not julkaistu when osaamismerkki is julkaistu" in {
+  it should "fail if one of the attached osaamismerkkikoulutus is not julkaistu when vst-toteutus is julkaistu" in {
     val osaamismerkkikoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
-    val osaamismerkkikoulutus2 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu)
+    val osaamismerkkikoulutus2 =
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu)
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
       .thenAnswer(
         Seq(osaamismerkkikoulutus1, osaamismerkkikoulutus2)
@@ -1729,11 +1758,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "fail if attached osaamismerkkikoulutus is Arkistoitu or Poistettu" in {
     val organisaatioOid = ChildOid
-    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1, organisaatioOid = organisaatioOid)
+    val osaamismerkkiKoulutus1 =
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1, organisaatioOid = organisaatioOid)
     val osaamismerkkiKoulutus2 =
-      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, organisaatioOid = organisaatioOid, tila = Arkistoitu)
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+        oid = koulutusOid2,
+        organisaatioOid = organisaatioOid,
+        tila = Arkistoitu
+      )
     val osaamismerkkiKoulutus3 =
-      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid3, organisaatioOid = organisaatioOid, tila = Poistettu)
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+        oid = koulutusOid3,
+        organisaatioOid = organisaatioOid,
+        tila = Poistettu
+      )
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2, koulutusOid3)))
       .thenAnswer(
         Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2, osaamismerkkiKoulutus3)
@@ -1758,24 +1796,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "pass if attached osaamismerkki is Tallennettu or Julkaistu when vst-toteutus is Tallennettu" in {
-    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
-    val osaamismerkkiKoulutus2 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu)
-    when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
-      .thenAnswer(
-        Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
-      )
-
-    val vstToteutus = vstOpistovuosiToteutus.copy(
-      oid = Some(toteutusOid),
-      tila = Tallennettu,
-      metadata =
-        Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
-    )
-
-    assert(validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus), authenticatedNonPaakayttaja)(t => t) == vstToteutus)
-  }
-
   it should "fail if the attached osaamismerkki does not exist" in {
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
@@ -1790,7 +1810,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ),
       vstToteutus,
       Seq(
-        ValidationError("metadata.liitetytEntiteetit.notFound", unknownEntity(Seq(koulutusOid2), Some(VapaaSivistystyoOsaamismerkki)))
+        ValidationError(
+          "metadata.liitetytEntiteetit.notFound",
+          unknownEntity(Seq(koulutusOid2), Some(VapaaSivistystyoOsaamismerkki))
+        )
       )
     )
   }
@@ -1802,11 +1825,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
       oid = koulutusOid1,
       modified = Modified(LocalDateTime.now().minusDays(1)),
-      organisaatioOid = oppilaitos1Oid)
+      organisaatioOid = oppilaitos1Oid
+    )
     val osaamismerkkiKoulutus2 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
       oid = koulutusOid2,
       modified = Modified(LocalDateTime.now().minusDays(1)),
-      organisaatioOid = oppilaitos2Oid)
+      organisaatioOid = oppilaitos2Oid
+    )
 
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
       .thenAnswer(
@@ -1826,13 +1851,55 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     assertThrows[OrganizationAuthorizationFailedException] {
       validator.withValidation(
         vstToteutus.copy(metadata =
-          Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
+          Some(
+            VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2))
+          )
         ),
         Some(vstToteutus),
         authenticatedNonPaakayttaja
       )(t => t)
     }
   }
+
+  "withValidation" should "fail if liitetty opintojakso is changed from julkaistu to tallennettu when it is attached to a julkaistu opintokokonaisuus" in {
+    val julkaistuKkOpintojaksoToteutus = kkOpintojaksoToteutus.copy(oid = Some(toteutusOid))
+    val julkaistuKkOpintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(
+      oid = Some(toteutusOid2),
+      metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = List(toteutusOid))),
+      modified = Some(Modified(LocalDateTime.now().minusDays(1))))
+    when(toteutusDao.get(toteutusOid))
+      .thenAnswer(Vector(MinimalExistingToteutus(julkaistuKkOpintokokonaisuusToteutus)))
+
+    failsLiitetytValidation(
+      julkaistuKkOpintojaksoToteutus.copy(tila = Tallennettu),
+      julkaistuKkOpintojaksoToteutus,
+      Seq(ValidationError("metadata.tila", invalidStateChangeForLiitetty(toteutusOid, List(Some(toteutusOid2)), Vector(toteutusOid2))))
+    )
+  }
+
+  it should "pass if attached osaamismerkki is Tallennettu or Julkaistu when vst-toteutus is Tallennettu" in {
+    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
+    val osaamismerkkiKoulutus2 =
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu)
+    when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
+      .thenAnswer(
+        Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
+      )
+
+    val vstToteutus = vstOpistovuosiToteutus.copy(
+      oid = Some(toteutusOid),
+      tila = Tallennettu,
+      metadata =
+        Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
+    )
+
+    assert(
+      validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus), authenticatedNonPaakayttaja)(t =>
+        t
+      ) == vstToteutus
+    )
+  }
+
 
   "Muu validation" should "fail if ammattinimikkeet given" in {
     failsValidation(

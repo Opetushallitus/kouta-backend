@@ -16,6 +16,7 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)]
+  def get(oid: LiitettyOid): Vector[MinimalExistingToteutus]
   def get(oids: List[ToteutusOid]): Seq[ToteutusLiitettyListItem]
   def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
@@ -69,6 +70,10 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
       case (Some(t), tt) => Some((t.copy(tarjoajat = tt.map(_.tarjoajaOid).toList), modifiedToInstant(t.modified.get)))
       case _             => None
     }
+  }
+
+  override def get(oid: LiitettyOid) = {
+    KoutaDatabase.runBlocking(selectWithLiitettyOid(oid).as[MinimalExistingToteutus])
   }
 
   override def get(oids: List[ToteutusOid]) = {
@@ -290,6 +295,23 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           on t.oid = o.oid
           where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "t.tila", "")}
           order by o.ord"""
+  }
+
+  def selectWithLiitettyOid(oid: LiitettyOid) = {
+    sql"""select distinct t.oid,
+                  t.koulutus_oid,
+                  t.nimi,
+                  t.tila,
+                  t.metadata,
+                  t.muokkaaja,
+                  t.organisaatio_oid,
+                  t.last_modified
+         from (select *, jsonb_array_elements_text(metadata->'liitetytOpintojaksot') as liitetty_opintojakso,
+                      jsonb_array_elements_text(metadata->'liitetytOsaamismerkit') as liitetty_osaamismerkki
+               from toteutukset
+               where metadata->'liitetytOpintojaksot' is not null or metadata->'liitetytOsaamismerkit' is not null
+               group by oid) as t
+          where $oid = liitetty_opintojakso or $oid = liitetty_osaamismerkki"""
   }
 
   def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {

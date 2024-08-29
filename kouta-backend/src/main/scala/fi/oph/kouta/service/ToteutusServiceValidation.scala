@@ -5,6 +5,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.Oid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.validation.LiitettyEntityValidation
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.LaajuusValidationUtil
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
@@ -41,6 +42,8 @@ class ToteutusServiceValidation(
     var errors = super.validate(toteutus, oldToteutus)
     if (errors.isEmpty) {
       toteutus.metadata match {
+        case Some(_: KkOpintojaksoToteutusMetadata) =>
+          errors = validateLiitettyEntityIntegrity(toteutus)
         case Some(metadata) =>
           errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, authenticated)
         case None =>
@@ -781,6 +784,13 @@ class ToteutusServiceValidation(
     integrityViolationMsg("Toteutusta", "hakukohteita")
   )
 
+  def validateLiitettyEntityIntegrity(toteutus: Toteutus): IsValid = {
+    LiitettyEntityValidation.validateLiitettyEntityIntegrity(toteutus, toteutus.oid match {
+      case Some(oid) => toteutusDAO.get(oid)
+      case None => Vector()
+    })
+  }
+
   def validateLiitetytEntitiesIntegrity(
       tila: Julkaisutila,
       metadata: ToteutusMetadata,
@@ -796,13 +806,14 @@ class ToteutusServiceValidation(
     val (liitetytOids, entities, liitettyjenKoulutustyyppi) = metadata match {
       case m: VapaaSivistystyoToteutusMetadata =>
         val liitetytOids = m.liitetytOsaamismerkit
-        val koulutukset = if (liitetytOids.isEmpty) List() else koulutusDAO.get(liitetytOids.toList)
+        val koulutukset  = if (liitetytOids.isEmpty) List() else koulutusDAO.get(liitetytOids.toList)
         (liitetytOids, koulutukset, Some(VapaaSivistystyoOsaamismerkki))
       case m: KkOpintokokonaisuusToteutusMetadata =>
         val liitetytOids = m.liitetytOpintojaksot
-        val toteutukset = if (liitetytOids.isEmpty) List() else toteutusDAO.get(liitetytOids.toList)
+        val toteutukset  = if (liitetytOids.isEmpty) List() else toteutusDAO.get(liitetytOids.toList)
         (liitetytOids, toteutukset, Some(KkOpintojakso))
-      case _ => (List(), List(), None)
+      case _ =>
+        (List(), List(), None)
     }
 
     entities.foreach(entity => {

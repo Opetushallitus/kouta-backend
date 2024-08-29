@@ -4,7 +4,7 @@ import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
-import fi.oph.kouta.domain.oid.{GenericOid, Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{GenericOid, LiitettyOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
@@ -163,6 +163,15 @@ object Validations {
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
       id = "invalidTilaForLiitetty",
       meta = Some(Map("entiteetit" -> entities))
+    )
+  }
+
+  def invalidStateChangeForLiitetty(liitetty: LiitettyOid, mihinLiitetty: List[Option[Oid]], toteutukset: Vector[ToteutusOid]) = {
+    ErrorMessage(
+      msg =
+        s"Entiteetin $liitetty tilaa ei voi vaihtaa, koska se on liitetty entiteetteihin $mihinLiitetty, joiden tila on Julkaistu.",
+      id = "invalidStateChangeForLiitetty",
+      meta = Some(Map("julkaistutToteutukset" -> toteutukset))
     )
   }
 

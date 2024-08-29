@@ -706,6 +706,8 @@ object TestData {
 
   val VapaaSivistystyoOsaamismerkkiKoulutusMetatieto = VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
     osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+    opintojenLaajuusNumero = Some(1),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
     isMuokkaajaOphVirkailija = Some(true)
   )

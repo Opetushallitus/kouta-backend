@@ -38,6 +38,11 @@ class ToteutusSpec
     mockLokalisointiResponse("yleiset.opintopistetta")
     mockLokalisointiResponse("toteutuslomake.lukionYleislinjaNimiOsa")
     koulutusOid = put(koulutus, ophSession)
+
+    // Osaamismerkin nimenmuodostukseen liittyvät mockit
+    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
+    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
+    mockLokalisointiResponse("yleiset.osaamismerkki")
   }
 
   "Get toteutus by oid" should "return 404 if toteutus not found" in {
@@ -826,6 +831,41 @@ class ToteutusSpec
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
   }
 
+  it should "fail to change attached opintojakso to tallennettu when opintokokonaisuus is julkaistu" in {
+    val julkaistuOpintojaksoKoulutus = KkOpintojaksoKoulutus
+    val opintojaksoKoulutusOid       = put(julkaistuOpintojaksoKoulutus)
+    val julkaistuKkOpintojaksoToteutus =
+      JulkaistuKkOpintojaksoToteutus.copy(koulutusOid = KoulutusOid(opintojaksoKoulutusOid))
+    val opintojaksoToteutusOid               = put(julkaistuKkOpintojaksoToteutus)
+    val julkaistuKkOpintokokonaisuusKoulutus = KkOpintokokonaisuusKoulutus
+    val opintokokonaisuusKoulutusOid         = put(julkaistuKkOpintokokonaisuusKoulutus)
+    val julkaistuKkOpintokokonaisuusToteutus = JulkaistuKkOpintokokonaisuusToteutus.copy(
+      koulutusOid = KoulutusOid(opintokokonaisuusKoulutusOid),
+      metadata = Some(
+        KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = Seq(ToteutusOid(opintojaksoToteutusOid)))
+      )
+    )
+    put(julkaistuKkOpintokokonaisuusToteutus)
+    val lastModified = get(
+      opintojaksoToteutusOid,
+      julkaistuKkOpintojaksoToteutus.copy(oid = Some(ToteutusOid(opintojaksoToteutusOid)), koulutuksetKoodiUri = List())
+    )
+
+    post(
+      ToteutusPath,
+      bytes(
+        julkaistuKkOpintojaksoToteutus
+          .copy(oid = Some(ToteutusOid(opintojaksoToteutusOid)), tila = Tallennettu, koulutuksetKoodiUri = List())
+      ),
+      headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))
+    ) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""errorType":"invalidStateChangeForLiitetty""")
+    }
+  }
+
   object ToteutusJsonMethods extends JsonMethods {
     def extractJsonString(s: String): Toteutus = {
       parse(s).extract[Toteutus]
@@ -1024,13 +1064,12 @@ class ToteutusSpec
   }
 
   it should "create, get and update vapaasivistystyo-osaamismerkkitoteutus" in {
-    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
-    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
-    mockLokalisointiResponse("yleiset.osaamismerkki")
-    val osaamismerkkiKoulutusOid = put(TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Julkaistu), ophSession)
+    val osaamismerkkiKoulutusOid =
+      put(TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Julkaistu), ophSession)
     val osaamismerkkiToteutus = TestData.VapaaSivistystyoOsaamismerkkiToteutus.copy(
       koulutusOid = KoulutusOid(osaamismerkkiKoulutusOid),
-      tila = Tallennettu
+      tila = Tallennettu,
+      modified = Some(Modified(LocalDateTime.now().minusDays(1)))
     )
     val oid = put(osaamismerkkiToteutus)
     val lastModified = get(oid, osaamismerkkiToteutus.copy(oid = Some(ToteutusOid(oid))))
@@ -1160,7 +1199,6 @@ class ToteutusSpec
     response.head.status shouldBe "success"
     response.last.oid.toString shouldBe julkaistuToteutusOid2
     response.last.status shouldBe "success"
-
 
     get(julkaistuToteutusOid1, arkistoituToteutus1)
     get(julkaistuToteutusOid2, arkistoituToteutus2)

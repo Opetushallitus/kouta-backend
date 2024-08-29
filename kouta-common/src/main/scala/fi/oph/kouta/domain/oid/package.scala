@@ -11,13 +11,15 @@ sealed trait Oid {
   def isValid: Boolean = OidPattern.matcher(s).matches()
 }
 
+trait LiitettyOid
+
 case class GenericOid(s: String) extends Oid
 
-case class KoulutusOid(s: String) extends Oid {
+case class KoulutusOid(s: String) extends Oid with LiitettyOid {
   override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.13\.\d+$""")
 }
 
-case class ToteutusOid(s: String) extends Oid {
+case class ToteutusOid(s: String) extends Oid with LiitettyOid {
   override val OidPattern: Pattern = Pattern.compile("""^1\.2\.246\.562\.17\.\d+$""")
 }
 

@@ -212,7 +212,8 @@ case class Koulutus(
 ) extends PerustiedotWithOid[KoulutusOid, Koulutus]
   with HasTeemakuva[Koulutus]
   with HasHakutuloslistauksenKuvake[Koulutus]
-  with AuthorizableMaybeJulkinen[Koulutus] {
+  with AuthorizableMaybeJulkinen[Koulutus]
+  with LiitettyEntity {
 
   override def validate(): IsValid =
     super.validate()

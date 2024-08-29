@@ -1,11 +1,12 @@
 package fi.oph.kouta.domain
 
-import java.util.UUID
-import fi.oph.kouta.domain.oid.{KoulutusOid, Oid, OrganisaatioOid, ToteutusOid, UserOid}
+import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.AuthorizableMaybeJulkinen
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.validation.IsValid
 import fi.oph.kouta.validation.Validations._
+
+import java.util.UUID
 
 package object toteutus {
 
@@ -233,7 +234,8 @@ case class Toteutus(
     koulutuksetKoodiUri: Seq[String] = Seq(),
     _enrichedData: Option[ToteutusEnrichedData] = None
 ) extends PerustiedotWithOidAndOptionalNimi[ToteutusOid, Toteutus]
-    with HasTeemakuva[Toteutus] {
+    with HasTeemakuva[Toteutus]
+    with LiitettyEntity {
 
   override def validate(): IsValid = and(
     validateIfDefined[Oid](oid, assertValid(_, "oid")),
@@ -337,11 +339,11 @@ case class ToteutusLiitettyListItem(
     modified: Modified,
     koulutustyyppi: Koulutustyyppi,
     julkinen: Boolean = false
-) extends LiitettyListItem with AuthorizableMaybeJulkinen[ToteutusLiitettyListItem] {
+) extends LiitettyListItem
+    with AuthorizableMaybeJulkinen[ToteutusLiitettyListItem] {
 
   def withMuokkaaja(oid: UserOid): ToteutusLiitettyListItem = this.copy(muokkaaja = oid)
 }
-
 
 object ToteutusLiitettyListItem {
   def apply(t: Toteutus): ToteutusLiitettyListItem = {
@@ -353,6 +355,32 @@ object ToteutusLiitettyListItem {
       t.muokkaaja,
       t.modified.get,
       t.metadata.get.tyyppi
+    )
+  }
+}
+
+case class MinimalExistingToteutus(
+    oid: ToteutusOid,
+    koulutusOid: KoulutusOid,
+    nimi: Kielistetty = Map(),
+    tila: Julkaisutila,
+    metadata: ToteutusMetadata,
+    muokkaaja: UserOid,
+    organisaatioOid: OrganisaatioOid,
+    modified: Modified
+)
+
+object MinimalExistingToteutus {
+  def apply(t: Toteutus): MinimalExistingToteutus = {
+    new MinimalExistingToteutus(
+      t.oid.get,
+      t.koulutusOid,
+      t.nimi,
+      t.tila,
+      t.metadata.get,
+      t.muokkaaja,
+      t.organisaatioOid,
+      t.modified.get
     )
   }
 }

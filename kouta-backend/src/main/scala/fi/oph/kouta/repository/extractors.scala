@@ -205,6 +205,19 @@ trait ToteutusExtractors extends ExtractorBase {
       val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
       ToteutusLiitettyListItem(t.copy(nimi = esitysnimi))
     })
+
+  implicit val getToteutusWithLiitetytItem: GetResult[MinimalExistingToteutus] =
+    GetResult(r => MinimalExistingToteutus(
+        oid = ToteutusOid(r.nextString()),
+        koulutusOid = KoulutusOid(r.nextString()),
+        nimi = extractKielistetty(r.nextStringOption()),
+        tila = Julkaisutila.withName(r.nextString()),
+        metadata = read[ToteutusMetadata](r.nextString()),
+        muokkaaja = UserOid(r.nextString()),
+        organisaatioOid = OrganisaatioOid(r.nextString()),
+        modified = timeStampToModified(r.nextTimestamp()),
+      )
+    )
 }
 
 trait HakuExtractors extends ExtractorBase {
