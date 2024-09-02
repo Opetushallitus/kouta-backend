@@ -4,7 +4,7 @@ import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
-import fi.oph.kouta.domain.oid.{GenericOid, LiitettyOid, Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{LiitettyOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
