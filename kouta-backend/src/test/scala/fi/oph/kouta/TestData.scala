@@ -1640,7 +1640,7 @@ object TestData {
       yhteyshenkilot = Seq(Yhteystieto1),
       isHakukohteetKaytossa = Some(true),
       hakutermi = None,
-      hakulomaketyyppi = None,
+      hakulomaketyyppi = Some(Ataru),
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
