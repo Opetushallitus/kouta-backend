@@ -1,14 +1,14 @@
-package fi.oph.kouta
+package fi.oph.kouta.ovara
 
 import com.zaxxer.hikari.HikariConfig
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.raportointi.{RaportointiDateTimeFormat, Siirtotiedosto, SiirtotiedostoCounts, SiirtotiedostoInfo}
-import fi.oph.kouta.repository.KoutaDatabaseAccessor
+import fi.oph.kouta.repository.{KoutaDatabaseAccessor, SimpleDatabaseAccessor}
 import fi.oph.kouta.service.SiirtotiedostoRaportointiService
+import fi.oph.kouta.util.KoutaJsonFormats
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.Serialization.writePretty
-import fi.oph.kouta.util.KoutaJsonFormats
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -18,7 +18,6 @@ import scala.util.{Failure, Success, Try}
 object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
   def main(args: Array[String]): Unit = {
     KoutaConfigurationFactory.init()
-    AuditLog.init()
     val opId = UUID.randomUUID();
     val latestSiirtotiedostoData = SiirtotiedostoRaportointiService.findLatestSiirtotiedostoData()
     val currentDatetime          = LocalDateTime.now()
@@ -56,7 +55,7 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
         data
     }
     SiirtotiedostoRaportointiService.saveSiirtotiedostoData(updatedSiirtotiedostoData)
-    SiirtotiedostoDatabaseAccessor.destroy()
+    SimpleDatabaseAccessor.destroy()
     exit
   }
 
@@ -109,16 +108,7 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
 
     } match {
       case Success(counts: SiirtotiedostoCounts) => Right(SiirtotiedostoInfo(Some(counts)))
-      case Failure(exception: Exception)         => Left(exception.getMessage)
+      case Failure(exception: Throwable)         => Left(exception.getMessage)
     }
-  }
-}
-
-object SiirtotiedostoDatabaseAccessor extends KoutaDatabaseAccessor {
-  override def hikariConfig: HikariConfig = {
-    val config = super.hikariConfig
-    config.setMaximumPoolSize(1)
-    config.setMinimumIdle(0)
-    config
   }
 }

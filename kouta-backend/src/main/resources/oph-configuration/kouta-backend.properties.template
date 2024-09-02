@@ -69,10 +69,10 @@ hakemuspalvelu-service.haku-ensisijainen-counts=https://{{host_virkailija}}/loma
 
 kouta.external-api.modify.enabled={{kouta_external_api_modify_enabled}}
 
-kouta-backend.elasticsearch.url={{kouta_backend_elasticsearch_url}}
+kouta-backend.elasticsearch.url={{kouta_backend_elasticsearch_url | default('http://elasticsearch-not-used.es')}}
 kouta-backend.elasticsearch.auth-enabled={{kouta_backend_elasticsearch_auth_enabled | default('false')}}
-kouta-backend.elasticsearch.username={{kouta_backend_elasticsearch_username}}
-kouta-backend.elasticsearch.password={{kouta_backend_elasticsearch_password}}
+kouta-backend.elasticsearch.username={{kouta_backend_elasticsearch_username | default('not_used')}}
+kouta-backend.elasticsearch.password={{kouta_backend_elasticsearch_password | default('not_used')}}
 
 valintaperusteet-service=https://{{host_virkailija}}/valintaperusteet-service
 valintaperusteet-service.valintatapajono.oid=https://{{host_virkailija}}/valintaperusteet-service/resources/valintatapajono/$1
