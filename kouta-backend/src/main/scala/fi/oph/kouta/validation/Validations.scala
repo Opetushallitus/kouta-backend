@@ -176,8 +176,12 @@ object Validations {
   }
 
   def unknownEntity(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
+    val message = koulutustyyppi match {
+      case Some(koulutustyyppi) => s"Liitettyä $koulutustyyppi-entiteettiä ei löydy."
+      case None => s"Liitettyä entiteettiä ei löydy."
+    }
     ErrorMessage(
-      msg = s"Liitettyä $koulutustyyppi-entiteettiä ei löydy.",
+      msg = message,
       id = "unknownEntity",
       meta = Some(Map("entiteetit" -> entities))
     )
