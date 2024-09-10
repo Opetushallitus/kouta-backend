@@ -1,4 +1,4 @@
-package fi.oph.kouta.domain.raportointi
+package fi.oph.kouta.domain.siirtotiedosto
 
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, UserOid}
 import fi.oph.kouta.domain._

@@ -1,4 +1,4 @@
-package fi.oph.kouta.domain.raportointi
+package fi.oph.kouta.domain.siirtotiedosto
 
 import fi.oph.kouta.domain.{Ajanjakso, Aloituspaikat, HakukohdeEnrichedData, Hakulomaketyyppi, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, LiitteenToimitustapa, Modified, Osoite, Tallennettu, ValintakokeenLisatilaisuudet}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid, UserOid}

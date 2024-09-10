@@ -1,9 +1,9 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.domain.raportointi.{RaportointiDateTimeFormat, SiirtotiedostoOperationResults}
-import fi.oph.kouta.repository.{KoutaDatabase, RaportointiDAO}
-import fi.oph.kouta.service.RaportointiService
+import fi.oph.kouta.domain.siirtotiedosto.{SiirtotiedostoDateTimeFormat, SiirtotiedostoOperationResults}
+import fi.oph.kouta.repository.{KoutaDatabase, SiirtotiedostoDAO}
+import fi.oph.kouta.service.SiirtotiedostoService
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import org.scalatra.Ok
@@ -14,11 +14,11 @@ import java.time.format.DateTimeFormatter
 import java.util.UUID
 import scala.util.{Failure, Success, Try}
 
-class RaportointiServlet(raportointiService: RaportointiService) extends KoutaServlet {
-  def this() = this(RaportointiService)
+class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extends KoutaServlet {
+  def this() = this(SiirtotiedostoService)
 
 
-  val DateTimeExample = RaportointiDateTimeFormat.format(LocalDateTime.now())
+  val DateTimeExample = SiirtotiedostoDateTimeFormat.format(LocalDateTime.now())
 
   private def parseDatetime(
       dateTime: Option[String],
@@ -28,7 +28,7 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     dateTime match {
       case Some(dateTimeStr) =>
         Try[LocalDateTime] {
-          LocalDateTime.from(RaportointiDateTimeFormat.parse(dateTimeStr))
+          LocalDateTime.from(SiirtotiedostoDateTimeFormat.parse(dateTimeStr))
         } match {
           case Success(dateTime) => Some(dateTime)
           case Failure(_)          => throw new IllegalArgumentException(s"Virheellinen $fieldName '$dateTimeStr'")
@@ -57,13 +57,13 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     Map("keys" -> operationResults.keys.mkString(", "), "count" -> operationResults.count.toString, "success" -> "true")
 
   registerPath(
-    "/raportointi/koulutukset",
+    "/siirtotiedosto/koulutukset",
     s"""    get:
        |      summary: Tallentaa koulutukset siirtotiedostoon
-       |      operationId: reportKoulutukset
+       |      operationId: siirtotiedostoKoulutukset
        |      description: Hakee annetulla aikavälillä luodut/modifioidut koulutukset ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -88,17 +88,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/koulutukset") {
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-    Ok(resultMap(raportointiService.saveKoulutukset(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveKoulutukset(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/toteutukset",
+    "/siirtotiedosto/toteutukset",
     s"""    get:
        |      summary: Tallentaa toteutukset siirtotiedostoon
-       |      operationId: reportToteutukset
+       |      operationId: siirtotiedostoToteutukset
        |      description: Hakee annetulla aikavälillä luodut/modifioidut toteutukset ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -124,17 +124,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveToteutukset(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveToteutukset(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/hakukohteet",
+    "/siirtotiedosto/hakukohteet",
     s"""    get:
        |      summary: Tallentaa hakukohteet siirtotiedostoon
-       |      operationId: reportHakukohteet
+       |      operationId: siirtotiedostoHakukohteet
        |      description: Hakee annetulla aikavälillä luodut/modifioidut hakukohteet ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -160,17 +160,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveHakukohteet(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveHakukohteet(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/haut",
+    "/siirtotiedosto/haut",
     s"""    get:
        |      summary: Tallentaa haut siirtotiedostoon
-       |      operationId: reportHaut
+       |      operationId: siirtotiedostoHaut
        |      description: Hakee annetulla aikavälillä luodut/modifioidut haut ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -196,17 +196,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveHaut(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveHaut(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/valintaperusteet",
+    "/siirtotiedosto/valintaperusteet",
     s"""    get:
        |      summary: Tallentaa valintaperusteet siirtotiedostoon
-       |      operationId: reportValintaperusteet
+       |      operationId: siirtotiedostoValintaperusteet
        |      description: Hakee annetulla aikavälillä luodut/modifioidut valintaperusteet ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -232,17 +232,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveValintaperusteet(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveValintaperusteet(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/sorakuvaukset",
+    "/siirtotiedosto/sorakuvaukset",
     s"""    get:
        |      summary: Tallentaa sorakuvaukset siirtotiedostoon
-       |      operationId: reportSorakuvaukset
+       |      operationId: siirtotiedostoSorakuvaukset
        |      description: Hakee annetulla aikavälillä luodut/modifioidut sorakuvaukset ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -268,18 +268,18 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveSorakuvaukset(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveSorakuvaukset(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/oppilaitoksetJaOsat",
+    "/siirtotiedosto/oppilaitoksetJaOsat",
     s"""    get:
        |      summary: Tallentaa oppilaitokset ja niiden osat siirtotiedostoon
-       |      operationId: reportOppilaitoksetJaOsat
+       |      operationId: siirtotiedostoOppilaitoksetJaOsat
        |      description: Hakee annetulla aikavälillä luodut/modifioidut oppilaitokset ja osat,
        |        ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -305,17 +305,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.saveOppilaitoksetJaOsat(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.saveOppilaitoksetJaOsat(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/pistehistoria",
+    "/siirtotiedosto/pistehistoria",
     s"""    get:
        |      summary: Tallentaa pistehistorian siirtotiedostoon
-       |      operationId: reportPistehistoria
+       |      operationId: siirtotiedostoPistehistoria
        |      description: Hakee annetulla aikavälillä luodut/modifioidut pistehistoriatiedot ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      parameters:
        |        - in: query
        |          name: startTime
@@ -341,17 +341,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
     implicit val authenticated: Authenticated = authenticate()
     val (startTime, endTime)                  = parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
 
-    Ok(resultMap(raportointiService.savePistehistoria(UUID.randomUUID(), startTime, endTime)))
+    Ok(resultMap(siirtotiedostoService.savePistehistoria(UUID.randomUUID(), startTime, endTime)))
   }
 
   registerPath(
-    "/raportointi/ammattinimikkeet",
+    "/siirtotiedosto/ammattinimikkeet",
     s"""    get:
        |      summary: Tallentaa ammattinimikkeet siirtotiedostoon
-       |      operationId: reportAmmattinimikkeet
+       |      operationId: siirtotiedostoAmmattinimikkeet
        |      description: Hakee kaikki ammattinimikkeet ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      responses:
        |        '200':
        |          description: Ok
@@ -360,17 +360,17 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/ammattinimikkeet") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(resultMap(raportointiService.saveAmmattinimikkeet(UUID.randomUUID())))
+    Ok(resultMap(siirtotiedostoService.saveAmmattinimikkeet(UUID.randomUUID())))
   }
 
   registerPath(
-    "/raportointi/asiasanat",
+    "/siirtotiedosto/asiasanat",
     s"""    get:
        |      summary: Tallentaa asiasanat siirtotiedostoon
-       |      operationId: reportAsiasanat
+       |      operationId: siirtotiedostoAsiasanat
        |      description: Hakee kaikki asiasanat ja tallentaa ne siirtotiedostoon (S3 -bucketiin)
        |      tags:
-       |        - Raportointi
+       |        - Siirtotiedostot
        |      responses:
        |        '200':
        |          description: Ok
@@ -379,6 +379,6 @@ class RaportointiServlet(raportointiService: RaportointiService) extends KoutaSe
   get("/asiasanat") {
     implicit val authenticated: Authenticated = authenticate()
 
-    Ok(resultMap(raportointiService.saveAsiasanat(UUID.randomUUID())))
+    Ok(resultMap(siirtotiedostoService.saveAsiasanat(UUID.randomUUID())))
   }
 }
