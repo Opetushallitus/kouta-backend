@@ -176,6 +176,10 @@ class OppilaitoksenOsaServiceValidationSpec extends AnyFlatSpec with BeforeAndAf
     passesValidation(osa, Some(osa))
   }
 
+  it should "fail if invalid data" in {
+    failsValidation(minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite)), "metadata.hakijapalveluidenYhteystiedot.kayntiosoite.postinumeroKoodiUri[0]", invalidPostiosoiteKoodiUri("puppu"))
+  }
+
   it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutus" in {
     passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
   }

@@ -76,6 +76,15 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
     ),
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
     validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
+    validateIfDefined[Yhteystieto](
+      m.hakijapalveluidenYhteystiedot,
+      _.validate(
+        "metadata.hakijapalveluidenYhteystiedot",
+        oppilaitosDiffResolver.newHakijapalveluidenYhteystiedot(),
+        vCtx,
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      )
+    ),
     validateIfDefined[Int](m.opiskelijoita, assertNotNegative(_, "metadata.opiskelijoita")),
     validateIfDefined[Int](m.korkeakouluja, assertNotNegative(_, "metadata.korkeakouluja")),
     validateIfDefined[Int](m.tiedekuntia, assertNotNegative(_, "metadata.tiedekuntia")),
@@ -173,6 +182,15 @@ class OppilaitoksenOsaServiceValidation(koodistoClient: KoodistoService, oppilai
   ): IsValid = and(
     validateIfDefined[NimettyLinkki](m.wwwSivu, _.validate(vCtx, "metadata.wwwSivu")),
     validateIfDefined[NimettyLinkki](m.esittelyvideo, _.validate(vCtx, "metadata.esittelyvideo")),
+    validateIfDefined[Yhteystieto](
+      m.hakijapalveluidenYhteystiedot,
+      _.validate(
+        "metadata.hakijapalveluidenYhteystiedot",
+        diffResolver.newHakijapalveluidenYhteystiedot(),
+        vCtx,
+        koodistoClient.koodiUriExistsInKoodisto(PostiosoiteKoodisto, _)
+      )
+    ),
     assertTrue(
       !diffResolver.jarjestaaUrheilijanAmmatillistakoulutustaChanged() || isOphPaakayttaja,
       "metadata.jarjestaaUrheilijanAmmKoulutusta",

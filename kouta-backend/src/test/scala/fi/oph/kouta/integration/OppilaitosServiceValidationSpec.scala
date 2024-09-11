@@ -78,15 +78,23 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
      message: ErrorMessage
   ): Assertion = failsValidation(oppilaitos, Seq(ValidationError(path, message)), authenticatedNonPaakayttaja)
 
+//  {
+//    println(s"failsValidation oppilaitos: $oppilaitos")
+//    println(s"failsValidation path: $path")
+//    println(s"failsValidation message: $message")
+//  }
+
   def failsValidation(
                        oppilaitos: Oppilaitos,
                        expected: Seq[ValidationError],
                        authenticated: Authenticated = authenticatedNonPaakayttaja
-                     ): Assertion =
+                     ): Assertion = {
+    println(s"expected $expected")
     Try(validator.withValidation(oppilaitos, None, authenticated)(o => o)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _ => fail("Expecting validation failure, but it succeeded")
     }
+  }
 
   "Oppilaitos validation" should "pass a valid oppilaitos" in {
     passesValidation(max)
@@ -258,6 +266,40 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     passesValidation(oppilaitos, Some(oppilaitos))
   }
 
+  it should "pass validation when only \"Yhteystiedon nimi\" is given" in {
+    val oppilaitos = minWithYhteystieto(Yhteystieto(nimi = Map(Fi -> "Testi koulu", En -> "Test school")))
+    println(s"oppilaitos: $oppilaitos")
+    passesValidation(
+      oppilaitos,
+      Some(oppilaitos)
+    )
+  }
+
+  it should "fail if invalid postiosoite" in {
+    failsValidation(
+      minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite)),
+      "metadata.hakijapalveluidenYhteystiedot.postiosoite.postinumeroKoodiUri[0]",
+      invalidPostiosoiteKoodiUri("puppu")
+    )
+  }
+
+  it should "fail if missing values in julkaistu oppilaitos" in {
+    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    failsValidation(
+      max.copy(metadata =
+        Some(
+          maxMetadata.copy(hakijapalveluidenYhteystiedot =
+            Some(yt.copy(nimi = Map(), puhelinnumero = vainSuomeksi, sahkoposti = Map(Fi -> "opettaja@koulu.fi")))
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Fi, Sv))),
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.puhelinnumero", invalidKielistetty(Seq(Sv))),
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti", invalidKielistetty(Seq(Sv)))
+      )
+    )
+  }
 
   it should "pass if oph pääkäyttäjä changes järjestää uheilijan ammatillista koulutusta" in {
     passesValidation(max.copy(metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), Some(max), authenticatedPaakayttaja)
