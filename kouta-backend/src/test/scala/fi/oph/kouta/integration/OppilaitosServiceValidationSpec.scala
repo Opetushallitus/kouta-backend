@@ -256,6 +256,16 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  "Yhteystieto validation" should "succeed when postiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
+    val oppilaitos = minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite))
+    passesValidation(oppilaitos, Some(oppilaitos))
+  }
+
+  it should "succeed when kayntiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
+    val oppilaitos = minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite))
+    passesValidation(oppilaitos, Some(oppilaitos))
+  }
+
   it should "fail if Yhteystiedon nimi given only in Finnish in hakijapalveluidenYhteystiedot " in {
     val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
         failsValidation(

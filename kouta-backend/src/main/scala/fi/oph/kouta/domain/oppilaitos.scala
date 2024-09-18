@@ -443,8 +443,9 @@ case class Yhteystieto(
     sahkoposti: Kielistetty = Map(),
     www: Kielistetty = Map()
 ) {
-  def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid =
+  def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid = {
     entityWithNewValues match {
+      case None => NoErrors
       case Some(Yhteystieto(nimi,_,_,_,_,_)) =>
         nimi match {
           case n if n.contains(Fi) && n(Fi).nonEmpty =>
@@ -497,6 +498,7 @@ case class Yhteystieto(
             )
         }
     }
+  }
 
 }
 
