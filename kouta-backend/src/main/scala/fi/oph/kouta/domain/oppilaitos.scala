@@ -449,7 +449,6 @@ case class Yhteystieto(
       case Some(Yhteystieto(nimi,_,_,_,_,_)) =>
         nimi match {
           case n if n.contains(Fi) && n(Fi).nonEmpty =>
-            println(s"nimi Fi: $n")
             and(validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
               validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
               validateOptionalSahkoposti(sahkoposti, s"$path.sahkoposti", assertValidEmail),
