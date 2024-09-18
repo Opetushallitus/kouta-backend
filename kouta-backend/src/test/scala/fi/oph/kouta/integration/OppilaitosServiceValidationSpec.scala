@@ -256,22 +256,66 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
-  "Yhteystieto validation" should "succeed when postiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
-    val oppilaitos = minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite))
-    passesValidation(oppilaitos, Some(oppilaitos))
+  it should "fail if Yhteystiedon nimi given only in Finnish in hakijapalveluidenYhteystiedot " in {
+    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
+        failsValidation(
+          max.copy(metadata =
+            Some(
+              maxMetadata.copy(hakijapalveluidenYhteystiedot =
+                Some(yt.copy(nimi = Map(Fi -> "koulu fi")))
+              )
+            )
+          ),
+          Seq(
+            ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Sv))),
+          )
+        )
   }
 
-  it should "succeed when kayntiosoite not changed, eventhough unknown postinumeroKoodiUri" in {
-    val oppilaitos = minWithYhteystieto(Yhteystieto(kayntiosoite = invalidOsoite))
-    passesValidation(oppilaitos, Some(oppilaitos))
+  it should "pass if hakijapalveluidenYhteystiedot all fields are blank: nimi, postiosoite, käyntiosoite, puhelinnumero, sahkoposti and www" in {
+    val hpyt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    passesValidation(max.copy(metadata =
+      Some(
+        maxMetadata.copy(hakijapalveluidenYhteystiedot =
+          Some(hpyt.copy(nimi = Map(Fi -> "", Sv -> ""),
+            postiosoite = emptyAddress,
+            kayntiosoite = emptyAddress,
+            puhelinnumero = emptyKielistetty,
+            sahkoposti = emptyKielistetty,
+            www = emptyKielistetty))
+        )
+      )
+    ), Some(max))
   }
 
-  it should "pass validation when only \"Yhteystiedon nimi\" is given" in {
-    val oppilaitos = minWithYhteystieto(Yhteystieto(nimi = Map(Fi -> "Testi koulu", En -> "Test school")))
-    println(s"oppilaitos: $oppilaitos")
-    passesValidation(
-      oppilaitos,
-      Some(oppilaitos)
+  it should "pass if in \"hakijapalveluidenYhteystiedot\" only filled field is \"nimi\"" in {
+    val hpyt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    passesValidation(max.copy(metadata =
+      Some(
+        maxMetadata.copy(hakijapalveluidenYhteystiedot =
+          Some(hpyt.copy(nimi = Map(Fi -> "nimi fi", Sv -> "nimi sv"), postiosoite = emptyAddress,
+            kayntiosoite = emptyAddress,
+            puhelinnumero = emptyKielistetty,
+            sahkoposti = emptyKielistetty,
+            www = emptyKielistetty))
+        )
+      )
+    ), Some(max))
+  }
+
+  it should "fail if nimi is empty but sahkoposti is not empty" in {
+    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    failsValidation(
+      max.copy(metadata =
+        Some(
+          maxMetadata.copy(hakijapalveluidenYhteystiedot =
+            Some(yt.copy(nimi = Map(), puhelinnumero = Map(), kayntiosoite = emptyAddress, postiosoite = emptyAddress, sahkoposti = Map(Fi -> "opettaja@koulu.fi")))
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti", notAllowedNonEmpties(Seq(Fi))),
+      )
     )
   }
 
@@ -289,14 +333,13 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
       max.copy(metadata =
         Some(
           maxMetadata.copy(hakijapalveluidenYhteystiedot =
-            Some(yt.copy(nimi = Map(), puhelinnumero = vainSuomeksi, sahkoposti = Map(Fi -> "opettaja@koulu.fi")))
+            Some(yt.copy(nimi = Map(), puhelinnumero = vainSuomeksi, kayntiosoite = emptyAddress, postiosoite = emptyAddress,  sahkoposti = Map(Fi -> "opettaja@koulu.fi")))
           )
         )
       ),
       Seq(
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.puhelinnumero", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti", invalidKielistetty(Seq(Sv)))
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.puhelinnumero", notAllowedNonEmpties(Seq(Fi))),
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti", notAllowedNonEmpties(Seq(Fi)))
       )
     )
   }
@@ -323,5 +366,7 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
-  val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
+  private lazy val vainSuomeksi  = Map(Fi -> "vain suomeksi", Sv -> "")
+  private lazy val emptyAddress = Some(Osoite(osoite = Map(Fi -> "", Sv -> ""), postinumeroKoodiUri = Map()))
+  private lazy val emptyKielistetty = Map(Fi -> "", Sv -> "")
 }

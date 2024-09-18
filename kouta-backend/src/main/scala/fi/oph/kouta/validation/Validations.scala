@@ -378,6 +378,12 @@ object Validations {
     msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}",
     id = "notAllowedKielistetty"
   )
+
+  def notAllowedNonEmpties(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
+    msg = s"Kentän arvoksi sallittu vain tyhjä merkkijono, silloin kun nimi-kenttä on tyhjä [${values.mkString(",")}]",
+    id = "notAllowedNonEmpties"
+  )
+
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
@@ -785,6 +791,9 @@ object Validations {
   def findNonAllowedKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
     k.keySet.filter(lng => !kielivalinta.contains(lng) && k(lng) != null && k(lng).nonEmpty).toSeq
 
+  def findNonEmpties(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
+    k.filter { case (_, value) => value.nonEmpty }.keySet.toSeq
+
   def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
     val missing = findMissingKielet(kielivalinta, k) match {
       case x if x.isEmpty => NoErrors
@@ -797,8 +806,23 @@ object Validations {
     missing ++ notAllowed
   }
 
+  def validateKielistettyOnlyEmpties(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
+    val notAllowed = findNonAllowedKielet(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case kielet => error(path, notAllowedKielistetty(kielet))
+    }
+    val nonEmpties = findNonEmpties(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case nonEmpties => error(path, notAllowedNonEmpties(nonEmpties))
+    }
+    notAllowed ++ nonEmpties
+  }
+
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
+
+  def validateOptionalSahkoposti(sahkoposti: Kielistetty, path: String, assertValidEmail: (String, String) => IsValid): IsValid =
+    validateIfTrue(sahkoposti.values.exists(_.nonEmpty), validateIfNonEmpty(sahkoposti, path, assertValidEmail))
 
   def validateHakulomake(
       hakulomaketyyppi: Option[Hakulomaketyyppi],

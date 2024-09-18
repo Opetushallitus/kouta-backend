@@ -942,6 +942,64 @@ package object domain {
         )
       )
     }
+
+    def validateOptional(
+                  path: String,
+                  entityWithNewValues: Option[Osoite],
+                  vCtx: ValidationContext,
+                  koodistoCheckFunc: String => ExternalQueryResult
+                ): IsValid = {
+      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
+        .flatMap((k: Kielistetty) => Some(k.values.toList))
+
+      and(
+        validateIfDefined[List[String]](
+          koodiurit,
+          koodiurit => assertPostinumerokoodiuritValid(
+            koodiurit,
+            s"$path.postinumeroKoodiUri",
+            vCtx,
+            koodistoCheckFunc
+          )
+        ),
+        validateIfJulkaistu(
+          vCtx.tila,
+          and(
+            validateOptionalKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
+            validateOptionalKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+          )
+        )
+      )
+    }
+
+    def validateIfEmpty(
+                          path: String,
+                          entityWithNewValues: Option[Osoite],
+                          vCtx: ValidationContext,
+                          koodistoCheckFunc: String => ExternalQueryResult
+                        ): IsValid = {
+      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
+        .flatMap((k: Kielistetty) => Some(k.values.toList))
+
+      and(
+        validateIfDefined[List[String]](
+          koodiurit,
+          koodiurit => assertPostinumerokoodiuritValid(
+            koodiurit,
+            s"$path.postinumeroKoodiUri",
+            vCtx,
+            koodistoCheckFunc
+          )
+        ),
+        validateIfJulkaistu(
+          vCtx.tila,
+          and(
+            validateKielistettyOnlyEmpties(vCtx.kielivalinta, osoite, s"$path.osoite"),
+            validateKielistettyOnlyEmpties(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+          )
+        )
+      )
+    }
   }
 
   case class KoulutuksenAlkamiskausi(

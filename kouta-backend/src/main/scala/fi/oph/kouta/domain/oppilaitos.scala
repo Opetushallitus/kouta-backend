@@ -444,43 +444,60 @@ case class Yhteystieto(
     www: Kielistetty = Map()
 ) {
   def validate(path: String, entityWithNewValues: Option[Yhteystieto], vCtx: ValidationContext, osoiteKoodistoCheckFunc: String => ExternalQueryResult): IsValid =
-    and(
-      validateIfDefined[Osoite](
-        postiosoite,
-        _.validate(
-          s"$path.postiosoite",
-          entityWithNewValues.flatMap(_.postiosoite),
-          vCtx,
-          osoiteKoodistoCheckFunc
-        )
-      ),
-      validateIfDefined[Osoite](
-        kayntiosoite,
-        _.validate(
-          s"$path.kayntiosoite",
-          entityWithNewValues.flatMap(_.kayntiosoite),
-          vCtx,
-          osoiteKoodistoCheckFunc
-        )
-      ),
-      validateIfNonEmpty(sahkoposti, s"$path.sahkoposti", assertValidEmail _),
-      validateIfJulkaistu(
-        vCtx.tila,
-        and(
-          validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
-          validateOptionalKielistetty(
-            vCtx.kielivalinta,
-            puhelinnumero,
-            s"$path.puhelinnumero"
-          ),
-          validateOptionalKielistetty(
-            vCtx.kielivalinta,
-            sahkoposti,
-            s"$path.sahkoposti"
-          )
-        )
-      )
-    )
+    entityWithNewValues match {
+      case Some(Yhteystieto(nimi,_,_,_,_,_)) =>
+        nimi match {
+          case n if n.contains(Fi) && n(Fi).nonEmpty =>
+            println(s"nimi Fi: $n")
+            and(validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
+              validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
+              validateOptionalSahkoposti(sahkoposti, s"$path.sahkoposti", assertValidEmail),
+              validateOptionalKielistetty(vCtx.kielivalinta, www, s"$path.www"),
+              validateIfDefined[Osoite](
+                        postiosoite,
+                        _.validateOptional(
+                          s"$path.postiosoite",
+                          entityWithNewValues.flatMap(_.postiosoite),
+                          vCtx,
+                          osoiteKoodistoCheckFunc
+                        )
+                      ),
+              validateIfDefined[Osoite](
+                        kayntiosoite,
+                        _.validateOptional(
+                          s"$path.kayntiosoite",
+                          entityWithNewValues.flatMap(_.kayntiosoite),
+                          vCtx,
+                          osoiteKoodistoCheckFunc
+                        )
+                      )
+            )
+          case _ =>
+            and(validateKielistettyOnlyEmpties(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
+              validateKielistettyOnlyEmpties(vCtx.kielivalinta, sahkoposti, s"$path.sahkoposti"),
+              validateKielistettyOnlyEmpties(vCtx.kielivalinta, www, s"$path.www"),
+              validateIfDefined[Osoite](
+                postiosoite,
+                _.validateIfEmpty(
+                  s"$path.postiosoite",
+                  entityWithNewValues.flatMap(_.postiosoite),
+                  vCtx,
+                  osoiteKoodistoCheckFunc
+                )
+              ),
+              validateIfDefined[Osoite](
+                kayntiosoite,
+                _.validateIfEmpty(
+                  s"$path.kayntiosoite",
+                  entityWithNewValues.flatMap(_.kayntiosoite),
+                  vCtx,
+                  osoiteKoodistoCheckFunc
+                )
+              )
+            )
+        }
+    }
+
 }
 
 case class OppilaitosEnrichedData(muokkaajanNimi: Option[String] = None,
