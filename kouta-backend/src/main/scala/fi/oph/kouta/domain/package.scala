@@ -918,8 +918,29 @@ package object domain {
         path: String,
         entityWithNewValues: Option[Osoite],
         vCtx: ValidationContext,
-        koodistoCheckFunc: String => ExternalQueryResult
+        koodistoCheckFunc: String => ExternalQueryResult,
+        validationType: ValidationType = ValidationType.Default
     ): IsValid = {
+
+      def validateOsoiteAndPostinumeroKoodiKielistetty(): IsValid =
+        validationType match {
+          case ValidationType.Optional =>
+            and(
+              validateOptionalKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
+              validateOptionalKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+            )
+          case ValidationType.OnlyEmpties =>
+            and(
+              validateKielistettyOnlyEmpties(vCtx.kielivalinta, osoite, s"$path.osoite"),
+              validateKielistettyOnlyEmpties(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+            )
+          case _ =>
+            and(
+              validateKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
+              validateKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
+            )
+        }
+
       val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
         .flatMap((k: Kielistetty) => Some(k.values.toList))
 
@@ -935,68 +956,7 @@ package object domain {
         ),
         validateIfJulkaistu(
           vCtx.tila,
-          and(
-            validateKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
-            validateKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
-          )
-        )
-      )
-    }
-
-    def validateOptional(
-                  path: String,
-                  entityWithNewValues: Option[Osoite],
-                  vCtx: ValidationContext,
-                  koodistoCheckFunc: String => ExternalQueryResult
-                ): IsValid = {
-      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
-        .flatMap((k: Kielistetty) => Some(k.values.toList))
-
-      and(
-        validateIfDefined[List[String]](
-          koodiurit,
-          koodiurit => assertPostinumerokoodiuritValid(
-            koodiurit,
-            s"$path.postinumeroKoodiUri",
-            vCtx,
-            koodistoCheckFunc
-          )
-        ),
-        validateIfJulkaistu(
-          vCtx.tila,
-          and(
-            validateOptionalKielistetty(vCtx.kielivalinta, osoite, s"$path.osoite"),
-            validateOptionalKielistetty(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
-          )
-        )
-      )
-    }
-
-    def validateIfEmpty(
-                          path: String,
-                          entityWithNewValues: Option[Osoite],
-                          vCtx: ValidationContext,
-                          koodistoCheckFunc: String => ExternalQueryResult
-                        ): IsValid = {
-      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
-        .flatMap((k: Kielistetty) => Some(k.values.toList))
-
-      and(
-        validateIfDefined[List[String]](
-          koodiurit,
-          koodiurit => assertPostinumerokoodiuritValid(
-            koodiurit,
-            s"$path.postinumeroKoodiUri",
-            vCtx,
-            koodistoCheckFunc
-          )
-        ),
-        validateIfJulkaistu(
-          vCtx.tila,
-          and(
-            validateKielistettyOnlyEmpties(vCtx.kielivalinta, osoite, s"$path.osoite"),
-            validateKielistettyOnlyEmpties(vCtx.kielivalinta, postinumeroKoodiUri, s"$path.postinumeroKoodiUri")
-          )
+          validateOsoiteAndPostinumeroKoodiKielistetty()
         )
       )
     }

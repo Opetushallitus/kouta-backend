@@ -22,6 +22,14 @@ object Validations {
   private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
   private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
 
+  sealed trait ValidationType
+
+  object ValidationType {
+    case object Optional extends ValidationType
+    case object OnlyEmpties extends ValidationType
+    case object Default extends ValidationType
+  }
+
   def error(path: String, msg: ErrorMessage): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid          = validations.flatten.distinct

@@ -78,23 +78,15 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
      message: ErrorMessage
   ): Assertion = failsValidation(oppilaitos, Seq(ValidationError(path, message)), authenticatedNonPaakayttaja)
 
-//  {
-//    println(s"failsValidation oppilaitos: $oppilaitos")
-//    println(s"failsValidation path: $path")
-//    println(s"failsValidation message: $message")
-//  }
-
   def failsValidation(
                        oppilaitos: Oppilaitos,
                        expected: Seq[ValidationError],
                        authenticated: Authenticated = authenticatedNonPaakayttaja
-                     ): Assertion = {
-    println(s"expected $expected")
+                     ): Assertion =
     Try(validator.withValidation(oppilaitos, None, authenticated)(o => o)) match {
       case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
       case _ => fail("Expecting validation failure, but it succeeded")
     }
-  }
 
   "Oppilaitos validation" should "pass a valid oppilaitos" in {
     passesValidation(max)
