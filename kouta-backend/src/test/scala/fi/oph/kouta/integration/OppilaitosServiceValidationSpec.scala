@@ -258,20 +258,36 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     passesValidation(oppilaitos, Some(oppilaitos))
   }
 
-  it should "fail if Yhteystiedon nimi given only in Finnish in hakijapalveluidenYhteystiedot " in {
+  it should "fail if Hakijapalveluiden Yhteystiedon nimi given only in Finnish, when required Fi and Sv" in {
     val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
-        failsValidation(
-          max.copy(metadata =
-            Some(
-              maxMetadata.copy(hakijapalveluidenYhteystiedot =
-                Some(yt.copy(nimi = Map(Fi -> "koulu fi")))
-              )
-            )
-          ),
-          Seq(
-            ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Sv))),
+    failsValidation(
+      max.copy(metadata =
+        Some(
+          maxMetadata.copy(hakijapalveluidenYhteystiedot =
+            Some(yt.copy(nimi = Map(Fi -> "koulu fi")))
           )
         )
+      ),
+      Seq(
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Sv))),
+      )
+    )
+  }
+
+  it should "fail if Hakijapalveluiden Yhteystiedon nimi given only in Swedish, when required Fi and Sv" in {
+    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    failsValidation(
+      max.copy(metadata =
+        Some(
+          maxMetadata.copy(hakijapalveluidenYhteystiedot =
+            Some(yt.copy(nimi = Map(Sv -> "koulu  sv")))
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.nimi", invalidKielistetty(Seq(Fi))),
+      )
+    )
   }
 
   it should "pass if hakijapalveluidenYhteystiedot all fields are blank: nimi, postiosoite, käyntiosoite, puhelinnumero, sahkoposti and www" in {

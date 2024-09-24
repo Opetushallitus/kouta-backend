@@ -467,23 +467,22 @@ case class Yhteystieto(
           )
         )
       )
+
     entityWithNewValues match {
       case None => NoErrors
       case Some(Yhteystieto(nimi,_,_,_,_,_)) =>
         nimi match {
-          case n if n.contains(Fi) && n(Fi).nonEmpty =>
-            and(validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
-              validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
-              validateOptionalSahkoposti(sahkoposti, s"$path.sahkoposti", assertValidEmail),
-              validateOptionalKielistetty(vCtx.kielivalinta, www, s"$path.www"),
-              validateKayntiAndPostiOsoite(ValidationType.Optional)
-            )
-          case _ =>
+          case n if findNonEmpties(vCtx.kielivalinta, n).isEmpty =>
             and(validateKielistettyOnlyEmpties(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
               validateKielistettyOnlyEmpties(vCtx.kielivalinta, sahkoposti, s"$path.sahkoposti"),
               validateKielistettyOnlyEmpties(vCtx.kielivalinta, www, s"$path.www"),
               validateKayntiAndPostiOsoite(ValidationType.OnlyEmpties)
             )
+          case _ => and(validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
+            validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
+            validateOptionalSahkoposti(sahkoposti, s"$path.sahkoposti", assertValidEmail),
+            validateOptionalKielistetty(vCtx.kielivalinta, www, s"$path.www"),
+            validateKayntiAndPostiOsoite(ValidationType.Optional))
         }
      }
   }
