@@ -202,8 +202,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             esikatselu,
             kielivalinta,
             teemakuva,
-            eperuste_id,
-            hakutuloslistauksen_kuvake)
+            eperuste_id)
           values (
             ${koulutus.externalId},
             ${koulutus.johtaaTutkintoon},
@@ -219,8 +218,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.esikatselu},
             ${toJsonParam(koulutus.kielivalinta)}::jsonb,
             ${koulutus.teemakuva},
-            ${koulutus.ePerusteId},
-            ${koulutus.hakutuloslistauksenKuvake}) returning oid""".as[KoulutusOid].head
+            ${koulutus.ePerusteId}
+            ) returning oid""".as[KoulutusOid].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
@@ -246,7 +245,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  esikatselu,
                  kielivalinta,
                  teemakuva,
-                 hakutuloslistauksen_kuvake,
                  eperuste_id,
                  last_modified
           from koulutukset
@@ -267,7 +265,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
                  koulutus.organisaatio_oid,
                  koulutus.kielivalinta,
                  koulutus.teemakuva,
-                 koulutus.hakutuloslistauksen_kuvake,
                  toteutus.oid,
                  toteutus.external_id,
                  toteutus.koulutus_oid,
@@ -292,8 +289,7 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
              k.metadata,
              k.organisaatio_oid,
              k.kielivalinta,
-             k.teemakuva,
-             k.hakutuloslistauksen_kuvake
+             k.teemakuva
       from koulutukset k, koulutusten_tarjoajat kt
       where oid = kt.koulutus_oid
       #${tilaConditions(TilaFilter.onlyJulkaistut(), "k.tila")}
@@ -347,7 +343,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               esikatselu = ${koulutus.esikatselu},
               kielivalinta = ${toJsonParam(koulutus.kielivalinta)}::jsonb,
               teemakuva = ${koulutus.teemakuva},
-              hakutuloslistauksen_kuvake = ${koulutus.hakutuloslistauksenKuvake},
               eperuste_id = ${koulutus.ePerusteId}
             where oid = ${koulutus.oid}
             and (johtaa_tutkintoon is distinct from ${koulutus.johtaaTutkintoon}
@@ -361,7 +356,6 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             or metadata is distinct from ${toJsonParam(koulutus.metadata)}::jsonb
             or kielivalinta is distinct from ${toJsonParam(koulutus.kielivalinta)}::jsonb
             or teemakuva is distinct from ${koulutus.teemakuva}
-            or hakutuloslistauksen_kuvake is distinct from ${koulutus.hakutuloslistauksenKuvake}
             or esikatselu is distinct from ${koulutus.esikatselu}
             or eperuste_id is distinct from ${koulutus.ePerusteId}
             or organisaatio_oid is distinct from ${koulutus.organisaatioOid})"""

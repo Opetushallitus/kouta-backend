@@ -86,7 +86,6 @@ trait KoulutusExtractors extends ExtractorBase {
     esikatselu = r.nextBoolean(),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
-    hakutuloslistauksenKuvake = r.nextStringOption(),
     ePerusteId = r.nextLongOption(),
     modified = Some(timeStampToModified(r.nextTimestamp()))))
 
@@ -102,7 +101,6 @@ trait KoulutusExtractors extends ExtractorBase {
     organisaatioOid = OrganisaatioOid(r.nextString()),
     kielivalinta = extractKielivalinta(r.nextStringOption()),
     teemakuva = r.nextStringOption(),
-    hakutuloslistauksenKuvake = r.nextStringOption(),
     toteutus = MaybeToteutus(
       oid = r.nextStringOption().map(oid => ToteutusOid(oid)),
       externalId = r.nextStringOption(),
