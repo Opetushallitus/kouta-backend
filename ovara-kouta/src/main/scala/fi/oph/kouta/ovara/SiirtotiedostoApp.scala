@@ -3,7 +3,7 @@ package fi.oph.kouta.ovara
 import com.zaxxer.hikari.HikariConfig
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.raportointi.{RaportointiDateTimeFormat, Siirtotiedosto, SiirtotiedostoCounts, SiirtotiedostoInfo}
+import fi.oph.kouta.domain.siirtotiedosto.{SiirtotiedostoDateTimeFormat, Siirtotiedosto, SiirtotiedostoCounts, SiirtotiedostoInfo}
 import fi.oph.kouta.repository.{KoutaDatabaseAccessor, SimpleDatabaseAccessor}
 import fi.oph.kouta.service.SiirtotiedostoRaportointiService
 import fi.oph.kouta.util.KoutaJsonFormats
@@ -63,7 +63,7 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
     Siirtotiedosto(
       opId,
       windowStart,
-      RaportointiDateTimeFormat.format(currentDatetime),
+      SiirtotiedostoDateTimeFormat.format(currentDatetime),
       currentDatetime,
       None,
       None,

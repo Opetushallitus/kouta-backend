@@ -205,13 +205,11 @@ case class Koulutus(
     organisaatioOid: OrganisaatioOid,
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
-    hakutuloslistauksenKuvake: Option[String] = None,
     ePerusteId: Option[Long] = None,
     modified: Option[Modified],
     _enrichedData: Option[KoulutusEnrichedData] = None
 ) extends PerustiedotWithOid[KoulutusOid, Koulutus]
   with HasTeemakuva[Koulutus]
-  with HasHakutuloslistauksenKuvake[Koulutus]
   with AuthorizableMaybeJulkinen[Koulutus]
   with LiitettyEntity {
 
@@ -221,9 +219,6 @@ case class Koulutus(
   def withOid(oid: KoulutusOid): Koulutus = copy(oid = Some(oid))
 
   override def withTeemakuva(teemakuva: Option[String]): Koulutus = this.copy(teemakuva = teemakuva)
-
-  override def withHakutuloslistauksenKuvake(hakutuloslistauksenKuvake: Option[String]): Koulutus =
-    this.copy(hakutuloslistauksenKuvake = hakutuloslistauksenKuvake)
 
   override def withModified(modified: Modified): Koulutus = this.copy(modified = Some(modified))
 
@@ -290,7 +285,6 @@ case class KoulutusWithMaybeToteutus(
     organisaatioOid: OrganisaatioOid,
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
-    hakutuloslistauksenKuvake: Option[String] = None,
     toteutus: MaybeToteutus
 )
 
@@ -306,7 +300,6 @@ case class KoulutusWithToteutukset(
     organisaatioOid: OrganisaatioOid,
     kielivalinta: Seq[Kieli] = Seq(),
     teemakuva: Option[String] = None,
-    hakutuloslistauksenKuvake: Option[String] = None,
     toteutukset: List[Toteutus] = List()
 )
 object KoulutusWithToteutukset {
@@ -323,7 +316,6 @@ object KoulutusWithToteutukset {
       organisaatioOid = koulutus.organisaatioOid,
       kielivalinta = koulutus.kielivalinta,
       teemakuva = koulutus.teemakuva,
-      hakutuloslistauksenKuvake = koulutus.hakutuloslistauksenKuvake,
       toteutukset = toteutukset.toList
     )
   }

@@ -7,8 +7,8 @@ import java.time.{LocalDateTime, ZoneId}
 import java.time.format.DateTimeFormatter
 import java.util.UUID
 
-package object raportointi {
-  val RaportointiDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
+package object siirtotiedosto {
+  val SiirtotiedostoDateTimeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
 
   case class YhteyshenkiloRaporttiItem(
@@ -87,7 +87,7 @@ package object raportointi {
 
   case object Oppilaitos       extends Organisaatiotyyppi { val name = "oppilaitos"       }
   case object OppilaitoksenOsa extends Organisaatiotyyppi { val name = "oppilaitoksenOsa" }
-  
+
   case class SiirtotiedostoOperationResults(
       keys: Seq[String],
       count: Int,
@@ -120,7 +120,7 @@ package object raportointi {
   ) {
     def windowStartAsLocalDate() =
       windowStart match {
-        case Some(dateStr) => Some(LocalDateTime.parse(dateStr, RaportointiDateTimeFormat))
+        case Some(dateStr) => Some(LocalDateTime.parse(dateStr, SiirtotiedostoDateTimeFormat))
         case _ => None
       }
   }
