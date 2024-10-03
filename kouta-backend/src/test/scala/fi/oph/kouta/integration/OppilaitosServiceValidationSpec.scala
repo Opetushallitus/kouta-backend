@@ -337,6 +337,22 @@ class OppilaitosServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEac
     )
   }
 
+  it should "fail if sahkoposti in hakijapalveluiden yhteystiedot is filled only in Finnish" in {
+    val yt = maxMetadata.hakijapalveluidenYhteystiedot.get
+    failsValidation(
+      max.copy(metadata =
+        Some(
+          maxMetadata.copy(hakijapalveluidenYhteystiedot =
+            Some(yt.copy(nimi = Map(Fi -> "nimi fi", Sv -> "nimi sv"), sahkoposti = Map(Fi -> "opettaja@koulu.fi", Sv -> "")))
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.hakijapalveluidenYhteystiedot.sahkoposti.sv", invalidEmail("")),
+      )
+    )
+  }
+
   it should "fail if invalid postiosoite" in {
     failsValidation(
       minWithYhteystieto(Yhteystieto(postiosoite = invalidOsoite)),
