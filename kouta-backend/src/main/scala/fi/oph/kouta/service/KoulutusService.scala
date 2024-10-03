@@ -1,8 +1,8 @@
 package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client._
 import fi.oph.kouta.client.KoodistoUtils.getVersio
+import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
@@ -84,8 +84,8 @@ class KoulutusService(
     koutaIndeksoijaClient: KoutaIndeksoijaClient,
     lokalisointiClient: LokalisointiClient
 ) extends RoleEntityAuthorizationService[Koulutus]
-    with TeemakuvaService[KoulutusOid, Koulutus]
-    with Logging {
+  with TeemakuvaService[KoulutusOid, Koulutus]
+  with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AuthorizationRules =
@@ -260,6 +260,12 @@ class KoulutusService(
             vapaaSivistystyoKoulutusMetadata match {
               case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
                 Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
+              case vapaaSivistystyoOsaamismerkkiMetadata: VapaaSivistystyoOsaamismerkkiKoulutusMetadata =>
+                Some(vapaaSivistystyoOsaamismerkkiMetadata.copy(
+                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                  opintojenLaajuusNumero = Some(1),
+                  opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+                ))
               case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
                 Some(
                   m.copy(
@@ -381,6 +387,30 @@ class KoulutusService(
             }
           case _ => koulutus
         }
+      case VapaaSivistystyoOsaamismerkki =>
+        koulutus.metadata match {
+          case Some(m: VapaaSivistystyoOsaamismerkkiKoulutusMetadata) =>
+            val osaamismerkinKaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.osaamismerkki")
+            val nimenKaannokset =
+              if (m.osaamismerkkiKoodiUri.isDefined) {
+                getKaannokset(m.osaamismerkkiKoodiUri.get) match {
+                  case Right(kaannokset) => kaannokset
+                  case Left(exp) => throw exp
+                }
+              } else {
+                Map(Fi -> "", Sv -> "", En -> "")
+              }
+
+            val osaamismerkinNimi = if (osaamismerkinKaannokset.nonEmpty) {
+              NameHelper.concatAsEntityName(osaamismerkinKaannokset, Some(":"), nimenKaannokset, koulutus.kielivalinta)
+            } else {
+              throw new RuntimeException("Failed to fetch translations for osaamismerkki")
+            }
+
+            koulutus.copy(nimi = osaamismerkinNimi)
+          case _ => koulutus
+        }
+
       case OpePedagOpinnot =>
         koulutus.copy(koulutuksetKoodiUri =
           getKoodiUriVersionAsStrSeqIfEmpty(koulutus.koulutuksetKoodiUri, "koulutus_919999")
@@ -687,30 +717,29 @@ class KoulutusService(
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        (teema, k) <- checkAndMaybeClearTeemakuva(koulutus)
-        k          <- KoulutusDAO.getPutActions(k)
-        k          <- maybeCopyTeemakuva(teema, k)
-        k          <- teema.map(_ => KoulutusDAO.updateJustKoulutus(k)).getOrElse(DBIO.successful(k))
-        _          <- auditLog.logCreate(k)
-      } yield (teema, k)
-    }.map { case (teema, k: Koulutus) =>
-      maybeDeleteTempImage(teema)
+        (teemakuva, k) <- checkAndMaybeClearTeemakuva(koulutus)
+        k <- KoulutusDAO.getPutActions(k)
+        k <- maybeCopyTeemakuva(teemakuva, k)
+        k <- KoulutusDAO.updateJustKoulutus(k).andFinally(DBIO.successful(k))
+        _ <- auditLog.logCreate(k)
+      } yield (teemakuva, k)
+    }.map { case (teemakuva, k: Koulutus) =>
+      maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.oid) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
-      authenticated: Authenticated
-  ): UpdateResult =
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)
+                      (implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _          <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
-        (teema, k) <- checkAndMaybeCopyTeemakuva(koulutus)
-        k          <- KoulutusDAO.getUpdateActions(k)
-        _          <- auditLog.logUpdate(before, k)
-      } yield (teema, k)
-    }.map { case (teema, k: Option[Koulutus]) =>
-      maybeDeleteTempImage(teema)
+        _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        (teemakuva, k) <- checkAndMaybeCopyTeemakuva(koulutus)
+        k <- KoulutusDAO.getUpdateActions(k)
+        _ <- auditLog.logUpdate(before, k)
+      } yield (teemakuva, k)
+    }.map { case (teemakuva, k: Option[Koulutus]) =>
+      maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get

@@ -1023,6 +1023,21 @@ class ToteutusSpec
     )
   }
 
+  it should "create, get and update vapaasivistystyo-osaamismerkkitoteutus" in {
+    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
+    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
+    mockLokalisointiResponse("yleiset.osaamismerkki")
+    val osaamismerkkiKoulutusOid = put(TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Julkaistu), ophSession)
+    val osaamismerkkiToteutus = TestData.VapaaSivistystyoOsaamismerkkiToteutus.copy(
+      koulutusOid = KoulutusOid(osaamismerkkiKoulutusOid),
+      tila = Tallennettu
+    )
+    val oid = put(osaamismerkkiToteutus)
+    val lastModified = get(oid, osaamismerkkiToteutus.copy(oid = Some(ToteutusOid(oid))))
+    update(osaamismerkkiToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu), lastModified)
+    get(oid, osaamismerkkiToteutus.copy(oid = Some(ToteutusOid(oid)), tila = Julkaistu))
+  }
+
   "Toteutus nimi" should "be copied from koulutus for certain koulutustyypit" in {
     var toteutus = AmmOsaamisalaToteutus.copy(
       koulutusOid = KoulutusOid(put(AmmOsaamisalaKoulutus)),

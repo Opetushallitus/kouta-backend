@@ -218,7 +218,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
             ${koulutus.esikatselu},
             ${toJsonParam(koulutus.kielivalinta)}::jsonb,
             ${koulutus.teemakuva},
-            ${koulutus.ePerusteId}) returning oid""".as[KoulutusOid].head
+            ${koulutus.ePerusteId}
+            ) returning oid""".as[KoulutusOid].head
   }
 
   def insertKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {

@@ -205,4 +205,30 @@ class NameHelperSpec extends UnitSpec {
     assert(NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> null), Seq(Fi, Sv)))
     assert(!NameHelper.notFullyPopulated(Map(Fi -> "suomeksi", Sv -> "Ruåtsiksi"), Seq(Fi, Sv)))
   }
+
+  "concatAsEntityName" should "return only first part of name without separator because end part is empty" in {
+    val first = Map(En -> "Osaamismerkki en", Fi -> "Osaamismerkki fi", Sv -> "Osaamismerkki sv")
+    val expected = Map(En -> "Osaamismerkki en", Fi -> "Osaamismerkki fi", Sv -> "Osaamismerkki sv")
+    assert(NameHelper.concatAsEntityName(first, Some(":"), Map(), Seq(Fi, En, Sv)) == expected)
+  }
+
+  it should "return only Fi name as Fi is the default selected language for the koulutus" in {
+    val first = Map(En -> "Osaamismerkki en", Fi -> "Osaamismerkki fi", Sv -> "Osaamismerkki sv")
+    val expected = Map(Fi -> "Osaamismerkki fi")
+    assert(NameHelper.concatAsEntityName(first, Some(":")) == expected)
+  }
+
+  it should "return start and end parts concatenated and separated with colon for the selected languages" in {
+    val start = Map(Sv -> "Osaamismerkki sv", En -> "Osaamismerkki en", Fi -> "Osaamismerkki fi")
+    val end = Map(En -> "Nimi en", Fi -> "Nimi fi", Sv -> "Nimi sv")
+    val expected = Map(Fi -> "Osaamismerkki fi: Nimi fi", Sv -> "Osaamismerkki sv: Nimi sv")
+    assert(NameHelper.concatAsEntityName(start, Some(":"), end, Seq(Fi, Sv)) == expected)
+  }
+
+  it should "default to finnish language name if selected language does not have a translation for osaamismerkki" in {
+    val start = Map(Sv -> "Osaamismerkki sv", Fi -> "Osaamismerkki fi")
+    val end = Map(Fi -> "Nimi fi", Sv -> "Nimi sv")
+    val expected = Map(En -> "Osaamismerkki fi: Nimi fi")
+    assert(NameHelper.concatAsEntityName(start, Some(":"), end, Seq(En)) == expected)
+  }
 }
