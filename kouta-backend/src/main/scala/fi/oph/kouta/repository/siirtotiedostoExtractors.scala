@@ -2,14 +2,14 @@ package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.raportointi.{OppilaitoksenOsa, _}
+import fi.oph.kouta.domain.siirtotiedosto.{OppilaitoksenOsa, _}
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
 import slick.jdbc.GetResult
 
 import java.util.UUID
 
-trait RaportointiExtractors extends ExtractorBase {
+trait SiirtotiedostoExtractors extends ExtractorBase {
   implicit val getKoulutusRaporttiItemResult: GetResult[KoulutusRaporttiItem] = GetResult(r =>
     KoulutusRaporttiItem(
       oid = KoulutusOid(r.nextString()),

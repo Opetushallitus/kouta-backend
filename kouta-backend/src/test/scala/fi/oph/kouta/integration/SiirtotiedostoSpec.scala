@@ -3,12 +3,12 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid, GrandChildOid, LukioOid, OphOid, ParentOid, YoOid}
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
-import fi.oph.kouta.integration.fixture.RaportointiFixture
+import fi.oph.kouta.integration.fixture.SiirtotiedostoFixture
 import fi.oph.kouta.mocks.LokalisointiServiceMock
 
 import java.util.UUID
 
-class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with LokalisointiServiceMock {
+class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture with LokalisointiServiceMock {
   var sorakuvausId1, sorakuvausId2, sorakuvausId3: UUID                        = _
   var valintaperusteId1, valintaperusteId2, valintaperusteId3: UUID            = _
   var koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid: String       = _
@@ -90,7 +90,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
   }
 
   "Save toteutukset with given timerange" should "save toteutukset in bulks according to max limit" in {
-    clearRaporttiContents()
+    clearSiirtotiedostoContents()
     get("toteutukset", None, dayAfter, 200)
     verifyLatestContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
     nbrOfContentItems() should equal(2)
@@ -117,7 +117,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
   }
 
   "Save oppilaitokset and osat with given timerange" should "save oppilaitokset and osat in bulks according to max limit" in {
-    clearRaporttiContents()
+    clearSiirtotiedostoContents()
     get("oppilaitoksetJaOsat", dayBefore, dayAfter, 200)
     verifyFirstContents(initialOppilaitosOids ++ Seq(oppilaitosOid1.s,oppilaitosOid2.s, oppilaitosOid3.s, oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s), "oid")
     verifyLatestContents(Seq(oppilaitoksenOsaOid3.s), "oid")
@@ -140,7 +140,7 @@ class RaportointiSpec extends KoutaIntegrationSpec with RaportointiFixture with 
   }
 
   "Save entities with invalid time definition" should "return error" in {
-    get(s"$RaportointiPath/koulutukset?startTime=puppua", headers = Seq(sessionHeader(raportointiSession))) {
+    get(s"$SiirtotiedostoPath/koulutukset?startTime=puppua", headers = Seq(sessionHeader(raportointiSession))) {
       status should equal(400)
     }
   }

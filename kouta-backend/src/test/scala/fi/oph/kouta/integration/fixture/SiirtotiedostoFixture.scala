@@ -1,12 +1,12 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.client.OrganisaatioServiceClient
-import fi.oph.kouta.domain.raportointi.RaportointiDateTimeFormat
+import fi.oph.kouta.domain.siirtotiedosto.SiirtotiedostoDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockSiirtotiedostoPalveluClient}
-import fi.oph.kouta.repository.RaportointiDAO
-import fi.oph.kouta.service.RaportointiService
-import fi.oph.kouta.servlet.RaportointiServlet
+import fi.oph.kouta.repository.SiirtotiedostoDAO
+import fi.oph.kouta.service.SiirtotiedostoService
+import fi.oph.kouta.servlet.SiirtotiedostoServlet
 import org.json4s.JValue
 import org.json4s.JsonAST.JArray
 import org.json4s.jackson.JsonMethods.parse
@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets
 import java.time.{Duration, Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
 
-trait RaportointiFixture
+trait SiirtotiedostoFixture
     extends KoulutusFixture
     with ToteutusFixture
     with HakukohdeFixture
@@ -32,16 +32,16 @@ trait RaportointiFixture
 
   override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
 
-  val RaportointiPath = "/raportointi"
+  val SiirtotiedostoPath = "/siirtotiedosto"
   val dayBefore       = Some(LocalDateTime.now.minus(Duration.of(1, ChronoUnit.DAYS)))
   val twoDaysBefore   = Some(LocalDateTime.now.minus(Duration.of(2, ChronoUnit.DAYS)))
   val dayAfter        = Some(LocalDateTime.now.plus(Duration.of(1, ChronoUnit.DAYS)))
 
   val siirtotiedostoPalveluClient = new MockSiirtotiedostoPalveluClient()
   val maxNumberOfItemsInOneWrite = 40
-  def raportointiService: RaportointiService =
-    new RaportointiService(
-      RaportointiDAO,
+  def siirtotiedostoService: SiirtotiedostoService =
+    new SiirtotiedostoService(
+      SiirtotiedostoDAO,
       koulutusService,
       toteutusService,
       hakukohdeService,
@@ -54,7 +54,7 @@ trait RaportointiFixture
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    addServlet(new RaportointiServlet(raportointiService), RaportointiPath)
+    addServlet(new SiirtotiedostoServlet(siirtotiedostoService), SiirtotiedostoPath)
   }
 
   def get(
@@ -69,19 +69,19 @@ trait RaportointiFixture
       case (None, Some(endTime))            => s"?endTime=${dateParam(endTime)}"
       case (_, _)                           => ""
     }
-    get(s"$RaportointiPath/$entityPath$queryParams", headers = Seq(sessionHeader(raportointiSession))) {
+    get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(raportointiSession))) {
       status should equal(expectedStatusCode)
       body
     }
   }
 
   def verifyLatestContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
-    val reportJson = parse(lastRaporttiContent())
+    val reportJson = parse(lastSiirtotiedostoContent())
     verifyContents(reportJson, checkedIds, idFieldName)
   }
 
   def verifyFirstContents(checkedIds: Seq[String], idFieldName: String): Assertion = {
-    val reportJson = parse(firstRaporttiContent())
+    val reportJson = parse(firstSiirtotiedostoContent())
     verifyContents(reportJson, checkedIds, idFieldName)
   }
 
@@ -95,17 +95,17 @@ trait RaportointiFixture
     val allLowercase     = rawList.map(_.toLowerCase)
     val sv               = allLowercase.map(k => s"${k}_sv")
     val searchedKeywords = allLowercase ::: sv
-    val reportJson       = parse(lastRaporttiContent())
+    val reportJson       = parse(lastSiirtotiedostoContent())
     val contentIds =
       reportJson.asInstanceOf[JArray].values.indices.map(idx => (reportJson(idx) \ "arvo").extract[String])
     contentIds.intersect(searchedKeywords) should contain theSameElementsAs searchedKeywords
   }
 
   def nbrOfContentItems(): Int      = siirtotiedostoPalveluClient.numberOfContentItems
-  def lastRaporttiContent(): String = siirtotiedostoPalveluClient.last()
-  def firstRaporttiContent(): String = siirtotiedostoPalveluClient.head()
-  def clearRaporttiContents(): Unit = siirtotiedostoPalveluClient.clearContents()
+  def lastSiirtotiedostoContent(): String = siirtotiedostoPalveluClient.last()
+  def firstSiirtotiedostoContent(): String = siirtotiedostoPalveluClient.head()
+  def clearSiirtotiedostoContents(): Unit = siirtotiedostoPalveluClient.clearContents()
 
   def dateParam(dateTime: LocalDateTime): String =
-    URLEncoder.encode(RaportointiDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)
+    URLEncoder.encode(SiirtotiedostoDateTimeFormat.format(dateTime), StandardCharsets.UTF_8)
 }

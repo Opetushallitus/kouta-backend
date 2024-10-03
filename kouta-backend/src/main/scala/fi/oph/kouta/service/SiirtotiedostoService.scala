@@ -1,12 +1,11 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
-import fi.oph.kouta.domain.raportointi._
+import fi.oph.kouta.domain.siirtotiedosto._
 import fi.oph.kouta.domain.{LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
-import fi.oph.kouta.repository.{KoutaDatabase, RaportointiDAO, SiirtotiedostoRaportointiDAO}
+import fi.oph.kouta.repository.{KoutaDatabase, SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.NameHelper
 
@@ -14,9 +13,9 @@ import java.time.LocalDateTime
 import java.util.UUID
 import scala.collection.mutable.ListBuffer
 
-object RaportointiService
-    extends RaportointiService(
-      RaportointiDAO,
+object SiirtotiedostoService
+    extends SiirtotiedostoService(
+      SiirtotiedostoDAO,
       KoulutusService,
       ToteutusService,
       HakukohdeService,
@@ -25,7 +24,7 @@ object RaportointiService
     )
 
 object SiirtotiedostoRaportointiService
-    extends RaportointiService(
+    extends SiirtotiedostoService(
       SiirtotiedostoRaportointiDAO,
       KoulutusService,
       ToteutusService,
@@ -34,8 +33,8 @@ object SiirtotiedostoRaportointiService
       SiirtotiedostoPalveluClient
     )
 
-class RaportointiService(
-    raportointiDAO: RaportointiDAO,
+class SiirtotiedostoService(
+    siirtotiedostoDAO: SiirtotiedostoDAO,
     koulutusService: KoulutusService,
     toteutusService: ToteutusService,
     hakukohdeService: HakukohdeService,
@@ -54,7 +53,7 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listKoulutukset,
+      siirtotiedostoDAO.listKoulutukset,
       enrichKoulutukset
     )
   }
@@ -77,14 +76,14 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listToteutukset,
+      siirtotiedostoDAO.listToteutukset,
       enrichToteutukset
     )
   }
 
   private def enrichToteutukset(toteutusItems: Seq[ToteutusRaporttiItem]): Seq[ToteutusRaporttiItem] = {
     val lukioKoulutusOids                = toteutusItems.filter(_.isLukioToteutus).map(_.koulutusOid)
-    val lukioKoulutusEnrichmentDataItems = raportointiDAO.listKoulutusEnrichmentDataItems(lukioKoulutusOids)
+    val lukioKoulutusEnrichmentDataItems = siirtotiedostoDAO.listKoulutusEnrichmentDataItems(lukioKoulutusOids)
     toteutusItems.map(t => {
       val koulutusEnrichmentData =
         if (t.isLukioToteutus)
@@ -143,14 +142,14 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listHakukohteet,
+      siirtotiedostoDAO.listHakukohteet,
       enrichHakukohteet
     )
   }
 
   private def enrichHakukohteet(hakukohdeItems: Seq[HakukohdeRaporttiItem]): Seq[HakukohdeRaporttiItem] = {
     hakukohdeItems.map(hri => {
-      val toteutusItem = raportointiDAO.getSingleTotetutus(hri.toteutusOid, TilaFilter.onlyOlemassaolevat())
+      val toteutusItem = siirtotiedostoDAO.getSingleTotetutus(hri.toteutusOid, TilaFilter.onlyOlemassaolevat())
       hri.copy(enrichedData =
         Some(
           new HakukohdeEnrichedDataRaporttiItem(
@@ -176,7 +175,7 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listHaut,
+      siirtotiedostoDAO.listHaut,
       enrichHaut
     )
   }
@@ -195,7 +194,7 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listValintaperusteet,
+      siirtotiedostoDAO.listValintaperusteet,
       enrichValintaperusteet
     )
   }
@@ -217,7 +216,7 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listSorakuvaukset,
+      siirtotiedostoDAO.listSorakuvaukset,
       enrichSorakuvaukset
     )
   }
@@ -250,7 +249,7 @@ class RaportointiService(
         .map(o => o.copy(enrichedData = Some(OppilaitosOrOsaEnrichedDataRaporttiItem(getMuokkaajanNimi(o.muokkaaja)))))
       operationSubId += 1
       keyList += siirtotiedostoPalveluClient.saveSiirtotiedosto(
-        "oppilaitosJaOsa",
+        "oppilaitoksetjaosat",
         enriched,
         operationId,
         operationSubId
@@ -270,16 +269,17 @@ class RaportointiService(
     queriedTypes match {
       case Seq(_, _) =>
         val oppilaitokset =
-          raportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset)
+          siirtotiedostoDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset)
         (
           oppilaitokset,
           if (oppilaitokset.size < maxNumberOfItemsInFile)
-            raportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile - oppilaitokset.size, 0)
+            siirtotiedostoDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile - oppilaitokset.size, 0)
           else Seq()
         )
       case Seq(OppilaitoksenOsa) =>
-        (Seq(), raportointiDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile, osaOffset))
-      case _ => (raportointiDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset), Seq())
+        (Seq(), siirtotiedostoDAO.listOppilaitostenOsat(startTime, endTime, maxNumberOfItemsInFile, osaOffset))
+      case _ =>
+        (siirtotiedostoDAO.listOppilaitokset(startTime, endTime, maxNumberOfItemsInFile, oppilaitosOffset), Seq())
     }
   }
 
@@ -293,7 +293,7 @@ class RaportointiService(
       startTime,
       endTime,
       operationId,
-      raportointiDAO.listPistehistoria,
+      siirtotiedostoDAO.listPistehistoria,
       { (pistetietoItems: Seq[PistetietoRaporttiItem]) => pistetietoItems }
     )
   }
@@ -304,7 +304,7 @@ class RaportointiService(
       None,
       None,
       operationId,
-      raportointiDAO.listAmmattinimikkeet,
+      siirtotiedostoDAO.listAmmattinimikkeet,
       { (ammattinimikkeet: Seq[keyword.Keyword]) => ammattinimikkeet }
     )
   }
@@ -315,7 +315,7 @@ class RaportointiService(
       None,
       None,
       operationId,
-      raportointiDAO.listAsiasanat,
+      siirtotiedostoDAO.listAsiasanat,
       { (asiasanat: Seq[keyword.Keyword]) => asiasanat }
     )
   }
@@ -342,7 +342,7 @@ class RaportointiService(
     SiirtotiedostoOperationResults(keyList.toSeq, offsetCounter, true)
   }
 
-  def findLatestSiirtotiedostoData(): Option[Siirtotiedosto] = raportointiDAO.findLatestSiirtotiedostoData()
+  def findLatestSiirtotiedostoData(): Option[Siirtotiedosto] = siirtotiedostoDAO.findLatestSiirtotiedostoData()
   def saveSiirtotiedostoData(siirtoTiedosto: Siirtotiedosto): Int =
-    raportointiDAO.saveSiirtotiedostoData(siirtoTiedosto)
+    siirtotiedostoDAO.saveSiirtotiedostoData(siirtoTiedosto)
 }

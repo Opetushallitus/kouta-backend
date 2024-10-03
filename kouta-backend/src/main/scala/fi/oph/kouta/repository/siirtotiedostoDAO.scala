@@ -1,8 +1,7 @@
 package fi.oph.kouta.repository
 
-import fi.oph.kouta.SiirtotiedostoDatabaseAccessor
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.raportointi.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, Siirtotiedosto, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
+import fi.oph.kouta.domain.siirtotiedosto.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, Siirtotiedosto, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
 import fi.oph.kouta.domain.{Ajanjakso, TilaFilter, Toteutus}
 import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
 import fi.oph.kouta.repository.ToteutusDAO.getToteutusResult
@@ -12,17 +11,17 @@ import slick.jdbc.PostgresProfile.api._
 import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-object RaportointiDAO
-    extends RaportointiDAO(
+object SiirtotiedostoDAO
+    extends SiirtotiedostoDAO(
       KoutaDatabase
     ) {
-  def apply(databaseAccessor: KoutaDatabaseAccessor): RaportointiDAO =
-    new RaportointiDAO(databaseAccessor)
+  def apply(databaseAccessor: KoutaDatabaseAccessor): SiirtotiedostoDAO =
+    new SiirtotiedostoDAO(databaseAccessor)
 }
 
-object SiirtotiedostoRaportointiDAO extends RaportointiDAO(SiirtotiedostoDatabaseAccessor)
+object SiirtotiedostoRaportointiDAO extends SiirtotiedostoDAO(SimpleDatabaseAccessor)
 
-class RaportointiDAO(
+class SiirtotiedostoDAO(
     databaseAccessor: KoutaDatabaseAccessor
 ) extends EntitySQL {
   def listKoulutukset(
@@ -165,7 +164,7 @@ class RaportointiDAO(
     databaseAccessor.runBlocking(persistSiirtotiedostoData(siirtotiedosto))
 }
 
-sealed trait EntitySQL extends RaportointiExtractors with SQLHelpers {
+sealed trait EntitySQL extends SiirtotiedostoExtractors with SQLHelpers {
   private def selectByTimerange(
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],

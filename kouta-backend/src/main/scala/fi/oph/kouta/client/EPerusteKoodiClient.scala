@@ -1,5 +1,6 @@
 package fi.oph.kouta.client
 
+import com.fasterxml.jackson.core.JsonParseException
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -15,6 +16,7 @@ import scala.util.{Failure, Right, Success, Try}
 
 case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
 case class KoodistoNotFoundException(message: String)                        extends RuntimeException(message)
+case class UnexpectedDataException(exception: Exception)                     extends RuntimeException(exception)
 
 case class KoodiUri(koodiUri: String, versio: Int, nimi: Kielistetty = Map())
 object KoodiUri {
@@ -140,6 +142,9 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
       case Failure(e: KoodistoQueryException) if e.status == 404 =>
         logger.error(s"Eperuste $ePerusteId was not found from eperusteet-service")
         None
+      case Failure(e: JsonParseException) =>
+        logger.error(s"Unexpected data returned from ePeruste-service for Eperuste $ePerusteId, unable to parse json", e)
+        throw UnexpectedDataException(e)
       case Failure(e: Exception) => throw e
     }
   }
