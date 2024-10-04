@@ -829,8 +829,12 @@ object Validations {
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
 
-  def validateOptionalSahkoposti(sahkoposti: Kielistetty, path: String, assertValidEmail: (String, String) => IsValid): IsValid =
-    validateIfTrue(sahkoposti.values.exists(_.nonEmpty), validateIfNonEmpty(sahkoposti, path, assertValidEmail))
+  def validateOptionalSahkoposti(kielivalinta: Seq[Kieli], sahkoposti: Kielistetty, path: String, assertValidEmail: (String, String) => IsValid): IsValid =
+    findMissingKielet(kielivalinta, sahkoposti) match {
+      case missing if missing == kielivalinta => NoErrors
+      case missing if missing.isEmpty => validateIfTrue(sahkoposti.values.exists(_.nonEmpty), validateIfNonEmpty(sahkoposti, path, assertValidEmail))
+      case _ => validateKielistetty(kielivalinta, sahkoposti, path)
+    }
 
   def validateHakulomake(
       hakulomaketyyppi: Option[Hakulomaketyyppi],

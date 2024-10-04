@@ -480,7 +480,7 @@ case class Yhteystieto(
             )
           case _ => and(validateKielistetty(vCtx.kielivalinta, nimi, s"$path.nimi"),
             validateOptionalKielistetty(vCtx.kielivalinta, puhelinnumero, s"$path.puhelinnumero"),
-            validateOptionalSahkoposti(sahkoposti, s"$path.sahkoposti", assertValidEmail),
+            validateOptionalSahkoposti(vCtx.kielivalinta, sahkoposti, s"$path.sahkoposti", assertValidEmail),
             validateOptionalKielistetty(vCtx.kielivalinta, www, s"$path.www"),
             validateKayntiAndPostiOsoite(ValidationType.Optional))
         }
