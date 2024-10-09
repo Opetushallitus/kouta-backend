@@ -23,6 +23,14 @@ object Validations {
   private lazy val imageBucketPublicUrl = KoutaConfigurationFactory.configuration.s3Configuration.imageBucketPublicUrl
   private lazy val isTest               = KoutaConfigurationFactory.configuration.isTestEnvironment
 
+  sealed trait ValidationType
+
+  object ValidationType {
+    case object Optional extends ValidationType
+    case object OnlyEmpties extends ValidationType
+    case object Default extends ValidationType
+  }
+
   def error(path: String, msg: ErrorMessage): IsValid = List(ValidationError(path, msg))
 
   def and(validations: IsValid*): IsValid          = validations.flatten.distinct
@@ -405,6 +413,12 @@ object Validations {
     msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}",
     id = "notAllowedKielistetty"
   )
+
+  def notAllowedNonEmpties(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
+    msg = s"Kentän arvoksi sallittu vain tyhjä merkkijono, silloin kun nimi-kenttä on tyhjä [${values.mkString(",")}]",
+    id = "notAllowedNonEmpties"
+  )
+
   def invalidTutkintoonjohtavuus(tyyppi: String): ErrorMessage =
     ErrorMessage(msg = s"Koulutuksen tyypin $tyyppi pitäisi olla tutkintoon johtava", id = "invalidTutkintoonjohtavuus")
   def invalidUrl(url: String): ErrorMessage = ErrorMessage(msg = s"'$url' ei ole validi URL", id = "invalidUrl")
@@ -818,6 +832,9 @@ object Validations {
   def findNonAllowedKielet(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
     k.keySet.filter(lng => !kielivalinta.contains(lng) && k(lng) != null && k(lng).nonEmpty).toSeq
 
+  def findNonEmpties(kielivalinta: Seq[Kieli], k: Kielistetty): Seq[Kieli] =
+    k.filter { case (_, value) => value.nonEmpty }.keySet.toSeq
+
   def validateKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
     val missing = findMissingKielet(kielivalinta, k) match {
       case x if x.isEmpty => NoErrors
@@ -830,8 +847,27 @@ object Validations {
     missing ++ notAllowed
   }
 
+  def validateKielistettyOnlyEmpties(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid = {
+    val notAllowed = findNonAllowedKielet(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case kielet => error(path, notAllowedKielistetty(kielet))
+    }
+    val nonEmpties = findNonEmpties(kielivalinta, k) match {
+      case x if x.isEmpty => NoErrors
+      case nonEmpties => error(path, notAllowedNonEmpties(nonEmpties))
+    }
+    notAllowed ++ nonEmpties
+  }
+
   def validateOptionalKielistetty(kielivalinta: Seq[Kieli], k: Kielistetty, path: String): IsValid =
     validateIfTrue(k.values.exists(_.nonEmpty), validateKielistetty(kielivalinta, k, path))
+
+  def validateOptionalSahkoposti(kielivalinta: Seq[Kieli], sahkoposti: Kielistetty, path: String, assertValidEmail: (String, String) => IsValid): IsValid =
+    findMissingKielet(kielivalinta, sahkoposti) match {
+      case missing if missing == kielivalinta => NoErrors
+      case missing if missing.isEmpty => validateIfTrue(sahkoposti.values.exists(_.nonEmpty), validateIfNonEmpty(sahkoposti, path, assertValidEmail))
+      case _ => validateKielistetty(kielivalinta, sahkoposti, path)
+    }
 
   def validateHakulomake(
       hakulomaketyyppi: Option[Hakulomaketyyppi],
