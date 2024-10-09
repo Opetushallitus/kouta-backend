@@ -501,7 +501,8 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
               k.muokkaaja,
               k.last_modified,
               k.tyyppi,
-              k.julkinen
+              k.julkinen,
+              k.metadata
        from koulutukset k"""
 
   def selectKoulutuksetOrderedByOids(koulutusOids: List[KoulutusOid]) = {

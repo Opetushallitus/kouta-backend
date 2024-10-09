@@ -733,7 +733,8 @@ object TestData {
     tila = Julkaistu,
     organisaatioOid = ChildOid,
     julkinen = true,
-    modified = Modified(LocalDateTime.now().minusDays(1))
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1")
   )
 
   val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(

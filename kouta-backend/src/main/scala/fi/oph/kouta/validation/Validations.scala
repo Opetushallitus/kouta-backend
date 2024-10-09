@@ -9,6 +9,7 @@ import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
+import org.jsoup.nodes.Entities
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
@@ -175,7 +176,7 @@ object Validations {
     )
   }
 
-  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
+  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = {
     val message = koulutustyyppi match {
       case Some(koulutustyyppi) => s"Liitettyä $koulutustyyppi-entiteettiä ei löydy."
       case None => s"Liitettyä entiteettiä ei löydy."
@@ -187,12 +188,20 @@ object Validations {
     )
   }
 
-  val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
+  def deprecatedOsaamismerkki(entities: Seq[Oid]): ErrorMessage = {
+    ErrorMessage(
+      msg = s"Osaamismerkkiä $entities ei voi liittää toteutukselle, koska osaamismerkin voimassaolo on päättynyt.",
+      id = "deprecatedOsaamismerkki",
+      meta = Some(Map("osaamismerkit" -> entities))
+    )
+  }
+
+  val cannotChangeIsAvoinKorkeakoulutus: ErrorMessage = ErrorMessage(
     id = "cannotChangeIsAvoinKorkeakoulutus",
     msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
   )
 
-  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]) = ErrorMessage(
+  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]): ErrorMessage = ErrorMessage(
     id = "cannotRemoveTarjoajaFromAvoinKorkeakoulutus",
     msg =
       s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat

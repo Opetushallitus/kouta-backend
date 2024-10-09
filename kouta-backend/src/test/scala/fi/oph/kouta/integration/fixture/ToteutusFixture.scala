@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
@@ -23,6 +23,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   val ToteutusPath     = "/toteutus"
   val ToteutusCopyPath = "/toteutus/copy"
   val ToteutusChangeTilaPath = s"/toteutus/tila/"
+  val mockEPerusteKoodiClient: EPerusteKoodiClient = mock[EPerusteKoodiClient]
 
   protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
@@ -31,13 +32,15 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
+
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
       organisaatioService,
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO,
-      ToteutusDAO
+      ToteutusDAO,
+      mockEPerusteKoodiClient
     )
     new ToteutusService(
       SqsInTransactionServiceIgnoringIndexing,

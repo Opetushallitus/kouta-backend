@@ -137,6 +137,10 @@ trait KoulutusExtractors extends ExtractorBase {
     modified = timeStampToModified(r.nextTimestamp()),
     koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
     julkinen = r.nextBoolean(),
+    osaamismerkkiKoodiUri = r.nextStringOption().map(read[KoulutusMetadata]) match {
+      case Some(m: VapaaSivistystyoOsaamismerkkiKoulutusMetadata) => m.osaamismerkkiKoodiUri
+      case _ => None
+    }
   ))
 }
 

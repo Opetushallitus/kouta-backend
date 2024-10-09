@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoodistoElement
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoElement}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.Oid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
@@ -14,6 +14,8 @@ import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 
+import java.time.Instant
+
 object ToteutusServiceValidation
     extends ToteutusServiceValidation(
       KoodistoService,
@@ -21,7 +23,8 @@ object ToteutusServiceValidation
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO,
-      ToteutusDAO
+      ToteutusDAO,
+      EPerusteKoodiClient
     )
 
 class ToteutusServiceValidation(
@@ -30,7 +33,8 @@ class ToteutusServiceValidation(
     koulutusDAO: KoulutusDAO,
     hakukohdeDAO: HakukohdeDAO,
     val sorakuvausDAO: SorakuvausDAO,
-    toteutusDAO: ToteutusDAO
+    toteutusDAO: ToteutusDAO,
+    ePerusteKoodiClient: EPerusteKoodiClient
 ) extends KoulutusToteutusValidatingService[Toteutus]
     with RoleEntityAuthorizationService[Toteutus] {
 
@@ -45,7 +49,7 @@ class ToteutusServiceValidation(
         case Some(_: KkOpintojaksoToteutusMetadata) =>
           errors = validateLiitettyEntityIntegrity(toteutus)
         case Some(metadata) =>
-          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, authenticated)
+          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated)
         case None =>
       }
     }
@@ -794,6 +798,7 @@ class ToteutusServiceValidation(
   def validateLiitetytEntitiesIntegrity(
       tila: Julkaisutila,
       metadata: ToteutusMetadata,
+      ePerusteKoodiClient: EPerusteKoodiClient,
       authenticated: Authenticated
   ): IsValid = {
     var errors: List[ValidationError]    = List()
@@ -817,12 +822,30 @@ class ToteutusServiceValidation(
     }
 
     entities.foreach(entity => {
-      entity match {
-        case t: ToteutusLiitettyListItem => authorizeGetWithType[ToteutusLiitettyListItem](t)(authenticated)
-        case t: KoulutusLiitettyListItem => authorizeGetWithType[KoulutusLiitettyListItem](t)(authenticated)
-      }
       val liitettavanEntiteetinTyyppi = entity.koulutustyyppi
       val liitettavanEntiteetinTila   = entity.tila
+      entity match {
+        case t: ToteutusLiitettyListItem => authorizeGetWithType[ToteutusLiitettyListItem](t)(authenticated)
+        case t: KoulutusLiitettyListItem =>
+          authorizeGetWithType[KoulutusLiitettyListItem](t)(authenticated)
+          if (liitettavanEntiteetinTyyppi == VapaaSivistystyoOsaamismerkki) {
+            t.osaamismerkkiKoodiUri match {
+              case Some(koodiUri) =>
+                ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache(withoutKoodiVersion(koodiUri)) match {
+                  case Right(osaamismerkki) =>
+                    osaamismerkki.voimassaoloLoppuu match {
+                      case Some(voimassaoloLoppuu) =>
+                        if (voimassaoloLoppuu < Instant.now().toEpochMilli) {
+                          addErrorOid("metadata.liitetytEntiteetit.deprecatedOsaamismerkki", entity.oid)
+                        }
+                      case _ =>
+                    }
+                  case Left(exp) => throw exp
+                }
+              case _ =>
+            }
+          }
+      }
 
       if (liitettavanEntiteetinTyyppi != liitettyjenKoulutustyyppi.get) {
         addErrorOid("metadata.liitetytEntiteetit.koulutustyyppi", entity.oid)
@@ -860,6 +883,9 @@ class ToteutusServiceValidation(
             invalidTilaForLiitetty(entities, liitettyjenKoulutustyyppi)
           case "metadata.liitetytEntiteetit.notFound" =>
             unknownEntity(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.deprecatedOsaamismerkki" =>
+            deprecatedOsaamismerkki(entities)
+
         }
       )
     })

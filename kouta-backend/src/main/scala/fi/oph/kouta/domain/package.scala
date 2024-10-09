@@ -1094,6 +1094,12 @@ package object domain {
     val authenticated: Authenticated
   }
 
+  case class Osaamismerkki(
+      tila: String,
+      koodiUri: String,
+      voimassaoloLoppuu: Option[BigInt] = None
+  )
+
   // HUOM! Nämä ei ole koodiston arvoja, vaan koodiURI-etuliitteitä.
   // Kyseisiä koodiarvoja ei ole koodistossa "painotettavatoppiaineetlukiossa"!
   val oppiaineKielitasoKoodiUriEtuliitteet: Set[String] = Set(

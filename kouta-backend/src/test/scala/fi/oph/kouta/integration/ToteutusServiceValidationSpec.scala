@@ -2,6 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.EPerusteKoodiClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
@@ -32,6 +33,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   val hakukohdeDao        = mock[HakukohdeDAO]
   val sorakuvausDao       = mock[SorakuvausDAO]
   val toteutusDao         = mock[ToteutusDAO]
+  val ePerusteKoodiClient = mock[EPerusteKoodiClient]
   val lukioToteutus       = LukioToteutus.copy(koulutusOid = KoulutusOid("1.2.246.562.13.125"), nimi = Map())
   val lukioDIAKoulutus =
     LukioKoulutus.copy(oid = Some(KoulutusOid("1.2.246.562.13.122")), koulutuksetKoodiUri = Seq("koulutus_301103"))
@@ -239,7 +241,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       koulutusDao,
       hakukohdeDao,
       sorakuvausDao,
-      toteutusDao
+      toteutusDao,
+      ePerusteKoodiClient
     )
 
   override def beforeEach(): Unit = {
@@ -389,6 +392,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           )
         )
       )
+
+    val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
+    when(
+      ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(futureMillis))))
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
@@ -1859,6 +1867,33 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         authenticatedNonPaakayttaja
       )(t => t)
     }
+  }
+
+  it should "fail if the attached osaamismerkki is deprecated (voimassaolo on päättynyt)" in {
+    val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
+    when(
+      ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+
+    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
+    when(koulutusDao.get(List(koulutusOid1)))
+      .thenAnswer(
+        Seq(osaamismerkkiKoulutus1)
+      )
+
+    val vstToteutus = vstOpistovuosiToteutus.copy(oid = Some(toteutusOid4))
+    failsLiitetytValidation(
+      vstToteutus.copy(metadata =
+        Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1)))
+      ),
+      vstToteutus,
+      Seq(
+        ValidationError(
+          "metadata.liitetytEntiteetit.deprecatedOsaamismerkki",
+          deprecatedOsaamismerkki(Seq(koulutusOid1))
+        )
+      )
+    )
   }
 
   "withValidation" should "fail if liitetty opintojakso is changed from julkaistu to tallennettu when it is attached to a julkaistu opintokokonaisuus" in {

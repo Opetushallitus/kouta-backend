@@ -263,7 +263,8 @@ case class KoulutusLiitettyListItem(
     muokkaaja: UserOid,
     modified: Modified,
     koulutustyyppi: Koulutustyyppi,
-    julkinen: Boolean = false
+    julkinen: Boolean = false,
+    osaamismerkkiKoodiUri: Option[String] = None
 ) extends LiitettyListItem with AuthorizableMaybeJulkinen[KoulutusLiitettyListItem] {
 
   def withMuokkaaja(oid: UserOid): KoulutusLiitettyListItem = this.copy(muokkaaja = oid)

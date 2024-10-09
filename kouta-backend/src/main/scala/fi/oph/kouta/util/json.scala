@@ -1,10 +1,10 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.siirtotiedosto.{AikuistenPerusopetusKoulutusMetadataRaporttiItem, AikuistenPerusopetusToteutusMetadataRaporttiItem, AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem, AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem, AmmatillinenKoulutusMetadataRaporttiItem, AmmatillinenMuuKoulutusMetadataRaporttiItem, AmmatillinenMuuToteutusMetadataRaporttiItem, AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem, AmmatillinenOsaamisalaToteutusMetadataRaporttiItem, AmmatillinenToteutusMetadataRaporttiItem, AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem, AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem, AmmattikorkeakouluKoulutusMetadataRaporttiItem, AmmattikorkeakouluToteutusMetadataRaporttiItem, ErikoislaakariKoulutusMetadataRaporttiItem, ErikoislaakariToteutusMetadataRaporttiItem, ErikoistumiskoulutusMetadataRaporttiItem, ErikoistumiskoulutusToteutusMetadataRaporttiItem, KkOpintojaksoKoulutusMetadataRaporttiItem, KkOpintojaksoToteutusMetadataRaporttiItem, KkOpintokokonaisuusKoulutusMetadataRaporttiItem, KkOpintokokonaisuusToteutusMetadataRaporttiItem, KoulutusMetadataRaporttiItem, LukioKoulutusMetadataRaporttiItem, LukioToteutusMetadataRaporttiItem, MuuToteutusMetadataRaporttiItem, OpePedagOpinnotKoulutusMetadataRaporttiItem, OpePedagOpinnotToteutusMetadataRaporttiItem, TaiteenPerusopetusKoulutusMetadataRaporttiItem, TaiteenPerusopetusToteutusMetadataRaporttiItem, TelmaKoulutusMetadataRaporttiItem, TelmaToteutusMetadataRaporttiItem, ToteutusMetadataRaporttiItem, TuvaKoulutusMetadataRaporttiItem, TuvaToteutusMetadataRaporttiItem, VapaaSivistystyoMuuKoulutusMetadataRaporttiItem, VapaaSivistystyoMuuToteutusMetadataRaporttiItem, VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem, VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem, YliopistoKoulutusMetadataRaporttiItem, YliopistoToteutusMetadataRaporttiItem}
+import fi.oph.kouta.domain.siirtotiedosto._
 import fi.oph.kouta.security.{ExternalSession, Session}
 import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
-import org.json4s.JsonAST.{JObject, JString}
+import org.json4s.JsonAST.{JInt, JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
@@ -23,7 +23,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     sisaltoSerializer,
     valintaperusteMetadataSerializer,
     sessionSerializer,
-    organisaationYhteystietoSerializer
+    organisaationYhteystietoSerializer,
+    osaamismerkkiSerializer
   )
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ =>
@@ -343,5 +344,36 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           )
       }
     )
+  )
+
+  private def osaamismerkkiSerializer = new CustomSerializer[Osaamismerkki](_ =>
+    ({ case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      s \ "tila" match {
+        case JString(osaamismerkinTila) =>
+          val tila = osaamismerkinTila
+
+          s \ "koodiUri" match {
+            case JString(osaamismerkkiKoodiUri) =>
+              val koodiUri = osaamismerkkiKoodiUri
+
+              s \ "voimassaoloLoppuu" match {
+                case JInt(osaamismerkinVoimassaoloLoppuu) =>
+                  val voimassaoloLoppuu = Some(osaamismerkinVoimassaoloLoppuu)
+
+                  Osaamismerkki(tila, koodiUri, voimassaoloLoppuu)
+                case _ => Osaamismerkki(tila, koodiUri)
+              }
+            case _ => null
+          }
+        case _ => null
+      }
+    },
+      { case o: Osaamismerkki =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        Extraction.decompose(o)
+      })
   )
 }

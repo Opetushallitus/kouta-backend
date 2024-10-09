@@ -37,8 +37,11 @@ class KoulutusSpec
   override def beforeAll(): Unit = {
     super.beforeAll()
     ePerusteKoodiClient.ePerusteCache.invalidateAll()
-    mockKoodiUriVersionFailure("koulutus_111111", 11)
-    mockTutkinnonOsatFailure(111111)
+    when(
+      mockEPerusteKoodiClient.getOsaamismerkkiFromEPerusteCache(
+        "osaamismerkit_1082"
+      )
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082")))
     mockOsaamisalaKoodiUritFailure(111111)
 
     // Osaamismerkin nimenmuodostukseen liittyvät mockit
