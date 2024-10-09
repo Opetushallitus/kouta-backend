@@ -5,7 +5,7 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
-import fi.oph.kouta.util.MiscUtils.retryStatusCodes
+import fi.oph.kouta.util.MiscUtils.{retryStatusCodes, withoutKoodiVersion}
 import fi.vm.sade.properties.OphProperties
 import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.DefaultFormats
@@ -124,6 +124,9 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
   implicit val ePerusteCache: Cache[Long, EPeruste] = Scaffeine()
     .expireAfterWrite(cacheTTL)
     .build()
+  implicit val osaamismerkkiCache: Cache[String, Osaamismerkki] = Scaffeine()
+    .expireAfterWrite(cacheTTL)
+    .build()
 
   private def getEPeruste(ePerusteId: Long): EPeruste = {
     get(
@@ -177,10 +180,10 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
           getKoulutusKoodiUritForEPerusteFromEPerusteetService(ePerusteId)
         } match {
           case Success(koodiUris)    => koodiUris
-          case Failure(t: Throwable) => throw exception(t, ePerusteId, "ePerusteet", true)
+          case Failure(t: Throwable) => throw exception(t, ePerusteId.toString, "ePerusteet", true)
         }
       case Failure(t: Throwable) =>
-        throw exception(t, ePerusteId, "ePerusteet", false)
+        throw exception(t, ePerusteId.toString, "ePerusteet", false)
     }
   }
 
@@ -226,9 +229,9 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
           getTutkinnonosatForEPerusteFromEPerusteetService(ePerusteId)
         } match {
           case Success(tutkinnonOsat) => tutkinnonOsat
-          case Failure(t: Throwable)  => throw exception(t, ePerusteId, "tutkinnonosat for ePeruste", true)
+          case Failure(t: Throwable)  => throw exception(t, ePerusteId.toString, "tutkinnonosat for ePeruste", true)
         }
-      case Failure(t: Throwable) => throw exception(t, ePerusteId, "tutkinnonosat for ePeruste", false)
+      case Failure(t: Throwable) => throw exception(t, ePerusteId.toString, "tutkinnonosat for ePeruste", false)
     }
   }
 
@@ -276,9 +279,9 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
           getOsaamisalaKoodiuritForEPerusteFromEPerusteetService(ePerusteId)
         } match {
           case Success(koodiUrit)    => koodiUrit
-          case Failure(t: Throwable) => throw exception(t, ePerusteId, "osaamisalat for ePeruste", true)
+          case Failure(t: Throwable) => throw exception(t, ePerusteId.toString, "osaamisalat for ePeruste", true)
         }
-      case Failure(t: Throwable) => throw exception(t, ePerusteId, "osaamisalat for ePeruste", false)
+      case Failure(t: Throwable) => throw exception(t, ePerusteId.toString, "osaamisalat for ePeruste", false)
     }
   }
 
@@ -293,7 +296,45 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
     }
   }
 
-  private def exception(throwable: Throwable, ePerusteId: Long, contentDesc: String, retryDone: Boolean): Throwable = {
+  private def getOsaamismerkkiFromEPerusteetService(osaamismerkkiId: String): Osaamismerkki = {
+    get(
+      urlProperties.url("eperusteet-service.osaamismerkki-by-id", withoutKoodiVersion(osaamismerkkiId)),
+      errorHandler,
+      followRedirects = true
+    ) { response => {
+      parse(response).extract[Osaamismerkki]
+    }
+    }
+  }
+
+  private def getOsaamismerkkiFromEPeruste(osaamismerkkiId: String): Osaamismerkki = {
+    Try[Osaamismerkki] {
+      getOsaamismerkkiFromEPerusteetService(osaamismerkkiId)
+    } match {
+      case Success(koodiUrit) => koodiUrit
+      case Failure(exp: KoodistoQueryException) if retryStatusCodes.contains(exp.status) =>
+        logger.warn(s"Failed to get osaamismerkki for ePeruste with id $osaamismerkkiId, retrying once...")
+        Try[Osaamismerkki] {
+          getOsaamismerkkiFromEPerusteetService(osaamismerkkiId)
+        } match {
+          case Success(koodiUrit) => koodiUrit
+          case Failure(t: Throwable) => throw exception(t, osaamismerkkiId, "osaamismerkki for ePeruste", true)
+        }
+      case Failure(t: Throwable) => throw exception(t, osaamismerkkiId, "osaamismerkki for ePeruste", false)
+    }
+  }
+
+  def getOsaamismerkkiFromEPerusteCache(osaamismerkkiId: String): Either[Throwable, Osaamismerkki] = {
+    try {
+      val osaamismerkkiFromEperuste =
+        osaamismerkkiCache.get(osaamismerkkiId, osaamismerkkiId => getOsaamismerkkiFromEPeruste(osaamismerkkiId))
+      Right(osaamismerkkiFromEperuste)
+    } catch {
+      case error: RuntimeException   => Left(error)
+    }
+  }
+
+  private def exception(throwable: Throwable, ePerusteId: String, contentDesc: String, retryDone: Boolean): Throwable = {
     val retryDoneMsg = if (retryDone) " after retry" else ""
     throwable match {
       case exp: KoodistoQueryException if exp.status == 404 =>
@@ -306,7 +347,7 @@ class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with
         )
       case _ =>
         new RuntimeException(
-          s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${throwable.getMessage()}"
+          s"Failed to get $contentDesc with id $ePerusteId$retryDoneMsg, got response ${throwable.getMessage}"
         )
     }
   }

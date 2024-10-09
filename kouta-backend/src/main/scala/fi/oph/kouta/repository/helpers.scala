@@ -79,14 +79,8 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
     }
   }
 
-  implicit object SetKoulutusOid extends SetParameter[KoulutusOid] {
-    def apply(o: KoulutusOid, pp: PositionedParameters) {
-      pp.setString(o.toString)
-    }
-  }
-
-  implicit object SetToteutusOid extends SetParameter[ToteutusOid] {
-    def apply(o: ToteutusOid, pp: PositionedParameters) {
+  implicit object SetLiitettyOid extends SetParameter[LiitettyOid] {
+    def apply(o: LiitettyOid, pp: PositionedParameters) {
       pp.setString(o.toString)
     }
   }

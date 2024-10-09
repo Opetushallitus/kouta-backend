@@ -1,13 +1,12 @@
 package fi.oph.kouta.integration.fixture
 
 import java.nio.file.{Files, Paths}
-
 import com.amazonaws.services.s3.model.ObjectMetadata
 import fi.oph.kouta.images.{ImageServlet, S3ImageService}
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.integration.fixture.MockS3Client.Content
 import fi.oph.kouta.mocks.MockS3ImageService
-import fi.oph.kouta.servlet.{ImageSizeSpecs, UploadServlet}
+import fi.oph.kouta.servlet.{ImageSizeSpecs, ImageWithMinSizeSpecs, UploadServlet}
 import org.scalatest.BeforeAndAfterEach
 
 trait UploadFixture extends BeforeAndAfterEach {
@@ -21,6 +20,7 @@ trait UploadFixture extends BeforeAndAfterEach {
   val UploadPath          = "/upload"
   val TeemakuvaUploadPath = s"$UploadPath/teemakuva"
   val LogoUploadPath      = s"$UploadPath/logo"
+  val IconUploadPath      = s"$UploadPath/icon"
 
   val ImageBucket       = MockS3ImageService.config.imageBucket
   val PublicImageServer = MockS3ImageService.config.imageBucketPublicUrl
@@ -35,6 +35,8 @@ trait UploadFixture extends BeforeAndAfterEach {
     Files.readAllBytes(Paths.get(getClass.getClassLoader.getResource(s"files/$filename").toURI))
 
   lazy val correctTeemakuva: Array[Byte]    = getResourceImage("correct-header.png")
+  lazy val smallTeemakuva: Array[Byte]      = getResourceImage("small-teemakuva.png")
+  lazy val tooSmallSmallTeemakuva: Array[Byte] = getResourceImage("too-small-small-teemakuva.png")
   lazy val correctLogo: Array[Byte]         = getResourceImage("correct-logo.png")
   lazy val correctJpgTeemakuva: Array[Byte] = getResourceImage("correct-header.jpg")
   lazy val tooLargeTeemakuva: Array[Byte]   = getResourceImage("too-large-header.png")
@@ -42,6 +44,7 @@ trait UploadFixture extends BeforeAndAfterEach {
   lazy val tooSmallLogo: Array[Byte]        = getResourceImage("too-small-logo.png")
   lazy val correctSvgLogo: Array[Byte]      = getResourceImage("correct-logo.svg")
   lazy val randomXml: Array[Byte]           = getResourceImage("random-xml.svg")
+  lazy val correctIcon: Array[Byte]         = getResourceImage("correct-icon.png")
 
   def saveLocalPng(key: String): Unit = {
     val metadata = new ObjectMetadata()
@@ -60,7 +63,7 @@ trait UploadFixture extends BeforeAndAfterEach {
   }
 
   object TestUploadServlet extends UploadServlet(s3ImageService) {
-    override val teemakuvaSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 1260, minHeight = 400)
-    override val logoSizes: ImageSizeSpecs = ImageSizeSpecs(maxSize = MaxSizeInTest, minWidth = 100, minHeight = 100)
+    override val teemakuvaSizes: ImageWithMinSizeSpecs = ImageWithMinSizeSpecs(maxSize = MaxSizeInTest, minWidth = 1260, minHeight = 400)
+    override val logoSizes: ImageWithMinSizeSpecs = ImageWithMinSizeSpecs(maxSize = MaxSizeInTest, minWidth = 100, minHeight = 100)
   }
 }

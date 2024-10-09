@@ -1,12 +1,15 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
+import fi.oph.kouta.TestData.muokkaajanNimi
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.util.OrganisaatioServiceUtil
 import org.json4s.jackson.Serialization.read
+
+import java.time.LocalDateTime
 
 class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
@@ -224,7 +227,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2))
+      read[List[String]](body) should contain theSameElementsAs List(koulutusOid, koulutusOid2)
     }
   }
 
@@ -236,7 +239,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list?vainOlemassaolevat=false", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List(koulutusOid, koulutusOid2, koulutusOid3))
+      read[List[String]](body) should contain theSameElementsAs List(koulutusOid, koulutusOid2, koulutusOid3)
     }
   }
 
@@ -245,7 +248,7 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", headers = Seq(sessionHeader(indexerSession))) {
       status should equal (200)
-      read[List[String]](body) should contain theSameElementsAs(List())
+      read[List[String]](body) should contain theSameElementsAs List()
     }
   }
 
@@ -266,5 +269,32 @@ class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
   it should "deny access without root organization access to the indexer role" in {
     val sorakuvausId = put(sorakuvaus, ophSession)
     get(s"$IndexerPath/sorakuvaus/$sorakuvausId/koulutukset/list", fakeIndexerSession, 403)
+  }
+
+  "List koulutukset by oids" should "return list element for julkaistu and tallennettu koulutus" in {
+    val oid = put(koulutus, ophSession)
+    val koulutus2 = koulutus.copy(tarjoajat = List(ChildOid), tila = Tallennettu)
+    val koulutusOid2 = put(koulutus2, ophSession)
+    val koulutusOid3 = put(koulutus.copy(tila = Arkistoitu), ophSession)
+    val liitettyKoulutus = KoulutusLiitettyListItem(
+      oid = KoulutusOid(oid),
+      nimi = koulutus.nimi,
+      tila = koulutus.tila,
+      organisaatioOid = koulutus.organisaatioOid,
+      muokkaaja = koulutus.muokkaaja,
+      modified = readKoulutusModified(oid),
+      koulutustyyppi = koulutus.koulutustyyppi,
+      julkinen = koulutus.julkinen)
+    post(s"$IndexerPath/koulutukset", body = bytes(Seq(oid, koulutusOid2, koulutusOid3)), headers = Seq(sessionHeader(indexerSession))) {
+      status should equal(200)
+      read[List[KoulutusLiitettyListItem]](body) should contain theSameElementsAs List(
+        liitettyKoulutus,
+        liitettyKoulutus.copy(
+          oid = KoulutusOid(koulutusOid2),
+          tila = Tallennettu,
+          modified = readKoulutusModified(oid)
+        )
+      )
+    }
   }
 }

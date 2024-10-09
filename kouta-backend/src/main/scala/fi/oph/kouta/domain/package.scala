@@ -2,18 +2,12 @@ package fi.oph.kouta
 
 import fi.oph.kouta.client.TutkinnonOsaServiceItem
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.KoulutusServiceValidation.assertKoodiUritExist
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.TimeUtils
-import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult}
-import fi.oph.kouta.validation.Validations.{assertKoodistoQueryResult, assertTrue, _}
-import fi.oph.kouta.validation.{
-  IsValid,
-  JulkaisuValidatableSubEntity,
-  NoErrors,
-  ValidatableSubEntity,
-  ValidationContext
-}
+import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
+import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.validation._
+
 import java.time.{Instant, LocalDateTime}
 import java.util.UUID
 
@@ -22,8 +16,8 @@ package object domain {
 
   val KoulutustyyppiModel: String =
     ("""    Koulutustyyppi:
-      |      type: string
-      |      enum:
+       |      type: string
+       |      enum:
 """ + Koulutustyyppi.valuesToSwaggerEnum() +
       "      |").stripMargin
 
@@ -808,6 +802,22 @@ package object domain {
     val modified: Modified
   }
 
+  trait LiitettyListItem {
+    val oid: Oid
+    val nimi: Kielistetty
+    val tila: Julkaisutila
+    val organisaatioOid: OrganisaatioOid
+    val muokkaaja: UserOid
+    val modified: Modified
+    val koulutustyyppi: Koulutustyyppi
+    val julkinen: Boolean
+  }
+
+  trait LiitettyEntity {
+    val tila: Julkaisutila
+    val oid: Option[LiitettyOid]
+  }
+
   case class Lisatieto(otsikkoKoodiUri: String, teksti: Kielistetty) {
     def validate(
         path: String,
@@ -947,12 +957,13 @@ package object domain {
       and(
         validateIfDefined[List[String]](
           koodiurit,
-          koodiurit => assertPostinumerokoodiuritValid(
-            koodiurit,
-            s"$path.postinumeroKoodiUri",
-            vCtx,
-            koodistoCheckFunc
-          )
+          koodiurit =>
+            assertPostinumerokoodiuritValid(
+              koodiurit,
+              s"$path.postinumeroKoodiUri",
+              vCtx,
+              koodistoCheckFunc
+            )
         ),
         validateIfJulkaistu(
           vCtx.tila,
@@ -1101,6 +1112,12 @@ package object domain {
     val authenticated: Authenticated
   }
 
+  case class Osaamismerkki(
+      tila: String,
+      koodiUri: String,
+      voimassaoloLoppuu: Option[BigInt] = None
+  )
+
   // HUOM! Nämä ei ole koodiston arvoja, vaan koodiURI-etuliitteitä.
   // Kyseisiä koodiarvoja ei ole koodistossa "painotettavatoppiaineetlukiossa"!
   val oppiaineKielitasoKoodiUriEtuliitteet: Set[String] = Set(
@@ -1128,4 +1145,5 @@ package object domain {
   val opintojenLaajuusOpintopiste  = "opintojenlaajuusyksikko_2"
   val opintojenLaajuusOsaamispiste = "opintojenlaajuusyksikko_6"
   val opintojenLaajuusViikko       = "opintojenlaajuusyksikko_8"
+  val opintojenLaajuusKurssi       = "opintojenlaajuusyksikko_4"
 }

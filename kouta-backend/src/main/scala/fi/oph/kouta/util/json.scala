@@ -1,10 +1,10 @@
 package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.siirtotiedosto.{AikuistenPerusopetusKoulutusMetadataRaporttiItem, AikuistenPerusopetusToteutusMetadataRaporttiItem, AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem, AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem, AmmatillinenKoulutusMetadataRaporttiItem, AmmatillinenMuuKoulutusMetadataRaporttiItem, AmmatillinenMuuToteutusMetadataRaporttiItem, AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem, AmmatillinenOsaamisalaToteutusMetadataRaporttiItem, AmmatillinenToteutusMetadataRaporttiItem, AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem, AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem, AmmattikorkeakouluKoulutusMetadataRaporttiItem, AmmattikorkeakouluToteutusMetadataRaporttiItem, ErikoislaakariKoulutusMetadataRaporttiItem, ErikoislaakariToteutusMetadataRaporttiItem, ErikoistumiskoulutusMetadataRaporttiItem, ErikoistumiskoulutusToteutusMetadataRaporttiItem, KkOpintojaksoKoulutusMetadataRaporttiItem, KkOpintojaksoToteutusMetadataRaporttiItem, KkOpintokokonaisuusKoulutusMetadataRaporttiItem, KkOpintokokonaisuusToteutusMetadataRaporttiItem, KoulutusMetadataRaporttiItem, LukioKoulutusMetadataRaporttiItem, LukioToteutusMetadataRaporttiItem, MuuToteutusMetadataRaporttiItem, OpePedagOpinnotKoulutusMetadataRaporttiItem, OpePedagOpinnotToteutusMetadataRaporttiItem, TaiteenPerusopetusKoulutusMetadataRaporttiItem, TaiteenPerusopetusToteutusMetadataRaporttiItem, TelmaKoulutusMetadataRaporttiItem, TelmaToteutusMetadataRaporttiItem, ToteutusMetadataRaporttiItem, TuvaKoulutusMetadataRaporttiItem, TuvaToteutusMetadataRaporttiItem, VapaaSivistystyoMuuKoulutusMetadataRaporttiItem, VapaaSivistystyoMuuToteutusMetadataRaporttiItem, VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem, VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem, YliopistoKoulutusMetadataRaporttiItem, YliopistoToteutusMetadataRaporttiItem}
+import fi.oph.kouta.domain.siirtotiedosto._
 import fi.oph.kouta.security.{ExternalSession, Session}
 import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
-import org.json4s.JsonAST.{JObject, JString}
+import org.json4s.JsonAST.{JInt, JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
@@ -23,7 +23,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     sisaltoSerializer,
     valintaperusteMetadataSerializer,
     sessionSerializer,
-    organisaationYhteystietoSerializer
+    organisaationYhteystietoSerializer,
+    osaamismerkkiSerializer
   )
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ =>
@@ -34,27 +35,28 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
         Try(s \ "tyyppi").toOption.collect { case JString(tyyppi) =>
           Koulutustyyppi.withName(tyyppi)
         }.getOrElse(Amm) match {
-          case Yo                          => s.extract[YliopistoKoulutusMetadata]
-          case Amm                         => s.extract[AmmatillinenKoulutusMetadata]
-          case AmmTutkinnonOsa             => s.extract[AmmatillinenTutkinnonOsaKoulutusMetadata]
-          case AmmOsaamisala               => s.extract[AmmatillinenOsaamisalaKoulutusMetadata]
-          case AmmMuu                      => s.extract[AmmatillinenMuuKoulutusMetadata]
-          case Amk                         => s.extract[AmmattikorkeakouluKoulutusMetadata]
-          case KkOpintojakso               => s.extract[KkOpintojaksoKoulutusMetadata]
-          case KkOpintokokonaisuus         => s.extract[KkOpintokokonaisuusKoulutusMetadata]
-          case Lk                          => s.extract[LukioKoulutusMetadata]
-          case Tuva                        => s.extract[TuvaKoulutusMetadata]
-          case Telma                       => s.extract[TelmaKoulutusMetadata]
-          case VapaaSivistystyoOpistovuosi => s.extract[VapaaSivistystyoOpistovuosiKoulutusMetadata]
-          case VapaaSivistystyoMuu         => s.extract[VapaaSivistystyoMuuKoulutusMetadata]
-          case AmmOpeErityisopeJaOpo       => s.extract[AmmOpeErityisopeJaOpoKoulutusMetadata]
-          case OpePedagOpinnot             => s.extract[OpePedagOpinnotKoulutusMetadata]
-          case AikuistenPerusopetus        => s.extract[AikuistenPerusopetusKoulutusMetadata]
-          case Erikoislaakari              => s.extract[ErikoislaakariKoulutusMetadata]
-          case Erikoistumiskoulutus        => s.extract[ErikoistumiskoulutusMetadata]
-          case TaiteenPerusopetus          => s.extract[TaiteenPerusopetusKoulutusMetadata]
-          case Muu                         => s.extract[MuuKoulutusMetadata]
-          case kt                          => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
+          case Yo                            => s.extract[YliopistoKoulutusMetadata]
+          case Amm                           => s.extract[AmmatillinenKoulutusMetadata]
+          case AmmTutkinnonOsa               => s.extract[AmmatillinenTutkinnonOsaKoulutusMetadata]
+          case AmmOsaamisala                 => s.extract[AmmatillinenOsaamisalaKoulutusMetadata]
+          case AmmMuu                        => s.extract[AmmatillinenMuuKoulutusMetadata]
+          case Amk                           => s.extract[AmmattikorkeakouluKoulutusMetadata]
+          case KkOpintojakso                 => s.extract[KkOpintojaksoKoulutusMetadata]
+          case KkOpintokokonaisuus           => s.extract[KkOpintokokonaisuusKoulutusMetadata]
+          case Lk                            => s.extract[LukioKoulutusMetadata]
+          case Tuva                          => s.extract[TuvaKoulutusMetadata]
+          case Telma                         => s.extract[TelmaKoulutusMetadata]
+          case VapaaSivistystyoOpistovuosi   => s.extract[VapaaSivistystyoOpistovuosiKoulutusMetadata]
+          case VapaaSivistystyoMuu           => s.extract[VapaaSivistystyoMuuKoulutusMetadata]
+          case VapaaSivistystyoOsaamismerkki => s.extract[VapaaSivistystyoOsaamismerkkiKoulutusMetadata]
+          case AmmOpeErityisopeJaOpo         => s.extract[AmmOpeErityisopeJaOpoKoulutusMetadata]
+          case OpePedagOpinnot               => s.extract[OpePedagOpinnotKoulutusMetadata]
+          case AikuistenPerusopetus          => s.extract[AikuistenPerusopetusKoulutusMetadata]
+          case Erikoislaakari                => s.extract[ErikoislaakariKoulutusMetadata]
+          case Erikoistumiskoulutus          => s.extract[ErikoistumiskoulutusMetadata]
+          case TaiteenPerusopetus            => s.extract[TaiteenPerusopetusKoulutusMetadata]
+          case Muu                           => s.extract[MuuKoulutusMetadata]
+          case kt                            => throw new UnsupportedOperationException(s"Unsupported koulutustyyppi $kt")
         }
       },
       { case j: KoulutusMetadata =>
@@ -125,6 +127,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           case Telma                       => s.extract[TelmaToteutusMetadata]
           case VapaaSivistystyoOpistovuosi => s.extract[VapaaSivistystyoOpistovuosiToteutusMetadata]
           case VapaaSivistystyoMuu         => s.extract[VapaaSivistystyoMuuToteutusMetadata]
+          case VapaaSivistystyoOsaamismerkki => s.extract[VapaaSivistystyoOsaamismerkkiToteutusMetadata]
           case AmmOpeErityisopeJaOpo       => s.extract[AmmOpeErityisopeJaOpoToteutusMetadata]
           case OpePedagOpinnot             => s.extract[OpePedagOpinnotToteutusMetadata]
           case AikuistenPerusopetus        => s.extract[AikuistenPerusopetusToteutusMetadata]
@@ -341,5 +344,36 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
           )
       }
     )
+  )
+
+  private def osaamismerkkiSerializer = new CustomSerializer[Osaamismerkki](_ =>
+    ({ case s: JObject =>
+      implicit def formats: Formats = genericKoutaFormats
+
+      s \ "tila" match {
+        case JString(osaamismerkinTila) =>
+          val tila = osaamismerkinTila
+
+          s \ "koodiUri" match {
+            case JString(osaamismerkkiKoodiUri) =>
+              val koodiUri = osaamismerkkiKoodiUri
+
+              s \ "voimassaoloLoppuu" match {
+                case JInt(osaamismerkinVoimassaoloLoppuu) =>
+                  val voimassaoloLoppuu = Some(osaamismerkinVoimassaoloLoppuu)
+
+                  Osaamismerkki(tila, koodiUri, voimassaoloLoppuu)
+                case _ => Osaamismerkki(tila, koodiUri)
+              }
+            case _ => null
+          }
+        case _ => null
+      }
+    },
+      { case o: Osaamismerkki =>
+        implicit def formats: Formats = genericKoutaFormats
+
+        Extraction.decompose(o)
+      })
   )
 }

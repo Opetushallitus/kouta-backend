@@ -1,25 +1,15 @@
 package fi.oph.kouta.servlet
 
-import java.net.URLDecoder
-import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.TilaFilter
 import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
-import fi.oph.kouta.service.{
-  HakuService,
-  HakukohdeService,
-  KoulutusService,
-  ModificationService,
-  OppilaitoksenOsaService,
-  OppilaitosService,
-  PistehistoriaService,
-  SorakuvausService,
-  ToteutusService,
-  ValintaperusteService
-}
+import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.KoutaServlet.SampleHttpDate
 import fi.oph.kouta.util.TimeUtils.parseHttpDate
 import org.scalatra.{BadRequest, InternalServerError, NotFound, Ok}
+
+import java.net.URLDecoder
+import java.util.UUID
 
 class IndexerServlet(
     koulutusService: KoulutusService,
@@ -725,9 +715,9 @@ class IndexerServlet(
   registerPath(
     "/indexer/list-opintokokonaisuudet",
     """    post:
-      |      summary: Hakee niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty
+      |      summary: Hakee tiedot niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty
       |      operationId: indexerListOpintokokonaisuudet
-      |      description: Hakee niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty. Tämä rajapinta on indeksointia varten
+      |      description: Hakee tiedot niille opintokokonaisuuksille, joihin requestBodyssä annetut toteutus-oidit on liitetty. Tämä rajapinta on indeksointia varten
       |      tags:
       |        - Indexer
       |      requestBody:
@@ -749,6 +739,34 @@ class IndexerServlet(
 
     implicit val authenticated: Authenticated = authenticate()
     Ok(ToteutusService.listOpintokokonaisuudet(parsedBody.extract[List[ToteutusOid]]))
+  }
+
+  registerPath(
+    "/indexer/koulutukset",
+    """    post:
+      |      summary: Hakee koulutukset, joiden oidit annettu requestBodyssä
+      |      operationId: indexerKoulutukset
+      |      description: Hakee koulutukset, joiden oidit annettu requestBodyssä. Tämä rajapinta on indeksointia varten
+      |      tags:
+      |        - Indexer
+      |      requestBody:
+      |        description: Lista koulutusOideja
+      |        required: true
+      |        content:
+      |          application/json:
+      |            schema:
+      |              type: array
+      |              items:
+      |                type: string
+      |                example: 1.2.246.562.13.00000000000000007752
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
+  )
+  post("/koulutukset") {
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(KoulutusService.get(koulutusOids = parsedBody.extract[List[KoulutusOid]]))
   }
 
   registerPath(

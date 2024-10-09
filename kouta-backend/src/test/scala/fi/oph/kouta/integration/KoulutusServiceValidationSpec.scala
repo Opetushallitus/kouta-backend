@@ -8,14 +8,18 @@ import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
-import fi.oph.kouta.service.{KoodistoService, KoulutusServiceValidation, OrganisaatioService}
+import fi.oph.kouta.service.{KoodistoService, KoulutusServiceValidation, KoutaValidationException, OrganisaatioService}
 import fi.oph.kouta.validation.ExternalQueryResults.{itemFound, itemNotFound}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
 import org.mockito.ArgumentMatchers
 import org.scalatest.Assertion
+import org.scalatest.matchers.must.Matchers.contain
+import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
+import java.time.LocalDateTime
 import java.util.UUID
+import scala.util.{Failure, Try}
 
 class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] {
   KoutaConfigurationFactory.setupWithDefaultTemplateFile()
@@ -296,6 +300,9 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     acceptKoulutusKoodiUri(LukioKoulutusKoodit, "koulutus_301101#1")
     // erikoislaakari
     acceptKoulutusKoodiUri(ErikoislaakariKoulutusKoodit, "koulutus_775101#1")
+    // osaamismerkki
+    when(koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, "osaamismerkit_1082#1"))
+      .thenAnswer(itemFound)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -1797,6 +1804,68 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
+  it should "succeed new valid luonnos for vapaa sivistystyo osaamismerkki -koulutus" in {
+    passesValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        tila = Tallennettu,
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+            opintojenLaajuusNumero = Some(1),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+          )
+        )
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for luonnostilainen vapaa sivistystyo osaamismerkki -koulutus" in {
+    failsValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        tila = Tallennettu,
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = None,
+            opintojenLaajuusNumero = Some(2),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1")
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.osaamismerkkiKoodiUri", missingMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(2.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4")))
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for julkaistu vapaa sivistystyo osaamismerkki -koulutus" in {
+    failsValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+            kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+            koulutusalaKoodiUrit = Seq("puppu"),
+            linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi"),
+            opintojenLaajuusNumero = Some(10),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.linkkiEPerusteisiin", notEmptyMsg),
+        ValidationError("metadata.kuvaus", notEmptyMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(10.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))),
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit[0]",
+          invalidKoulutusAlaKoodiuri("puppu")
+        ),
+      )
+    )
+  }
+
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(yoWithOid, yo.copy(tila = Tallennettu))
   }
@@ -1865,6 +1934,40 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       yoWithOid.copy(oid = Some(koulutusOid), tila = Poistettu),
       yo.copy(tila = Tallennettu),
       integrityViolationMsg("Koulutusta", "toteutuksia")
+    )
+  }
+
+  def failsLiitettyValidation(
+      koulutus: Koulutus,
+      oldKoulutus: Koulutus,
+      expected: Seq[ValidationError]
+  ): Assertion =
+    Try(validator.withValidation(koulutus, Some(oldKoulutus))(t => t)) match {
+      case Failure(exp: KoutaValidationException) => exp.errorMessages should contain theSameElementsAs expected
+      case _                                      => fail("Expecting validation failure, but it succeeded")
+    }
+
+  "withValidation" should "fail if one of the attached osaamismerkkikoulutus is not julkaistu when vst-toteutus is julkaistu" in {
+    val osaamismerkkikoulutus = VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(koulutusOid))
+    val toteutusOid          = ToteutusOid("1.2.246.562.17.00000000000000000123")
+    val julkaistuVstToteutus = MinimalExistingToteutus(VapaaSivistystyoOpistovuosiToteutus.copy(oid = Some(toteutusOid),
+      modified = Some(Modified(LocalDateTime.now().minusDays(1))),
+    ))
+
+    when(toteutusDao.get(koulutusOid))
+      .thenAnswer(
+        Vector(julkaistuVstToteutus)
+      )
+
+    failsLiitettyValidation(
+      osaamismerkkikoulutus.copy(tila = Tallennettu),
+      osaamismerkkikoulutus,
+      Seq(
+        ValidationError(
+          "metadata.tila",
+          invalidStateChangeForLiitetty(koulutusOid, List(Some(toteutusOid)), Vector(toteutusOid))
+        )
+      )
     )
   }
 }

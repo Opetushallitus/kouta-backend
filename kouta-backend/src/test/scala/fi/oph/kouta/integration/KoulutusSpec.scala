@@ -6,28 +6,28 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
-import fi.oph.kouta.mocks.MockAuditLogger
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
-import fi.oph.kouta.service.KoulutusService
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.util.TimeUtils.{instantToModified, modifiedToInstant}
 import org.joda.time.LocalDate
 import org.json4s.jackson.Serialization.read
 
-import java.time.{Duration, Instant, LocalDateTime, ZoneId}
+import java.time.{Duration, Instant, LocalDateTime}
 import java.util.UUID
 import scala.util.Success
 
 class KoulutusSpec
-    extends KoutaIntegrationSpec
+  extends KoutaIntegrationSpec
     with AccessControlSpec
     with KoulutusFixture
     with ToteutusFixture
     with SorakuvausFixture
-    with UploadFixture {
+    with UploadFixture
+    with LokalisointiServiceMock {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Koulutus)
 
@@ -37,9 +37,17 @@ class KoulutusSpec
   override def beforeAll(): Unit = {
     super.beforeAll()
     ePerusteKoodiClient.ePerusteCache.invalidateAll()
-    mockKoodiUriVersionFailure("koulutus_111111", 11)
-    mockTutkinnonOsatFailure(111111)
+    when(
+      mockEPerusteKoodiClient.getOsaamismerkkiFromEPerusteCache(
+        "osaamismerkit_1082"
+      )
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082")))
     mockOsaamisalaKoodiUritFailure(111111)
+
+    // Osaamismerkin nimenmuodostukseen liittyvät mockit
+    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
+    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
+    mockLokalisointiResponse("yleiset.osaamismerkki")
   }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
@@ -128,6 +136,7 @@ class KoulutusSpec
   }
 
   it should "enrich name with voimaantulo date if eperuste voimaantulo is in the future" in {
+    mockLokalisointiResponse("yleiset.eperusteVoimaantulo")
     val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
     val futureDate = new LocalDate(futureMillis)
     mockKoulutusKoodiUritForEPerusteResponse(556, voimassaoloAlkaa = Some(futureMillis),
@@ -136,7 +145,7 @@ class KoulutusSpec
     val foo: (Koulutus, Instant) = insertKoulutus(koulutus.copy(ePerusteId = Some(556)))
     get(s"$KoulutusPath/${foo._1.oid.get}", headers = defaultHeaders) {
       status should equal(200)
-      assert(body.contains(s"(voimaantulo ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
+      assert(body.contains(s"(yleiset.eperusteVoimaantulo fi ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
     }
   }
 
@@ -732,6 +741,24 @@ class KoulutusSpec
     get(oid, kkOpintokokonaisuusKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
   }
 
+  it should "create, get and update vapaasivistystyo-osaamismerkkikoulutus" in {
+    val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
+    val oid = put(vapaaSivistystyoOsaamismerkkiKoulutus, ophSession)
+    val vstOsaamismerkkiWithOpintojenLaajuus = vapaaSivistystyoOsaamismerkkiKoulutus.copy(
+      oid = Some(KoulutusOid(oid)),
+      metadata = Some(TestData.VapaaSivistystyoOsaamismerkkiKoulutusMetatieto.copy(
+        opintojenLaajuusNumero = Some(1.0),
+        opintojenLaajuusyksikkoKoodiUri = Some(opintojenLaajuusKurssi))))
+    val lastModified = get(oid, vstOsaamismerkkiWithOpintojenLaajuus)
+    update(vapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu), lastModified, ophSession, 200)
+    get(oid, vstOsaamismerkkiWithOpintojenLaajuus.copy(oid = Some(KoulutusOid(oid)), tila = Julkaistu))
+  }
+
+  it should "fail to create vapaasivistystyo-osaamismerkkikoulutus when not oph user trying to create" in {
+    val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
+    put(KoulutusPath, vapaaSivistystyoOsaamismerkkiKoulutus, ammAndChildSession, 403)
+  }
+
   it should "set nimi of ammatillinen koulutus nimi by koulutusKoodiUri if nimi not given for koulutus" in {
     val ammKoulutus = koulutus.copy(nimi = Map())
     val oid         = put(ammKoulutus, ophSession)
@@ -1002,6 +1029,32 @@ class KoulutusSpec
       withClue(body) {
         status should equal(200)
       }
+    }
+  }
+
+  it should "fail to change attached osaamismerkki tila to tallennettu when vst-toteutus is julkaistu" in {
+    val julkaistuOsaamismerkkiKoulutus = VapaaSivistystyoOsaamismerkkiKoulutus
+    val osaamismerkkiKoulutusOid = put(julkaistuOsaamismerkkiKoulutus, ophSession)
+    val julkaistuVstMuuKoulutus = VapaaSivistystyoMuuKoulutus
+    val vstMuuKoulutusOid = put(julkaistuVstMuuKoulutus)
+    val julkaistuVstMuuToteutus = VapaaSivistystyoMuuToteutus.copy(
+      koulutusOid = KoulutusOid(vstMuuKoulutusOid),
+      metadata = Some(
+        VapaaSivistystyoMuuToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(KoulutusOid(osaamismerkkiKoulutusOid)))
+      )
+    )
+    put(julkaistuVstMuuToteutus)
+
+    val osaamismerkkiKoulutus = julkaistuOsaamismerkkiKoulutus.copy(
+      oid = Some(KoulutusOid(osaamismerkkiKoulutusOid)), koulutuksetKoodiUri = List())
+    val lastModified = get(osaamismerkkiKoulutusOid, osaamismerkkiKoulutus)
+
+    post(KoulutusPath, bytes(osaamismerkkiKoulutus.copy(tila = Tallennettu)),
+      headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""errorType":"invalidStateChangeForLiitetty""")
     }
   }
 }

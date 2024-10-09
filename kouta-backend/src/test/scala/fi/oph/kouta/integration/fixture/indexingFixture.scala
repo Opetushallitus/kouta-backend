@@ -52,7 +52,9 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
-    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+
+    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO, mockEPerusteKoodiClient)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     new ToteutusService(SqsInTransactionService, MockS3ImageService, auditLog,
       new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient, koodistoService, mockOppijanumerorekisteriClient, mockKayttooikeusClient, toteutusServiceValidation, koutaIndeksoijaClient)
@@ -79,8 +81,10 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
+    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(koodistoService, mockHakemusPalveluClient, organisaatioService, lokalisointiClient, HakukohdeDAO, HakuDAO)
-    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO)
+    val toteutusServiceValidation = new ToteutusServiceValidation(koodistoService, organisaatioService, KoulutusDAO, HakukohdeDAO, SorakuvausDAO, ToteutusDAO, mockEPerusteKoodiClient)
     new HakukohdeService(SqsInTransactionService, new AuditLog(MockAuditLogger), organisaatioService, lokalisointiClient, mockOppijanumerorekisteriClient, mockKayttooikeusClient, koodistoService,
       new ToteutusService(SqsInTransactionServiceIgnoringIndexing, MockS3ImageService, auditLog,
         new KeywordService(auditLog, organisaatioService), organisaatioService, koulutusService, lokalisointiClient,

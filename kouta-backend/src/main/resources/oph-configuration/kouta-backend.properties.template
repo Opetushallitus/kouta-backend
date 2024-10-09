@@ -55,6 +55,7 @@ koodisto-service.sisaltyy-ylakoodit=https://{{host_virkailija}}/koodisto-service
 eperusteet-service.peruste-by-id=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1
 eperusteet-service.tutkinnonosat-by-eperuste=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1/suoritustavat/reformi/tutkinnonosat
 eperusteet-service.osaamisalat-by-eperuste=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1/osaamisalakuvaukset
+eperusteet-service.osaamismerkki-by-id=https://{{host_virkailija}}/eperusteet-service/api/external/osaamismerkki/koodi/$1
 
 ohjausparametrit-service.service=https://{{host_virkailija}}/ohjausparametrit-service
 ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-service/api/v1/rest/parametri/$1

@@ -105,6 +105,7 @@ package object koulutus {
       |            - $ref: '#/components/schemas/TuvaKoulutusMetadata'
       |            - $ref: '#/components/schemas/TelmaKoulutusMetadata'
       |            - $ref: '#/components/schemas/VapaaSivistystyoKoulutusMetadata'
+      |            - $ref: '#/components/schemas/VapaaSivistystyoOsaamismerkkiKoulutusMetadata'
       |            - $ref: '#/components/schemas/AikuistenPerusopetusKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoislaakariKoulutusMetadata'
       |            - $ref: '#/components/schemas/ErikoistumiskoulutusMetadata'
@@ -208,8 +209,9 @@ case class Koulutus(
     modified: Option[Modified],
     _enrichedData: Option[KoulutusEnrichedData] = None
 ) extends PerustiedotWithOid[KoulutusOid, Koulutus]
-    with HasTeemakuva[Koulutus]
-    with AuthorizableMaybeJulkinen[Koulutus] {
+  with HasTeemakuva[Koulutus]
+  with AuthorizableMaybeJulkinen[Koulutus]
+  with LiitettyEntity {
 
   override def validate(): IsValid =
     super.validate()
@@ -252,6 +254,21 @@ case class KoulutusListItem(
     muokkaaja: UserOid,
     modified: Modified
 ) extends OidListItem
+
+case class KoulutusLiitettyListItem(
+    oid: KoulutusOid,
+    nimi: Kielistetty,
+    tila: Julkaisutila,
+    organisaatioOid: OrganisaatioOid,
+    muokkaaja: UserOid,
+    modified: Modified,
+    koulutustyyppi: Koulutustyyppi,
+    julkinen: Boolean = false,
+    osaamismerkkiKoodiUri: Option[String] = None
+) extends LiitettyListItem with AuthorizableMaybeJulkinen[KoulutusLiitettyListItem] {
+
+  def withMuokkaaja(oid: UserOid): KoulutusLiitettyListItem = this.copy(muokkaaja = oid)
+}
 
 case class KoulutusEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
 
