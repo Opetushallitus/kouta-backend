@@ -49,7 +49,7 @@ class ToteutusServiceValidation(
         case Some(_: KkOpintojaksoToteutusMetadata) =>
           errors = validateLiitettyEntityIntegrity(toteutus)
         case Some(metadata) =>
-          errors = validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated)
+          errors = if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu) validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated) else NoErrors
         case None =>
       }
     }

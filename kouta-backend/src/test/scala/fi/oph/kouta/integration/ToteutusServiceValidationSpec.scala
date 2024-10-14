@@ -103,6 +103,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     InetAddress.getByName("127.0.0.1")
   )
   val nimiNotMatchingDefault = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")
+  val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
 
   private def ammToteutusWithOpetusParameters(
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
@@ -1870,7 +1871,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   it should "fail if the attached osaamismerkki is deprecated (voimassaolo on päättynyt)" in {
-    val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
     ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
@@ -1924,6 +1924,32 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val vstToteutus = vstOpistovuosiToteutus.copy(
       oid = Some(toteutusOid),
       tila = Tallennettu,
+      metadata =
+        Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
+    )
+
+    assert(
+      validator.withValidation(vstToteutus, Some(vstOpistovuosiToteutus), authenticatedNonPaakayttaja)(t =>
+        t
+      ) == vstToteutus
+    )
+  }
+
+  it should "succeed to arkistoida toteutus when liitetty osaamismerkki is deprecated" in {
+    when(
+      ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1083")
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+    val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
+    val osaamismerkkiKoulutus2 =
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu, osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1"))
+    when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
+      .thenAnswer(
+        Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
+      )
+
+    val vstToteutus = vstOpistovuosiToteutus.copy(
+      oid = Some(toteutusOid),
+      tila = Arkistoitu,
       metadata =
         Some(VapaaSivistystyoOpistovuosiToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(koulutusOid1, koulutusOid2)))
     )

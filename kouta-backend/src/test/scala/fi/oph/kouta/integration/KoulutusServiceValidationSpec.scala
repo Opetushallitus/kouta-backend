@@ -1866,6 +1866,43 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
+  it should "fail if trying to julkaista vapaa sivistystyo osaamismerkki -koulutus from deprecated osaamismerkki" in {
+    when(koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, "osaamismerkit_1083#1"))
+      .thenAnswer(itemNotFound)
+    failsValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        tila = Julkaistu,
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1"),
+            opintojenLaajuusNumero = Some(1),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.osaamismerkkiKoodiUri", invalidKoodiuri("osaamismerkit_1083#1", "osaamismerkit")),
+      )
+    )
+  }
+
+  it should "succeed when trying to arkistoida vapaa sivistystyo osaamismerkki -koulutus for deprecated osaamismerkki" in {
+    when(koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, "osaamismerkit_1083#1"))
+      .thenAnswer(itemNotFound)
+    passesValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        tila = Arkistoitu,
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1"),
+            opintojenLaajuusNumero = Some(1),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+          )
+        )
+      )
+    )
+  }
+
   "State change" should "succeed from tallennettu to julkaistu" in {
     passesValidation(yoWithOid, yo.copy(tila = Tallennettu))
   }

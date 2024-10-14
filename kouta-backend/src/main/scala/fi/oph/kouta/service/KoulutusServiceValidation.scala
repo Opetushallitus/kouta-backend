@@ -803,16 +803,19 @@ class KoulutusServiceValidation(
   ): IsValid = {
     and(
       assertNotOptional(metadata.osaamismerkkiKoodiUri, "metadata.osaamismerkkiKoodiUri"),
-      validateIfDefined[String](
-        metadata.osaamismerkkiKoodiUri,
-        uri =>
-          assertKoodistoQueryResult(
-            uri,
-            koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, _),
-            "metadata.osaamismerkkiKoodiUri",
-            validationContext,
-            invalidKoodiuri(uri, "osaamismerkit")
-          )
+      validateIfJulkaistu(
+        validationContext.tila,
+        validateIfDefined[String](
+          metadata.osaamismerkkiKoodiUri,
+          uri =>
+            assertKoodistoQueryResult(
+              uri,
+              koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, _),
+              "metadata.osaamismerkkiKoodiUri",
+              validationContext,
+              invalidKoodiuri(uri, "osaamismerkit")
+            )
+        ),
       ),
       assertEmptyKielistetty(metadata.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin"),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
