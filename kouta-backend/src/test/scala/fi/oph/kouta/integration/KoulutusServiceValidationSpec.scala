@@ -296,6 +296,9 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     acceptKoulutusKoodiUri(LukioKoulutusKoodit, "koulutus_301101#1")
     // erikoislaakari
     acceptKoulutusKoodiUri(ErikoislaakariKoulutusKoodit, "koulutus_775101#1")
+    // osaamismerkki
+    when(koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, "osaamismerkit_1082#1"))
+      .thenAnswer(itemFound)
     // toteutukset
     when(toteutusDao.getByKoulutusOid(koulutusOid, TilaFilter.onlyOlemassaolevat())).thenAnswer(
       Seq(
@@ -1793,6 +1796,65 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ),
         ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppua suomeksi")),
         ValidationError("metadata.linkkiEPerusteisiin", kielistettyWoSvenskaError)
+      )
+    )
+  }
+
+  it should "succeed new valid luonnos for vapaa sivistystyo osaamismerkki -koulutus" in {
+    passesValidation(VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+      tila = Tallennettu,
+      metadata = Some(
+      VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+        osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+        opintojenLaajuusNumero = Some(1),
+        opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4"),
+      )
+    )))
+  }
+
+  it should "fail if invalid metadata for luonnostilainen vapaa sivistystyo osaamismerkki -koulutus" in {
+    failsValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        tila = Tallennettu,
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = None,
+            opintojenLaajuusNumero = Some(2),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.osaamismerkkiKoodiUri", missingMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(2.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4")))
+      )
+    )
+  }
+
+  it should "fail if invalid metadata for julkaistu vapaa sivistystyo osaamismerkki -koulutus" in {
+    failsValidation(
+      VapaaSivistystyoOsaamismerkkiKoulutus.copy(
+        metadata = Some(
+          VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+            osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+            kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+            koulutusalaKoodiUrit = Seq("puppu"),
+            linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi"),
+            opintojenLaajuusNumero = Some(10),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.linkkiEPerusteisiin", notEmptyMsg),
+        ValidationError("metadata.kuvaus", notEmptyMsg),
+        ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(10.0).toString)),
+        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))),
+        ValidationError(
+          "metadata.koulutusalaKoodiUrit[0]",
+          invalidKoulutusAlaKoodiuri("puppu")
+        ),
       )
     )
   }

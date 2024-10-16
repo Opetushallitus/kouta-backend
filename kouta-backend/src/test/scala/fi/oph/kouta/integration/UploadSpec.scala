@@ -110,6 +110,29 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     }
   }
 
+  it should "upload smaller image when isSmallTeemakuva query parameter is set to true" in {
+    post(uri = s"$TeemakuvaUploadPath?isSmallTeemakuva=true", body = smallTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
+      status should equal(200)
+      read[ImageUrl](body).url match {
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
+          content should not be empty
+          val Content(localData, metadata) = content.get
+          localData should equal(smallTeemakuva)
+          metadata.getCacheControl should equal("max-age=86400")
+          metadata.getContentType should equal("image/png")
+        case url => fail(s"$url was not an url to the public bucket")
+      }
+    }
+  }
+
+  it should "reject small teemakuva image that has too few pixels" in {
+    post(uri = s"$TeemakuvaUploadPath?isSmallTeemakuva=true", body = tooSmallSmallTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
+      status should equal(400)
+      body should include("väärän kokoinen")
+    }
+  }
+
   "Upload logo image" should "upload image" in {
     post(uri = LogoUploadPath, body = correctLogo, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
@@ -247,4 +270,26 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     }
   }
 
+  "Upload icon image" should "upload icon" in {
+    post(uri = IconUploadPath, body = correctIcon, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
+      status should equal(200)
+      read[ImageUrl](body).url match {
+        case s3ImageService.tempUrl(filename) =>
+          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
+          content should not be empty
+          val Content(localData, metadata) = content.get
+          localData should equal(correctIcon)
+          metadata.getCacheControl should equal("max-age=86400")
+          metadata.getContentType should equal("image/png")
+        case url => fail(s"$url was not an url to the public bucket")
+      }
+    }
+  }
+
+  it should "reject icon image that has too many pixels" in {
+    post(uri = IconUploadPath, body = correctTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
+      status should equal(400)
+      body should include("väärän kokoinen")
+    }
+  }
 }

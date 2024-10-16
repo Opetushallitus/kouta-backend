@@ -79,3 +79,4 @@ case object ValintatapaKoodisto             extends KoodistoNimi { val name = "v
 case object TietoaOpiskelustaKoodisto       extends KoodistoNimi { val name = "organisaationkuvaustiedot"       }
 
 case object SosiaalinenMedia                extends KoodistoNimi { val name = "sosiaalinenmedia"                }
+case object Osaamismerkit                extends KoodistoNimi { val name = "osaamismerkit"                }

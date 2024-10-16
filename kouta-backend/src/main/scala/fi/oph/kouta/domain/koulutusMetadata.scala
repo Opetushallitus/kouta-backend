@@ -207,47 +207,47 @@ package object koulutusMetadata {
 
   val AmmatillinenKoulutusMetadataModel: String =
     s"""    AmmatillinenKoulutusMetadata:
-      |      allOf:
-      |        - $$ref: '#/components/schemas/KoulutusMetadata'
-      |        - type: object
-      |          properties:
-      |            tyyppi:
-      |              type: string
-      |              description: Koulutuksen metatiedon tyyppi
-      |              example: amm
-      |              enum:
-      |                - amm
-      |            koulutusalaKoodiUrit:
-      |              type: array
-      |              description: |
-      |                Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/kansallinenkoulutusluokitus2016koulutusalataso2).
-      |                ${AmmTutkintoWithoutEperusteFieldDescription}
-      |              items:
-      |                type: string
-      |              example:
-      |                - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
-      |                - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
-      |            tutkintonimikeKoodiUrit:
-      |              type: array
-      |              description: |
-      |                Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/tutkintonimikkeet).
-      |                ${AmmTutkintoWithoutEperusteFieldDescription}
-      |              items:
-      |                type: string
-      |              example:
-      |                - tutkintonimikkeet_10091#2
-      |                - tutkintonimikkeet_10015#2
-      |            opintojenLaajuusyksikkoKoodiUri:
-      |              type: string
-      |              description: |
-      |                Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/opintojenlaajuusyksikko).
-      |                ${AmmTutkintoWithoutEperusteFieldDescription}
-      |              example: opintojenlaajuusyksikko_2#1
-      |            opintojenLaajuusNumero:
-      |              type: integer
-      |              description: Opintojen laajuus tai kesto numeroarvona. ${AmmTutkintoWithoutEperusteFieldDescription}
-      |              example: 10
-      |""".stripMargin
+       |      allOf:
+       |        - $$ref: '#/components/schemas/KoulutusMetadata'
+       |        - type: object
+       |          properties:
+       |            tyyppi:
+       |              type: string
+       |              description: Koulutuksen metatiedon tyyppi
+       |              example: amm
+       |              enum:
+       |                - amm
+       |            koulutusalaKoodiUrit:
+       |              type: array
+       |              description: |
+       |                Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/kansallinenkoulutusluokitus2016koulutusalataso2).
+       |                ${AmmTutkintoWithoutEperusteFieldDescription}
+       |              items:
+       |                type: string
+       |              example:
+       |                - kansallinenkoulutusluokitus2016koulutusalataso2_054#1
+       |                - kansallinenkoulutusluokitus2016koulutusalataso2_055#1
+       |            tutkintonimikeKoodiUrit:
+       |              type: array
+       |              description: |
+       |                Lista koulutuksen tutkintonimikkeistä. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/tutkintonimikkeet).
+       |                ${AmmTutkintoWithoutEperusteFieldDescription}
+       |              items:
+       |                type: string
+       |              example:
+       |                - tutkintonimikkeet_10091#2
+       |                - tutkintonimikkeet_10015#2
+       |            opintojenLaajuusyksikkoKoodiUri:
+       |              type: string
+       |              description: |
+       |                Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/opintojenlaajuusyksikko).
+       |                ${AmmTutkintoWithoutEperusteFieldDescription}
+       |              example: opintojenlaajuusyksikko_2#1
+       |            opintojenLaajuusNumero:
+       |              type: integer
+       |              description: Opintojen laajuus tai kesto numeroarvona. ${AmmTutkintoWithoutEperusteFieldDescription}
+       |              example: 10
+       |""".stripMargin
 
   val AmmatillinenTutkinnonOsaKoulutusMetadataModel: String =
     """    AmmatillinenTutkinnonOsaKoulutusMetadata:
@@ -427,6 +427,31 @@ package object koulutusMetadata {
       |              example: 10
       |""".stripMargin
 
+  val VapaaSivistystyoOsaamismerkkiKoulutusMetadataModel: String =
+    """    VapaaSivistystyoOsaamismerkkiKoulutusMetadata:
+      |      allOf:
+      |        - $ref: '#/components/schemas/KoulutusMetadata'
+      |        - type: object
+      |          properties:
+      |            tyyppi:
+      |              type: string
+      |              description: Koulutuksen metatiedon tyyppi
+      |              example: vapaa-sivistystyo-osaamismerkki
+      |              enum:
+      |                - vapaa-sivistystyo-osaamismerkki
+      |            koulutusalaKoodiUrit:
+      |              type: array
+      |              description: Lista koulutusaloja. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kansallinenkoulutusluokitus2016koulutusalataso1/1)
+      |              items:
+      |                type: string
+      |                example:
+      |                  - kansallinenkoulutusluokitus2016koulutusalataso1_001#1
+      |            osaamismerkkiKoodiUri:
+      |              type: string
+      |              description: Osaamismerkki. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/koodisto/view/osaamismerkit/1)
+      |              example: osaamismerkit_1009#1
+      |""".stripMargin
+
   val AikuistenPerusopetusKoulutusMetadataModel: String =
     """    AikuistenPerusopetusKoulutusMetadata:
       |      allOf:
@@ -585,6 +610,7 @@ package object koulutusMetadata {
     TuvaKoulutusMetadataModel,
     TelmaKoulutusMetadataModel,
     VapaaSivistystyoKoulutusMetadataModel,
+    VapaaSivistystyoOsaamismerkkiKoulutusMetadataModel,
     AikuistenPerusopetusKoulutusMetadataModel,
     ErikoislaakariKoulutusMetadataModel,
     KkOpintokokonaisuusKoulutusMetadataModel,
@@ -792,6 +818,18 @@ case class VapaaSivistystyoMuuKoulutusMetadata(
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    isMuokkaajaOphVirkailija: Option[Boolean] = None
+) extends VapaaSivistystyoKoulutusMetadata
+
+case class VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    lisatiedot: Seq[Lisatieto] = Seq(),
+    kuvaus: Kielistetty = Map(),
+    linkkiEPerusteisiin: Kielistetty = Map(),
+    koulutusalaKoodiUrit: Seq[String] = Seq(),
+    opintojenLaajuusNumero: Option[Double] = None,
+    opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+    osaamismerkkiKoodiUri: Option[String],
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends VapaaSivistystyoKoulutusMetadata
 

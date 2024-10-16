@@ -103,6 +103,11 @@ object Validations {
     id = "invalidOpinnonTyyppiKoodiuri"
   )
 
+  def invalidKoodiuri(koodiUri: String, tyyppi: String): ErrorMessage = ErrorMessage(
+    msg = s"Koulutukselle valittua $tyyppi-koodiuria $koodiUri ei löydy, tai ei ole voimassa",
+    id = s"invalid${tyyppi.capitalize}Koodiuri"
+  )
+
   def invalidKoulutusOpintojenLaajuusNumeroIntegrity(
       laajuusMin: Option[Double],
       laajuusMax: Option[Double],
@@ -571,6 +576,12 @@ object Validations {
       msg = "Oppilaitoksella tai sen osalla voi olla samanaikaisesti vain joko teemakuva tai esittelyvideo",
       id = "onlyTeemakuvaOrEsittelyvideo"
     )
+
+  def hakukohteenLiittaminenNotAllowed(koulutustyyppi: Koulutustyyppi): ErrorMessage =
+    ErrorMessage(msg = s"Hakukohteita ei voi liittää tälle koulutustyypille: $koulutustyyppi", id = "hakukohteenLiittaminenNotAllowed")
+
+  def notAllowedHakulomaketyyppi(hakulomaketyyppi: Option[Hakulomaketyyppi]): ErrorMessage =
+    ErrorMessage(msg = s"Hakulomaketyyppiä ${hakulomaketyyppi.getOrElse("")} ei voi käyttää tutkintoon johtamattomille koulutuksille", id = "hakulomaketyyppiNotAllowed")
 
   val KoulutusKoodiPattern: Pattern                 = Pattern.compile("""koulutus_\d{6}#\d{1,2}""")
   val TietoaOpiskelustaOtsikkoKoodiPattern: Pattern = Pattern.compile("""organisaationkuvaustiedot_\d+#\d{1,2}""")

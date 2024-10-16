@@ -114,6 +114,29 @@ object NameHelper {
       })
   }
 
+  def concatAsEntityName(start: Kielistetty, separator: Option[String], end: Kielistetty = Map(), kielivalinta: Seq[Kieli] = List(Fi)): Kielistetty = {
+    def concatSeparatorToEnd(separator: Option[String], kaannos: (Kieli, String)): String = {
+      s"${separator.getOrElse("")} ${kaannos._2}"
+    }
+
+    kielivalinta.map(kieli => {
+      val startPart = start.find(kielistettyStart => kielistettyStart._1 == kieli) match {
+        case Some(kaannos) => kaannos._2
+        case None => start.find(kielistettyStart => kielistettyStart._1 == Fi).map(_._2).getOrElse("")
+      }
+
+      val endPart = end.find(kielistettyEnd => kielistettyEnd._1 == kieli)
+      val endPartWithPossibleSeparator = endPart match {
+        case Some(endPartWithRightLang) => concatSeparatorToEnd(separator, endPartWithRightLang)
+        case None => end.find(kielistettyEnd => kielistettyEnd._1 == Fi) match {
+          case Some(endPartWithFi) => concatSeparatorToEnd(separator, endPartWithFi)
+          case None => ""
+        }
+      }
+      kieli -> (startPart + endPartWithPossibleSeparator)
+    }).toMap
+  }
+
   def notFullyPopulated(nimi: Kielistetty, kielivalinta: Seq[Kieli]): Boolean = {
     val nimiWoNullValues = kielistettyWoNullValues(nimi)
     kielivalinta.exists(nimiWoNullValues.getOrElse(_, "").isEmpty)
