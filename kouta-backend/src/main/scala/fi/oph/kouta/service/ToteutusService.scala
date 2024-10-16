@@ -513,7 +513,7 @@ class ToteutusService(
       ToteutusDAO.getOidsByTarjoajat(jarjestyspaikkaOids, tilaFilter)
     }
 
-  def getToteutukset(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[Toteutus] =
+  def getToteutukset(oids: List[ToteutusOid])(implicit authenticated: Authenticated): Seq[ToteutusLiitettyListItem] =
     withRootAccess(indexerRoles) {
       ToteutusDAO.get(oids)
     }

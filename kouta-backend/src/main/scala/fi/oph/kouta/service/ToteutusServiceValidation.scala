@@ -1,17 +1,20 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.KoodistoElement
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoElement}
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.Oid
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SorakuvausDAO, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.validation.LiitettyEntityValidation
 import fi.oph.kouta.servlet.Authenticated
-import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
 import fi.oph.kouta.util.LaajuusValidationUtil
+import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus, withoutKoodiVersion}
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.ExternalQueryResults.ExternalQueryResult
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation._
+
+import java.time.Instant
 
 object ToteutusServiceValidation
     extends ToteutusServiceValidation(
@@ -20,17 +23,20 @@ object ToteutusServiceValidation
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO,
-      ToteutusDAO
+      ToteutusDAO,
+      EPerusteKoodiClient
     )
 
-class ToteutusServiceValidation(val koodistoService: KoodistoService,
-                                val organisaatioService: OrganisaatioService,
-                                koulutusDAO: KoulutusDAO,
-                                hakukohdeDAO: HakukohdeDAO,
-                                val sorakuvausDAO: SorakuvausDAO,
-                                toteutusDAO: ToteutusDAO
-                               ) extends KoulutusToteutusValidatingService[Toteutus]
-  with RoleEntityAuthorizationService[Toteutus] {
+class ToteutusServiceValidation(
+    val koodistoService: KoodistoService,
+    val organisaatioService: OrganisaatioService,
+    koulutusDAO: KoulutusDAO,
+    hakukohdeDAO: HakukohdeDAO,
+    val sorakuvausDAO: SorakuvausDAO,
+    toteutusDAO: ToteutusDAO,
+    ePerusteKoodiClient: EPerusteKoodiClient
+) extends KoulutusToteutusValidatingService[Toteutus]
+    with RoleEntityAuthorizationService[Toteutus] {
 
   protected val roleEntity: RoleEntity = Role.Toteutus
 
@@ -40,9 +46,11 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     var errors = super.validate(toteutus, oldToteutus)
     if (errors.isEmpty) {
       toteutus.metadata match {
-        case Some(metadata: KkOpintokokonaisuusToteutusMetadata) =>
-          errors = validateOpintojaksotIntegrity(toteutus.tila, metadata, authenticated)
-        case _ =>
+        case Some(_: KkOpintojaksoToteutusMetadata) =>
+          errors = validateLiitettyEntityIntegrity(toteutus)
+        case Some(metadata) =>
+          errors = if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu) validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated) else NoErrors
+        case None =>
       }
     }
 
@@ -74,7 +82,15 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     val koulutustyyppiSpecificErrors = toteutus.metadata match {
       case Some(metadata) =>
         val koulutustyypitWithMandatoryKuvaus: Set[Koulutustyyppi] =
-          Set(AmmMuu, Tuva, Telma, VapaaSivistystyoOpistovuosi, VapaaSivistystyoMuu, VapaaSivistystyoOsaamismerkki, KkOpintojakso)
+          Set(
+            AmmMuu,
+            Tuva,
+            Telma,
+            VapaaSivistystyoOpistovuosi,
+            VapaaSivistystyoMuu,
+            VapaaSivistystyoOsaamismerkki,
+            KkOpintojakso
+          )
         val koulutusTyyppi    = metadata.tyyppi
         val koulutusKoodiUrit = koulutus.map(_.koulutuksetKoodiUri).getOrElse(Seq())
         and(
@@ -161,7 +177,11 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
                   )
                 case m: VapaaSivistystyoOsaamismerkkiToteutusMetadata =>
                   and(
-                    assertFalse(m.isHakukohteetKaytossa.get, "metadata.isHakukohteetKaytossa", hakukohteenLiittaminenNotAllowed(koulutusTyyppi)),
+                    assertFalse(
+                      m.isHakukohteetKaytossa.get,
+                      "metadata.isHakukohteetKaytossa",
+                      hakukohteenLiittaminenNotAllowed(koulutusTyyppi)
+                    ),
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
                     assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
                   )
@@ -236,7 +256,7 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       toteutusDiffResolver: ToteutusDiffResolver,
       opetus: Opetus,
       koulutustyyppi: Koulutustyyppi,
-      koulutuskoodiurit: Seq[String],
+      koulutuskoodiurit: Seq[String]
   ): IsValid = {
     val path = "metadata.opetus"
     and(
@@ -319,7 +339,7 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli],
       apuraha: Apuraha,
-      opetus: Opetus,
+      opetus: Opetus
   ): IsValid = {
     val path = "metadata.opetus.apuraha"
     val min  = apuraha.min
@@ -344,9 +364,15 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     )
   }
 
-  private def validateMaksullisuus(opetus: Opetus, koulutustyyppi: Koulutustyyppi, koulutuskoodiurit: Seq[String], path: String): IsValid = {
-    val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
-    val English = "oppilaitoksenopetuskieli_4"
+  private def validateMaksullisuus(
+      opetus: Opetus,
+      koulutustyyppi: Koulutustyyppi,
+      koulutuskoodiurit: Seq[String],
+      path: String
+  ): IsValid = {
+    val isTutkintoonJohtavaKorkeakoulutus =
+      Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
+    val English         = "oppilaitoksenopetuskieli_4"
     val Tohtorikoulutus = "tutkintotyyppi_16"
 
     and(
@@ -368,7 +394,8 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
             koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
               case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
                 val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-                val tohtorikoulutukset = tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                val tohtorikoulutukset =
+                  tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
                 assertEmpty(
                   tohtorikoulutukset,
                   s"$path.maksullisuustyyppi",
@@ -453,15 +480,22 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
             assertFalse(
               m.hakulomaketyyppi.contains(Ataru) || m.hakulomaketyyppi.contains(HakuApp),
               "metadata.hakulomaketyyppi",
-              notAllowedHakulomaketyyppi(m.hakulomaketyyppi))),
-          validateIfTrue(!m.isHakukohteetKaytossa.contains(true),
+              notAllowedHakulomaketyyppi(m.hakulomaketyyppi)
+            )
+          ),
+          validateIfTrue(
+            !m.isHakukohteetKaytossa.contains(true),
             and(
               assertNotOptional(m.hakutermi, "metadata.hakutermi"),
               assertNotOptional(m.hakulomaketyyppi, "metadata.hakulomaketyyppi"),
               validateIfTrue(
                 m.hakulomaketyyppi.contains(MuuHakulomake),
                 and(
-                  validateKielistetty(vCtx.kielivalinta, m.lisatietoaHakeutumisesta, "metadata.lisatietoaHakeutumisesta"),
+                  validateKielistetty(
+                    vCtx.kielivalinta,
+                    m.lisatietoaHakeutumisesta,
+                    "metadata.lisatietoaHakeutumisesta"
+                  ),
                   validateKielistetty(vCtx.kielivalinta, m.hakulomakeLinkki, "metadata.hakulomakeLinkki"),
                   validateOptionalKielistetty(
                     vCtx.kielivalinta,
@@ -480,71 +514,6 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
         )
       )
     )
-  }
-
-  def validateOpintojaksotIntegrity(
-      tila: Julkaisutila,
-      metadata: KkOpintokokonaisuusToteutusMetadata,
-      authenticated: Authenticated
-  ): IsValid = {
-    var errors: List[ValidationError]                    = List()
-    var errorMap: Map[String, List[Option[ToteutusOid]]] = Map()
-
-    val addErrorOid = (errorKey: String, toteutusOid: Option[ToteutusOid]) => {
-      errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(toteutusOid)))
-    }
-
-    val liitetytOpintojaksot = metadata.liitetytOpintojaksot
-    val toteutukset          = toteutusDAO.get(liitetytOpintojaksot.toList)
-
-    toteutukset.foreach(toteutus => {
-      authorizeGet(toteutus)(authenticated)
-      val liitettavanToteutuksenTyyppi = toteutus.metadata.get.tyyppi
-      val liitettavanToteutuksenTila   = toteutus.tila
-
-      if (liitettavanToteutuksenTyyppi != KkOpintojakso) {
-        addErrorOid("metadata.liitetytOpintojaksot.koulutustyyppi", toteutus.oid)
-      }
-
-      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanToteutuksenTila)) {
-        addErrorOid("metadata.liitetytOpintojaksot.tila", toteutus.oid)
-      }
-    })
-
-    liitetytOpintojaksot.foreach(oid => {
-      if (!toteutukset.exists(toteutus => toteutus.oid.get == oid)) {
-        addErrorOid("metadata.liitetytOpintojaksot.notFound", Some(oid))
-      }
-    })
-
-    // Jos opintokokonaisuus on julkaistu, täytyy siihen liitettyjen opintojaksojen olla myös julkaistuja
-    if (tila == Julkaistu) {
-      toteutukset.foreach(toteutus => {
-        if (toteutus.tila != Julkaistu) {
-          addErrorOid(s"metadata.liitetytOpintojaksot.julkaisutila", toteutus.oid)
-        }
-      })
-    }
-
-    errors = errorMap.toList.map(value => {
-      val errorKey    = value._1
-      val toteutukset = value._2.flatten
-      ValidationError(
-        errorKey,
-        errorKey match {
-          case "metadata.liitetytOpintojaksot.koulutustyyppi" =>
-            invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset)
-          case "metadata.liitetytOpintojaksot.julkaisutila" =>
-            invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset)
-          case "metadata.liitetytOpintojaksot.tila" =>
-            invalidTilaForLiitettyOpintojakso(toteutukset)
-          case "metadata.liitetytOpintojaksot.notFound" =>
-            unknownOpintojakso(toteutukset)
-        }
-      )
-    })
-
-    if (errors.isEmpty) NoErrors else errors
   }
 
   private def validateKieliKoodit(
@@ -818,4 +787,109 @@ class ToteutusServiceValidation(val koodistoService: KoodistoService,
     "tila",
     integrityViolationMsg("Toteutusta", "hakukohteita")
   )
+
+  def validateLiitettyEntityIntegrity(toteutus: Toteutus): IsValid = {
+    LiitettyEntityValidation.validateLiitettyEntityIntegrity(toteutus, toteutus.oid match {
+      case Some(oid) => toteutusDAO.get(oid)
+      case None => Vector()
+    })
+  }
+
+  def validateLiitetytEntitiesIntegrity(
+      tila: Julkaisutila,
+      metadata: ToteutusMetadata,
+      ePerusteKoodiClient: EPerusteKoodiClient,
+      authenticated: Authenticated
+  ): IsValid = {
+    var errors: List[ValidationError]    = List()
+    var errorMap: Map[String, List[Oid]] = Map()
+
+    val addErrorOid = (errorKey: String, koulutusOid: Oid) => {
+      errorMap += (errorKey -> (errorMap.getOrElse(errorKey, List()) ++ List(koulutusOid)))
+    }
+
+    val (liitetytOids, entities, liitettyjenKoulutustyyppi) = metadata match {
+      case m: VapaaSivistystyoToteutusMetadata =>
+        val liitetytOids = m.liitetytOsaamismerkit
+        val koulutukset  = if (liitetytOids.isEmpty) List() else koulutusDAO.get(liitetytOids.toList)
+        (liitetytOids, koulutukset, Some(VapaaSivistystyoOsaamismerkki))
+      case m: KkOpintokokonaisuusToteutusMetadata =>
+        val liitetytOids = m.liitetytOpintojaksot
+        val toteutukset  = if (liitetytOids.isEmpty) List() else toteutusDAO.get(liitetytOids.toList)
+        (liitetytOids, toteutukset, Some(KkOpintojakso))
+      case _ =>
+        (List(), List(), None)
+    }
+
+    entities.foreach(entity => {
+      val liitettavanEntiteetinTyyppi = entity.koulutustyyppi
+      val liitettavanEntiteetinTila   = entity.tila
+      entity match {
+        case t: ToteutusLiitettyListItem => authorizeGetWithType[ToteutusLiitettyListItem](t)(authenticated)
+        case t: KoulutusLiitettyListItem =>
+          authorizeGetWithType[KoulutusLiitettyListItem](t)(authenticated)
+          if (liitettavanEntiteetinTyyppi == VapaaSivistystyoOsaamismerkki) {
+            t.osaamismerkkiKoodiUri match {
+              case Some(koodiUri) =>
+                ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache(withoutKoodiVersion(koodiUri)) match {
+                  case Right(osaamismerkki) =>
+                    osaamismerkki.voimassaoloLoppuu match {
+                      case Some(voimassaoloLoppuu) =>
+                        if (voimassaoloLoppuu < Instant.now().toEpochMilli) {
+                          addErrorOid("metadata.liitetytEntiteetit.deprecatedOsaamismerkki", entity.oid)
+                        }
+                      case _ =>
+                    }
+                  case Left(exp) => throw exp
+                }
+              case _ =>
+            }
+          }
+      }
+
+      if (liitettavanEntiteetinTyyppi != liitettyjenKoulutustyyppi.get) {
+        addErrorOid("metadata.liitetytEntiteetit.koulutustyyppi", entity.oid)
+      }
+
+      if (!TilaFilter.onlyOlemassaolevatAndArkistoimattomat().contains(liitettavanEntiteetinTila)) {
+        addErrorOid("metadata.liitetytEntiteetit.tila", entity.oid)
+      }
+
+      // Jos toteutus on julkaistu, täytyy siihen liitettyjen entiteettien olla myös julkaistuja
+      if (tila == Julkaistu) {
+        if (liitettavanEntiteetinTila != Julkaistu) {
+          addErrorOid(s"metadata.liitetytEntiteetit.julkaisutila", entity.oid)
+        }
+      }
+    })
+
+    liitetytOids.foreach(oid => {
+      if (!entities.exists(entity => entity.oid == oid)) {
+        addErrorOid("metadata.liitetytEntiteetit.notFound", oid)
+      }
+    })
+
+    errors = errorMap.toList.map(value => {
+      val errorKey = value._1
+      val entities = value._2
+      ValidationError(
+        errorKey,
+        errorKey match {
+          case "metadata.liitetytEntiteetit.koulutustyyppi" =>
+            invalidKoulutustyyppiForLiitetty(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.julkaisutila" =>
+            invalidTilaForLiitettyOnJulkaisu(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.tila" =>
+            invalidTilaForLiitetty(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.notFound" =>
+            unknownEntity(entities, liitettyjenKoulutustyyppi)
+          case "metadata.liitetytEntiteetit.deprecatedOsaamismerkki" =>
+            deprecatedOsaamismerkki(entities)
+
+        }
+      )
+    })
+
+    if (errors.isEmpty) NoErrors else errors
+  }
 }

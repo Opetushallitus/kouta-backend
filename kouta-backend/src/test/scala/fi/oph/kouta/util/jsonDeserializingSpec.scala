@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Puhelin, Sv, Www}
+import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Osaamismerkki, Puhelin, Sv, Www}
 import org.json4s.jackson.JsonMethods.parse
 
 class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
@@ -113,4 +113,81 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
 
     assert(parse(organisaatioJson).extract[OrganisaatioServiceOrg] == result)
   }
+
+  "osaamismerkkiSerializer" should "return osaamismerkki with voimassaoloLoppuu value" in {
+    val osaamismerkkiJson = "{\"id\" : 9202689," +
+      "\"nimi\" : {\"_id\" : \"9204031\"," +
+      "\"_tunniste\" : \"f87c9f04-d7e9-4993-a16a-42fd42b8333e\"," +
+      "\"fi\" : \"Oma talous\"," +
+      "\"sv\" : \"Min ekonomi\"}," +
+      "\"kuvaus\" : null," +
+      "\"tila\" : \"JULKAISTU\"," +
+      "\"kategoria\" : {\"id\" : 9202621," +
+      "\"nimi\" : {\"_id\" : \"9202526\"," +
+      "\"_tunniste\" : \"0a2fbef2-0549-4a43-81f6-4ecfb447b091\"," +
+      "\"fi\" : \"Numero- ja taloustaidot\"," +
+      "\"sv\" : \"Numeriska färdigheter och färdigheter i ekonomi\" }," +
+      "\"kuvaus\" : null," +
+      "\"liite\" : {\"id\" : \"a0dcad65-088c-480c-a116-977ecbbe52f7\"," +
+      "\"nimi\" : \"numero_ja_taloustaidot_eitekstia.png\"," +
+      "\"mime\" : \"image/png\"," +
+      "\"binarydata\" : \"iVBORw0KGgoAAAANSUhEUgAAAM\"}," +
+      "\"muokattu\" : 1727934803353}," +
+      "\"koodiUri\" : \"osaamismerkit_1010\"," +
+      "\"osaamistavoitteet\" : [{\"id\" : 9202891," +
+      "\"osaamistavoite\" : {\"_id\" : \"9204032\"," +
+      "\"_tunniste\" : \"9a625d8d-7fec-4d8f-9a6f-6aa5f44331f0\"," +
+      "\"fi\" : \"osaa tunnistaa menojen ja tulojen vaikutuksen taloudelliseen tilanteeseensa\"," +
+      "\"sv\" : \"är medveten om hur utgifter och inkomster inverkar på den egna ekonomiska situationen\"}}]," +
+      "\"arviointikriteerit\" : [ {\"id\" : 9202873," +
+      "\"arviointikriteeri\" : {\"_id\" : \"9204015\"," +
+          "\"_tunniste\" : \"bd867103-ad5f-4640-93ea-54933d10ae3c\"," +
+          "\"fi\" : \"erittelee oman taloutensa menot ja tulot\"," +
+          "\"sv\" : \"specificera utgifter och inkomster för sin egen ekonomi\"}}]," +
+      "\"voimassaoloAlkaa\" : 1704060000000," +
+      "\"voimassaoloLoppuu\" : 1727643600000," +
+      "\"muokattu\" : 1706787214743," +
+      "\"muokkaaja\" : \"1.2.246.562.24.16945731101\"}"
+
+    assert(parse(osaamismerkkiJson).extract[Osaamismerkki] == Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1010", voimassaoloLoppuu = Some(1727643600000L)))
+  }
+
+  "osaamismerkkiSerializer" should "return osaamismerkki without voimassaoloLoppuu" in {
+    val osaamismerkkiJson = "{\"id\" : 9202689," +
+      "\"nimi\" : {\"_id\" : \"9204031\"," +
+      "\"_tunniste\" : \"f87c9f04-d7e9-4993-a16a-42fd42b8333e\"," +
+      "\"fi\" : \"Oma talous\"," +
+      "\"sv\" : \"Min ekonomi\"}," +
+      "\"kuvaus\" : null," +
+      "\"tila\" : \"JULKAISTU\"," +
+      "\"kategoria\" : {\"id\" : 9202621," +
+      "\"nimi\" : {\"_id\" : \"9202526\"," +
+      "\"_tunniste\" : \"0a2fbef2-0549-4a43-81f6-4ecfb447b091\"," +
+      "\"fi\" : \"Numero- ja taloustaidot\"," +
+      "\"sv\" : \"Numeriska färdigheter och färdigheter i ekonomi\" }," +
+      "\"kuvaus\" : null," +
+      "\"liite\" : {\"id\" : \"a0dcad65-088c-480c-a116-977ecbbe52f7\"," +
+      "\"nimi\" : \"numero_ja_taloustaidot_eitekstia.png\"," +
+      "\"mime\" : \"image/png\"," +
+      "\"binarydata\" : \"iVBORw0KGgoAAAANSUhEUgAAAM\"}," +
+      "\"muokattu\" : 1727934803353}," +
+      "\"koodiUri\" : \"osaamismerkit_1010\"," +
+      "\"osaamistavoitteet\" : [{\"id\" : 9202891," +
+      "\"osaamistavoite\" : {\"_id\" : \"9204032\"," +
+      "\"_tunniste\" : \"9a625d8d-7fec-4d8f-9a6f-6aa5f44331f0\"," +
+      "\"fi\" : \"osaa tunnistaa menojen ja tulojen vaikutuksen taloudelliseen tilanteeseensa\"," +
+      "\"sv\" : \"är medveten om hur utgifter och inkomster inverkar på den egna ekonomiska situationen\"}}]," +
+      "\"arviointikriteerit\" : [ {\"id\" : 9202873," +
+      "\"arviointikriteeri\" : {\"_id\" : \"9204015\"," +
+      "\"_tunniste\" : \"bd867103-ad5f-4640-93ea-54933d10ae3c\"," +
+      "\"fi\" : \"erittelee oman taloutensa menot ja tulot\"," +
+      "\"sv\" : \"specificera utgifter och inkomster för sin egen ekonomi\"}}]," +
+      "\"voimassaoloAlkaa\" : 1704060000000," +
+      "\"voimassaoloLoppuu\" : null," +
+      "\"muokattu\" : 1706787214743," +
+      "\"muokkaaja\" : \"1.2.246.562.24.16945731101\"}"
+
+    assert(parse(osaamismerkkiJson).extract[Osaamismerkki] == Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1010", voimassaoloLoppuu = None))
+  }
 }
+

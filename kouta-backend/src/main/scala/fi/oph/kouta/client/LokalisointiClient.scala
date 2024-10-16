@@ -32,8 +32,10 @@ class LokalisointiClient(urlProperties: OphProperties)
       "lokalisointi-service.localisation"
     )
 
+  val errorHandler = (url: String, status: Int, response: String) => throw LokalisointiQueryException(url, status, response)
+
   private def getKaannoksetWithKeyFromLokalisointiService(key: String): Map[Kieli, String] =
-    get(lokalisointiUrl + s"&key=$key", followRedirects = true) { response =>
+    get(lokalisointiUrl + s"&key=$key", errorHandler, followRedirects = true) { response =>
       parseKaannokset(parse(response).extract[List[Kaannos]])
     }
 

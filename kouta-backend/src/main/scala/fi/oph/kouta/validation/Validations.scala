@@ -4,11 +4,12 @@ import fi.oph.kouta.client.HakemusPalveluClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
-import fi.oph.kouta.domain.oid.{Oid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{LiitettyOid, Oid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
+import org.jsoup.nodes.Entities
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
@@ -147,47 +148,68 @@ object Validations {
     )
   }
 
-  def invalidKoulutustyyppiForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä koulutustyyppi. Kaikkien toteutusten tulee olla opintojaksoja.",
-      id = "invalidKoulutustyyppiForLiitettyOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä koulutustyyppi. Kaikkien entiteettien tulee olla tyyppiä $koulutustyyppi.",
+      id = "invalidKoulutustyyppiForLiitetty",
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
-  def invalidTilaForLiitettyOpintojaksoOnJulkaisu(toteutukset: Seq[ToteutusOid]) = {
+  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Kaikkien julkaistuun opintokokonaisuuteen liitettyjen opintojaksojen tulee olla julkaistuja.",
-      id = "invalidTilaForLiitettyOpintojaksoOnJulkaisu",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Kaikkien julkaistuun entiteettiin liitettyjen $koulutustyyppi-entiteettien tulee olla myös julkaistuja.",
+      id = "invalidTilaForLiitettyOnJulkaisu",
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
-  def invalidTilaForLiitettyOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
     ErrorMessage(
       msg =
-        s"Ainakin yhdellä opintokokonaisuuteen liitetyllä toteutuksella on väärä julkaisutila. Opintokokonaisuuteen liitettyjen opintojaksojen tulee olla luonnostilaisia tai julkaistuja.",
-      id = "invalidTilaForLiitettyOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+        s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
+      id = "invalidTilaForLiitetty",
+      meta = Some(Map("entiteetit" -> entities))
     )
   }
 
-  def unknownOpintojakso(toteutukset: Seq[ToteutusOid]) = {
+  def invalidStateChangeForLiitetty(liitetty: LiitettyOid, mihinLiitetty: List[Option[Oid]], toteutukset: Vector[ToteutusOid]) = {
     ErrorMessage(
-      msg = s"Opintokokonaisuuteen liitettyä opintojaksoa ei löydy.",
-      id = "unknownOpintojakso",
-      meta = Some(Map("toteutukset" -> toteutukset))
+      msg =
+        s"Entiteetin $liitetty tilaa ei voi vaihtaa, koska se on liitetty entiteetteihin $mihinLiitetty, joiden tila on Julkaistu.",
+      id = "invalidStateChangeForLiitetty",
+      meta = Some(Map("julkaistutToteutukset" -> toteutukset))
     )
   }
 
-  val cannotChangeIsAvoinKorkeakoulutus = ErrorMessage(
+  def unknownEntity(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = {
+    val message = koulutustyyppi match {
+      case Some(koulutustyyppi) => s"Liitettyä $koulutustyyppi-entiteettiä ei löydy."
+      case None => s"Liitettyä entiteettiä ei löydy."
+    }
+    ErrorMessage(
+      msg = message,
+      id = "unknownEntity",
+      meta = Some(Map("entiteetit" -> entities))
+    )
+  }
+
+  def deprecatedOsaamismerkki(entities: Seq[Oid]): ErrorMessage = {
+    ErrorMessage(
+      msg = s"Osaamismerkkiä $entities ei voi liittää toteutukselle, koska osaamismerkin voimassaolo on päättynyt.",
+      id = "deprecatedOsaamismerkki",
+      meta = Some(Map("osaamismerkit" -> entities))
+    )
+  }
+
+  val cannotChangeIsAvoinKorkeakoulutus: ErrorMessage = ErrorMessage(
     id = "cannotChangeIsAvoinKorkeakoulutus",
     msg = "Avoimen korkeakoulutuksen valintaa ei voi enää muuttaa, koska koulutukseen on liitetty toteutuksia."
   )
 
-  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]) = ErrorMessage(
+  def cannotRemoveTarjoajaFromAvoinKorkeakoulutus(tarjoajat: List[OrganisaatioOid]): ErrorMessage = ErrorMessage(
     id = "cannotRemoveTarjoajaFromAvoinKorkeakoulutus",
     msg =
       s"Avoimen korkeakoulutuksen tarjoajaa ei voi enää poistaa, koska koulutukseen on liitetty toteutuksia, joissa tarjoaja on lisätty järjestäjäksi: ${tarjoajat

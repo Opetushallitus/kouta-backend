@@ -3,7 +3,7 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.TestData.LukioHakukohteenLinja
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
@@ -50,13 +50,16 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koodistoService     = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
+    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
       organisaatioService,
       KoulutusDAO,
       HakukohdeDAO,
       SorakuvausDAO,
-      ToteutusDAO
+      ToteutusDAO,
+      mockEPerusteKoodiClient
     )
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(
       koodistoService,

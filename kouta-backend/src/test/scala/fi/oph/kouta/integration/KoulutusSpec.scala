@@ -37,9 +37,17 @@ class KoulutusSpec
   override def beforeAll(): Unit = {
     super.beforeAll()
     ePerusteKoodiClient.ePerusteCache.invalidateAll()
-    mockKoodiUriVersionFailure("koulutus_111111", 11)
-    mockTutkinnonOsatFailure(111111)
+    when(
+      mockEPerusteKoodiClient.getOsaamismerkkiFromEPerusteCache(
+        "osaamismerkit_1082"
+      )
+    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082")))
     mockOsaamisalaKoodiUritFailure(111111)
+
+    // Osaamismerkin nimenmuodostukseen liittyvät mockit
+    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
+    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
+    mockLokalisointiResponse("yleiset.osaamismerkki")
   }
 
   "Get koulutus by oid" should "return 404 if koulutus not found" in {
@@ -734,9 +742,6 @@ class KoulutusSpec
   }
 
   it should "create, get and update vapaasivistystyo-osaamismerkkikoulutus" in {
-    mockKoodiUriVersionResponse("osaamismerkit_1082", 1)
-    mockKoodistoResponse("osaamismerkit", Seq(("osaamismerkit_1081", 12, None), ("osaamismerkit_1082", 1, None)))
-    mockLokalisointiResponse("yleiset.osaamismerkki")
     val vapaaSivistystyoOsaamismerkkiKoulutus = TestData.VapaaSivistystyoOsaamismerkkiKoulutus.copy(tila = Tallennettu)
     val oid = put(vapaaSivistystyoOsaamismerkkiKoulutus, ophSession)
     val vstOsaamismerkkiWithOpintojenLaajuus = vapaaSivistystyoOsaamismerkkiKoulutus.copy(
@@ -1024,6 +1029,32 @@ class KoulutusSpec
       withClue(body) {
         status should equal(200)
       }
+    }
+  }
+
+  it should "fail to change attached osaamismerkki tila to tallennettu when vst-toteutus is julkaistu" in {
+    val julkaistuOsaamismerkkiKoulutus = VapaaSivistystyoOsaamismerkkiKoulutus
+    val osaamismerkkiKoulutusOid = put(julkaistuOsaamismerkkiKoulutus, ophSession)
+    val julkaistuVstMuuKoulutus = VapaaSivistystyoMuuKoulutus
+    val vstMuuKoulutusOid = put(julkaistuVstMuuKoulutus)
+    val julkaistuVstMuuToteutus = VapaaSivistystyoMuuToteutus.copy(
+      koulutusOid = KoulutusOid(vstMuuKoulutusOid),
+      metadata = Some(
+        VapaaSivistystyoMuuToteutusMetatieto.copy(liitetytOsaamismerkit = Seq(KoulutusOid(osaamismerkkiKoulutusOid)))
+      )
+    )
+    put(julkaistuVstMuuToteutus)
+
+    val osaamismerkkiKoulutus = julkaistuOsaamismerkkiKoulutus.copy(
+      oid = Some(KoulutusOid(osaamismerkkiKoulutusOid)), koulutuksetKoodiUri = List())
+    val lastModified = get(osaamismerkkiKoulutusOid, osaamismerkkiKoulutus)
+
+    post(KoulutusPath, bytes(osaamismerkkiKoulutus.copy(tila = Tallennettu)),
+      headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""errorType":"invalidStateChangeForLiitetty""")
     }
   }
 }

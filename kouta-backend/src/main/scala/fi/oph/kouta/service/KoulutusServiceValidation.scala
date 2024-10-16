@@ -4,7 +4,7 @@ import fi.oph.kouta.domain.Koulutustyyppi.isAmmatillinen
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
+import fi.oph.kouta.service.validation.{AmmatillinenKoulutusServiceValidation, LiitettyEntityValidation}
 import fi.oph.kouta.util.{KoulutusServiceValidationUtil, LaajuusValidationUtil}
 import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
@@ -26,6 +26,31 @@ class KoulutusServiceValidation(
     val sorakuvausDAO: SorakuvausDAO,
     ammatillinenKoulutusServiceValidation: AmmatillinenKoulutusServiceValidation
 ) extends KoulutusToteutusValidatingService[Koulutus] {
+
+  override def withValidation[R](koulutus: Koulutus, oldKoulutus: Option[Koulutus])(
+    f: Koulutus => R
+  ): R = {
+    var errors = super.validate(koulutus, oldKoulutus)
+    if (errors.isEmpty) {
+      koulutus.koulutustyyppi match {
+        case VapaaSivistystyoOsaamismerkki =>
+          errors = validateLiitettyEntityIntegrity(koulutus)
+        case _ =>
+      }
+    }
+
+    errors match {
+      case NoErrors => f(koulutus)
+      case errors => throw KoutaValidationException(errors)
+    }
+  }
+
+  def validateLiitettyEntityIntegrity(koulutus: Koulutus): IsValid = {
+    LiitettyEntityValidation.validateLiitettyEntityIntegrity(koulutus, koulutus.oid match {
+      case Some(oid) => toteutusDAO.get(oid)
+      case None => Vector()
+    })
+  }
 
   override def validateEntity(koulutus: Koulutus, oldKoulutus: Option[Koulutus]): IsValid = {
     val validationContext =
@@ -778,16 +803,19 @@ class KoulutusServiceValidation(
   ): IsValid = {
     and(
       assertNotOptional(metadata.osaamismerkkiKoodiUri, "metadata.osaamismerkkiKoodiUri"),
-      validateIfDefined[String](
-        metadata.osaamismerkkiKoodiUri,
-        uri =>
-          assertKoodistoQueryResult(
-            uri,
-            koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, _),
-            "metadata.osaamismerkkiKoodiUri",
-            validationContext,
-            invalidKoodiuri(uri, "osaamismerkit")
-          )
+      validateIfJulkaistu(
+        validationContext.tila,
+        validateIfDefined[String](
+          metadata.osaamismerkkiKoodiUri,
+          uri =>
+            assertKoodistoQueryResult(
+              uri,
+              koodistoService.koodiUriExistsInKoodisto(Osaamismerkit, _),
+              "metadata.osaamismerkkiKoodiUri",
+              validationContext,
+              invalidKoodiuri(uri, "osaamismerkit")
+            )
+        ),
       ),
       assertEmptyKielistetty(metadata.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin"),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),

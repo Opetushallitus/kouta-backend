@@ -1,7 +1,7 @@
 package fi.oph.kouta.domain
 
 import fi.oph.kouta.domain.keyword.Keyword
-import fi.oph.kouta.domain.oid.ToteutusOid
+import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, JulkaisuValidatableSubEntity}
 
@@ -492,6 +492,10 @@ package object toteutusMetadata {
       |              example: vapaa-sivistystyo-opistovuosi
       |              enum:
       |                - vapaa-sivistystyo-opistovuosi
+      |            suoritetaanNayttona:
+      |              type: boolean
+      |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
+      |              example: false
       |""".stripMargin
 
   val VapaaSivistystyoMuuToteutusMetadataModel: String =
@@ -506,6 +510,10 @@ package object toteutusMetadata {
       |              example: vapaa-sivistystyo-muu
       |              enum:
       |                - vapaa-sivistystyo-muu
+      |            suoritetaanNayttona:
+      |              type: boolean
+      |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
+      |              example: false
       |""".stripMargin
 
   val VapaaSivistystyoOsaamismerkkiToteutusMetadataModel: String =
@@ -1085,6 +1093,10 @@ case class LukiolinjaTieto(koodiUri: String, kuvaus: Kielistetty)
 
 case class LukiodiplomiTieto(koodiUri: String, linkki: Kielistetty = Map(), linkinAltTeksti: Kielistetty = Map())
 
+sealed trait VapaaSivistystyoToteutusMetadata {
+  val liitetytOsaamismerkit: Seq[KoulutusOid]
+}
+
 case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
     kuvaus: Kielistetty = Map(),
@@ -1095,8 +1107,10 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends ToteutusMetadata
+    isTyovoimakoulutus: Boolean = false,
+    suoritetaanNayttona: Boolean = false,
+    liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
+) extends ToteutusMetadata with VapaaSivistystyoToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -1117,8 +1131,10 @@ case class VapaaSivistystyoMuuToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
-) extends TutkintoonJohtamatonToteutusMetadata {
+    isTyovoimakoulutus: Boolean = false,
+    suoritetaanNayttona: Boolean = false,
+    liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
+) extends TutkintoonJohtamatonToteutusMetadata with VapaaSivistystyoToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }

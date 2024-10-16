@@ -16,7 +16,8 @@ trait ToteutusDAO extends EntityModificationDAO[ToteutusOid] {
   def getUpdateActions(toteutus: Toteutus): DBIO[Option[Toteutus]]
 
   def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)]
-  def get(oids: List[ToteutusOid]): Seq[Toteutus]
+  def get(oid: LiitettyOid): Vector[MinimalExistingToteutus]
+  def get(oids: List[ToteutusOid]): Seq[ToteutusLiitettyListItem]
   def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus]
   def getTarjoajatByHakukohdeOid(hakukohdeOid: HakukohdeOid): Seq[OrganisaatioOid]
 
@@ -71,8 +72,12 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
     }
   }
 
+  override def get(oid: LiitettyOid) = {
+    KoutaDatabase.runBlocking(selectWithLiitettyOid(oid).as[MinimalExistingToteutus])
+  }
+
   override def get(oids: List[ToteutusOid]) = {
-    KoutaDatabase.runBlocking(selectToteutuksetOrderedByOids(oids).as[Toteutus])
+    KoutaDatabase.runBlocking(selectLiitetytToteutuksetOrderedByOids(oids).as[ToteutusLiitettyListItem])
   }
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
@@ -276,6 +281,37 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
           on t.oid = o.oid
           order by o.ord"""
+  }
+
+  val selectToteutusEntityListItemSql =
+    """select t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
+              from toteutukset t
+              inner join (select oid, metadata, koulutukset_koodi_uri from koulutukset) k on k.oid = t.koulutus_oid"""
+
+  def selectLiitetytToteutuksetOrderedByOids(toteutusOids: List[ToteutusOid]) = {
+    val oidsAsStr = toteutusOids.map(oid => oid.toString())
+    sql"""#$selectToteutusEntityListItemSql
+          join unnest($oidsAsStr::text[]) with ordinality o(oid, ord)
+          on t.oid = o.oid
+          where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "t.tila", "")}
+          order by o.ord"""
+  }
+
+  def selectWithLiitettyOid(oid: LiitettyOid) = {
+    sql"""select distinct t.oid,
+                  t.koulutus_oid,
+                  t.nimi,
+                  t.tila,
+                  t.metadata,
+                  t.muokkaaja,
+                  t.organisaatio_oid,
+                  t.last_modified
+         from (select *, jsonb_array_elements_text(metadata->'liitetytOpintojaksot') as liitetty_opintojakso,
+                      jsonb_array_elements_text(metadata->'liitetytOsaamismerkit') as liitetty_osaamismerkki
+               from toteutukset
+               where metadata->'liitetytOpintojaksot' is not null or metadata->'liitetytOsaamismerkit' is not null
+               group by oid) as t
+          where $oid = liitetty_opintojakso or $oid = liitetty_osaamismerkki"""
   }
 
   def insertToteutus(toteutus: Toteutus): DBIO[ToteutusOid] = {

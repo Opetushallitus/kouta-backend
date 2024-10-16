@@ -261,11 +261,13 @@ class KoulutusService(
               case vapaaSivistystyoMuuMetadata: VapaaSivistystyoMuuKoulutusMetadata =>
                 Some(vapaaSivistystyoMuuMetadata.copy(isMuokkaajaOphVirkailija = Some(isOphVirkailija)))
               case vapaaSivistystyoOsaamismerkkiMetadata: VapaaSivistystyoOsaamismerkkiKoulutusMetadata =>
-                Some(vapaaSivistystyoOsaamismerkkiMetadata.copy(
-                  isMuokkaajaOphVirkailija = Some(isOphVirkailija),
-                  opintojenLaajuusNumero = Some(1),
-                  opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
-                ))
+                Some(
+                  vapaaSivistystyoOsaamismerkkiMetadata.copy(
+                    isMuokkaajaOphVirkailija = Some(isOphVirkailija),
+                    opintojenLaajuusNumero = Some(1),
+                    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4")
+                  )
+                )
               case m: VapaaSivistystyoOpistovuosiKoulutusMetadata =>
                 Some(
                   m.copy(
@@ -560,6 +562,13 @@ class KoulutusService(
       KoulutusDAO.listAllowedByOrganisaatiot(oids, koulutustyypit, tilaFilter)
     }
 
+  def get(koulutusOids: Seq[KoulutusOid])(implicit
+      authenticated: Authenticated
+  ): Seq[KoulutusLiitettyListItem] =
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.get(koulutusOids.toList)
+    }
+
   def listByKoulutustyyppi(organisaatioOid: OrganisaatioOid, koulutustyyppi: Koulutustyyppi, tilaFilter: TilaFilter)(
       implicit authenticated: Authenticated
   ): Seq[KoulutusListItem] =
@@ -729,8 +738,9 @@ class KoulutusService(
       CreateResult(k.oid.get, warnings)
     }.get
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)
-                      (implicit authenticated: Authenticated): UpdateResult =
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
+      authenticated: Authenticated
+  ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)

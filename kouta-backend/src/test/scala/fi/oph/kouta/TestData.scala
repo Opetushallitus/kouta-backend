@@ -176,6 +176,16 @@ object TestData {
     )
   )
 
+  val AmmKoulutusListItem: KoulutusListItem = KoulutusListItem(
+    oid = randomKoulutusOid,
+    nimi = AmmKoulutus.nimi,
+    tila = AmmKoulutus.tila,
+    tarjoajat = AmmKoulutus.tarjoajat,
+    organisaatioOid = AmmKoulutus.organisaatioOid,
+    muokkaaja = AmmKoulutus.muokkaaja,
+    modified = Modified(LocalDateTime.now().minusDays(1))
+  )
+
   val Lisatieto1: Lisatieto = Lisatieto(
     otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
     teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv")
@@ -574,6 +584,17 @@ object TestData {
     )
   )
 
+  val LukioKoulutusEntityListItem: KoulutusLiitettyListItem = KoulutusLiitettyListItem(
+    oid = randomKoulutusOid,
+    koulutustyyppi = Lk,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    muokkaaja = OphUserOid,
+    organisaatioOid = ChildOid,
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    julkinen = true
+  )
+
   val TuvaKoulutuksenMetatieto = TuvaKoulutusMetadata(
     kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
     linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
@@ -685,6 +706,8 @@ object TestData {
 
   val VapaaSivistystyoOsaamismerkkiKoulutusMetatieto = VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
     osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1"),
+    opintojenLaajuusNumero = Some(1),
+    opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_4"),
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
     isMuokkaajaOphVirkailija = Some(true)
   )
@@ -700,6 +723,18 @@ object TestData {
         muokkaajanNimi = Some(muokkaajanNimi)
       )
     )
+  )
+
+  val VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem: KoulutusLiitettyListItem = KoulutusLiitettyListItem(
+    oid = randomKoulutusOid,
+    koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    muokkaaja = OphUserOid,
+    nimi = Map(Fi -> "yleiset.osaamismerkki fi: nimi", Sv -> "yleiset.osaamismerkki sv: nimi sv"),
+    tila = Julkaistu,
+    organisaatioOid = ChildOid,
+    julkinen = true,
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    osaamismerkkiKoodiUri = Some("osaamismerkit_1082#1")
   )
 
   val AikuistenPerusopetusKoulutus: Koulutus = Koulutus(
@@ -1344,6 +1379,18 @@ object TestData {
 
   val JulkaistuKkOpintojaksoToteutus: Toteutus =
     JulkaistuAmmToteutus.copy(metadata = Some(KkOpintojaksoToteutuksenMetatieto), tarjoajat = List(YoOid, HkiYoOid))
+
+  val KkOpintojaksoToteutusEntityListItem: ToteutusLiitettyListItem =
+    ToteutusLiitettyListItem(
+      oid = randomToteutusOid,
+      tila = Julkaistu,
+      nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+      muokkaaja = TestUserOid,
+      organisaatioOid = ChildOid,
+      modified = Modified(LocalDateTime.now().minusDays(1)),
+      koulutustyyppi = KkOpintojakso
+    )
+
   val JulkaistuKkOpintokokonaisuusToteutus: Toteutus = {
     JulkaistuAmmToteutus.copy(
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto),
@@ -1574,6 +1621,16 @@ object TestData {
     )
   )
 
+  val LukioToteutusEntityListItem: ToteutusLiitettyListItem = ToteutusLiitettyListItem(
+    oid = randomToteutusOid,
+    tila = Julkaistu,
+    nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
+    muokkaaja = TestUserOid,
+    organisaatioOid = ChildOid,
+    modified = Modified(LocalDateTime.now().minusDays(1)),
+    koulutustyyppi = Lk
+  )
+
   val AmmOsaamisalaToteutusMetadataHakemuspalvelu: AmmatillinenOsaamisalaToteutusMetadata =
     AmmatillinenOsaamisalaToteutusMetadata(
       tyyppi = AmmOsaamisala,
@@ -1584,7 +1641,7 @@ object TestData {
       yhteyshenkilot = Seq(Yhteystieto1),
       isHakukohteetKaytossa = Some(true),
       hakutermi = None,
-      hakulomaketyyppi = None,
+      hakulomaketyyppi = Some(Ataru),
       hakulomakeLinkki = Map(),
       lisatietoaHakeutumisesta = Map(),
       lisatietoaValintaperusteista = Map(),
