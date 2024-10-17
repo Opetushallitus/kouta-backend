@@ -9,6 +9,7 @@ cas_url: https://virkailija.hahtuvaopintopolku.fi/cas
 kouta_backend_cas_username: kouta-backend
 kouta_backend_cas_password:
 kouta_backend_cas_service: http://localhost:8099/kouta-backend/auth/login
+kouta_backend_max_connections: 20
 kouta_backend_sqs_endpoint: http://localhost:4566
 kouta_backend_sqs_queue_priority: koutaIndeksoijaPriority
 kouta_backend_sqs_region:
