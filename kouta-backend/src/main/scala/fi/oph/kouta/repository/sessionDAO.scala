@@ -2,7 +2,6 @@ package fi.oph.kouta.repository
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket, Session}
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
@@ -18,6 +17,10 @@ trait SessionDAO {
   def store(session: CasSession, id: UUID): UUID
   def get(id: UUID): Option[Session]
 }
+
+case class SessionDbResult(casTicket: String,
+                           person: String,
+                           authorities: List[String])
 
 object SessionDAO extends SessionDAO with SessionSQL {
 
@@ -41,15 +44,12 @@ object SessionDAO extends SessionDAO with SessionSQL {
     runBlockingTransactionally(deleteSession(ticket), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get
 
   override def get(id: UUID): Option[Session] = {
-    runBlocking(getSession(id), timeout = Duration(15, TimeUnit.SECONDS)).map {
-      case (casTicket, personOid) =>
-        val authorities = runBlocking(searchAuthoritiesBySession(id), Duration(15, TimeUnit.SECONDS))
-        CasSession(ServiceTicket(casTicket.get), personOid, authorities.map(Authority(_)).toSet)
-    }
+    runBlocking(getSessionInfo(id), timeout = Duration(15, TimeUnit.SECONDS))
+      .map(result => CasSession(ServiceTicket(result.casTicket), result.person, result.authorities.map(Authority(_)).toSet))
   }
 }
 
-sealed trait SessionSQL extends SQLHelpers {
+sealed trait SessionSQL extends SQLHelpers with SessionExtractors {
 
   protected def storeCasSession(id: UUID,
                                 ticket: String,
@@ -57,8 +57,7 @@ sealed trait SessionSQL extends SQLHelpers {
                                 authorities: Set[Authority]): DBIO[_] = {
     DBIO.seq(
       sqlu"""insert into sessions (id, cas_ticket, person) values ($id, $ticket, $personOid)""",
-      DBIO.sequence(authorities.map(a => sqlu"""insert into authorities (session, authority) values ($id, ${a.authority})""").toSeq)
-    )
+      DBIO.sequence(authorities.map(a => sqlu"""insert into authorities (session, authority) values ($id, ${a.authority})""").toSeq))
   }
 
   protected def deleteSession(id: UUID): DBIO[Boolean] =
@@ -67,20 +66,14 @@ sealed trait SessionSQL extends SQLHelpers {
   protected def deleteSession(ticket: ServiceTicket): DBIO[Boolean] =
     sqlu"""delete from sessions where cas_ticket = ${ticket.s}""".map(_ > 0)
 
-  protected def getSession(id: UUID): DBIO[Option[(Option[String], String)]] =
-    getSessionQuery(id)
-      .flatMap {
-        case None => DBIO.successful(None)
-        case Some((ticket, person)) =>
-          DBIO.successful(Some((ticket, person)))
-      }
-
-  private def getSessionQuery(id: UUID): DBIO[Option[(Option[String], String)]] =
-    sql"""select cas_ticket, person from sessions
-          where id = $id and created > now() - interval '60 minutes'"""
-      .as[(Option[String], String)].headOption
-
-  protected def searchAuthoritiesBySession(sessionId: UUID): DBIO[Vector[String]] =
-    sql"""select authority from authorities where session = $sessionId""".as[String]
-
+  protected def getSessionInfo(id: UUID): DBIO[Option[SessionDbResult]] =
+    sql"""select s.cas_ticket,
+           s.person,
+           array_agg(a.authority)
+          from sessions s
+                   join public.authorities a on s.id = a.session
+          where s.id = $id
+            and s.created > now() - interval '60 minutes'
+          group by s.cas_ticket, s.person"""
+      .as[SessionDbResult].headOption
 }
