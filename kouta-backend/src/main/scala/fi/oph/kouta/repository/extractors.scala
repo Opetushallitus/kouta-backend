@@ -631,7 +631,10 @@ trait SessionExtractors extends ExtractorBase {
     SessionDbResult(
       casTicket = r.nextString(),
       person = r.nextString(),
-      authorities = extractArray[String](r.nextObjectOption()).toList)
+      authorities =
+        extractArray[String](r.nextObjectOption())
+          .toList
+          .filterNot(_ == null))
   })
 
 }
