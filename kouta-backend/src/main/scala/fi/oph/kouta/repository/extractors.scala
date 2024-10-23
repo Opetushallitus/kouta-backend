@@ -627,15 +627,13 @@ trait PistehistoriaExtractors extends ExtractorBase {
 }
 
 trait SessionExtractors extends ExtractorBase {
-  implicit val getSessionDbResult: GetResult[SessionDbResult] = GetResult((r: PositionedResult) =>
+  implicit val getSessionDbResult: GetResult[SessionDbResult] = GetResult((r: PositionedResult) => {
     SessionDbResult(
       casTicket = r.nextString(),
       person = r.nextString(),
-      authorities = r.nextObject()
-        .asInstanceOf[org.postgresql.jdbc.PgArray]
-        .getArray
-        .asInstanceOf[Array[String]]
-        .toList))
+      authorities = extractArray[String](r.nextObjectOption()).toList)
+  })
+
 }
 
 trait KeywordExtractors extends ExtractorBase

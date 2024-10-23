@@ -71,7 +71,7 @@ sealed trait SessionSQL extends SQLHelpers with SessionExtractors {
            s.person,
            array_agg(a.authority)
           from sessions s
-                   join public.authorities a on s.id = a.session
+                   left join public.authorities a on s.id = a.session
           where s.id = $id
             and s.created > now() - interval '60 minutes'
           group by s.cas_ticket, s.person"""
