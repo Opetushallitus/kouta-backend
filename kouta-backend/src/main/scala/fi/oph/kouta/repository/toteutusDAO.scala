@@ -404,7 +404,7 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   val selectToteutusListSql =
     """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
          from toteutukset t
-         inner join (select oid, metadata, koulutukset_koodi_uri from koulutukset) k on k.oid = t.koulutus_oid"""
+         inner join (select oid, metadata, koulutukset_koodi_uri, tyyppi from koulutukset) k on k.oid = t.koulutus_oid"""
 
   def selectByCreatorOrTarjoaja(
       organisaatioOids: Seq[OrganisaatioOid],
@@ -425,17 +425,17 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
                  or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-                and (((t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AmmMuu.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${TaiteenPerusopetus.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${KkOpintojakso.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${KkOpintokokonaisuus.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${Erikoistumiskoulutus.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${Muu.toString}::koulutustyyppi
-                       and (t.metadata->>'tyyppi')::koulutustyyppi is distinct from ${VapaaSivistystyoOsaamismerkki.toString}::koulutustyyppi)
+                and ((k.tyyppi::koulutustyyppi is distinct from ${AmmTutkinnonOsa.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${AmmOsaamisala.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${VapaaSivistystyoMuu.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${AmmMuu.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${AikuistenPerusopetus.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${TaiteenPerusopetus.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${KkOpintojakso.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${KkOpintokokonaisuus.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${Erikoistumiskoulutus.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${Muu.toString}::koulutustyyppi
+                       and k.tyyppi::koulutustyyppi is distinct from ${VapaaSivistystyoOsaamismerkki.toString}::koulutustyyppi)
                      or (t.metadata->>'isHakukohteetKaytossa')::boolean = true
                      or (t.metadata->>'hakulomaketyyppi')::hakulomaketyyppi = ${Ataru.toString}::hakulomaketyyppi)
                     #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
@@ -481,16 +481,17 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
           left join toteutusten_tarjoajat tt on t.oid = tt.toteutus_oid
           where (t.organisaatio_oid in (#${createOidInParams(organisaatioOids)})
              or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-             and t.metadata->>'tyyppi' = 'kk-opintojakso'
+             and k.tyyppi = 'kk-opintojakso'
               #${tilaConditions(tilaFilter, "t.tila")}""".as[ToteutusListItem]
   }
 
   def selectOpintokokonaisuudet(oids: Seq[ToteutusOid], tilaFilter: TilaFilter): DBIO[Vector[OidAndNimi]] = {
     val oidsAsStr = oids.map(oid => oid.toString())
-    sql"""select oid, nimi
+    sql"""select t.oid, t.nimi
           from toteutukset t
-          where metadata->>'tyyppi' = 'kk-opintokokonaisuus'
-          and array(select jsonb_array_elements_text(metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]
+          join koulutukset k on k.oid = t.koulutus_oid
+          where k.tyyppi = 'kk-opintokokonaisuus'
+          and array(select jsonb_array_elements_text(t.metadata->'liitetytOpintojaksot')) && $oidsAsStr::text[]
           #${tilaConditions(tilaFilter, "t.tila")}""".as[OidAndNimi]
   }
 }
