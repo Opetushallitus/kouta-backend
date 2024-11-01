@@ -8,7 +8,7 @@ import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.util.{KoutaJsonFormats, MiscUtils}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.http4s.Method.GET
 import org.http4s.client.blaze.defaultClient
 import org.http4s.{Request, Uri}

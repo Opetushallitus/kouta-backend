@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Koulutustyyppi, TilaFilter}
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import slick.dbio.DBIO
 import slick.jdbc.{PositionedParameters, SetParameter}
 

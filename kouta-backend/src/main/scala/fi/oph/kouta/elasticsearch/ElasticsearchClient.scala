@@ -6,7 +6,7 @@ import com.sksamuel.elastic4s.http.{JavaClient, NoOpHttpClientConfigCallback}
 import com.sksamuel.elastic4s.requests.searches.{SearchRequest, SearchResponse}
 import com.sksamuel.elastic4s.{ElasticClient, ElasticProperties, RequestFailure, RequestSuccess}
 import fi.oph.kouta.domain.{HasTila, SearchResult, Tallennettu}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.apache.http.auth.{AuthScope, UsernamePasswordCredentials}
 import org.apache.http.client.config.RequestConfig.Builder
 import org.apache.http.impl.client.BasicCredentialsProvider

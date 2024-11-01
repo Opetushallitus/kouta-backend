@@ -73,4 +73,5 @@ class AuthorizationServiceSpec extends SpecWithMocks with OrganisaatioFixture {
       TestService.withAuthorizedChildOrganizationOids(ChildOid, Role.Koulutus.readRoles) { o => o }
     }
   }
+
 }

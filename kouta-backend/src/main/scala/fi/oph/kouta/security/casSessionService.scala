@@ -8,7 +8,7 @@ import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.vm.sade.utils.cas.CasClient.Username
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import javax.servlet.http.HttpServletRequest
 import scalaz.concurrent.Task
 

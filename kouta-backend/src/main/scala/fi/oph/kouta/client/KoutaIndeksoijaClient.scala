@@ -1,7 +1,7 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 

@@ -27,8 +27,6 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <!-- Utility properties -->
-        <scala-utils.version>1.2.3-SNAPSHOT</scala-utils.version>
-        <scala-logging.version>1.3.0-SNAPSHOT</scala-logging.version>
         <auditlogger.version>8.3.1-SNAPSHOT</auditlogger.version>
         <json4s.version>3.6.12</json4s.version>
         <jackson.version>2.14.1</jackson.version>
@@ -135,13 +133,56 @@
             <version>${jetty.version}</version>
         </dependency>
     </dependencies>
+
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-log4j12</artifactId>
+                <version>1.7.36</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jsoup</groupId>
+                <artifactId>jsoup</artifactId>
+                <version>1.18.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-collection-compat_2.12</artifactId>
+                <version>2.12.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatra.scalate</groupId>
+                <artifactId>scalate-core_2.12</artifactId>
+                <version>1.10.1</version>
+            </dependency>
+            <dependency>
+                <groupId>com.hubspot.jinjava</groupId>
+                <artifactId>jinjava</artifactId>
+                <version>2.5.6</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scalaj</groupId>
+                <artifactId>scalaj-http_2.12</artifactId>
+                <version>2.4.2</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-library</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-core</artifactId>
@@ -194,18 +235,8 @@
             </dependency>
             <dependency>
                 <groupId>fi.vm.sade</groupId>
-                <artifactId>scala-logging_2.12</artifactId>
-                <version>${scala-logging.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fi.vm.sade</groupId>
                 <artifactId>scala-properties_2.12</artifactId>
-                <version>${scala-logging.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>fi.vm.sade</groupId>
-                <artifactId>scala-utils_2.12</artifactId>
-                <version>${scala-utils.version}</version>
+                <version>1.3.0-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>javax.servlet</groupId>

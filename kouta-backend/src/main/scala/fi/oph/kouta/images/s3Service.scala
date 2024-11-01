@@ -9,7 +9,7 @@ import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.{KoutaConfigurationFactory, S3Configuration}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import io.atlassian.aws.AmazonClientConnectionDef
 import io.atlassian.aws.s3.S3Client
 

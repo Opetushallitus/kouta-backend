@@ -1,15 +1,10 @@
 package fi.oph.kouta.util
 
 import com.typesafe.config.{Config => TypesafeConfig}
+import fi.oph.kouta.config.{ApplicationSettings, ApplicationSettingsLoader, ApplicationSettingsParser, ConfigTemplateProcessor}
 import fi.oph.kouta.util.ConfigUtils.getModuleDir
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.config.{
-  ApplicationSettings,
-  ApplicationSettingsLoader,
-  ApplicationSettingsParser,
-  ConfigTemplateProcessor
-}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 import java.io.File
 import java.net.URL
