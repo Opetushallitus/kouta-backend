@@ -7,7 +7,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.util.MiscUtils.{retryStatusCodes, withoutKoodiVersion}
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 

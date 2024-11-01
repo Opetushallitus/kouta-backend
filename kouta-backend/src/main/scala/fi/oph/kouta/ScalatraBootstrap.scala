@@ -4,7 +4,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.scheduler.SchedulerConfig
 import fi.oph.kouta.servlet._
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.scalatra._
 
 import javax.servlet.ServletContext

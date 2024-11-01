@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.Kieli
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.jackson.JsonMethods.parse
 
 import scala.concurrent.duration._

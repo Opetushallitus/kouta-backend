@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.siirtotiedosto.{SiirtotiedostoDateTimeFormat, Siirtot
 import fi.oph.kouta.repository.{KoutaDatabaseAccessor, SimpleDatabaseAccessor}
 import fi.oph.kouta.service.SiirtotiedostoRaportointiService
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.jackson.Serialization.writePretty
 
 import java.time.LocalDateTime

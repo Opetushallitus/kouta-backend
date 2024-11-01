@@ -6,7 +6,7 @@ import com.github.kagkarlsson.scheduler.task.{ExecutionContext, TaskInstance, Vo
 import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.RootOrganisaatioOid
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 object OrganisaatioHierarkiaCacheTask extends OrganisaatioHierarkiaCacheTask()
 

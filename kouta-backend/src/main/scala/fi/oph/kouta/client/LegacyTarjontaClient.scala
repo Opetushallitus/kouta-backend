@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.service.LegacyHakukohde
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.jackson.JsonMethods.parse
 
 object LegacyTarjontaClient extends LegacyTarjontaClient

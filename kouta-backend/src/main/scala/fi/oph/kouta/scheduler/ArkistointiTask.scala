@@ -9,7 +9,7 @@ import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
 import fi.oph.kouta.service.HakuService
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog.User
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.ietf.jgss.Oid
 
 import java.net.InetAddress

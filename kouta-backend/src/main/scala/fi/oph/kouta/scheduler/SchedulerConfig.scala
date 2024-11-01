@@ -2,7 +2,7 @@ package fi.oph.kouta.scheduler
 
 import com.github.kagkarlsson.scheduler.Scheduler
 import fi.oph.kouta.repository.KoutaDatabase
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 import java.time.Instant
 

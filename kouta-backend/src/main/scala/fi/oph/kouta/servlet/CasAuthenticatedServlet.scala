@@ -5,7 +5,7 @@ import java.util.UUID
 import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.AuthenticationFailedException
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.scalatra._
 
 trait CasAuthenticatedServlet {

@@ -8,7 +8,7 @@ import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBo
 import java.time.format.DateTimeFormatter
 import java.time.{LocalDate, LocalTime, ZonedDateTime}
 import scala.util.{Failure, Success, Try}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 object KoodistoService extends KoodistoService(KoodistoClient)
 

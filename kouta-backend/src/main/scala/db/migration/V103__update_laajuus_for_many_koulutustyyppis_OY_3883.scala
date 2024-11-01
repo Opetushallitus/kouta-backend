@@ -1,6 +1,6 @@
 package db.migration
 
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.flywaydb.core.api.migration.{BaseJavaMigration, Context}
 import io.circe._
 import io.circe.parser._
