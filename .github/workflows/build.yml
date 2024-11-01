@@ -123,4 +123,4 @@ jobs:
         env:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        run: mvn deploy -DskipTests --settings ci-tools/common/maven-settings.xml
+        run: mvn deploy -B -DskipTests --settings ci-tools/common/maven-settings.xml
