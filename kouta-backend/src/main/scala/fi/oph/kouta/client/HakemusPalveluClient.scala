@@ -7,16 +7,15 @@ import fi.oph.kouta.service.HakemuspalveluHakukohdeInfo
 import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.util.{KoutaJsonFormats, MiscUtils}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.oph.kouta.logging.Logging
-import org.http4s.Method.GET
-import org.http4s.client.blaze.defaultClient
-import org.http4s.{Request, Uri}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
-import scalaz.concurrent.Task
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, DurationInt}
 
 case class AtaruFormProperties(allowOnlyYhteisHaut: Option[Boolean]) {
@@ -53,21 +52,18 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
 
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   private lazy val config        = KoutaConfigurationFactory.configuration.hakemuspalveluClientConfiguration
-  private lazy val params = CasParams(
-    urlProperties.url("hakemuspalvelu-service"),
-    "auth/cas",
-    config.username,
-    config.password
-  )
 
-  private lazy val client = CasAuthenticatingClient(
-    casClient =
-      new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
-    casParams = params,
-    serviceClient = defaultClient,
-    clientCallerId = callerId,
-    sessionCookieName = "ring-session"
-  )
+  private lazy val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
+    config.username,
+    config.password,
+    urlProperties.url("cas.url"),
+    urlProperties.url("hakemuspalvelu-service"),
+    callerId,
+    callerId,
+    "/auth/cas")
+    .setJsessionName("ring-session").build
+
+  val casClient: CasClient = CasClientBuilder.build(casConfig)
 
   implicit val ataruFormCache: Cache[String, Seq[AtaruForm]] = Scaffeine()
     .expireAfterWrite(15.minutes)
@@ -77,30 +73,19 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
 
   private def getFromHakemuspalvelu[R: Manifest](
       urlStr: String,
-      timeout: Duration = Duration(60, TimeUnit.SECONDS),
-      parseResponse: (String => R)
+      timeout: Duration = Duration(5, TimeUnit.SECONDS)
   ): R = {
-    Uri
-      .fromString(urlStr)
-      .fold(
-        Task.fail,
-        url => {
-          client.fetch(Request(method = GET, uri = url)) {
-            case r if r.status.code == 200 =>
-              r.bodyAsText.runLog
-                .map(_.mkString)
-                .map(parseResponse)
-            case r =>
-              r.bodyAsText.runLog
-                .map(_.mkString)
-                .flatMap(_ =>
-                  Task.fail(AtaruQueryException(s"Failed to get '${urlStr}' from Hakemuspalvelu", r.status.code))
-                )
-          }
-        }
-      )
-      .unsafePerformSyncAttemptFor(timeout)
-      .fold(throw _, x => x)
+    val request = new RequestBuilder().setMethod("GET").setUrl(urlStr).build
+    val future = Future {
+      casClient.executeBlocking(request)
+    }
+    val result = future.map {
+      case r if r.getStatusCode == 200 =>
+        parse(r.getResponseBodyAsStream()).extract[R]
+      case r =>
+        throw AtaruQueryException(s"Tietojen hakeminen hakemuspalvelusta epäonnistui: $r", r.getStatusCode)
+    }
+    Await.result(result, timeout)
   }
 
   private def getWithRetry[R: Manifest](doGet: () => R, errorMsg: String) = {
@@ -117,10 +102,8 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
               s"${errorMsg} after retry, ${error.message}",
               error.status
             )
-          case error: CasClientException => throw new RuntimeException(s"Authentication to CAS failed: $error")
         }
       case error: AtaruQueryException => throw error
-      case error: CasClientException  => throw new RuntimeException(s"Authentication to CAS failed: $error")
     }
   }
 
@@ -128,8 +111,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     getWithRetry(
       doGet = () =>
         getFromHakemuspalvelu[Seq[AtaruForm]](
-          urlProperties.url("hakemuspalvelu-service.forms"),
-          parseResponse = parseForms
+          urlProperties.url("hakemuspalvelu-service.forms")
         ),
       errorMsg = "Failed to fetch forms from Hakemuspalvelu"
     )
@@ -166,8 +148,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
   override def getHakukohdeInfo(hakukohdeOid: HakukohdeOid): HakukohdeInfo = {
     getWithRetry(
       doGet = () =>
-        getFromHakemuspalvelu[HakukohdeInfo](urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid),
-          parseResponse = defaultParse[HakukohdeInfo]),
+        getFromHakemuspalvelu[HakukohdeInfo](urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid)),
       errorMsg = "Failed to fetch hakukohde information from Hakemuspalvelu"
     )
   }
@@ -177,8 +158,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     getWithRetry(
       doGet = () =>
         getFromHakemuspalvelu[HakukohdeApplicationCounts](
-          urlProperties.url("hakemuspalvelu-service.haku-ensisijainen-counts", hakuOid),
-          parseResponse = defaultParse[HakukohdeApplicationCounts]
+          urlProperties.url("hakemuspalvelu-service.haku-ensisijainen-counts", hakuOid)
         ),
       errorMsg = "Failed to fetch ensisijainen application counts from Hakemuspalvelu"
     )

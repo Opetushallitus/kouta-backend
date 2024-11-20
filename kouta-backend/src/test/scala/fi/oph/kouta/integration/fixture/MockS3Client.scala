@@ -4,12 +4,13 @@ import java.io.{DataInputStream, File, InputStream}
 import java.net.URL
 import java.util
 import java.util.Date
-
 import com.amazonaws.regions.Region
 import com.amazonaws.services.s3.model._
 import com.amazonaws.services.s3.model.analytics.AnalyticsConfiguration
+import com.amazonaws.services.s3.model.intelligenttiering.IntelligentTieringConfiguration
 import com.amazonaws.services.s3.model.inventory.InventoryConfiguration
 import com.amazonaws.services.s3.model.metrics.MetricsConfiguration
+import com.amazonaws.services.s3.model.ownership.OwnershipControls
 import com.amazonaws.services.s3.waiters.AmazonS3Waiters
 import com.amazonaws.services.s3.{AmazonS3, S3ClientOptions, S3ResponseMetadata, model}
 import com.amazonaws.{AmazonWebServiceRequest, HttpMethod}
@@ -109,6 +110,8 @@ object MockS3Client extends AmazonS3 {
   override def getS3AccountOwner(getS3AccountOwnerRequest: GetS3AccountOwnerRequest): Owner = ???
 
   override def doesBucketExist(s: String): Boolean = ???
+
+  override def doesBucketExistV2(s: String): Boolean = ???
 
   override def headBucket(headBucketRequest: HeadBucketRequest): HeadBucketResult = ???
 
@@ -296,6 +299,8 @@ object MockS3Client extends AmazonS3 {
 
   override def restoreObject(restoreObjectRequest: RestoreObjectRequest): Unit = ???
 
+  override def restoreObjectV2(restoreObjectRequest: RestoreObjectRequest): RestoreObjectResult = ???
+
   override def restoreObject(s: String, s1: String, i: Int): Unit = ???
 
   override def enableRequesterPays(s: String): Unit = ???
@@ -303,6 +308,8 @@ object MockS3Client extends AmazonS3 {
   override def disableRequesterPays(s: String): Unit = ???
 
   override def isRequesterPaysEnabled(s: String): Boolean = ???
+
+  override def setRequestPaymentConfiguration(setRequestPaymentConfigurationRequest: SetRequestPaymentConfigurationRequest): Unit = ???
 
   override def setBucketReplicationConfiguration(s: String, bucketReplicationConfiguration: BucketReplicationConfiguration): Unit = ???
 
@@ -340,6 +347,14 @@ object MockS3Client extends AmazonS3 {
 
   override def listBucketMetricsConfigurations(listBucketMetricsConfigurationsRequest: ListBucketMetricsConfigurationsRequest): ListBucketMetricsConfigurationsResult = ???
 
+  override def deleteBucketOwnershipControls(deleteBucketOwnershipControlsRequest: DeleteBucketOwnershipControlsRequest): DeleteBucketOwnershipControlsResult = ???
+
+  override def getBucketOwnershipControls(getBucketOwnershipControlsRequest: GetBucketOwnershipControlsRequest): GetBucketOwnershipControlsResult = ???
+
+  override def setBucketOwnershipControls(s: String, ownershipControls: OwnershipControls): SetBucketOwnershipControlsResult = ???
+
+  override def setBucketOwnershipControls(setBucketOwnershipControlsRequest: SetBucketOwnershipControlsRequest): SetBucketOwnershipControlsResult = ???
+
   override def deleteBucketAnalyticsConfiguration(s: String, s1: String): DeleteBucketAnalyticsConfigurationResult = ???
 
   override def deleteBucketAnalyticsConfiguration(deleteBucketAnalyticsConfigurationRequest: DeleteBucketAnalyticsConfigurationRequest): DeleteBucketAnalyticsConfigurationResult = ???
@@ -353,6 +368,20 @@ object MockS3Client extends AmazonS3 {
   override def setBucketAnalyticsConfiguration(setBucketAnalyticsConfigurationRequest: SetBucketAnalyticsConfigurationRequest): SetBucketAnalyticsConfigurationResult = ???
 
   override def listBucketAnalyticsConfigurations(listBucketAnalyticsConfigurationsRequest: ListBucketAnalyticsConfigurationsRequest): ListBucketAnalyticsConfigurationsResult = ???
+
+  override def deleteBucketIntelligentTieringConfiguration(s: String, s1: String): DeleteBucketIntelligentTieringConfigurationResult = ???
+
+  override def deleteBucketIntelligentTieringConfiguration(deleteBucketIntelligentTieringConfigurationRequest: DeleteBucketIntelligentTieringConfigurationRequest): DeleteBucketIntelligentTieringConfigurationResult = ???
+
+  override def getBucketIntelligentTieringConfiguration(s: String, s1: String): GetBucketIntelligentTieringConfigurationResult = ???
+
+  override def getBucketIntelligentTieringConfiguration(getBucketIntelligentTieringConfigurationRequest: GetBucketIntelligentTieringConfigurationRequest): GetBucketIntelligentTieringConfigurationResult = ???
+
+  override def setBucketIntelligentTieringConfiguration(s: String, intelligentTieringConfiguration: IntelligentTieringConfiguration): SetBucketIntelligentTieringConfigurationResult = ???
+
+  override def setBucketIntelligentTieringConfiguration(setBucketIntelligentTieringConfigurationRequest: SetBucketIntelligentTieringConfigurationRequest): SetBucketIntelligentTieringConfigurationResult = ???
+
+  override def listBucketIntelligentTieringConfigurations(listBucketIntelligentTieringConfigurationsRequest: ListBucketIntelligentTieringConfigurationsRequest): ListBucketIntelligentTieringConfigurationsResult = ???
 
   override def deleteBucketInventoryConfiguration(s: String, s1: String): DeleteBucketInventoryConfigurationResult = ???
 
@@ -368,6 +397,46 @@ object MockS3Client extends AmazonS3 {
 
   override def listBucketInventoryConfigurations(listBucketInventoryConfigurationsRequest: ListBucketInventoryConfigurationsRequest): ListBucketInventoryConfigurationsResult = ???
 
+  override def deleteBucketEncryption(s: String): DeleteBucketEncryptionResult = ???
+
+  override def deleteBucketEncryption(deleteBucketEncryptionRequest: DeleteBucketEncryptionRequest): DeleteBucketEncryptionResult = ???
+
+  override def getBucketEncryption(s: String): GetBucketEncryptionResult = ???
+
+  override def getBucketEncryption(getBucketEncryptionRequest: GetBucketEncryptionRequest): GetBucketEncryptionResult = ???
+
+  override def setBucketEncryption(setBucketEncryptionRequest: SetBucketEncryptionRequest): SetBucketEncryptionResult = ???
+
+  override def setPublicAccessBlock(setPublicAccessBlockRequest: SetPublicAccessBlockRequest): SetPublicAccessBlockResult = ???
+
+  override def getPublicAccessBlock(getPublicAccessBlockRequest: GetPublicAccessBlockRequest): GetPublicAccessBlockResult = ???
+
+  override def deletePublicAccessBlock(deletePublicAccessBlockRequest: DeletePublicAccessBlockRequest): DeletePublicAccessBlockResult = ???
+
+  override def getBucketPolicyStatus(getBucketPolicyStatusRequest: GetBucketPolicyStatusRequest): GetBucketPolicyStatusResult = ???
+
+  override def selectObjectContent(selectObjectContentRequest: SelectObjectContentRequest): SelectObjectContentResult = ???
+
+  override def setObjectLegalHold(setObjectLegalHoldRequest: SetObjectLegalHoldRequest): SetObjectLegalHoldResult = ???
+
+  override def getObjectLegalHold(getObjectLegalHoldRequest: GetObjectLegalHoldRequest): GetObjectLegalHoldResult = ???
+
+  override def setObjectLockConfiguration(setObjectLockConfigurationRequest: SetObjectLockConfigurationRequest): SetObjectLockConfigurationResult = ???
+
+  override def getObjectLockConfiguration(getObjectLockConfigurationRequest: GetObjectLockConfigurationRequest): GetObjectLockConfigurationResult = ???
+
+  override def setObjectRetention(setObjectRetentionRequest: SetObjectRetentionRequest): SetObjectRetentionResult = ???
+
+  override def getObjectRetention(getObjectRetentionRequest: GetObjectRetentionRequest): GetObjectRetentionResult = ???
+
+  override def writeGetObjectResponse(writeGetObjectResponseRequest: WriteGetObjectResponseRequest): WriteGetObjectResponseResult = ???
+
+  override def download(presignedUrlDownloadRequest: PresignedUrlDownloadRequest): PresignedUrlDownloadResult = ???
+
+  override def download(presignedUrlDownloadRequest: PresignedUrlDownloadRequest, file: File): Unit = ???
+
+  override def upload(presignedUrlUploadRequest: PresignedUrlUploadRequest): PresignedUrlUploadResult = ???
+
   override def shutdown(): Unit = ???
 
   override def getRegion: model.Region = ???
@@ -377,5 +446,4 @@ object MockS3Client extends AmazonS3 {
   override def getUrl(s: String, s1: String): URL = ???
 
   override def waiters(): AmazonS3Waiters = ???
-
 }

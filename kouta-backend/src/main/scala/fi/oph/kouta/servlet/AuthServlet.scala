@@ -1,15 +1,17 @@
 package fi.oph.kouta.servlet
 
-import java.util.UUID
-
+import java.util.{Optional, UUID}
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.{CasSessionService, ServiceTicket}
-import fi.vm.sade.utils.cas.CasLogout
+import fi.oph.kouta.util.MiscUtils.toScalaOption
+import fi.vm.sade.javautils.nio.cas.CasLogout
 import org.scalatra._
 
 class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
 
   def this() = this(CasSessionService)
+
+  private val casLogout = new CasLogout
 
   registerPath("/auth/login",
     """    get:
@@ -95,10 +97,10 @@ class AuthServlet(casSessionService: CasSessionService) extends KoutaServlet {
     val logoutRequest = params.get("logoutRequest")
       .getOrElse(throw new IllegalArgumentException("Not 'logoutRequest' parameter given"))
 
-    val ticket = CasLogout.parseTicketFromLogoutRequest(logoutRequest)
-      .getOrElse(throw new RuntimeException(s"Failed to parse CAS logout request $request"))
+    val ticket: Option[String] = toScalaOption(casLogout.parseTicketFromLogoutRequest(logoutRequest))
+    if(ticket.isEmpty) throw new RuntimeException(s"Failed to parse CAS logout request $request")
 
-    casSessionService.deleteSession(ServiceTicket(ticket))
+    casSessionService.deleteSession(ServiceTicket(ticket.get))
     NoContent()
   }
 

@@ -1,19 +1,13 @@
 package fi.oph.kouta.security
 
 import java.util.UUID
-import java.util.concurrent.TimeUnit
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
-import fi.vm.sade.utils.cas.CasClient.Username
 import fi.oph.kouta.logging.Logging
 import javax.servlet.http.HttpServletRequest
-import scalaz.concurrent.Task
-
-import scala.concurrent.duration.Duration
-import scala.util.control.NonFatal
 
 case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)
@@ -36,13 +30,13 @@ abstract class CasSessionService(val securityContext: SecurityContext,
 
   private val casClient = securityContext.casClient
 
-  private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, Username] = {
+  private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, String] = {
     val ServiceTicket(s) = ticket
-    casClient.validateServiceTicketWithVirkailijaUsername(securityContext.casServiceIdentifier)(s).handleWith {
-      case NonFatal(t) =>
-        logger.debug("Ticket validation error", t)
-        Task.fail(new AuthenticationFailedException(s"Failed to validate service ticket $s", t))
-    }.unsafePerformSyncAttemptFor(Duration(15, TimeUnit.SECONDS)).toEither
+    try {
+      Right(casClient.validateServiceTicketWithVirkailijaUsernameBlocking(securityContext.casServiceIdentifier, ticket.s))
+    } catch {
+      case e: Exception => Left(new AuthenticationFailedException(s"Failed to validate service ticket $s", e))
+    }
   }
 
   private def storeSession(ticket: ServiceTicket, user: KayttooikeusUserDetails): (UUID, CasSession) = {

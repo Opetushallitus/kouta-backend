@@ -2,6 +2,8 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain.{En, Fi, Kieli, Koulutustyyppi, Sv}
 
+import java.util.Optional
+
 object MiscUtils {
   def optionWhen[T](cond: Boolean)(result: => T): Option[T] = if(cond) Some(result) else None
   def isYhteishakuHakutapa(hakutapa: Option[String]): Boolean = hakutapa.exists(hakutapaKoodi => hakutapaKoodi.startsWith("hakutapa_01"))
@@ -40,4 +42,6 @@ object MiscUtils {
       case _ => ""
     }
   }
+  def toScalaOption[A](maybeA: Optional[A]): Option[A] =
+    if (maybeA.isEmpty) None else Some(maybeA.get)
 }
