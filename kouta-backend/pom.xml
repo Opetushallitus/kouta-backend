@@ -112,6 +112,15 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-cas</artifactId>
+        </dependency>
+        <dependency>
             <groupId>fi.oph.kouta</groupId>
             <artifactId>kouta-common</artifactId>
             <version>${kouta-common.version}</version>
@@ -201,21 +210,6 @@
             <groupId>org.gnieh</groupId>
             <artifactId>diffson-circe_2.12</artifactId>
             <version>4.3.0</version>
-        </dependency>
-
-        <!-- Cas related dependencies -->
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-cas_2.12</artifactId>
-            <version>${scala-cas.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-core_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-json4s-jackson_2.12</artifactId>
         </dependency>
 
         <!-- Http related dependencies -->
