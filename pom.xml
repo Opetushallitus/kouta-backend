@@ -17,7 +17,7 @@
     </modules>
 
     <properties>
-        <scala.version>2.12.10</scala.version>
+        <scala.version>2.12.20</scala.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Korjaa käännösvirheen:
@@ -29,7 +29,7 @@
         <!-- Utility properties -->
         <auditlogger.version>8.3.1-SNAPSHOT</auditlogger.version>
         <json4s.version>3.6.12</json4s.version>
-        <jackson.version>2.14.1</jackson.version>
+        <jackson.version>2.18.1</jackson.version>
         <log4j.version>2.17.1</log4j.version>
         <logback-access.version>1.3.0</logback-access.version>
 
@@ -56,86 +56,96 @@
         <!-- Plugin properties -->
         <enforce.java.version>[1.8,)</enforce.java.version>
 
-        <plugin.scala-maven-plugin.version>3.3.2</plugin.scala-maven-plugin.version>
+        <plugin.scala-maven-plugin.version>4.9.2</plugin.scala-maven-plugin.version>
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
         <plugin.maven-assembly-plugin.version>3.1.1</plugin.maven-assembly-plugin.version>
         <plugin.maven-jar-plugin.version>3.1.1</plugin.maven-jar-plugin.version>
         <plugin.maven-surefire-plugin.version>2.22.0</plugin.maven-surefire-plugin.version>
         <plugin.scalatest-maven-plugin.version>1.0</plugin.scalatest-maven-plugin.version>
     </properties>
-    <dependencies>
-        <!-- API, java.xml.bind module -->
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-
-        <!-- Runtime, com.sun.xml.bind module -->
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>2.3.2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_2.12</artifactId>
-            <version>${scalatra-scalatest.version}</version>
-            <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-webapp</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.mockito</groupId>
-                    <artifactId>mockito-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.12</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- Jetty -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>javax.servlet</groupId>
-                    <artifactId>javax.servlet-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-    </dependencies>
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-unix-common</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-resolver</artifactId>
+                <version>4.1.115.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>4.1.115.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>jmespath-java</artifactId>
+                <version>1.12.261</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-core</artifactId>
+                <version>1.12.261</version>
+            </dependency>
+            <dependency>
+                <groupId>org.log4s</groupId>
+                <artifactId>log4s_2.12</artifactId>
+                <version>1.9.0</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>1.3.12</version>
+            </dependency>
+            <dependency>
+                <groupId>com.amazonaws</groupId>
+                <artifactId>aws-java-sdk-s3</artifactId>
+                <version>1.12.261</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>4.1.100.Final</version>
+            </dependency>
+            <dependency>
+                <groupId>org.http4s</groupId>
+                <artifactId>blaze-core_2.12</artifactId>
+                <version>0.14.15</version>
+            </dependency>
+            <dependency>
+                <groupId>software.amazon.ion</groupId>
+                <artifactId>ion-java</artifactId>
+                <version>1.5.1</version>
+            </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-log4j12</artifactId>
@@ -362,6 +372,77 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
+    <dependencies>
+        <!-- API, java.xml.bind module -->
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+
+        <!-- Runtime, com.sun.xml.bind module -->
+        <dependency>
+            <groupId>org.glassfish.jaxb</groupId>
+            <artifactId>jaxb-runtime</artifactId>
+            <version>2.3.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatra</groupId>
+            <artifactId>scalatra-scalatest_2.12</artifactId>
+            <version>${scalatra-scalatest.version}</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.eclipse.jetty</groupId>
+                    <artifactId>jetty-webapp</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalatest</groupId>
+                    <artifactId>scalatest_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.httpcomponents</groupId>
+                    <artifactId>httpclient</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.mockito</groupId>
+                    <artifactId>mockito-core</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.scalatra.scalate</groupId>
+                    <artifactId>scalate-core_2.12</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <!-- Jetty -->
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-webapp</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-server</artifactId>
+            <version>${jetty.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>javax.servlet</groupId>
+                    <artifactId>javax.servlet-api</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-servlets</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+    </dependencies>
 
     <repositories>
         <repository>
