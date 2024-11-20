@@ -108,7 +108,9 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
 
     } match {
       case Success(counts: SiirtotiedostoCounts) => Right(SiirtotiedostoInfo(Some(counts)))
-      case Failure(exception: Throwable)         => Left(exception.getMessage)
+      case Failure(exception: Throwable)         =>
+        logger.error(s"Jotain meni vikaan muodostettaessa siirtotiedostoa:", exception)
+        Left(exception.getMessage)
     }
   }
 }
