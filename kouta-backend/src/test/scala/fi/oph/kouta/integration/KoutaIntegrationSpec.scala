@@ -15,7 +15,6 @@ import fi.oph.kouta.security._
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.validation.{ErrorMessage, ValidationError}
-import fi.vm.sade.utils.cas.CasClient.SessionCookie
 import org.json4s.jackson.Serialization.read
 import org.mockito.scalatest.MockitoSugar
 import org.scalactic.Equality
@@ -25,7 +24,7 @@ import java.util.UUID
 import scala.collection.mutable
 
 case class TestUser(oid: UserOid, username: String, sessionId: UUID) {
-  val ticket: SessionCookie = MockSecurityContext.ticketFor(TestSetups.defaultServiceIdentifier, username)
+  val ticket: String = MockSecurityContext.ticketFor(TestSetups.defaultServiceIdentifier, username)
 }
 
 trait DefaultTestImplicits {
@@ -414,7 +413,7 @@ sealed trait HttpSpec extends KoutaJsonFormats {
       debugJson(body)
       read[E](body) should equal(expected)
       header(KoutaServlet.LastModifiedHeader)
-    }
+    }.asInstanceOf[String]
   }
 
   def get[E <: scala.AnyRef, I](path: String, id: I)

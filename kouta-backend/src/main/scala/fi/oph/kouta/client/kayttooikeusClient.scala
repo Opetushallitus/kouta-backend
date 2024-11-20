@@ -3,16 +3,15 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
-import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
 import fi.oph.kouta.logging.Logging
-import org.http4s.Method.GET
-import org.http4s.client.blaze.defaultClient
-import org.http4s.{Request, Uri}
+import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
-import scalaz.concurrent.Task
 
 import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 
 case class OrganisaatioHenkilo(organisaatioOid: String)
@@ -27,19 +26,18 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
 
   private lazy val config = KoutaConfigurationFactory.configuration.kayttooikeusClientConfiguration
-  private lazy val params = CasParams(
-    urlProperties.url("kayttooikeus-service"),
-    config.username,
-    config.password
-  )
 
-  private lazy val client = CasAuthenticatingClient(
-    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
-    casParams = params,
-    serviceClient = defaultClient,
-    clientCallerId = callerId,
-    sessionCookieName = "JSESSIONID"
-  )
+  private lazy val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
+    config.username,
+    config.password,
+    urlProperties.url("cas.url"),
+    urlProperties.url("kayttooikeus-service"),
+    callerId,
+    callerId,
+    "j_spring_cas_security_check")
+    .setJsessionName("JSESSIONID").build
+
+  val casClient: CasClient = CasClientBuilder.build(casConfig)
 
   implicit val kayttooikeusCache: Cache[UserOid, List[OrganisaatioHenkilo]] = Scaffeine()
     .expireAfterWrite(45.minutes)
@@ -68,6 +66,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
   private def getOrganisaatiot(oid: UserOid): List[OrganisaatioHenkilo] =  {
     val url = urlProperties.url(s"kayttooikeus-service.organisaatiohenkilo", oid)
 
+    /*
     try {
       Uri.fromString(url)
         .fold(Task.fail, url => {
@@ -91,13 +90,24 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
         logger.error(s"Authentication to CAS failed: $error")
         throw error
     }
+    */
+    val request = new RequestBuilder().setMethod("GET").setUrl(url).build
+    val future = Future {
+      casClient.executeBlocking(request)
+    }
+    val result = future.map {
+      case r if r.getStatusCode == 200 =>
+        parse(r.getResponseBodyAsStream()).extract[List[OrganisaatioHenkilo]]
+      case r =>
+        throw new RuntimeException(s"Henkilön $oid käyttöoikeustietojen hakeminen käyttöoikeus-servicestä epäonnistui: $r")
+    }
+    Await.result(result, Duration(1, TimeUnit.MINUTES))
   }
 
   def getOrganisaatiotFromCache(oid: UserOid): List[OrganisaatioHenkilo] = {
     try {
       kayttooikeusCache.get(oid, oid => getOrganisaatiot(oid))
     } catch {
-      case _: CasClientException => List()
       case error: Throwable => throw error
     }
   }

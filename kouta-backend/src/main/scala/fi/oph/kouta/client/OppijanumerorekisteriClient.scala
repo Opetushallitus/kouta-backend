@@ -11,7 +11,7 @@ import org.json4s.jackson.JsonMethods._
 
 import java.util.concurrent.TimeUnit
 import scala.compat.java8.FutureConverters.toScala
-import scala.concurrent.Await
+import scala.concurrent.{Await, Future}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
@@ -56,7 +56,10 @@ object OppijanumerorekisteriClient
       )
 
     val request = new RequestBuilder().setMethod("GET").setUrl(oppijanumerorekisteriUrl).build
-    val result = toScala(casClient.execute(request)).map {
+    val future = Future {
+      casClient.executeBlocking(request)
+    }
+    val result = future.map {
       case r if r.getStatusCode == 200 =>
         parse(r.getResponseBodyAsStream()).extract[Henkilo]
       case r if r.getStatusCode == 404 && isTestEnvironment =>
