@@ -21,7 +21,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-resolver</artifactId>
-            <version>4.1.94.Final</version>
+            <version>4.1.115.Final</version>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
