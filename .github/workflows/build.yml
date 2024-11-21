@@ -34,11 +34,12 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          mvn clean package -B
+          mvn clean package -B --settings settings.xml
 
       - uses: actions/cache@v3
         id: restore-build
@@ -123,4 +124,5 @@ jobs:
         env:
           ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
           ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
-        run: mvn deploy -B -DskipTests --settings ci-tools/common/maven-settings.xml
+          GITHUB_TOKEN: ${{ github.token }}
+        run: mvn deploy -B -DskipTests --settings settings.xml
