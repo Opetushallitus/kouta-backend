@@ -15,13 +15,11 @@ case class ProductionSecurityContext(casUrl: String,
                                      casServiceIdentifier: String) extends SecurityContext
 
 object ProductionSecurityContext extends CallerId {
-  private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-
   def apply(config: SecurityConfiguration): ProductionSecurityContext = {
     val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
       "",
       "",
-      urlProperties.url("cas.url"),
+      config.casUrl,
       "",
       callerId,
       callerId,
