@@ -5,7 +5,7 @@
             <PatternLayout pattern="%m%n"/>
         </Console>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5v1Level %c{1} [%t]] %m%n"/>
+            <PatternLayout pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5p %c{1} [%t] %m%n"/>
         </Console>
     </Appenders>
     <Loggers>
