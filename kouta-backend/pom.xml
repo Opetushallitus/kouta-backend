@@ -391,6 +391,10 @@
             <artifactId>elastic4s-json-json4s_2.12</artifactId>
             <version>8.5.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-json-jackson_2.12</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
