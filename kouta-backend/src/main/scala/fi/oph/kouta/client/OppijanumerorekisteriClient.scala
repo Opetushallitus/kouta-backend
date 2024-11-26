@@ -3,17 +3,17 @@ package fi.oph.kouta.client
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
+import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasClientException, CasParams}
-import fi.vm.sade.utils.slf4j.Logging
-import org.http4s.Method.GET
-import org.http4s.client.blaze.defaultClient
-import org.http4s.{Request, Uri}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods._
-import scalaz.concurrent.Task
 
-import scala.concurrent.duration._
 import java.util.concurrent.TimeUnit
+import scala.compat.java8.FutureConverters.toScala
+import scala.concurrent.{Await, Future}
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 case class Henkilo(kutsumanimi: Option[String],
                    sukunimi: Option[String],
@@ -31,19 +31,18 @@ object OppijanumerorekisteriClient
   private val config = KoutaConfigurationFactory.configuration.oppijanumerorekisteriClientConfiguration
   private val isTestEnvironment = KoutaConfigurationFactory.configuration.isTestEnvironment
   private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-  private val params = CasParams(
-    urlProperties.url("oppijanumerorekisteri-service"),
-    config.username,
-    config.password
-  )
 
-  private val client = CasAuthenticatingClient(
-    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
-    casParams = params,
-    serviceClient = defaultClient,
-    clientCallerId = callerId,
-    sessionCookieName = "JSESSIONID"
-  )
+  val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
+    config.username,
+    config.password,
+    urlProperties.url("cas.url"),
+    urlProperties.url("oppijanumerorekisteri-service"),
+    callerId,
+    callerId,
+    "/j_spring_cas_security_check")
+    .setJsessionName("JSESSIONID").build
+
+  val casClient: CasClient = CasClientBuilder.build(casConfig)
 
   implicit val OppijanumeroCache: Cache[UserOid, Henkilo] = Scaffeine()
     .expireAfterWrite(60.minutes)
@@ -56,42 +55,22 @@ object OppijanumerorekisteriClient
         oid
       )
 
-    try {
-      Uri.fromString(oppijanumerorekisteriUrl)
-        .fold(Task.fail, url => {
-          client.fetch(Request(method = GET, uri = url)) {
-            case r if r.status.code == 200 =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .map(responseBody => {
-                  parse(responseBody).extract[Henkilo]
-                })
-            case r if r.status.code == 404 && isTestEnvironment =>
-              Task(Henkilo(kutsumanimi = Some("Henkilö"), sukunimi = Some("Puuttuu"), etunimet = Some("Henkilö")))
-            case r =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .flatMap(_ => Task.fail(new RuntimeException(s"Failed to get henkilö $oid: ${r.toString()}")))
-          }
-        }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
-    } catch {
-      case error: CasClientException =>
-        logger.error(s"Authentication to CAS failed: ${error}")
-        throw error
-      case error: Throwable =>
-        logger.error(s"Failed to get data from Oppijanumerorekisteri: ${error}")
-        throw error
+    val request = new RequestBuilder().setMethod("GET").setUrl(oppijanumerorekisteriUrl).build
+    val future = Future {
+      casClient.executeBlocking(request)
     }
+    val result = future.map {
+      case r if r.getStatusCode == 200 =>
+        parse(r.getResponseBodyAsStream()).extract[Henkilo]
+      case r if r.getStatusCode == 404 && isTestEnvironment =>
+        Henkilo(kutsumanimi = Some("Henkilö"), sukunimi = Some("Puuttuu"), etunimet = Some("Henkilö"))
+      case r =>
+        throw new RuntimeException(s"Henkilön $oid tietojen hakeminen oppijanumerorekisteristä epäonnistui: $r")
+    }
+    Await.result(result, Duration(1, TimeUnit.MINUTES))
   }
 
   override def getHenkilöFromCache(oid: UserOid): Henkilo = {
-    try {
       OppijanumeroCache.get(oid, oid => getHenkilö(oid))
-    } catch {
-      case _: CasClientException => Henkilo(kutsumanimi = None, sukunimi = None, etunimet = None)
-      case error: Throwable => throw error
-    }
   }
 }

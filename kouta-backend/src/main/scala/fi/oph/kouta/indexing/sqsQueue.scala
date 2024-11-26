@@ -6,7 +6,7 @@ import com.amazonaws.regions.{Region, RegionUtils, Regions}
 import com.amazonaws.services.sqs.{AmazonSQS, AmazonSQSClientBuilder}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.indexing.indexing._
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 import scala.util.{Failure, Success, Try}
 

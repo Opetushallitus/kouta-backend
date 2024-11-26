@@ -7,103 +7,16 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.4.0-SNAPSHOT</version>
+        <version>7.4.1-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>7.4.0-SNAPSHOT</version>
+    <version>7.4.1-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.20.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.21.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.java-json-tools</groupId>
-                <artifactId>json-schema-validator</artifactId>
-                <version>2.2.14</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>1.15</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>4.4.15</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpclient</artifactId>
-                <!-- Jos tämän päivittää >=4.5.8, niin osa KeywordSpec-testeistä alkaa feilata.
-                     Scalatran params() ei jostain syystä osaa uudemmilla versioilla lukea ääkkösiä oikein URL:stä -->
-                <version>4.5.7</version>
-            </dependency>
-            <dependency>
-                <groupId>net.java.dev.jna</groupId>
-                <artifactId>jna</artifactId>
-                <version>5.8.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-buffer</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-resolver</artifactId>
-                <version>4.1.53.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>org.reactivestreams</groupId>
-                <artifactId>reactive-streams</artifactId>
-                <version>1.0.3</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-cbor</artifactId>
-                <version>2.10.5</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
 
     <!--Huom! Lisää vain ylimmän tason riippuvudet!
         Älä määritä mukana tulevien riippuvuuksien versioita tässä, vaan anna niiden tulla implisiittisesti.
@@ -111,6 +24,21 @@
         Näin pom.xml pysyy siistinä ja lyhyenä.-->
 
     <dependencies>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-cas</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
         <dependency>
             <groupId>fi.oph.kouta</groupId>
             <artifactId>kouta-common</artifactId>
@@ -130,22 +58,13 @@
             <artifactId>scala-library</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.jsoup</groupId>
+            <artifactId>jsoup</artifactId>
+        </dependency>
+
+
         <!-- Utility dependencies -->
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-logging_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-utils_2.12</artifactId>
-            <version>${scala-utils.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.commons</groupId>
-                    <artifactId>commons-lang3</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>fi.vm.sade</groupId>
             <artifactId>scala-properties_2.12</artifactId>
@@ -153,6 +72,12 @@
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
             <artifactId>java-http</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>slf4j-simple</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
@@ -202,7 +127,8 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.10.1</version>
+            <!--version>2.10.1</version-->
+            <version>2.9.0</version>
         </dependency>
 
         <!-- Diffson for calculating audit log changes -->
@@ -210,21 +136,6 @@
             <groupId>org.gnieh</groupId>
             <artifactId>diffson-circe_2.12</artifactId>
             <version>4.3.0</version>
-        </dependency>
-
-        <!-- Cas related dependencies -->
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-cas_2.12</artifactId>
-            <version>${scala-cas.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-core_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.http4s</groupId>
-            <artifactId>http4s-json4s-jackson_2.12</artifactId>
         </dependency>
 
         <!-- Http related dependencies -->
@@ -363,7 +274,7 @@
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
             <scope>test</scope>
-            <version>2.0.33</version>
+            <version>2.1.23</version>
         </dependency>
         <dependency>
             <groupId>com.softwaremill.diffx</groupId>
@@ -473,7 +384,7 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>elasticsearch</artifactId>
-            <version>1.17.3</version>
+            <version>1.20.4</version>
             <scope>test</scope>
         </dependency>
         <!-- Elasticsearch dependencies -->
@@ -491,6 +402,22 @@
             <groupId>com.sksamuel.elastic4s</groupId>
             <artifactId>elastic4s-json-json4s_2.12</artifactId>
             <version>8.5.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.sksamuel.elastic4s</groupId>
+            <artifactId>elastic4s-json-jackson_2.12</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
         </dependency>
     </dependencies>
 

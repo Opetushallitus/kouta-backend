@@ -4,7 +4,7 @@ import fi.oph.kouta.client.KoulutusKoodiUri
 
 import java.util.UUID
 import fi.oph.kouta.domain.oid._
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 import java.time.LocalDateTime
 

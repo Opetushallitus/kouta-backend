@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<Configuration name="Log4j1">
+    <Appenders>
+{# raw-endraw -välillä template engine ei tee mitään! #}
+{% raw %}
+        <RollingFile name="AUDIT" fileName="/root/logs/auditlog_kouta-backend.log" append="true"
+                     filePattern="/root/logs/auditlog_kouta-backend.log.%i">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20" fileIndex="min"/>
+        </RollingFile>
+        <!--Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5p %c{1} [%t] %m%n"/>
+        </Console-->
+        <RollingFile name="FILE" fileName="/root/logs/oph-kouta-backend.log" append="true"
+                     filePattern="/root/logs/oph-kouta-backend.log.%i">
+            <PatternLayout
+                    pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5p %c{1} [%t] %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100" fileIndex="min"/>
+        </RollingFile>
+{% endraw %}
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="FILE"/>
+        </Root>
+        <Logger name="org.apache.activemq.spring" level="info"/>
+        <Logger name="org.springframework" level="error"/>
+        <Logger name="org.apache.cxf" level="error"/>
+        <Logger name="fi.vm.sade.auditlog.Audit" level="info">
+            <AppenderRef ref="AUDIT"/>
+        </Logger>
+        <Logger name="org.flywaydb" level="info"/>
+        <Logger name="javax.sql" level="error"/>
+        <Logger name="org.jasig.cas.client.session" level="info"/>
+        <Logger name="org.vaadin" level="error"/>
+        <Logger name="org.apache.activemq" level="info"/>
+    </Loggers>
+</Configuration>

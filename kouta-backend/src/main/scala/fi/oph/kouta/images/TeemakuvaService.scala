@@ -3,7 +3,7 @@ package fi.oph.kouta.images
 import fi.oph.kouta.domain.{HasModified, HasPrimaryId, HasTeemakuva}
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import slick.dbio.DBIO
 
 import scala.concurrent.ExecutionContext.Implicits.global
