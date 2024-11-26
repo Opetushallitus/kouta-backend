@@ -34,7 +34,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     urlProperties.url("kayttooikeus-service"),
     callerId,
     callerId,
-    "j_spring_cas_security_check")
+    "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
   val casClient: CasClient = CasClientBuilder.build(casConfig)

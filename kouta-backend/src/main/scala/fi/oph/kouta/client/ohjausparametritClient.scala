@@ -49,7 +49,7 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
     urlProperties.url("ohjausparametrit-service.service"),
     callerId,
     callerId,
-    "j_spring_cas_security_check")
+    "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
   val casClient: CasClient = CasClientBuilder.build(casConfig)
