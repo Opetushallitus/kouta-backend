@@ -360,7 +360,7 @@ package object koulutusMetadata {
       |            linkkiEPerusteisiin:
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
-      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |              example: https://eperusteet.opintopolku.fi/#/fi/kooste/telma
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
@@ -386,7 +386,7 @@ package object koulutusMetadata {
       |            linkkiEPerusteisiin:
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
-      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |              example: https://eperusteet.opintopolku.fi/#/fi/kooste/telma
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
@@ -467,7 +467,7 @@ package object koulutusMetadata {
       |            linkkiEPerusteisiin:
       |              type: string
       |              description: Linkki koulutuksen eperusteisiin
-      |              example: https://eperusteet.opintopolku.fi/beta/#/fi/kooste/telma
+      |              example: https://eperusteet.opintopolku.fi/#/fi/kooste/telma
       |            opintojenLaajuusyksikkoKoodiUri:
       |              type: string
       |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
