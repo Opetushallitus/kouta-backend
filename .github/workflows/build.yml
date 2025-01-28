@@ -20,9 +20,10 @@ jobs:
           distribution: 'corretto'
           cache: 'maven'
 
-      - uses: szenius/set-timezone@v1.1
-        with:
-          timezoneLinux: "Europe/Helsinki"
+      - name: Set timezone to Europe/Helsinki
+        run: |
+          sudo timedatectl set-timezone Europe/Helsinki
+          echo "Europe/Helsinki" | sudo tee /etc/timezone
 
       - name: Start postgres container
         run: |
