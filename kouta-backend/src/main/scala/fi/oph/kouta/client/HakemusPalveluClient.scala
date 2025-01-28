@@ -73,7 +73,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
 
   private def getFromHakemuspalvelu[R: Manifest](
       urlStr: String,
-      timeout: Duration = Duration(5, TimeUnit.SECONDS)
+      timeout: Duration = Duration(60, TimeUnit.SECONDS)
   ): R = {
     val request = new RequestBuilder().setMethod("GET").setUrl(urlStr).build
     val future = Future {
