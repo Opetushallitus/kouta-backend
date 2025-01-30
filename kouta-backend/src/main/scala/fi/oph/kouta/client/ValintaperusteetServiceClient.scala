@@ -54,7 +54,7 @@ object ValintaperusteetServiceClient extends ValintaperusteetServiceClient with 
     urlProperties.url("valintaperusteet-service"),
     callerId,
     callerId,
-    "j_spring_cas_security_check")
+    "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
   val casClient: CasClient = CasClientBuilder.build(casConfig)
