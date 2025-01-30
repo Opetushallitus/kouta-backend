@@ -239,6 +239,18 @@ case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends VapaaSivistystyoKoulutusMetadataRaporttiItem
 
+case class VapaaSivistystyoOsaamismerkkiKoulutusMetadataRaporttiItem(
+                                                          tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+                                                          lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
+                                                          kuvaus: Kielistetty = Map(),
+                                                          linkkiEPerusteisiin: Kielistetty = Map(),
+                                                          koulutusalaKoodiUrit: Seq[String] = Seq(),
+                                                          opintojenLaajuusNumero: Option[Double] = None,
+                                                          opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
+                                                          osaamismerkkiKoodiUri: Option[String],
+                                                          isMuokkaajaOphVirkailija: Option[Boolean] = None
+                                                        ) extends VapaaSivistystyoKoulutusMetadataRaporttiItem
+
 case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),

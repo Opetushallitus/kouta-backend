@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain.siirtotiedosto
 
-import fi.oph.kouta.domain.{AikuistenPerusopetus, AikuistenPerusopetusToteutusMetadata, Ajanjakso, Amk, Amm, AmmMuu, AmmOpeErityisopeJaOpo, AmmOpeErityisopeJaOpoToteutusMetadata, AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisala, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmattikorkeakouluToteutusMetadata, Apuraha, Apurahayksikko, Erikoislaakari, ErikoislaakariToteutusMetadata, Erikoistumiskoulutus, ErikoistumiskoulutusToteutusMetadata, Hakulomaketyyppi, Hakutermi, Julkaisutila, Kieli, Kielistetty, Kielivalikoima, KkOpintojakso, KkOpintojaksoToteutusMetadata, KkOpintokokonaisuus, KkOpintokokonaisuusToteutusMetadata, KoulutuksenAlkamiskausi, Koulutustyyppi, LaajuusMinMax, LaajuusSingle, Lisatieto, Lk, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Maksullisuustyyppi, Modified, Muu, MuuToteutusMetadata, OpePedagOpinnotToteutusMetadata, Opetus, TaiteenPerusopetus, TaiteenPerusopetusToteutusMetadata, Tallennettu, Telma, TelmaToteutusMetadata, Toteutus, ToteutusEnrichedData, Tuva, TuvaToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOpistovuosiToteutusMetadata, Yhteyshenkilo, YliopistoToteutusMetadata, Yo}
+import fi.oph.kouta.domain.{AikuistenPerusopetus, AikuistenPerusopetusToteutusMetadata, Ajanjakso, Amk, Amm, AmmMuu, AmmOpeErityisopeJaOpo, AmmOpeErityisopeJaOpoToteutusMetadata, AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisala, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmattikorkeakouluToteutusMetadata, Apuraha, Apurahayksikko, Erikoislaakari, ErikoislaakariToteutusMetadata, Erikoistumiskoulutus, ErikoistumiskoulutusToteutusMetadata, Hakulomaketyyppi, Hakutermi, Julkaisutila, Kieli, Kielistetty, Kielivalikoima, KkOpintojakso, KkOpintojaksoToteutusMetadata, KkOpintokokonaisuus, KkOpintokokonaisuusToteutusMetadata, KoulutuksenAlkamiskausi, Koulutustyyppi, LaajuusMinMax, LaajuusSingle, Lisatieto, Lk, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Maksullisuustyyppi, Modified, Muu, MuuToteutusMetadata, OpePedagOpinnotToteutusMetadata, Opetus, TaiteenPerusopetus, TaiteenPerusopetusToteutusMetadata, Tallennettu, Telma, TelmaToteutusMetadata, Toteutus, ToteutusEnrichedData, TutkintoonJohtamatonToteutusMetadata, Tuva, TuvaToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOpistovuosiToteutusMetadata, VapaaSivistystyoOsaamismerkki, Yhteyshenkilo, YliopistoToteutusMetadata, Yo}
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 
@@ -387,6 +387,29 @@ case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
     isTyovoimakoulutus: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
+
+case class VapaaSivistystyoOsaamismerkkiToteutusMetadataRaporttiItem(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[OpetusRaporttiItem] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = Some(false),
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None,
+    suoritetaanNayttona: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
