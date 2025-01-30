@@ -79,20 +79,28 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
     var koulutukset, toteutukset, hakukohteet, haut, valintaperusteet, sorakuvaukset, oppilaitoksetJaOsat,
         pistetiedot: Option[Int] = None
     Try[SiirtotiedostoCounts] {
+      logger.info(s"$operationId Saving koulutukset $windowStart - $windowEnd")
       val koulutusResult = SiirtotiedostoRaportointiService.saveKoulutukset(operationId, windowStart, windowEnd)
       koulutukset = Some(koulutusResult.count)
+      logger.info(s"$operationId Saving toteutukset $windowStart - $windowEnd")
       val toteutusResult = SiirtotiedostoRaportointiService.saveToteutukset(operationId, windowStart, windowEnd)
       toteutukset = Some(toteutusResult.count)
+      logger.info(s"$operationId Saving hakukohteet $windowStart - $windowEnd")
       val hakukohdeResult = SiirtotiedostoRaportointiService.saveHakukohteet(operationId, windowStart, windowEnd)
       hakukohteet = Some(hakukohdeResult.count)
+      logger.info(s"$operationId Saving haut $windowStart - $windowEnd")
       val hakuResult = SiirtotiedostoRaportointiService.saveHaut(operationId, windowStart, windowEnd)
       haut = Some(hakuResult.count)
+      logger.info(s"$operationId Saving valintaperusteet $windowStart - $windowEnd")
       val valintaperusteResult = SiirtotiedostoRaportointiService.saveValintaperusteet(operationId, windowStart, windowEnd)
       valintaperusteet = Some(valintaperusteResult.count)
+      logger.info(s"$operationId Saving sorakuvaukset $windowStart - $windowEnd")
       val sorakuvausResult = SiirtotiedostoRaportointiService.saveSorakuvaukset(operationId, windowStart, windowEnd)
       sorakuvaukset = Some(sorakuvausResult.count)
+      logger.info(s"$operationId Saving oppilaitoksetJaOsat $windowStart - $windowEnd")
       val oppilaitosJaOsaResult = SiirtotiedostoRaportointiService.saveOppilaitoksetJaOsat(operationId, windowStart, windowEnd)
       oppilaitoksetJaOsat = Some(oppilaitosJaOsaResult.count)
+      logger.info(s"$operationId Saving pistehistoria $windowStart - $windowEnd")
       val pistehistoriaResult = SiirtotiedostoRaportointiService.savePistehistoria(operationId, windowStart, windowEnd)
       pistetiedot = Some(pistehistoriaResult.count)
       SiirtotiedostoCounts(
@@ -108,7 +116,9 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
 
     } match {
       case Success(counts: SiirtotiedostoCounts) => Right(SiirtotiedostoInfo(Some(counts)))
-      case Failure(exception: Throwable)         => Left(exception.getMessage)
+      case Failure(exception: Throwable)         =>
+        logger.error(s"Error forming siirtotiedosto(s): ", exception)
+        Left(exception.getMessage)
     }
   }
 }
