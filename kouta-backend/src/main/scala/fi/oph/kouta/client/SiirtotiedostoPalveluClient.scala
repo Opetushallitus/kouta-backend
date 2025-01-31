@@ -3,6 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.{KoutaConfigurationFactory, S3Configuration}
 import fi.vm.sade.valinta.dokumenttipalvelu.SiirtotiedostoPalvelu
 import fi.oph.kouta.util.KoutaJsonFormats
+import fi.vm.sade.utils.slf4j.Logging
 import org.json4s.jackson.Serialization.writePretty
 
 import java.io.ByteArrayInputStream
@@ -10,7 +11,7 @@ import java.util.UUID
 
 object SiirtotiedostoPalveluClient extends SiirtotiedostoPalveluClient
 
-class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
+class SiirtotiedostoPalveluClient extends KoutaJsonFormats with Logging {
   val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration;
   val siirtotiedostoPalvelu   = new SiirtotiedostoPalvelu(config.region.getOrElse("eu-west-1"), config.transferFileBucket, config.transferFileTargetRoleArn)
   val saveRetryCount          = config.transferFileSaveRetryCount
@@ -21,6 +22,7 @@ class SiirtotiedostoPalveluClient extends KoutaJsonFormats {
       operationId: UUID,
       operationSubId: Int
   ): String = {
+    logger.info(s"$operationId Saving siirtotiedosto of type $contentType, subId $operationSubId to s3")
     siirtotiedostoPalvelu
       .saveSiirtotiedosto(
         "kouta",

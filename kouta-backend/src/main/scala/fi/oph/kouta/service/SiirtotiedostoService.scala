@@ -8,6 +8,7 @@ import fi.oph.kouta.domain.{LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourc
 import fi.oph.kouta.repository.{KoutaDatabase, SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.NameHelper
+import fi.vm.sade.utils.slf4j.Logging
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -40,7 +41,7 @@ class SiirtotiedostoService(
     hakukohdeService: HakukohdeService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
-) {
+) extends Logging {
   val maxNumberOfItemsInFile = KoutaConfigurationFactory.configuration.s3Configuration.transferFileMaxItemCount;
 
   def saveKoulutukset(
