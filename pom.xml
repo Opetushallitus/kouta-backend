@@ -50,7 +50,7 @@
         <!-- Test properties -->
         <scalatest.version>3.2.0-M4</scalatest.version>
         <scalatra-scalatest.version>2.7.0</scalatra-scalatest.version>
-        <jetty.version>9.4.46.v20220331</jetty.version>
+        <jetty.version>9.4.57.v20241219</jetty.version>
 
         <commons.io.version>2.16.1</commons.io.version>
         <commons.validator.version>1.8.0</commons.validator.version>
