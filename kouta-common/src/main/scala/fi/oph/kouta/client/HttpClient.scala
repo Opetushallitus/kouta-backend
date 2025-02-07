@@ -2,7 +2,7 @@ package fi.oph.kouta.client
 
 import java.util.{Map => JavaMap}
 
-import fi.vm.sade.utils.http.DefaultHttpClient
+import fi.oph.kouta.http.DefaultHttpClient
 import org.json4s.jackson.Serialization.write
 import org.json4s.Formats
 import scalaj.http.HttpOptions._

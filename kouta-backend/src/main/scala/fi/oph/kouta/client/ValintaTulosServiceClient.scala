@@ -2,14 +2,16 @@ package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.HakuOid
+import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasParams}
-import fi.vm.sade.utils.slf4j.Logging
-import org.http4s.Method.GET
-import org.http4s.{Request, Uri}
-import org.http4s.client.blaze.defaultClient
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
-import scalaz.concurrent.Task
+
+import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, Future}
 
 trait ValintaTulosServiceClient {
   def fetchPisteet(hakuOid: HakuOid): List[JononAlimmatPisteet]
@@ -23,41 +25,30 @@ case class JononAlimmatPisteet(valintatapajonoOid: String,
 object ValintaTulosServiceClient extends ValintaTulosServiceClient with HttpClient with CallerId with Logging with KoutaJsonFormats{
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
   private lazy val config = KoutaConfigurationFactory.configuration.valintaTulosServiceClientConfiguration
-  private lazy val params = CasParams(
-    urlProperties.url("valinta-tulos-service"),
-    "auth/login",
-    config.username,
-    config.password
-  )
 
-  private lazy val client = CasAuthenticatingClient(
-    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
-    casParams = params,
-    serviceClient = defaultClient,
-    clientCallerId = callerId,
-    sessionCookieName = "session"
-  )
+  private lazy val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
+    config.username,
+    config.password,
+    urlProperties.url("cas.url"),
+    urlProperties.url("valinta-tulos-service"),
+    callerId,
+    callerId,
+    "/auth/login")
+    .setJsessionName("session").build
+
+  val casClient: CasClient = CasClientBuilder.build(casConfig)
 
   def fetchPisteet(hakuOid: HakuOid): List[JononAlimmatPisteet] = {
-    Uri.fromString(urlProperties.url("valinta-tulos-service.haku.alimmatpisteet", hakuOid.toString))
-      .fold(Task.fail, url => {
-        client.fetch(Request(method = GET, uri = url)) {
-          case r if r.status.code == 200 =>
-            r.bodyAsText
-              .runLog
-              .map(_.mkString)
-              .map(responseBody => {
-                parse(responseBody).extract[List[JononAlimmatPisteet]]
-              })
-          case r if r.status.code == 404 =>
-            logger.info(s"Ei löydetty pisteitä valinta-tulos-servicestä haulle $hakuOid")
-            Task.now(List())
-          case r =>
-            r.bodyAsText
-              .runLog
-              .map(_.mkString)
-              .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch pistees from VTS for haku $hakuOid, status ${r.status.code}")))
-        }
-      }).unsafePerformSyncAttemptFor(60*1000).fold(throw _, x => x)
+    val request = new RequestBuilder().setMethod("GET").setUrl(urlProperties.url("valinta-tulos-service.haku.alimmatpisteet", hakuOid.toString)).build
+    val future = Future {
+      casClient.executeBlocking(request)
+    }
+    val result = future.map {
+      case r if r.getStatusCode == 200 =>
+        parse(r.getResponseBodyAsStream()).extract[List[JononAlimmatPisteet]]
+      case r =>
+        throw new RuntimeException(s"Haun $hakuOid tietojen hakeminen valinta-tulos-servicestä epäonnistui: $r")
+    }
+    Await.result(result, Duration(10, TimeUnit.MINUTES))
   }
 }

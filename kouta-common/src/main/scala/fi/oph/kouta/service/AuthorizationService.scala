@@ -5,7 +5,7 @@ import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Enum, EnumType}
 import fi.oph.kouta.security.{Authorizable, Role}
 import fi.oph.kouta.servlet.Authenticated
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 sealed trait OrganizationsAuthorizationMode extends EnumType
 

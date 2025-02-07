@@ -7,7 +7,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
 import fi.oph.kouta.util.CommandLine
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import io.atlassian.aws.sqs.SQSClient
 
 import java.util.UUID

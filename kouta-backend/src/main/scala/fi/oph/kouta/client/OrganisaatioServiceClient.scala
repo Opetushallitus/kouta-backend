@@ -5,7 +5,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.domain.{OrgServiceOrganisaatioHierarkia, OrganisaatioServiceOrg, OrganisaatioHierarkia}
 import fi.oph.kouta.util.{KoutaJsonFormats, OrganisaatioServiceUtil}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatra.{MultiParams, Params}
 

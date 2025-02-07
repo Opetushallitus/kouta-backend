@@ -16,7 +16,7 @@ import fi.oph.kouta.service.KoodistoService.getKaannokset
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.joda.time.LocalDate
 import slick.dbio.DBIO
 

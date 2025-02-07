@@ -1,20 +1,18 @@
 package fi.oph.kouta.client
 
-import java.time.Instant
-import java.util.concurrent.TimeUnit
-
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.utils.cas.{CasAuthenticatingClient, CasClient, CasParams}
-import org.http4s.Method.POST
-import org.http4s.client.blaze.defaultClient
-import org.http4s.json4s.jackson.jsonEncoderOf
-import org.http4s.{Request, Uri}
-import org.json4s.DefaultWriters._
-import org.json4s.{Extraction, JValue}
-import scalaz.concurrent.Task
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import org.asynchttpclient.RequestBuilder
+import org.json4s.jackson.JsonMethods.{compact, render}
+import org.json4s.Extraction
+import org.json4s.jackson.JsonMethods.parse
 
+import java.time.Instant
+import java.util.concurrent.TimeUnit
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.Duration
 
 case class DateParametriDTO(date: Long)
@@ -43,19 +41,18 @@ trait OhjausparametritClient {
 object OhjausparametritClient extends OhjausparametritClient with CallerId with KoutaJsonFormats {
   private val config = KoutaConfigurationFactory.configuration.ohjausparametritClientConfiguration
   private val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-  private val params = CasParams(
-    urlProperties.url("ohjausparametrit-service.service"),
-    "j_spring_cas_security_check",
+
+  private lazy val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
     config.username,
-    config.password
-  )
-  private val client = CasAuthenticatingClient(
-    casClient = new CasClient(KoutaConfigurationFactory.configuration.securityConfiguration.casUrl, defaultClient, callerId),
-    casParams = params,
-    serviceClient = defaultClient,
-    clientCallerId = callerId,
-    sessionCookieName = "JSESSIONID"
-  )
+    config.password,
+    urlProperties.url("cas.url"),
+    urlProperties.url("ohjausparametrit-service.service"),
+    callerId,
+    callerId,
+    "/j_spring_cas_security_check")
+    .setJsessionName("JSESSIONID").build
+
+  val casClient: CasClient = CasClientBuilder.build(casConfig)
 
   override def postHaunOhjausparametrit(haunOhjausparametrit: HaunOhjausparametrit): Unit = {
     val url = urlProperties.url("ohjausparametrit-service.parametri", haunOhjausparametrit.hakuOid)
@@ -68,18 +65,18 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
       jarjestetytHakutoiveet = haunOhjausparametrit.jarjestetytHakutoiveet,
       hakutoiveidenMaaraRajoitettu = haunOhjausparametrit.hakutoiveidenMaaraRajoitettu
     ))
+    val bodyString = compact(render(body))
 
-    Uri.fromString(url)
-      .fold(Task.fail, url => {
-        client.fetch(Request(method = POST, uri = url).withBody(body)(jsonEncoderOf[JValue])) {
-          case r if r.status.code == 200 =>
-            Task.now(())
-          case r =>
-            r.bodyAsText
-              .runLog
-              .map(_.mkString)
-              .flatMap(response => Task.fail(new RuntimeException(s"Url $url returned status code ${r.status} $response")))
-        }
-      }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
+    val request = new RequestBuilder().setMethod("POST").setUrl(url).setBody(bodyString).build
+    val future = Future {
+      casClient.executeBlocking(request)
+    }
+    val result = future.map {
+      case r if r.getStatusCode == 200 =>
+        parse(r.getResponseBodyAsStream()).extract[ValintatapajonoDTO]
+      case r =>
+        throw new RuntimeException(s"Haun ${haunOhjausparametrit.hakuOid} ohjausparametrien tallentaminen ohjausparametrit-serviceen epäonnistui: $r")
+    }
+    Await.result(result, Duration(1, TimeUnit.MINUTES))
   }
 }

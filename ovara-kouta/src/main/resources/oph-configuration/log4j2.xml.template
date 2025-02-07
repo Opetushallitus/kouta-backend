@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+<Configuration name="Log4j1">
+    <Appenders>
+{# raw-endraw -välillä template engine ei tee mitään! #}
+{% raw %}
+        <RollingFile name="AUDIT" fileName="/Users/august/logs/auditlog_kouta-backend.log" append="true"
+                     filePattern="/Users/august/logs/auditlog_kouta-backend.log.%i">
+            <PatternLayout pattern="%m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="20MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="20" fileIndex="min"/>
+        </RollingFile>
+        <Console name="STDOUT" target="SYSTEM_OUT">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
+        </Console>
+        <RollingFile name="FILE" fileName="/Users/august/logs/oph-kouta-backend.log" append="true"
+                     filePattern="/Users/august/logs/oph-kouta-backend.log.%i">
+            <PatternLayout
+                    pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
+            <Policies>
+                <SizeBasedTriggeringPolicy size="10MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100" fileIndex="min"/>
+        </RollingFile>
+{% endraw %}
+    </Appenders>
+    <Loggers>
+        <Root level="{{env_loglevel}}">
+            <AppenderRef ref="FILE"/>
+        </Root>
+        <Logger name="org.apache.activemq.spring" level="{{env_loglevel}}"/>
+        <Logger name="org.springframework" level="ERROR"/>
+        <Logger name="org.apache.cxf" level="ERROR"/>
+        <Logger name="fi.vm.sade.auditlog.Audit" level="INFO">
+            <AppenderRef ref="AUDIT"/>
+        </Logger>
+        <Logger name="org.flywaydb" level="INFO"/>
+        <Logger name="javax.sql" level="ERROR"/>
+        <Logger name="org.jasig.cas.client.session" level="INFO"/>
+        <Logger name="org.vaadin" level="ERROR"/>
+        <Logger name="org.apache.activemq" level="INFO"/>
+    </Loggers>
+</Configuration>

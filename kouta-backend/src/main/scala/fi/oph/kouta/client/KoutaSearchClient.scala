@@ -11,7 +11,7 @@ import fi.oph.kouta.elasticsearch.ElasticsearchClient
 import fi.oph.kouta.servlet.SearchParams
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.MiscUtils.withoutKoodiVersion
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 
 import java.util.UUID
 import scala.reflect.ClassTag

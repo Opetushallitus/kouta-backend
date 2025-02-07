@@ -1,0 +1,20 @@
+<?xml version="1.0" ?>
+<Configuration name="Log4j1">
+    <Appenders>
+        <Console name="AUDIT" target="SYSTEM_OUT">
+            <PatternLayout pattern="%m%n"/>
+        </Console>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5v1Level %c{1} [%t]] %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+        <Logger name="fi.vm.sade.auditlog.Audit" level="INFO">
+            <AppenderRef ref="AUDIT"/>
+        </Logger>
+        <Logger name="com.amazonaws.http" level="INFO"/>
+    </Loggers>
+</Configuration>

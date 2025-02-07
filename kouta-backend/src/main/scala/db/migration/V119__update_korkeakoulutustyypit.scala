@@ -3,7 +3,7 @@ package db.migration
 import fi.oph.kouta.domain.{Amk, Korkeakoulutustyyppi, Koulutustyyppi, Yo}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.{OrganisaatioService, OrganisaatioServiceImpl}
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import io.circe.{Json, JsonObject}
 import io.circe.parser.parse
 import io.circe.syntax._

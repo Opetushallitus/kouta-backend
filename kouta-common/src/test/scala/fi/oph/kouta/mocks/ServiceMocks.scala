@@ -1,7 +1,7 @@
 package fi.oph.kouta.mocks
 
 import fi.vm.sade.properties.OphProperties
-import fi.vm.sade.utils.slf4j.Logging
+import fi.oph.kouta.logging.Logging
 import org.json4s.Formats
 import org.json4s.jackson.Serialization.write
 import org.mockserver.integration.ClientAndServer
@@ -78,7 +78,7 @@ object ServiceMocker extends ServiceMocker
 trait ServiceMockBase extends UrlProperties {
   private val mocker = ServiceMocker
 
-  def getMockPath(key: String, param: Option[String] = None): String = 
+  def getMockPath(key: String, param: Option[String] = None): String =
     urlProperties match {
       case None => "/"
       case Some(up) =>
