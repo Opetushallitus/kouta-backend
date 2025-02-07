@@ -86,10 +86,11 @@ class HakukohdeService(
       case Some(t) =>
         val esitysnimi = generateHakukohdeEsitysnimi(nimi, t.metadata)
         hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = esitysnimi)
-      case None => hakukohdeEnrichedDataWithMuokkaajanNimi
+      case None => hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = nimi)
     }
   }
-    def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
+
+  def get(oid: HakukohdeOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Option[(Hakukohde, Instant)] = {
     val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)
