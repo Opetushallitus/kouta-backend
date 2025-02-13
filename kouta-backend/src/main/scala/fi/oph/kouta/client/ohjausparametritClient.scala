@@ -73,7 +73,7 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
     }
     val result = future.map {
       case r if r.getStatusCode == 200 =>
-        parse(r.getResponseBodyAsStream()).extract[ValintatapajonoDTO]
+        parse(r.getResponseBodyAsStream()).extract[String]
       case r =>
         throw new RuntimeException(s"Haun ${haunOhjausparametrit.hakuOid} ohjausparametrien tallentaminen ohjausparametrit-serviceen epäonnistui: $r")
     }
