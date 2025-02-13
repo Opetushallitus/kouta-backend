@@ -72,20 +72,20 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
   def defaultParse[R: Manifest](res: String): R = parse(res).extract[R]
 
   private def getFromHakemuspalvelu[R: Manifest](
-      urlStr: String,
-      timeout: Duration = Duration(60, TimeUnit.SECONDS)
-  ): R = {
+                                                  urlStr: String,
+                                                  timeout: Duration = Duration(60, TimeUnit.SECONDS),
+                                                  parseResponse: (String => R)
+                                                ): R = {
     val request = new RequestBuilder().setMethod("GET").setUrl(urlStr).build
     val future = Future {
       casClient.executeBlocking(request)
-    }
-    val result = future.map {
+    }.map {
       case r if r.getStatusCode == 200 =>
-        parse(r.getResponseBodyAsStream()).extract[R]
+        parseResponse(r.getResponseBody)
       case r =>
         throw AtaruQueryException(s"Tietojen hakeminen hakemuspalvelusta epäonnistui: $r", r.getStatusCode)
     }
-    Await.result(result, timeout)
+    Await.result(future, timeout)
   }
 
   private def getWithRetry[R: Manifest](doGet: () => R, errorMsg: String) = {
@@ -111,7 +111,8 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     getWithRetry(
       doGet = () =>
         getFromHakemuspalvelu[Seq[AtaruForm]](
-          urlProperties.url("hakemuspalvelu-service.forms")
+          urlProperties.url("hakemuspalvelu-service.forms"),
+          parseResponse = parseForms
         ),
       errorMsg = "Failed to fetch forms from Hakemuspalvelu"
     )
@@ -150,17 +151,21 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
   override def getHakukohdeInfo(hakukohdeOid: HakukohdeOid): HakukohdeInfo = {
     getWithRetry(
       doGet = () =>
-        getFromHakemuspalvelu[HakukohdeInfo](urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid)),
+        getFromHakemuspalvelu[HakukohdeInfo](
+          urlProperties.url("hakemuspalvelu-service.hakukohde-info", hakukohdeOid),
+          parseResponse = defaultParse[HakukohdeInfo]
+        ),
       errorMsg = "Failed to fetch hakukohde information from Hakemuspalvelu"
     )
   }
   override def getEnsisijainenApplicationCounts(
-      hakuOid: HakuOid
-  ): HakukohdeApplicationCounts = {
+                                                 hakuOid: HakuOid
+                                               ): HakukohdeApplicationCounts = {
     getWithRetry(
       doGet = () =>
         getFromHakemuspalvelu[HakukohdeApplicationCounts](
-          urlProperties.url("hakemuspalvelu-service.haku-ensisijainen-counts", hakuOid)
+          urlProperties.url("hakemuspalvelu-service.haku-ensisijainen-counts", hakuOid),
+          parseResponse = defaultParse[HakukohdeApplicationCounts]
         ),
       errorMsg = "Failed to fetch ensisijainen application counts from Hakemuspalvelu"
     )
