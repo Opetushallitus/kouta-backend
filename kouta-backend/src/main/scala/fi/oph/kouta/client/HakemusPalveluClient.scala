@@ -122,7 +122,9 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
       val existingFormsInCache = ataruFormCache.get("ALL", _ => getExistingAtaruIds)
       fromBoolean(existingFormsInCache.exists((form: AtaruForm) => form.key.equals(ataruId.toString)))
     } catch {
-      case _: Throwable => queryFailed
+      case t: Throwable =>
+        logger.error(s"Failed to check if ataruId ${ataruId} exists in cache", t)
+        queryFailed
     }
   }
 
