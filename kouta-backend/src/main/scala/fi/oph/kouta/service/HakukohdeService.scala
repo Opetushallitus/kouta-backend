@@ -75,22 +75,22 @@ class HakukohdeService(
     }
   }
 
-  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutusOid: ToteutusOid): HakukohdeEnrichedData =
-    enrichHakukohde(muokkaajaOid, nimi, ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1))
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutusOid: ToteutusOid, hakukohdeKoodiUri: Option[String]): HakukohdeEnrichedData =
+    enrichHakukohde(muokkaajaOid, nimi, ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1), hakukohdeKoodiUri)
 
-  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutus: Option[Toteutus], hakukohdeKoodiUri: Option[String] = None): HakukohdeEnrichedData = {
+  def enrichHakukohde(muokkaajaOid: UserOid, nimi: Kielistetty, toteutus: Option[Toteutus], hakukohdeKoodiUri: Option[String]): HakukohdeEnrichedData = {
     val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(muokkaajaOid)
     val muokkaajanNimi = NameHelper.generateMuokkaajanNimi(muokkaaja)
-    val hakukohdeKoodi = hakukohdeKoodiUri.map(
+    val hakukohdeKoodinimi = hakukohdeKoodiUri.map(
       koodistoService.getKaannokset(_) match {
-        case Right(koodi: Kielistetty) => koodi
+        case Right(koodinimi: Kielistetty) => koodinimi
         case Left(exp) => throw exp
       })
     val hakukohdeEnrichedDataWithMuokkaajanNimi = HakukohdeEnrichedData(muokkaajanNimi = Some(muokkaajanNimi))
 
-    hakukohdeKoodi match {
-      case Some(koodi) =>
-        hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = koodi)
+    hakukohdeKoodinimi match {
+      case Some(koodinimi) =>
+        hakukohdeEnrichedDataWithMuokkaajanNimi.copy(esitysnimi = koodinimi)
       case None => toteutus match {
         case Some(t) =>
           val esitysnimi = generateHakukohdeEsitysnimi(nimi, t.metadata)
@@ -107,7 +107,7 @@ class HakukohdeService(
     val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)
 
     val enrichedHakukohde = hakukohdeWithTime match {
-      case Some((h, i)) => Some(h.copy(_enrichedData = Some(enrichHakukohde(h.muokkaaja, h.nimi, h.toteutusOid))), i)
+      case Some((h, i)) => Some(h.copy(_enrichedData = Some(enrichHakukohde(h.muokkaaja, h.nimi, h.toteutusOid, h.hakukohdeKoodiUri))), i)
       case None => None
     }
 
