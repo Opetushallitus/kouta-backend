@@ -126,12 +126,13 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
     update(ToteutusPath, toteutus, lastModified, expectUpdate)
   def update(toteutus: Toteutus, lastModified: String): Unit = update(toteutus, lastModified, expectUpdate = true)
 
-  def addToList(toteutus: Toteutus): ToteutusListItem = {
+  def addToList(toteutus: Toteutus, johtaaTutkintoon: Boolean = true): ToteutusListItem = {
     val oid      = put(toteutus)
     val modified = readToteutusModified(oid)
     ToteutusListItem(
       ToteutusOid(oid),
       toteutus.koulutusOid,
+      johtaaTutkintoon,
       toteutus.nimi,
       toteutus.tila,
       toteutus.tarjoajat,

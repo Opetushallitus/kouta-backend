@@ -307,6 +307,7 @@ object MaybeToteutus {
 case class ToteutusListItem(
     oid: ToteutusOid,
     koulutusOid: KoulutusOid,
+    johtaaTutkintoon: Boolean,
     nimi: Kielistetty,
     tila: Julkaisutila,
     tarjoajat: List[OrganisaatioOid],
@@ -316,10 +317,11 @@ case class ToteutusListItem(
 ) extends OidListItem
 
 object ToteutusListItem {
-  def apply(t: Toteutus): ToteutusListItem = {
+  def apply(t: Toteutus, johtaaTutkintoon: Boolean): ToteutusListItem = {
     new ToteutusListItem(
       t.oid.get,
       t.koulutusOid,
+      johtaaTutkintoon,
       t.nimi,
       t.tila,
       t.tarjoajat,
