@@ -180,7 +180,7 @@ trait ToteutusExtractors extends ExtractorBase {
           koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
         )
         val esitysnimi = ToteutusService.generateToteutusEsitysnimi(t)
-        ToteutusListItem(t.copy(nimi = esitysnimi))
+        ToteutusListItem(t.copy(nimi = esitysnimi), r.nextBoolean())
       })
 
   implicit val getOidAndNimiResult: GetResult[OidAndNimi] = GetResult(r => OidAndNimi(
