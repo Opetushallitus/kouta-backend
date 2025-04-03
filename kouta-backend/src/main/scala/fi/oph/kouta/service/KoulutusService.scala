@@ -787,4 +787,9 @@ class KoulutusService(
     withRootAccess(indexerRoles) {
       KoulutusDAO.getOidsByTarjoajat(tarjoajaOids, tilaFilter)
     }
+
+  def getAllUsedEPerusteIds()(implicit authenticated: Authenticated) =
+    withRootAccess(indexerRoles) {
+      KoulutusDAO.listUsedEPerusteIds()
+    }
 }
