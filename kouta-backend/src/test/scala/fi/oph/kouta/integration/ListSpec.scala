@@ -51,12 +51,12 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     k2 = addToList(koulutus.copy(julkinen = false, organisaatioOid = ChildOid, tila = Arkistoitu, sorakuvausId = Some(s1.id)))
     k3 = addToList(koulutus(julkinen = false, GrandChildOid, Tallennettu))
     k4 = addToList(koulutus.copy(julkinen = false, organisaatioOid = LonelyOid, tila = Julkaistu, sorakuvausId =  Some(s3.id), tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
-    k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu))
+    k5 = addToList(koulutus(julkinen = true, LonelyOid, Julkaistu).copy(ePerusteId = Some(12L)))
     k6 = addToList(yoKoulutus.copy(julkinen = true, organisaatioOid = UnknownOid, tila = Julkaistu, muokkaaja = TestUserOid))
     k7 = addToList(ammTutkinnonOsaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k8 = addToList(ammOsaamisalaKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k9 = addToList(vapaaSivistystyoMuuKoulutus.copy(organisaatioOid = LonelyOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
-    k10 = addToList(koulutus.copy(tila = Poistettu))
+    k10 = addToList(koulutus.copy(ePerusteId = Some(15L), tila = Poistettu))
     k11 = addToList(TestData.VapaaSivistystyoOpistovuosiKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k12 = addToList(TestData.TelmaKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
     k13 = addToList(TestData.TuvaKoulutus.copy(organisaatioOid = AmmOid, tila = Julkaistu, tarjoajat = koulutus.tarjoajat ++ List(AmmOid, OtherOid)))
@@ -847,5 +847,9 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
 
       read[List[Hakutieto]](body) shouldMatchTo(expected)
     }
+  }
+
+  "ePerusteId list" should "return all ePerusteIds related to existing koulutukset" in {
+    list(s"$IndexerPath/koulutukset/eperusteet", Map[String,String](), List("11", "12", "123"), indexerSession)
   }
 }

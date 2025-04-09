@@ -7,6 +7,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.sql.SqlStreamingAction
 
 import java.util.UUID
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -38,6 +39,7 @@ trait KoulutusDAO extends EntityModificationDAO[KoulutusOid] {
 
   def listBySorakuvausId(sorakuvausId: UUID, tilaFilter: TilaFilter): Seq[String]
   def listTarjoajaOids(oid: KoulutusOid): Seq[OrganisaatioOid]
+  def listUsedEPerusteIds(): Seq[String]
 }
 
 object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
@@ -188,6 +190,8 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   def getOidsByTarjoajat(tarjoajaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter): Seq[KoulutusOid] = {
     KoutaDatabase.runBlocking(selectByCreatorOrTarjoaja(tarjoajaOids, tilaFilter))
   }
+
+  def listUsedEPerusteIds(): Seq[String] = KoutaDatabase.runBlocking(selectEPerusteIds())
 }
 
 sealed trait KoulutusModificationSQL extends SQLHelpers {
@@ -513,5 +517,15 @@ sealed trait KoulutusSQL extends KoulutusExtractors with KoulutusModificationSQL
           where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "k.tila", "")}
           order by o.ord
           """
+  }
+
+  def selectEPerusteIds(): SqlStreamingAction[Vector[String], String, Effect] = {
+    sql"""select distinct eperusteid from (
+            select tila, eperuste_id::text as eperusteid from koulutukset where eperuste_id is not null
+            union all
+            select tila, tutkinnonOsa ->> 'ePerusteId' as eperusteid from koulutukset,
+              LATERAL jsonb_array_elements(metadata -> 'tutkinnonOsat') as tutkinnonOsa) as eperusteidt
+          where #${tilaConditions(TilaFilter.onlyOlemassaolevatAndArkistoimattomat(), "tila", "")}
+          """.as[String]
   }
 }

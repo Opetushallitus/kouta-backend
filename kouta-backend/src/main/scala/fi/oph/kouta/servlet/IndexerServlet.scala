@@ -883,4 +883,28 @@ class IndexerServlet(
         InternalServerError("error" -> t.getMessage)
     }
   }
+
+  registerPath(
+    "/indexer/koulutukset/eperusteet/list",
+    """    get:
+      |      summary: Listaa kaikki ePerusteIDt joita on liitetty olemassaoleviin koulutuksiin.
+      |      operationId: indexerListKoulutuksetEPerusteIds
+      |      description: Listaa kaikki ePerusteIDt joita on liitetty olemassaoleviin koulutuksiin. Tämä rajapinta on indeksointia varten.
+      |      tags:
+      |        - Indexer
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: string
+      |""".stripMargin
+  )
+  get("/koulutukset/eperusteet/list") {
+    implicit val authenticated: Authenticated = authenticate()
+    Ok(koulutusService.getAllUsedEPerusteIds())
+  }
 }
