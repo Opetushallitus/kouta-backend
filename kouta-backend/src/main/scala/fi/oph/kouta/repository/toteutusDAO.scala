@@ -402,9 +402,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
   }
 
   val selectToteutusListSql =
-    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri
+    """select distinct t.oid, t.koulutus_oid, t.nimi, t.tila, t.organisaatio_oid, t.muokkaaja, t.last_modified, t.metadata, k.metadata, k.koulutukset_koodi_uri, k.johtaa_tutkintoon
          from toteutukset t
-         inner join (select oid, metadata, koulutukset_koodi_uri, tyyppi from koulutukset) k on k.oid = t.koulutus_oid"""
+         inner join (select oid, metadata, koulutukset_koodi_uri, tyyppi, johtaa_tutkintoon from koulutukset) k on k.oid = t.koulutus_oid"""
 
   def selectByCreatorOrTarjoaja(
       organisaatioOids: Seq[OrganisaatioOid],
