@@ -187,7 +187,7 @@
             <dependency>
                 <groupId>fi.vm.sade.java-utils</groupId>
                 <artifactId>java-cas</artifactId>
-                <version>1.2.2-SNAPSHOT</version>
+                <version>1.2.3-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>io.netty</groupId>
