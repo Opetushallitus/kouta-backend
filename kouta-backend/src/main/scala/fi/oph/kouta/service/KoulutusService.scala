@@ -5,18 +5,19 @@ import fi.oph.kouta.client.KoodistoUtils.getVersio
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
+import fi.oph.kouta.domain.keyword.Luokittelutermi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
+import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.service.KoodistoService.getKaannokset
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.logging.Logging
 import org.joda.time.LocalDate
 import slick.dbio.DBIO
 
@@ -40,7 +41,8 @@ object KoulutusService
       KoutaSearchClient,
       EPerusteKoodiClient,
       KoutaIndeksoijaClient,
-      LokalisointiClient
+      LokalisointiClient,
+      KeywordService
     ) {
   def apply(
       sqsInTransactionService: SqsInTransactionService,
@@ -51,7 +53,8 @@ object KoulutusService
       kayttooikeusClient: KayttooikeusClient,
       koodistoService: KoodistoService,
       koulutusServiceValidation: KoulutusServiceValidation,
-      lokalisointiClient: LokalisointiClient
+      lokalisointiClient: LokalisointiClient,
+      keywordService: KeywordService
   ): KoulutusService = {
     new KoulutusService(
       sqsInTransactionService,
@@ -65,7 +68,8 @@ object KoulutusService
       KoutaSearchClient,
       EPerusteKoodiClient,
       KoutaIndeksoijaClient,
-      lokalisointiClient
+      lokalisointiClient,
+      keywordService
     )
   }
 }
@@ -82,10 +86,11 @@ class KoulutusService(
     koutaSearchClient: KoutaSearchClient,
     ePerusteKoodiClient: EPerusteKoodiClient,
     koutaIndeksoijaClient: KoutaIndeksoijaClient,
-    lokalisointiClient: LokalisointiClient
+    lokalisointiClient: LokalisointiClient,
+    keywordService: KeywordService
 ) extends RoleEntityAuthorizationService[Koulutus]
-  with TeemakuvaService[KoulutusOid, Koulutus]
-  with Logging {
+    with TeemakuvaService[KoulutusOid, Koulutus]
+    with Logging {
 
   protected val roleEntity: RoleEntity = Role.Koulutus
   protected val readRules: AuthorizationRules =
@@ -397,7 +402,7 @@ class KoulutusService(
               if (m.osaamismerkkiKoodiUri.isDefined) {
                 getKaannokset(m.osaamismerkkiKoodiUri.get) match {
                   case Right(kaannokset) => kaannokset
-                  case Left(exp) => throw exp
+                  case Left(exp)         => throw exp
                 }
               } else {
                 Map(Fi -> "", Sv -> "", En -> "")
@@ -459,7 +464,7 @@ class KoulutusService(
 
     val enrichedKoulutus = koulutusWithTime match {
       case Some((k, i)) => Some(k.copy(_enrichedData = Some(enrichKoulutus(k.ePerusteId, k.nimi, k.muokkaaja))), i)
-      case None => None
+      case None         => None
     }
 
     authorizeGet(
@@ -723,36 +728,44 @@ class KoulutusService(
     } yield Some(k)
   }
 
-  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult =
+  private def insertLuokittelutermit(koulutus: Koulutus)(implicit authenticated: Authenticated) = {
+    keywordService.insert(Luokittelutermi, koulutus.metadata.map(_.luokittelutermit).getOrElse(Seq()))
+  }
+
+  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult = {
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teemakuva, k) <- checkAndMaybeClearTeemakuva(koulutus)
-        k <- KoulutusDAO.getPutActions(k)
-        k <- maybeCopyTeemakuva(teemakuva, k)
-        k <- KoulutusDAO.updateJustKoulutus(k).andFinally(DBIO.successful(k))
-        _ <- auditLog.logCreate(k)
+        _              <- insertLuokittelutermit(k)
+        k              <- KoulutusDAO.getPutActions(k)
+        k              <- maybeCopyTeemakuva(teemakuva, k)
+        k              <- KoulutusDAO.updateJustKoulutus(k).andFinally(DBIO.successful(k))
+        _              <- auditLog.logCreate(k)
       } yield (teemakuva, k)
     }.map { case (teemakuva, k: Koulutus) =>
       maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.oid) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
+  }
 
   private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
       authenticated: Authenticated
-  ): UpdateResult =
+  ): UpdateResult = {
     KoutaDatabase.runBlockingTransactionally {
       for {
-        _ <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
+        _              <- KoulutusDAO.checkNotModified(koulutus.oid.get, notModifiedSince)
         (teemakuva, k) <- checkAndMaybeCopyTeemakuva(koulutus)
-        k <- KoulutusDAO.getUpdateActions(k)
-        _ <- auditLog.logUpdate(before, k)
+        _              <- insertLuokittelutermit(k)
+        k              <- KoulutusDAO.getUpdateActions(k)
+        _              <- auditLog.logUpdate(before, k)
       } yield (teemakuva, k)
     }.map { case (teemakuva, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teemakuva)
       val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get
+  }
 
   def index(koulutus: Option[Koulutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
