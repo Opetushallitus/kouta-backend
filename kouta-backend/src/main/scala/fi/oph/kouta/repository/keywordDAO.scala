@@ -28,7 +28,8 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
   private def fieldAndTable(`type`: KeywordType) = `type` match {
     case Ammattinimike => ("ammattinimike", "ammattinimikkeet")
     case Asiasana => ("asiasana", "asiasanat")
-    case _ => ???
+    case Luokittelutermi => ("luokittelutermi", "luokittelutermit")
+    case _ =>
   }
 
   def searchKeywordsByPrefix(search: KeywordSearch): DBIO[Vector[String]] =
