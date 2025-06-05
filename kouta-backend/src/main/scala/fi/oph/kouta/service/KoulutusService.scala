@@ -5,7 +5,6 @@ import fi.oph.kouta.client.KoodistoUtils.getVersio
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.keyword.Luokittelutermi
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
 import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
@@ -729,7 +728,7 @@ class KoulutusService(
   }
 
   private def insertLuokittelutermit(koulutus: Koulutus)(implicit authenticated: Authenticated) = {
-    keywordService.insert(Luokittelutermi, koulutus.metadata.map(_.luokittelutermit).getOrElse(Seq()))
+    keywordService.insertLuokittelutermit(koulutus.metadata.map(_.luokittelutermit).getOrElse(Seq()))
   }
 
   private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult = {

@@ -234,15 +234,6 @@ class LuokittelutermiServlet(keywordService: KeywordService) extends KeywordServ
       |          description: hakutermi
       |          example: robo
       |        - in: query
-      |          name: kieli
-      |          description: Haettavan asiasanan kieli
-      |          schema:
-      |            type: string
-      |            enum:
-      |              - fi
-      |              - sv
-      |              - en
-      |        - in: query
       |          name: limit
       |          description: Palautettavien luokittelutermien maksimimäärä
       |          schema:
@@ -266,56 +257,14 @@ class LuokittelutermiServlet(keywordService: KeywordService) extends KeywordServ
 
     implicit val authenticated: Authenticated = authenticate()
 
-    println("SEARCH!!!!!")
     Ok(keywordService.search(parseLuokittelutermiSearch()))
   }
 
-  registerPath("/luokittelutermi/",
-    """    post:
-      |      summary: Tallenna luokittelutermejä
-      |      operationId: Tallenna luokittelutermejä
-      |      description: Tallenna luokittelutermejä
-      |      tags:
-      |        - Luokittelutermi
-      |      parameters:
-      |        - in: query
-      |          name: kieli
-      |          description: Tallennettavan luokittelutermin kieli
-      |          schema:
-      |            type: string
-      |            enum:
-      |              - fi
-      |              - sv
-      |              - en
-      |      requestBody:
-      |        description: Lista tallennettavia luokittelutermejä
-      |        required: true
-      |        content:
-      |          application/json:
-      |            schema:
-      |              type: array
-      |              items:
-      |                type: string
-      |                example:
-      |                  - biologia
-      |                  - genetiikka
-      |      responses:
-      |        '200':
-      |          description: O
-      |""".stripMargin)
-  post("/") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    val kieli = parseKieliParam("kieli", Fi)
-    Ok(keywordService.store(Luokittelutermi, bodyToKeywords(kieli)))
-  }
-
-  private def parseLuokittelutermiSearch(): KeywordSearch = KeywordSearch(
+  private def parseLuokittelutermiSearch(): LuokittelutermiSearch = LuokittelutermiSearch(
     params("term"),
-    parseKieliParam("kieli", Fi),
-    Luokittelutermi,
-    parseIntParam("limit", 15))
+    parseIntParam("limit"),
+    Luokittelutermi
+  )
 }
 
 sealed trait KeywordServlet extends KoutaServlet {
