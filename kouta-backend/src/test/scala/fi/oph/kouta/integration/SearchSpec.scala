@@ -149,7 +149,7 @@ class SearchSpec
               oid = k.organisaatioOid,
               nimi = Map(Fi -> "fi"),
             ),
-            muokkaaja = Muokkaaja(nimi = "Matti Muokkaaja", oid = k.muokkaaja),
+            muokkaaja = Muokkaaja(nimi = Some("Matti Muokkaaja"), oid = k.muokkaaja),
             modified = k.modified.getOrElse(Modified(LocalDateTime.now())),
             tila = k.tila,
             toteutukset = toteutusOidsByKoulutusOid
