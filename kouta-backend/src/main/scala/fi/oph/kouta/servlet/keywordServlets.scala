@@ -214,6 +214,59 @@ class AmmattinimikeServlet(keywordService: KeywordService) extends KeywordServle
     parseIntParam("limit", 15))
 }
 
+class LuokittelutermiServlet(keywordService: KeywordService) extends KeywordServlet {
+
+  def this() = this(KeywordService)
+
+  registerPath("/luokittelutermi/search/{term}",
+    """    get:
+      |      summary: Hakee luokittelutermejä annetulla hakutermillä
+      |      operationId: Hae luokittelutermejä
+      |      description: Hakee luokittelutermejä annetulla hakutermillä
+      |      tags:
+      |        - Luokittelutermi
+      |      parameters:
+      |        - in: path
+      |          name: term
+      |          schema:
+      |            type: string
+      |          required: true
+      |          description: hakutermi
+      |          example: robo
+      |        - in: query
+      |          name: limit
+      |          description: Palautettavien luokittelutermien maksimimäärä
+      |          schema:
+      |            type: integer
+      |            default: 15
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |          content:
+      |            application/json:
+      |              schema:
+      |                type: array
+      |                items:
+      |                  type: string
+      |                  example:
+      |                    - robotiikka
+      |                    - robotti
+      |
+      |""".stripMargin)
+  get("/search/:term") {
+
+    implicit val authenticated: Authenticated = authenticate()
+
+    Ok(keywordService.search(parseLuokittelutermiSearch()))
+  }
+
+  private def parseLuokittelutermiSearch(): LuokittelutermiSearch = LuokittelutermiSearch(
+    params("term"),
+    parseIntParam("limit"),
+    Luokittelutermi
+  )
+}
+
 sealed trait KeywordServlet extends KoutaServlet {
   def parseKieliParam(name: String, default: Kieli = Fi): Kieli =
     params.get(name).map(Kieli.withName).getOrElse(default)
