@@ -501,7 +501,7 @@ case class ValintaperusteSearchItem(id: UUID,
 case class IndexedOrganisaatio(oid: OrganisaatioOid,
                                nimi: Kielistetty)
 
-case class Muokkaaja(nimi: String,
+case class Muokkaaja(nimi: Option[String] = None,
                      oid: UserOid)
 
 case class Hakutapa(koodiUri: String,
