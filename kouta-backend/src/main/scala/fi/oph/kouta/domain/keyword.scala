@@ -34,23 +34,39 @@ package object keyword {
       |          example: insinööri
       |""".stripMargin
 
-  val models = List(AsiasanaModel, AmmattinimikeModel)
+  val LuokittelutermiModel: String =
+    """    Luokittelutermi:
+      |      type: array
+      |      items:
+      |        type: string
+      |        example:
+      |          - ohjaajakoulutus
+      |          - jod-ohjaaja
+      |""".stripMargin
+
+  val models = List(AsiasanaModel, AmmattinimikeModel, LuokittelutermiModel)
 
   sealed trait KeywordType extends EnumType
   object KeywordType extends Enum[KeywordType] {
-    override def name: String = "Asiasanan tyyppi"
-    override val values: List[KeywordType] = List(Asiasana, Ammattinimike)
+    override def name: String              = "Asiasanan tyyppi"
+    override val values: List[KeywordType] = List(Asiasana, Ammattinimike, Luokittelutermi)
   }
 
   case object Asiasana extends KeywordType { val name = "asiasana" }
+
+  case object Luokittelutermi extends KeywordType { val name = "luokittelutermi" }
 
   case object Ammattinimike extends KeywordType { val name = "ammattinimike" }
 
   case class Keyword(kieli: Kieli, arvo: String)
 
-  case class KeywordSearch(term: String,
-                           kieli: Kieli,
-                           `type`: KeywordType,
-                           limit: Int)
-}
+  sealed trait KeywordSearchBase {
+    val term: String
+    val limit: Int
+    val `type`: KeywordType
+  }
 
+  case class KeywordSearch(term: String, kieli: Kieli, `type`: KeywordType, limit: Int) extends KeywordSearchBase
+
+  case class LuokittelutermiSearch(term: String, limit: Int, `type`: KeywordType) extends KeywordSearchBase
+}

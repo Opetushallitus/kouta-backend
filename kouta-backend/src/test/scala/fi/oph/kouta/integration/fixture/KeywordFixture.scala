@@ -5,7 +5,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl}
-import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet}
+import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet, LuokittelutermiServlet}
 import org.json4s.jackson.Serialization.read
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
@@ -13,6 +13,7 @@ trait KeywordFixture extends ScalatraFlatSpec {
   this: KoutaIntegrationSpec =>
   val AsiasanaPath = "/asiasana"
   val AmmattinimikePath = "/ammattinimike"
+  val LuokittelutermiPath = "/luokittelutermi"
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -20,6 +21,7 @@ trait KeywordFixture extends ScalatraFlatSpec {
     val keywordService = new KeywordService(new AuditLog(MockAuditLogger), organisaatioService)
     addServlet(new AsiasanaServlet(keywordService), AsiasanaPath)
     addServlet(new AmmattinimikeServlet(keywordService), AmmattinimikePath)
+    addServlet(new LuokittelutermiServlet(keywordService), LuokittelutermiPath)
   }
 
   val asiasanat = List(
@@ -59,6 +61,12 @@ trait KeywordFixture extends ScalatraFlatSpec {
     "sähkömies",
     "talonpoika",
     "yleislääkäri"
+  )
+
+  val luokittelutermit = List(
+    "jod-ohjaaja",
+    "ohjaajakoulutus",
+    "ohjaajakesä2025"
   )
 
   def storeAsiasanat() = {

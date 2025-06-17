@@ -158,6 +158,7 @@ object TestData {
             teksti = Map(Fi -> "Opintojen lisätieto ", Sv -> "Opintojen lisätieto sv")
           )
         ),
+        luokittelutermit = List("termi1", "termi2"),
         isMuokkaajaOphVirkailija = Some(true)
       )
     ),

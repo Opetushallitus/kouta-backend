@@ -18,6 +18,7 @@ object AuditResource {
   case object OppilaitoksenOsa extends AuditResource("oppilaitoksen_osa", "oid")
   case object Asiasana         extends AuditResource("asiasana", "asiasana")
   case object Ammattinimike    extends AuditResource("ammattinimike", "ammattinimike")
+  case object Luokittelutermi  extends AuditResource("luokittelutermi", "luokittelutermi")
 
   def apply(entity: AnyRef): AuditResource = {
     entity match {
@@ -31,6 +32,7 @@ object AuditResource {
       case _: domain.OppilaitoksenOsa => OppilaitoksenOsa
       case keyword.Ammattinimike      => Ammattinimike
       case keyword.Asiasana           => Asiasana
+      case keyword.Luokittelutermi    => Luokittelutermi
       case r: AuditResource           => r
       case _                          => throw new IllegalArgumentException("Resource not found")
     }
