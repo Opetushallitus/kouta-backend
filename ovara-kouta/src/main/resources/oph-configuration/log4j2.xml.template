@@ -3,8 +3,8 @@
     <Appenders>
 {# raw-endraw -välillä template engine ei tee mitään! #}
 {% raw %}
-        <RollingFile name="AUDIT" fileName="/Users/august/logs/auditlog_kouta-backend.log" append="true"
-                     filePattern="/Users/august/logs/auditlog_kouta-backend.log.%i">
+        <RollingFile name="AUDIT" fileName="/root/logs/auditlog_kouta-backend.log" append="true"
+                     filePattern="/root/logs/auditlog_kouta-backend.log.%i">
             <PatternLayout pattern="%m%n"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="20MB"/>
@@ -15,8 +15,8 @@
             <PatternLayout
                     pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
         </Console>
-        <RollingFile name="FILE" fileName="/Users/august/logs/oph-kouta-backend.log" append="true"
-                     filePattern="/Users/august/logs/oph-kouta-backend.log.%i">
+        <RollingFile name="FILE" fileName="/root/logs/oph-kouta-backend.log" append="true"
+                     filePattern="/root/logs/oph-kouta-backend.log.%i">
             <PatternLayout
                     pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
             <Policies>
@@ -27,7 +27,7 @@
 {% endraw %}
     </Appenders>
     <Loggers>
-        <Root level="{{env_loglevel}}">
+        <Root level="info">
             <AppenderRef ref="FILE"/>
         </Root>
         <Logger name="org.apache.activemq.spring" level="{{env_loglevel}}"/>
