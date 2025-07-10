@@ -3,8 +3,8 @@
     <Appenders>
 {# raw-endraw -välillä template engine ei tee mitään! #}
 {% raw %}
-        <RollingFile name="AUDIT" fileName="/root/logs/auditlog_kouta-backend.log" append="true"
-                     filePattern="/root/logs/auditlog_kouta-backend.log.%i">
+        <RollingFile name="AUDIT" fileName="/root/logs/auditlog_ovara-kouta.log" append="true"
+                     filePattern="/root/logs/auditlog_ovara-kouta.log.%i">
             <PatternLayout pattern="%m%n"/>
             <Policies>
                 <SizeBasedTriggeringPolicy size="20MB"/>
@@ -15,8 +15,8 @@
             <PatternLayout
                     pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5p %c{1} [%t] %m%n"/>
         </Console-->
-        <RollingFile name="FILE" fileName="/root/logs/oph-kouta-backend.log" append="true"
-                     filePattern="/root/logs/oph-kouta-backend.log.%i">
+        <RollingFile name="FILE" fileName="/root/logs/oph-ovara-kouta.log" append="true"
+                     filePattern="/root/logs/oph-ovara-kouta.log.%i">
             <PatternLayout
                     pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5p %c{1} [%t] %m%n"/>
             <Policies>
