@@ -35,7 +35,7 @@ object OppijanumerorekisteriClient
   val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
     config.username,
     config.password,
-    urlProperties.url("cas.url"),
+    config.casUrl,
     urlProperties.url("oppijanumerorekisteri-service"),
     callerId,
     callerId,
