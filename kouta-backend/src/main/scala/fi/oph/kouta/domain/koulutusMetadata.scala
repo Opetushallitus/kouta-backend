@@ -1,5 +1,7 @@
 package fi.oph.kouta.domain
 
+import fi.oph.kouta.domain.keyword.Keyword
+
 package object koulutusMetadata {
 
   val KoulutusMetadataModel: String =
@@ -635,6 +637,7 @@ sealed trait KoulutusMetadata {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
   val lisatiedot: Seq[Lisatieto]
+  val luokittelutermit: List[String]
   val isMuokkaajaOphVirkailija: Option[Boolean]
 }
 
@@ -651,6 +654,7 @@ case class AmmatillinenKoulutusMetadata(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     // Alla olevat kentät vain ammatillisilla tutkintoon johtavilla koulutuksilla, joilla ei ole ePerustetta (pelastusala ja rikosseuraamusala)!
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -663,6 +667,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadata(
     tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     tutkinnonOsat: Seq[TutkinnonOsa] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadata
@@ -671,6 +676,7 @@ case class AmmatillinenOsaamisalaKoulutusMetadata(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     osaamisalaKoodiUri: Option[String] = None,
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadata
@@ -678,6 +684,7 @@ case class AmmatillinenOsaamisalaKoulutusMetadata(
 case class AmmatillinenMuuKoulutusMetadata(
     tyyppi: Koulutustyyppi = AmmMuu,
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     kuvaus: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -690,6 +697,7 @@ case class YliopistoKoulutusMetadata(
     tyyppi: Koulutustyyppi = Yo,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -701,6 +709,7 @@ case class AmmattikorkeakouluKoulutusMetadata(
     tyyppi: Koulutustyyppi = Amk,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -712,6 +721,7 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadata(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -723,6 +733,7 @@ case class OpePedagOpinnotKoulutusMetadata(
     tyyppi: Koulutustyyppi = OpePedagOpinnot,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -734,6 +745,7 @@ case class KkOpintojaksoKoulutusMetadata(
     tyyppi: Koulutustyyppi = KkOpintojakso,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
@@ -749,6 +761,7 @@ case class KkOpintokokonaisuusKoulutusMetadata(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
@@ -764,6 +777,7 @@ case class LukioKoulutusMetadata(
     tyyppi: Koulutustyyppi = Lk,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(), // koulutusalaKoodiUrit kovakoodataan koulutusService:ssa
@@ -775,6 +789,7 @@ case class TuvaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Tuva,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -786,6 +801,7 @@ case class TelmaKoulutusMetadata(
     tyyppi: Koulutustyyppi = Telma,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusNumero: Option[Double] = None,
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -802,6 +818,7 @@ trait VapaaSivistystyoKoulutusMetadata extends KoulutusMetadata with LaajuusSing
 case class VapaaSivistystyoOpistovuosiKoulutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     kuvaus: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -813,6 +830,7 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadata(
 case class VapaaSivistystyoMuuKoulutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     kuvaus: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -824,6 +842,7 @@ case class VapaaSivistystyoMuuKoulutusMetadata(
 case class VapaaSivistystyoOsaamismerkkiKoulutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     kuvaus: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -837,6 +856,7 @@ case class AikuistenPerusopetusKoulutusMetadata(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
@@ -849,6 +869,7 @@ case class ErikoislaakariKoulutusMetadata(
     tyyppi: Koulutustyyppi = Erikoislaakari,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
@@ -858,6 +879,7 @@ case class ErikoistumiskoulutusMetadata(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     erikoistumiskoulutusKoodiUri: Option[String] = None,
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
@@ -871,6 +893,7 @@ case class TaiteenPerusopetusKoulutusMetadata(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadata
@@ -879,6 +902,7 @@ case class MuuKoulutusMetadata(
     tyyppi: Koulutustyyppi = Muu,
     kuvaus: Kielistetty = Map(),
     lisatiedot: Seq[Lisatieto] = Seq(),
+    luokittelutermit: List[String] = List(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumeroMin: Option[Double] = None,

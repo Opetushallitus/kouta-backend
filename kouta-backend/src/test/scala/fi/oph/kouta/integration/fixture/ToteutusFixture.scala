@@ -25,7 +25,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   val ToteutusChangeTilaPath = s"/toteutus/tila/"
   val mockEPerusteKoodiClient: EPerusteKoodiClient = mock[EPerusteKoodiClient]
 
-  protected lazy val auditLog = new AuditLog(MockAuditLogger)
+  override protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
   def toteutusService: ToteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)

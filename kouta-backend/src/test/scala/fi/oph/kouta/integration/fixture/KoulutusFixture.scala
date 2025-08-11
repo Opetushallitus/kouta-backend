@@ -6,9 +6,9 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{KoulutusDAO, KoulutusExtractors, SQLHelpers, SorakuvausDAO, ToteutusDAO}
+import fi.oph.kouta.repository._
 import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
-import fi.oph.kouta.service.{KoodistoService, KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
+import fi.oph.kouta.service.{KeywordService, KoodistoService, KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.KoulutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.validation.ValidationError
@@ -22,7 +22,8 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
 
   val KoulutusPath = "/koulutus"
 
-  val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
+  val ePerusteKoodiClient = new EPerusteKoodiClient(urlProperties.get)
+  protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
   def koulutusService: KoulutusService = {
     val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
@@ -31,7 +32,7 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
     val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
     val lokalisointiClient           = new LokalisointiClient(urlProperties.get)
-
+    val keywordService               = new KeywordService(auditLog, organisaatioService)
 
     val koulutusServiceValidation =
       new KoulutusServiceValidation(
@@ -54,7 +55,8 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
       mockKoutaSearchClient,
       ePerusteKoodiClient,
       koutaIndeksoijaClient,
-      lokalisointiClient
+      lokalisointiClient,
+      keywordService
     )
   }
 
@@ -148,8 +150,9 @@ trait KoulutusDbFixture extends KoulutusExtractors with SQLHelpers {
 
   import slick.dbio.DBIO
   import slick.jdbc.PostgresProfile.api._
-  import scala.concurrent.ExecutionContext.Implicits.global
+
   import java.time.Instant
+  import scala.concurrent.ExecutionContext.Implicits.global
 
   private def getPutActions(koulutus: Koulutus): DBIO[Koulutus] =
     for {
