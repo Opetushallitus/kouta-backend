@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain.siirtotiedosto
 
-import fi.oph.kouta.domain.{AikuistenPerusopetus, AikuistenPerusopetusToteutusMetadata, Ajanjakso, Amk, Amm, AmmMuu, AmmOpeErityisopeJaOpo, AmmOpeErityisopeJaOpoToteutusMetadata, AmmOsaamisala, AmmTutkinnonOsa, AmmatillinenMuuToteutusMetadata, AmmatillinenOsaamisala, AmmatillinenOsaamisalaToteutusMetadata, AmmatillinenToteutusMetadata, AmmatillinenTutkinnonOsaToteutusMetadata, AmmattikorkeakouluToteutusMetadata, Apuraha, Apurahayksikko, Erikoislaakari, ErikoislaakariToteutusMetadata, Erikoistumiskoulutus, ErikoistumiskoulutusToteutusMetadata, Hakulomaketyyppi, Hakutermi, Julkaisutila, Kieli, Kielistetty, Kielivalikoima, KkOpintojakso, KkOpintojaksoToteutusMetadata, KkOpintokokonaisuus, KkOpintokokonaisuusToteutusMetadata, KoulutuksenAlkamiskausi, Koulutustyyppi, LaajuusMinMax, LaajuusSingle, Lisatieto, Lk, LukioToteutusMetadata, LukiodiplomiTieto, LukiolinjaTieto, Maksullisuustyyppi, Modified, Muu, MuuToteutusMetadata, OpePedagOpinnotToteutusMetadata, Opetus, TaiteenPerusopetus, TaiteenPerusopetusToteutusMetadata, Tallennettu, Telma, TelmaToteutusMetadata, Toteutus, ToteutusEnrichedData, Tuva, TuvaToteutusMetadata, VapaaSivistystyoMuu, VapaaSivistystyoMuuToteutusMetadata, VapaaSivistystyoOpistovuosi, VapaaSivistystyoOpistovuosiToteutusMetadata, Yhteyshenkilo, YliopistoToteutusMetadata, Yo}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid, UserOid}
 
@@ -17,6 +17,7 @@ sealed trait ToteutusMetadataRaporttiItem {
   val hasJotpaRahoitus: Option[Boolean]
   val isTaydennyskoulutus: Option[Boolean]
   val isTyovoimakoulutus: Option[Boolean]
+  val isPieniOsaamiskokonaisuus: Option[Boolean]
 }
 
 case class ToteutusEnrichedDataRaporttiItem(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None) {
@@ -69,7 +70,8 @@ case class AmmatillinenToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 trait TutkintoonJohtamatonToteutusMetadataRaporttiItem extends ToteutusMetadataRaporttiItem {
@@ -103,7 +105,8 @@ case class AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
@@ -125,7 +128,8 @@ case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AmmatillinenMuuToteutusMetadataRaporttiItem(
@@ -147,7 +151,8 @@ case class AmmatillinenMuuToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class YliopistoToteutusMetadataRaporttiItem(
@@ -160,7 +165,8 @@ case class YliopistoToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
@@ -173,7 +179,8 @@ case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
@@ -186,7 +193,8 @@ case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class OpePedagOpinnotToteutusMetadataRaporttiItem(
@@ -199,7 +207,8 @@ case class OpePedagOpinnotToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class KkOpintojaksoToteutusMetadataRaporttiItem(
@@ -225,6 +234,7 @@ case class KkOpintojaksoToteutusMetadataRaporttiItem(
     isTaydennyskoulutus: Option[Boolean] = None,
     isTyovoimakoulutus: Option[Boolean] = None,
     isAvoinKorkeakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
@@ -254,6 +264,7 @@ case class KkOpintokokonaisuusToteutusMetadataRaporttiItem(
     isTyovoimakoulutus: Option[Boolean] = None,
     liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
     isAvoinKorkeakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
@@ -274,7 +285,8 @@ case class LukioToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class TuvaToteutusMetadataRaporttiItem(
@@ -288,7 +300,8 @@ case class TuvaToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class TelmaToteutusMetadataRaporttiItem(
@@ -301,7 +314,8 @@ case class TelmaToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class AmmatillinenOsaamisalaRaporttiItem(
@@ -364,7 +378,8 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
@@ -386,7 +401,8 @@ case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
@@ -408,7 +424,8 @@ case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class ErikoislaakariToteutusMetadataRaporttiItem(
@@ -421,7 +438,8 @@ case class ErikoislaakariToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends ToteutusMetadataRaporttiItem
 
 case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
@@ -443,7 +461,8 @@ case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
 case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
@@ -469,7 +488,8 @@ case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
     with LaajuusMinMax
 
@@ -495,6 +515,7 @@ case class MuuToteutusMetadataRaporttiItem(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Option[Boolean] = None,
-    isTyovoimakoulutus: Option[Boolean] = None
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
     with LaajuusMinMax
