@@ -405,6 +405,30 @@ case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     isPieniOsaamiskokonaisuus: Option[Boolean] = None
 ) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
 
+case class VapaaSivistystyoOsaamismerkkiToteutusMetadataRaporttiItem(
+    tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
+    kuvaus: Kielistetty = Map(),
+    opetus: Option[OpetusRaporttiItem] = None,
+    asiasanat: List[Keyword] = List(),
+    ammattinimikkeet: List[Keyword] = List(),
+    yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
+    isHakukohteetKaytossa: Option[Boolean] = Some(false),
+    hakutermi: Option[Hakutermi] = None,
+    hakulomaketyyppi: Option[Hakulomaketyyppi] = None,
+    hakulomakeLinkki: Kielistetty = Map(),
+    lisatietoaHakeutumisesta: Kielistetty = Map(),
+    lisatietoaValintaperusteista: Kielistetty = Map(),
+    hakuaika: Option[Ajanjakso] = None,
+    aloituspaikat: Option[Int] = None,
+    aloituspaikkakuvaus: Kielistetty = Map(),
+    isMuokkaajaOphVirkailija: Option[Boolean] = None,
+    hasJotpaRahoitus: Option[Boolean] = None,
+    isTaydennyskoulutus: Option[Boolean] = None,
+    isTyovoimakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Option[Boolean] = None,
+    suoritetaanNayttona: Option[Boolean] = None
+) extends TutkintoonJohtamatonToteutusMetadataRaporttiItem
+
 case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),
