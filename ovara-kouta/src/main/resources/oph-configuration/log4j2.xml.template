@@ -7,7 +7,7 @@
             <PatternLayout pattern="%m%n"/>
         </Console>
         <Console name="Console" target="SYSTEM_OUT">
-            <PatternLayout pattern="%d{yyyyMMdd HH:mm:ss.SSS} %5v1Level %c{1} [%t]] %m%n"/>
+            <PatternLayout pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n"/>
         </Console>
 {% endraw %}
     </Appenders>
