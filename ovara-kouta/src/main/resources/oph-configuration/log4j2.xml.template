@@ -3,43 +3,28 @@
     <Appenders>
 {# raw-endraw -välillä template engine ei tee mitään! #}
 {% raw %}
-        <RollingFile name="AUDIT" fileName="/Users/august/logs/auditlog_kouta-backend.log" append="true"
-                     filePattern="/Users/august/logs/auditlog_kouta-backend.log.%i">
+        <Console name="AUDIT" target="SYSTEM_OUT">
             <PatternLayout pattern="%m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="20MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="20" fileIndex="min"/>
-        </RollingFile>
-        <Console name="STDOUT" target="SYSTEM_OUT">
-            <PatternLayout
-                    pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
         </Console>
-        <RollingFile name="FILE" fileName="/Users/august/logs/oph-kouta-backend.log" append="true"
-                     filePattern="/Users/august/logs/oph-kouta-backend.log.%i">
-            <PatternLayout
-                    pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5v1Level {%properties{user}} [%t] %-5v1Level %c: %m%n"/>
-            <Policies>
-                <SizeBasedTriggeringPolicy size="10MB"/>
-            </Policies>
-            <DefaultRolloverStrategy max="100" fileIndex="min"/>
-        </RollingFile>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{yyyy-MM-dd'T'HH:mm:ss.SSSX} %-5p {%X{user}} [%t] %-5p %c: %m%n"/>
+        </Console>
 {% endraw %}
     </Appenders>
     <Loggers>
-        <Root level="{{env_loglevel}}">
-            <AppenderRef ref="FILE"/>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
         </Root>
-        <Logger name="org.apache.activemq.spring" level="{{env_loglevel}}"/>
-        <Logger name="org.springframework" level="ERROR"/>
-        <Logger name="org.apache.cxf" level="ERROR"/>
-        <Logger name="fi.vm.sade.auditlog.Audit" level="INFO">
+        <Logger name="org.apache.activemq.spring" level="info"/>
+        <Logger name="org.springframework" level="error"/>
+        <Logger name="org.apache.cxf" level="error"/>
+        <Logger name="fi.vm.sade.auditlog.Audit" level="info">
             <AppenderRef ref="AUDIT"/>
         </Logger>
-        <Logger name="org.flywaydb" level="INFO"/>
-        <Logger name="javax.sql" level="ERROR"/>
-        <Logger name="org.jasig.cas.client.session" level="INFO"/>
-        <Logger name="org.vaadin" level="ERROR"/>
-        <Logger name="org.apache.activemq" level="INFO"/>
+        <Logger name="org.flywaydb" level="info"/>
+        <Logger name="javax.sql" level="error"/>
+        <Logger name="org.jasig.cas.client.session" level="info"/>
+        <Logger name="org.vaadin" level="error"/>
+        <Logger name="org.apache.activemq" level="info"/>
     </Loggers>
 </Configuration>
