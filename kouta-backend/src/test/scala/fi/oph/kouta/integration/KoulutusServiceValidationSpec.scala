@@ -68,7 +68,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   private def amkKoulutusWithParameters(
       koulutusalaKoodiUri: String = "kansallinenkoulutusluokitus2016koulutusalataso2_020#1",
       tutkintonimikeKoodiUri: String = "tutkintonimikekk_110#2",
-      opintojenLaajuusYksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1")
+      opintojenLaajuusYksikkoKoodiUri: Option[String] = Some("opintojenlaajuusyksikko_2#1"),
+      lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1)
   ) = amk.copy(metadata =
     Some(
       amk.metadata.get
@@ -76,7 +77,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         .copy(
           koulutusalaKoodiUrit = Seq(koulutusalaKoodiUri),
           tutkintonimikeKoodiUrit = Seq(tutkintonimikeKoodiUri),
-          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusYksikkoKoodiUri
+          opintojenLaajuusyksikkoKoodiUri = opintojenLaajuusYksikkoKoodiUri,
+          lisatiedot = lisatiedot
         )
     )
   )
@@ -796,6 +798,17 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       yoKoulutusWithParameters(lisatiedot = Seq(invalidLisatieto)),
       "metadata.lisatiedot[0].otsikkoKoodiUri",
       invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_04#1")
+    )
+  }
+
+  it should "fail if trying to save osaamistavoitteet as lisätieto" in {
+    val invalidLisatieto = Lisatieto1.copy(otsikkoKoodiUri = "koulutuksenlisatiedot_13#1")
+    failsValidation(
+      amkKoulutusWithParameters(lisatiedot = Seq(invalidLisatieto)),
+      Seq(
+        ValidationError("metadata.lisatiedot[0].otsikkoKoodiUri", invalidOsaamistavoitteetLisatieto("koulutuksenlisatiedot_13#1")),
+        ValidationError("metadata.lisatiedot[0].otsikkoKoodiUri", invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_13#1"))
+      )
     )
   }
 
@@ -1857,7 +1870,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError("metadata.linkkiEPerusteisiin", notEmptyMsg),
         ValidationError("metadata.kuvaus", notEmptyMsg),
         ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(10.0).toString)),
-        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))),
+        ValidationError(
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))
+        ),
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
           invalidKoulutusAlaKoodiuri("puppu")
