@@ -77,6 +77,12 @@ object Validations {
     msg = s"Lisätieto-otsikkokoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidLisatietoOtsikkoKoodiuri"
   )
+
+  def invalidOsaamistavoitteetLisatieto(koodiUri: String): ErrorMessage = ErrorMessage(
+    msg = s"Osaamistavoitteita ($koodiUri) ei voi tallentaa lisätieto-osioksi vaan tulee tallentaa metadatan alle omana kenttänään",
+    id = "invalidOsaamistavoitteetLisatieto"
+  )
+
   def invalidKoulutusAlaKoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutusalakoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutusAlaKoodiuri"

@@ -330,7 +330,8 @@ object TestData {
     koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_001#1"),
     isMuokkaajaOphVirkailija = Some(false),
     isAvoinKorkeakoulutus = Some(false),
-    tunniste = Some("XZY-123")
+    tunniste = Some("XZY-123"),
+    osaamistavoitteet = Map(Fi -> "<p>Osaamistavoitteet</p>", Sv -> "<p>Osaamistavoitteet sv</p>" ),
   )
 
   val MuuKoulutuksenMetatieto = MuuKoulutusMetadata(
