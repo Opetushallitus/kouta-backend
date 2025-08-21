@@ -829,12 +829,15 @@ package object domain {
         entityWithNewValues,
         newValues => {
           val koodiUri = newValues.otsikkoKoodiUri
-          assertKoodistoQueryResult(
-            koodiUri,
-            koodistoCheckFunc,
-            path = s"$path.otsikkoKoodiUri",
-            vCtx,
-            invalidLisatietoOtsikkoKoodiuri(koodiUri)
+          and(
+            assertFalse(koodiUri.startsWith("koulutuksenlisatiedot_13#"), s"$path.otsikkoKoodiUri", invalidOsaamistavoitteetLisatieto(koodiUri)),
+            assertKoodistoQueryResult(
+              koodiUri,
+              koodistoCheckFunc,
+              path = s"$path.otsikkoKoodiUri",
+              vCtx,
+              invalidLisatietoOtsikkoKoodiuri(koodiUri)
+            )
           )
         }
       ),
@@ -951,7 +954,8 @@ package object domain {
             )
         }
 
-      val koodiurit = entityWithNewValues.map(_.postinumeroKoodiUri)
+      val koodiurit = entityWithNewValues
+        .map(_.postinumeroKoodiUri)
         .flatMap((k: Kielistetty) => Some(k.values.toList))
 
       and(
