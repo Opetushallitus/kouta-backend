@@ -127,7 +127,7 @@ object HakuService extends HakuService(SqsInTransactionService, AuditLog, Ohjaus
     }
   }
 
-  private def ehrichHakukohteet(hakukohteet: Seq[HakukohdeListItem]): Seq[HakukohdeListItem]= {
+  private def enrichHakukohteet(hakukohteet: Seq[HakukohdeListItem]): Seq[HakukohdeListItem]= {
     hakukohteet.map { hakukohde =>
       val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeService.enrichHakukohde(hakukohde.muokkaaja, hakukohde.nimi, hakukohde.toteutusOid, hakukohde.hakukohdeKoodiUri)
       hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi)
@@ -139,13 +139,15 @@ object HakuService extends HakuService(SqsInTransactionService, AuditLog, Ohjaus
       oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    ehrichHakukohteet(withRootAccess(indexerRoles)(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
+    withRootAccess(indexerRoles)(enrichHakukohteet(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
 
-  def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    ehrichHakukohteet(withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
+  def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
+    val hakukohteet = withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
       case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())
       case x => HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, x)
-    })
+    }
+    enrichHakukohteet(hakukohteet)
+  }
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withRootAccess(indexerRoles)(KoulutusDAO.listByHakuOid(hakuOid))
