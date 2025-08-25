@@ -29,6 +29,52 @@ trait HakuFixtureWithIndexing extends HakuFixture {
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val hakuServiceValidation =
       new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO, OrganisaatioServiceImpl)
+    val lokalisointiClient = new LokalisointiClient(urlProperties.get)
+    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+
+    val toteutusServiceValidation = new ToteutusServiceValidation(
+      koodistoService,
+      organisaatioService,
+      KoulutusDAO,
+      HakukohdeDAO,
+      SorakuvausDAO,
+      ToteutusDAO,
+      mockEPerusteKoodiClient
+    )
+    val hakukohdeServiceValidation = new HakukohdeServiceValidation(
+      koodistoService,
+      mockHakemusPalveluClient,
+      organisaatioService,
+      lokalisointiClient,
+      HakukohdeDAO,
+      HakuDAO
+    )
+
+    val hakukohdeService = new HakukohdeService(
+      SqsInTransactionServiceCheckingRowExistsWhenIndexing,
+      new AuditLog(MockAuditLogger),
+      organisaatioService,
+      lokalisointiClient,
+      mockOppijanumerorekisteriClient,
+      mockKayttooikeusClient,
+      koodistoService,
+      new ToteutusService(
+        SqsInTransactionServiceCheckingRowExistsWhenIndexing,
+        MockS3ImageService,
+        auditLogger,
+        new KeywordService(auditLogger, organisaatioService),
+        organisaatioService,
+        kService,
+        lokalisointiClient,
+        koodistoService,
+        mockOppijanumerorekisteriClient,
+        mockKayttooikeusClient,
+        toteutusServiceValidation,
+        koutaIndeksoijaClient
+      ),
+      hakukohdeServiceValidation,
+      koutaIndeksoijaClient
+    )
     new HakuService(
       SqsInTransactionService,
       new AuditLog(MockAuditLogger),
@@ -37,7 +83,8 @@ trait HakuFixtureWithIndexing extends HakuFixture {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       hakuServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeService
     )
   }
 }
