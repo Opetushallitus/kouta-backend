@@ -806,8 +806,14 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       amkKoulutusWithParameters(lisatiedot = Seq(invalidLisatieto)),
       Seq(
-        ValidationError("metadata.lisatiedot[0].otsikkoKoodiUri", invalidOsaamistavoitteetLisatieto("koulutuksenlisatiedot_13#1")),
-        ValidationError("metadata.lisatiedot[0].otsikkoKoodiUri", invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_13#1"))
+        ValidationError(
+          "metadata.lisatiedot[0].otsikkoKoodiUri",
+          invalidOsaamistavoitteetLisatieto("koulutuksenlisatiedot_13#1")
+        ),
+        ValidationError(
+          "metadata.lisatiedot[0].otsikkoKoodiUri",
+          invalidLisatietoOtsikkoKoodiuri("koulutuksenlisatiedot_13#1")
+        )
       )
     )
   }
@@ -1847,7 +1853,10 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       Seq(
         ValidationError("metadata.osaamismerkkiKoodiUri", missingMsg),
         ValidationError("metadata.opintojenLaajuusNumero", validationMsg(Some(2.0).toString)),
-        ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4")))
+        ValidationError(
+          "metadata.opintojenLaajuusyksikkoKoodiUri",
+          illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_4"))
+        )
       )
     )
   }
@@ -1862,7 +1871,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
             koulutusalaKoodiUrit = Seq("puppu"),
             linkkiEPerusteisiin = Map(Fi -> "http://www.vain.suomeksi.fi"),
             opintojenLaajuusNumero = Some(10),
-            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
+            opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1")
           )
         )
       ),
@@ -1877,7 +1886,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.koulutusalaKoodiUrit[0]",
           invalidKoulutusAlaKoodiuri("puppu")
-        ),
+        )
       )
     )
   }
@@ -1897,7 +1906,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         )
       ),
       Seq(
-        ValidationError("metadata.osaamismerkkiKoodiUri", invalidKoodiuri("osaamismerkit_1083#1", "osaamismerkit")),
+        ValidationError("metadata.osaamismerkkiKoodiUri", invalidKoodiuri("osaamismerkit_1083#1", "osaamismerkit"))
       )
     )
   }
@@ -2002,10 +2011,13 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
 
   "withValidation" should "fail if one of the attached osaamismerkkikoulutus is not julkaistu when vst-toteutus is julkaistu" in {
     val osaamismerkkikoulutus = VapaaSivistystyoOsaamismerkkiKoulutus.copy(oid = Some(koulutusOid))
-    val toteutusOid          = ToteutusOid("1.2.246.562.17.00000000000000000123")
-    val julkaistuVstToteutus = MinimalExistingToteutus(VapaaSivistystyoOpistovuosiToteutus.copy(oid = Some(toteutusOid),
-      modified = Some(Modified(LocalDateTime.now().minusDays(1))),
-    ))
+    val toteutusOid           = ToteutusOid("1.2.246.562.17.00000000000000000123")
+    val julkaistuVstToteutus = MinimalExistingToteutus(
+      VapaaSivistystyoOpistovuosiToteutus.copy(
+        oid = Some(toteutusOid),
+        modified = Some(Modified(LocalDateTime.now().minusDays(1)))
+      )
+    )
 
     when(toteutusDao.get(koulutusOid))
       .thenAnswer(
