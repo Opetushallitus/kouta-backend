@@ -14,7 +14,7 @@
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.22.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.23.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -30,7 +30,7 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>fi.vm.sade.java-utils</groupId>
+            <groupId>opiskelijavalinnat-utils.java-utils</groupId>
             <artifactId>java-cas</artifactId>
             <exclusions>
                 <exclusion>
