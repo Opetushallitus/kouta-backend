@@ -41,9 +41,9 @@ case class S3Configuration(imageBucket: String, imageBucketPublicUrl: String, tr
 
 case class OhjausparametritClientConfiguration(username: String, password: String)
 
-case class OppijanumerorekisteriClientConfiguration(username: String, password: String)
+case class OppijanumerorekisteriClientConfiguration(casUrl: String, username: String, password: String)
 
-case class KayttooikeusClientConfiguration(username: String, password: String)
+case class KayttooikeusClientConfiguration(casUrl: String, username: String, password: String)
 
 case class HakemuspalveluClientConfiguration(username: String, password: String)
 
@@ -107,11 +107,13 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
 
   val oppijanumerorekisteriClientConfiguration: OppijanumerorekisteriClientConfiguration =
     OppijanumerorekisteriClientConfiguration(
+      casUrl = config.getString("cas.url"),
       username = config.getString("kouta-backend.cas.username"),
       password = config.getString("kouta-backend.cas.password")
     )
 
   val kayttooikeusClientConfiguration: KayttooikeusClientConfiguration = KayttooikeusClientConfiguration(
+    casUrl = config.getString("cas.url"),
     username = config.getString("kouta-backend.cas.username"),
     password = config.getString("kouta-backend.cas.password")
   )

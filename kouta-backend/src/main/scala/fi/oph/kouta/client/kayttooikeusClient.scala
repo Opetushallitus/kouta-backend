@@ -30,7 +30,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
   private lazy val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
     config.username,
     config.password,
-    urlProperties.url("cas.url"),
+    config.casUrl,
     urlProperties.url("kayttooikeus-service"),
     callerId,
     callerId,
