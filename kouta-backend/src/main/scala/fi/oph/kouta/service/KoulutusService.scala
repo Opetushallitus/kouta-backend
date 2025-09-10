@@ -41,7 +41,8 @@ object KoulutusService
       EPerusteKoodiClient,
       KoutaIndeksoijaClient,
       LokalisointiClient,
-      KeywordService
+      KeywordService,
+      HakukohdeUtil
     ) {
   def apply(
       sqsInTransactionService: SqsInTransactionService,
@@ -53,7 +54,8 @@ object KoulutusService
       koodistoService: KoodistoService,
       koulutusServiceValidation: KoulutusServiceValidation,
       lokalisointiClient: LokalisointiClient,
-      keywordService: KeywordService
+      keywordService: KeywordService,
+      hakukohdeUtil: HakukohdeUtil
   ): KoulutusService = {
     new KoulutusService(
       sqsInTransactionService,
@@ -68,7 +70,8 @@ object KoulutusService
       EPerusteKoodiClient,
       KoutaIndeksoijaClient,
       lokalisointiClient,
-      keywordService
+      keywordService,
+      hakukohdeUtil
     )
   }
 }
@@ -86,7 +89,8 @@ class KoulutusService(
     ePerusteKoodiClient: EPerusteKoodiClient,
     koutaIndeksoijaClient: KoutaIndeksoijaClient,
     lokalisointiClient: LokalisointiClient,
-    keywordService: KeywordService
+    keywordService: KeywordService,
+    hakukohdeUtil: HakukohdeUtil
 ) extends RoleEntityAuthorizationService[Koulutus]
     with TeemakuvaService[KoulutusOid, Koulutus]
     with Logging {
@@ -620,7 +624,22 @@ class KoulutusService(
 
   def hakutiedot(oid: KoulutusOid)(implicit authenticated: Authenticated): Seq[Hakutieto] =
     withRootAccess(indexerRoles) {
-      HakutietoDAO.getByKoulutusOid(oid)
+      val hakutiedot = HakutietoDAO.getByKoulutusOid(oid)
+      hakutiedot.map(hakutieto => {
+        val updatedHaut = hakutieto.haut.map(haku => {
+          val updatedHakukohteet = haku.hakukohteet.map(hakukohde => {
+            val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.enrichHakukohde(
+              hakukohde.muokkaaja,
+              hakukohde.nimi,
+              hakukohde.toteutusOid,
+              hakukohde.hakukohdeKoodiUri
+            )
+            hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi)
+          })
+          haku.copy(hakukohteet = updatedHakukohteet)
+        })
+        hakutieto.copy(haut = updatedHaut)
+      })
     }
 
   def listToteutukset(oid: KoulutusOid, tilaFilter: TilaFilter)(implicit

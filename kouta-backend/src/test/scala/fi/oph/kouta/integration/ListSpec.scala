@@ -4,16 +4,20 @@ import com.softwaremill.diffx._
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{KkOpintojaksoKoulutuksenMetatieto, KkOpintojaksoToteutuksenMetatieto}
+import fi.oph.kouta.TestData.KkOpintojaksoToteutuksenMetatieto
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.repository.HakukohdeDAO
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.util.OrganisaatioServiceUtil
+import fi.oph.kouta.validation.ExternalQueryResults.itemFound
+import fi.oph.kouta.validation.ValidationConstants
 import org.json4s.jackson.Serialization.read
 
-class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
+class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationConstants {
 
   implicit val koulutusMatcher = ObjectMatcher.seq[KoulutusListItem].byValue(_.oid)
   implicit val koulutusListDiff = Diff.summon[List[KoulutusListItem]]
@@ -24,12 +28,15 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 
+  override val koodistoService: KoodistoService = mock[KoodistoService]
+
   var k1, k2, k3, k4, k5, k6, k7, k8, k9, k10, k11, k12, k13, k14, k15, k16, k17, k18, k19, k20, k21, k22       :KoulutusListItem = _
   var t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, t12, t13, t14, t15, t16, t17, t18, t19, t20, t21, t22, t23  :ToteutusListItem = _
   var h1, h2, h3, h4, h5                            :HakuListItem = _
   var v1, v2, v3, v4, v5                            :ValintaperusteListItem = _
   var s1, s2, s3, s4, s5                            :SorakuvausListItem = _
   var hk1, hk2, hk3, hk4, hk5, hk6, hk7             :HakukohdeListItem = _
+  var hk1WithEnrichedName, hk2WithEnrichedName, hk4WithEnrichedName, hk7WithEnrichedName :HakukohdeListItem = _
   var o1, o2                                        :OrganisaatioOid = _
   var oo1, oo2, oo3                                 :OppilaitoksenOsaListItem = _
 
@@ -42,6 +49,96 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
 
   def createTestData(): Unit = {
+    when(koodistoService.getKaannokset("koulutus_371101#1")).thenAnswer(Right(defaultName))
+    when(koodistoService.isInLisattavatKoulutukset(AmmatillisetKoulutusKoodit.koulutusTyypit, "koulutus_371101#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, "koulutuksenlisatiedot_03#1")).thenAnswer(itemFound)
+    when(
+      koodistoService.isInLisattavatKoulutukset(Seq(
+        "tutkintotyyppi_13",
+        "tutkintotyyppi_14",
+        "tutkintotyyppi_15",
+        "eqf_8"
+      ), "koulutus_371101#1")
+    ).thenAnswer(itemFound)
+    when(
+      koodistoService.isInLisattavatKoulutukset(Seq(
+        "tutkintotyyppi_13",
+        "tutkintotyyppi_14",
+        "tutkintotyyppi_15",
+        "eqf_8"
+      ), "koulutus_201001#1")
+    ).thenAnswer(itemFound)
+    when(
+      koodistoService.isLisattavaKoulutus(AmmOpeErityisopeJaOpoKoulutusKoodit.koulutusKoodiUrit, "koulutus_000002#12")
+    ).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(TutkintonimikeKorkeakoulutusKoodisto, "tutkintonimikekk_110#2"))
+      .thenAnswer(itemFound)
+    when(
+      koodistoService.koodiUriExistsInKoodisto(
+        KoulutusalaKoodisto,
+        "kansallinenkoulutusluokitus2016koulutusalataso1_001#1"
+      )
+    ).thenAnswer(itemFound)
+    when(
+      koodistoService.koodiUriExistsInKoodisto(
+        KoulutusalaKoodisto,
+        "kansallinenkoulutusluokitus2016koulutusalataso2_080#1"
+      )
+    )
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_6#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ErikoistumiskoulutusKoodisto, "erikoistumiskoulutukset_001#2"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpintojenLaajuusyksikkoKoodisto, "opintojenlaajuusyksikko_2#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_01#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_02#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_03#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakukohdePoJalkYhteishakuKoodisto, "hakukohteetperusopetuksenjalkeinenyhteishaku_04#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_pk#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PohjakoulutusvaatimusKoodisto, "pohjakoulutusvaatimuskouta_yo#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(LiiteTyyppiKoodisto, "liitetyypitamm_2#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(PostiosoiteKoodisto, "posti_04230#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintakoeTyyppiKoodisto, "valintakokeentyyppi_1#1")).thenAnswer(itemFound)
+    when(koodistoService.getValintakokeenTyypit(any, any, any, any))
+      .thenAnswer(Right(Seq(KoodistoElement("valintakokeentyyppi_1", "1", 1, None),
+        KoodistoElement("valintakokeentyyppi_9", "9", 1, None))))
+    when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_01#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_02#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_04#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_17#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_05#2")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, "haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
+    when(koodistoService.getKaannokset("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")).thenAnswer(
+      Right(
+        Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 sv")
+      )
+    )
+    when(koodistoService.getKaannokset("hakukohteetperusopetuksenjalkeinenyhteishaku_02#1")).thenAnswer(
+      Right(
+        Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 2 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 2 sv")
+      )
+    )
+    when(koodistoService.getKaannokset("hakukohteetperusopetuksenjalkeinenyhteishaku_03#1")).thenAnswer(
+      Right(
+        Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 3 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 3 sv")
+      )
+    )
+    when(koodistoService.getKaannokset("hakukohteetperusopetuksenjalkeinenyhteishaku_04#1")).thenAnswer(
+      Right(
+        Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 sv")
+      )
+    )
+
     s1 = addToList(sorakuvaus(Julkaistu, OphOid))
     s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
     s3 = addToList(sorakuvaus(Julkaistu, OphOid))
@@ -95,7 +192,7 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     t22 = addToList(TestData.JulkaistuAmmOpettajaToteutus.copy(koulutusOid = k21.oid, organisaatioOid = AmkOid, tila = Julkaistu), false)
     t23 = addToList(TestData.JulkaistuMuuToteutus.copy(koulutusOid = k22.oid, organisaatioOid = PohjoiskalotinKoulutussaatio, tila = Julkaistu))
 
-    h1 = addToList(haku(Julkaistu, ParentOid).copy(hakukohteenLiittajaOrganisaatiot = Seq(LonelyOid)))
+    h1 = addToList(haku(Julkaistu, ParentOid).copy(hakukohteenLiittajaOrganisaatiot = Seq(LonelyOid), hakutapaKoodiUri = Some("hakutapa_01#1"), muokkaaja = OphUserOid))
     h2 = addToList(haku(Arkistoitu, ChildOid))
     h3 = addToList(haku(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), kohdejoukonTarkenneKoodiUri = None))
     h4 = addToList(haku(Julkaistu, LonelyOid))
@@ -105,13 +202,28 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     v3 = addToList(valintaperuste(Tallennettu, GrandChildOid).copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_05#2"), julkinen = false))
     v4 = addToList(valintaperuste(Julkaistu, LonelyOid).copy(julkinen = false))
     v5 = addToList(valintaperuste(Poistettu, LonelyOid).copy(julkinen = false))
-    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
-    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t2.tarjoajat.head)))
+    hk1 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(
+      jarjestyspaikkaOid = Some(t1.tarjoajat.head),
+      nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_01#1")))
+    hk2 = addToList(hakukohde(t2.oid, h1.oid, v1.id, ChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t2.tarjoajat.head), nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_02#1")))
     hk3 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Arkistoitu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
-    hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid))
+    hk4 = addToList(hakukohde(t4.oid, h1.oid, v1.id, LonelyOid).copy(nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_03#1")))
     hk5 = addToList(hakukohde(t1.oid, h2.oid, v1.id, GrandChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
     hk6 = addToList(hakukohde(t1.oid, h3.oid, v1.id, GrandChildOid).copy(tila = Tallennettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
-    hk7 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(tila = Poistettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head)))
+    hk7 = addToList(hakukohde(t1.oid, h1.oid, v1.id, ParentOid).copy(tila = Poistettu, jarjestyspaikkaOid = Some(t1.tarjoajat.head), nimi = Map(),
+      hakukohdeKoodiUri = Some("hakukohteetperusopetuksenjalkeinenyhteishaku_04#1")))
+
+    hk1WithEnrichedName = hk1
+      .copy(nimi = Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 sv"))
+    hk2WithEnrichedName = hk2
+      .copy(nimi = Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 2 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 2 sv"))
+    hk4WithEnrichedName = hk4
+      .copy(nimi = Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 3 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 3 sv"))
+    hk7WithEnrichedName = hk7
+      .copy(nimi = Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 sv"))
 
     o1 = OrganisaatioOid(put(oppilaitos(Julkaistu, ParentOid)))
     o2 = OrganisaatioOid(put(oppilaitos(Julkaistu, EvilChildOid)))
@@ -541,13 +653,14 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
 
   "Hakuun liitetyt hakukohteet" should "list all hakukohteet mapped to given haku for authorized organizations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), List(hk1, hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), List(
+      hk1WithEnrichedName, hk2WithEnrichedName))
   }
   it should "list all hakukohteet mapped to given haku for authorized organizations 2" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid.s), List(hk4))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> LonelyOid.s), List(hk4WithEnrichedName))
   }
   it should "not list hakukohteet belonging to parent organisations" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid.s), List(hk2))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ChildOid.s), List(hk2WithEnrichedName))
   }
   it should "return forbidden if organisaatio oid is unknown" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> UnknownOid.s), 403)
@@ -559,13 +672,13 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> ParentOid.s), 401, Map.empty)
   }
   it should "allow access to a user of the haku organization" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h1.organisaatioOid.s), List(hk1, hk2), crudSessions(h1.organisaatioOid))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h1.organisaatioOid.s), List(hk1WithEnrichedName, hk2WithEnrichedName), crudSessions(h1.organisaatioOid))
   }
   it should "deny access to a user without access to the haku organization" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h1.organisaatioOid.s), 403, crudSessions(LonelyOid))
   }
   it should "allow access to a user of an ancestor organization" in {
-    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h2.organisaatioOid.s), List(hk2), crudSessions(ParentOid))
+    list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h2.organisaatioOid.s), List(hk2WithEnrichedName), crudSessions(ParentOid))
   }
   it should "deny access to a user of a descendant organization" in {
     list(s"$HakuPath/${h1.oid}/hakukohteet", Map("organisaatioOid" -> h1.organisaatioOid.s), 403, crudSessions(GrandChildOid))
@@ -575,10 +688,10 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
   }
 
   "Hakuun liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given haku for indexer" in {
-    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1, hk2, hk4), indexerSession)
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), List(hk1WithEnrichedName, hk2WithEnrichedName, hk4WithEnrichedName), indexerSession)
   }
   it should "list also poistetut hakukohteet if instructed" in {
-    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk4, hk7), indexerSession)
+    list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1WithEnrichedName, hk2WithEnrichedName, hk4WithEnrichedName, hk7WithEnrichedName), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$HakuPath/${h1.oid}/hakukohteet", Map[String, String](), 403)
@@ -664,17 +777,17 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
     get(s"$IndexerPath$KoulutusPath/${k1.oid}/hakutiedot", headers = Seq(sessionHeader(indexerSession))) {
       status should equal(200)
 
-      val hk1valintakokeet = HakukohdeDAO.get(hk1.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
-      val hk3valintakokeet = HakukohdeDAO.get(hk3.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
-      val hk5valintakokeet = HakukohdeDAO.get(hk5.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
-      val hk6valintakokeet = HakukohdeDAO.get(hk6.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).map(_.id).flatten
+      val hk1valintakokeet = HakukohdeDAO.get(hk1.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).flatMap(_.id)
+      val hk3valintakokeet = HakukohdeDAO.get(hk3.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).flatMap(_.id)
+      val hk5valintakokeet = HakukohdeDAO.get(hk5.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).flatMap(_.id)
+      val hk6valintakokeet = HakukohdeDAO.get(hk6.oid, TilaFilter()).map(_._1).map(_.valintakokeet).getOrElse(Seq()).flatMap(_.id)
 
       val expected = List(Hakutieto(
         toteutusOid = t1.oid,
         haut = Seq(HakutietoHaku(
           hakuOid = h1.oid,
           nimi = h1.nimi,
-          hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+          hakutapaKoodiUri = Some("hakutapa_01#1"),
           tila = Julkaistu,
           koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
           hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
@@ -688,14 +801,15 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
           modified = Some(h1.modified),
           hakukohteet = Seq(
             HakutietoHakukohde(
-              hakukohdeOid = hk1.oid,
+              hakukohdeOid = hk1WithEnrichedName.oid,
               toteutusOid = t1.oid,
               hakuOid = h1.oid,
-              nimi = hk1.nimi,
+              nimi = hk1WithEnrichedName.nimi,
+              hakukohdeKoodiUri = hk1WithEnrichedName.hakukohdeKoodiUri,
               jarjestyspaikkaOid = Some(OtherOid),
-              tila = hk1.tila,
+              tila = hk1WithEnrichedName.tila,
               esikatselu = true,
-              valintaperusteId = hk1.valintaperusteId,
+              valintaperusteId = hk1WithEnrichedName.valintaperusteId,
               koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
               kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
               hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
@@ -708,10 +822,10 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
               hakuajat = TestData.JulkaistuHakukohde.hakuajat,
               pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
               pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
-              muokkaaja = hk1.muokkaaja,
-              organisaatioOid = hk1.organisaatioOid,
+              muokkaaja = hk1WithEnrichedName.muokkaaja,
+              organisaatioOid = hk1WithEnrichedName.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-              modified = Some(hk1.modified),
+              modified = Some(hk1WithEnrichedName.modified),
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
               valintakoeIds = hk1valintakokeet))),
 
@@ -831,7 +945,7 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture {
           List(HakutietoHaku(
             hakuOid = h1.oid,
             nimi = h1.nimi,
-            hakutapaKoodiUri = TestData.JulkaistuHaku.hakutapaKoodiUri,
+            hakutapaKoodiUri = Some("hakutapa_01#1"),
             tila = Julkaistu,
             koulutuksenAlkamiskausi = TestData.JulkaistuHaku.metadata.get.koulutuksenAlkamiskausi,
             hakulomaketyyppi = TestData.JulkaistuHaku.hakulomaketyyppi,
