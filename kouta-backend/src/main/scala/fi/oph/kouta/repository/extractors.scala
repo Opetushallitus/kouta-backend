@@ -606,8 +606,7 @@ trait HakutietoExtractors extends ExtractorBase {
           kynnysehto = extractKielistetty(r.nextStringOption()),
           valintakoeIds = extractArray[UUID](r.nextObjectOption()))
 
-      val esitysnimi = HakukohdeUtil.generateHakukohdeEsitysnimi(ht.nimi, ht.toteutusMetadata)
-      (toteutusOid, hakuOid, ht.copy(nimi = esitysnimi, toteutusMetadata = None))
+      (toteutusOid, hakuOid, ht)
     })
 }
 
