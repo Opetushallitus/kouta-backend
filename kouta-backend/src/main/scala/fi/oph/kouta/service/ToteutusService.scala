@@ -33,8 +33,7 @@ object ToteutusService
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ToteutusServiceValidation,
-      KoutaIndeksoijaClient,
-      HakukohdeUtil
+      KoutaIndeksoijaClient
     )
 
 case class ToteutusCopyOids(
@@ -68,7 +67,6 @@ class ToteutusService(
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation,
     koutaIndeksoijaClient: KoutaIndeksoijaClient,
-    hakukohdeUtil: HakukohdeUtil
 ) extends RoleEntityAuthorizationService[Toteutus]
     with TeemakuvaService[ToteutusOid, Toteutus] {
 
@@ -356,21 +354,6 @@ class ToteutusService(
 
   def listHaut(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid, tilaFilter))
-
-  def listHakukohteet(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit
-      authenticated: Authenticated
-  ): Seq[HakukohdeListItem] = {
-    withRootAccess(indexerRoles)(hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOid(oid, tilaFilter)))
-  }
-
-  def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit
-      authenticated: Authenticated
-  ): Seq[HakukohdeListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      case Seq(RootOrganisaatioOid) => hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOid(oid, TilaFilter.onlyOlemassaolevat()))
-      case organisaatioOids         => hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids))
-    }
-  }
 
   def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(

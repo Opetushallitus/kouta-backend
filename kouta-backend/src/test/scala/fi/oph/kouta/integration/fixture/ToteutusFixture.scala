@@ -32,8 +32,6 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val hakukohdeUtil =
-      new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
@@ -56,8 +54,7 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       toteutusServiceValidation,
-      koutaIndeksoijaClient,
-      hakukohdeUtil
+      koutaIndeksoijaClient
     )
   }
 

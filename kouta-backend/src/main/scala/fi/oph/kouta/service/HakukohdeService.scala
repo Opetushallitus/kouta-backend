@@ -256,11 +256,6 @@ class HakukohdeService(
     }
   }
 
-  def listOlemassaolevat(organisaatioOid: OrganisaatioOid)(implicit
-      authenticated: Authenticated
-  ): Seq[HakukohdeListItem] =
-    withAuthorizedChildOrganizationOids(organisaatioOid, roleEntity.readRoles)(HakukohdeDAO.listByAllowedOrganisaatiot)
-
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
       authenticated: Authenticated
   ): HakukohdeSearchResult = {

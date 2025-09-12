@@ -98,8 +98,6 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val lokalisointiClient      = new LokalisointiClient(urlProperties.get)
     val koodistoService         = new KoodistoService(new KoodistoClient(urlProperties.get))
     val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
-    val hakukohdeUtil =
-      new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
@@ -123,8 +121,7 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       toteutusServiceValidation,
-      koutaIndeksoijaClient,
-      hakukohdeUtil
+      koutaIndeksoijaClient
     )
   }
 }
@@ -199,8 +196,7 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
         mockOppijanumerorekisteriClient,
         mockKayttooikeusClient,
         toteutusServiceValidation,
-        koutaIndeksoijaClient,
-        hakukohdeUtil
+        koutaIndeksoijaClient
       ),
       hakukohdeServiceValidation,
       koutaIndeksoijaClient,
