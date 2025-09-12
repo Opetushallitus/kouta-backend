@@ -278,49 +278,6 @@ class IndexerServlet(
   }
 
   registerPath(
-    "/indexer/toteutus/{oid}/hakukohteet/list",
-    """    get:
-      |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
-      |      operationId: listToteutusHakukohteet
-      |      description: Listaa kaikki toteutukseen liitetyt hakukohteet. Tämä rajapinta on indeksointia varten
-      |      tags:
-      |        - Indexer
-      |      parameters:
-      |        - in: path
-      |          name: oid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Toteutus-oid
-      |          example: 1.2.246.562.17.00000000000000000009
-      |        - in: query
-      |          name: vainOlemassaolevat
-      |          schema:
-      |            type: boolean
-      |            default: true
-      |          required: false
-      |          description: Palautetaanko ainoastaan olemassaolevat (=ei poistetut) hakukohteet
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items:
-      |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin
-  )
-  get("/toteutus/:oid/hakukohteet/list") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    val myosPoistetut = !params.getOrElse("vainOlemassaolevat", "true").toBoolean
-    Ok(
-      toteutusService.listHakukohteet(ToteutusOid(params("oid")), TilaFilter.alsoPoistetutAddedToOthers(myosPoistetut))
-    )
-  }
-
-  registerPath(
     "/indexer/haku/{oid}/hakukohteet/list",
     """    get:
       |      summary: Listaa kaikki hakukohteet, jotka on liitetty hakuun

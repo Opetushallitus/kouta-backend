@@ -170,49 +170,6 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
     }
   }
 
-  registerPath( "/toteutus/{oid}/hakukohteet/list",
-    """    get:
-      |      summary: Listaa kaikki toteutukseen liitetyt hakukohteet
-      |      operationId: Listaa toteutuksen hakukohteet
-      |      description: Listaa kaikki toteutukseen liitetyt hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
-      |      tags:
-      |        - Toteutus
-      |      parameters:
-      |        - in: path
-      |          name: oid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Toteutus-oid
-      |          example: 1.2.246.562.17.00000000000000000009
-      |        - in: query
-      |          name: organisaatioOid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Organisaatio-oid
-      |          example: 1.2.246.562.10.00101010101
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items:
-      |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin)
-  get("/:oid/hakukohteet/list") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    val toteutusOid = ToteutusOid(params("oid"))
-
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(organisaatioOid) => Ok(toteutusService.listHakukohteet(toteutusOid, organisaatioOid))
-    }
-  }
-
   registerPath( "/toteutus/copy",
     """    put:
       |      summary: Tallenna kopiot toteutuksista
