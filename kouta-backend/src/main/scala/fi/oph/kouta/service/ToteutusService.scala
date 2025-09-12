@@ -33,7 +33,8 @@ object ToteutusService
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ToteutusServiceValidation,
-      KoutaIndeksoijaClient
+      KoutaIndeksoijaClient,
+      HakukohdeUtil
     )
 
 case class ToteutusCopyOids(
@@ -66,7 +67,8 @@ class ToteutusService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation,
-    koutaIndeksoijaClient: KoutaIndeksoijaClient
+    koutaIndeksoijaClient: KoutaIndeksoijaClient,
+    hakukohdeUtil: HakukohdeUtil
 ) extends RoleEntityAuthorizationService[Toteutus]
     with TeemakuvaService[ToteutusOid, Toteutus] {
 
@@ -358,15 +360,15 @@ class ToteutusService(
   def listHakukohteet(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit
       authenticated: Authenticated
   ): Seq[HakukohdeListItem] = {
-    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, tilaFilter))
+    withRootAccess(indexerRoles)(hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOid(oid, tilaFilter)))
   }
 
   def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit
       authenticated: Authenticated
   ): Seq[HakukohdeListItem] = {
     withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid, TilaFilter.onlyOlemassaolevat())
-      case organisaatioOids         => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids)
+      case Seq(RootOrganisaatioOid) => hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOid(oid, TilaFilter.onlyOlemassaolevat()))
+      case organisaatioOids         => hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids))
     }
   }
 

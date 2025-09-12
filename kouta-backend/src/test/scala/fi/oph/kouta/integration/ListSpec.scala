@@ -138,6 +138,16 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
         Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 4 sv")
       )
     )
+    when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_av#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(ValintatapaKoodisto, "valintatapajono_tv#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetuskieliKoodisto, "oppilaitoksenopetuskieli_1#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetusaikaKoodisto, "opetusaikakk_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OpetustapaKoodisto, "opetuspaikkakk_2#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(OsaamisalaKoodisto, "osaamisala_0001#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(TaiteenalaKoodisto, "taiteenperusopetustaiteenala_kuvataide"))
+      .thenAnswer(itemFound)
 
     s1 = addToList(sorakuvaus(Julkaistu, OphOid))
     s2 = addToList(sorakuvaus(Arkistoitu, OphOid))
@@ -509,7 +519,7 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
   }
 
   "Valintaperustetta käyttävät hakukohteet for indexer list" should "list all hakukohteet using given valintaperuste id" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6))
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1WithEnrichedName, hk2WithEnrichedName, hk3, hk4WithEnrichedName, hk5, hk6))
   }
   it should "return 401 if session is not valid" in {
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 401, Map.empty)
@@ -518,10 +528,12 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
     list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), 403, crudSessions(v1.organisaatioOid))
   }
   it should "allow access to the indexer" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](), List(hk1, hk2, hk3, hk4, hk5, hk6), indexerSession)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map[String,String](),
+      List(hk1WithEnrichedName, hk2WithEnrichedName, hk3, hk4WithEnrichedName, hk5, hk6), indexerSession)
   }
   it should "include also poistetut if instructed" in {
-    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk2, hk3, hk4, hk5, hk6, hk7), indexerSession)
+    list(s"$IndexerPath$ValintaperustePath/${v1.id.toString}/hakukohteet", Map("vainOlemassaolevat" -> "false"),
+      List(hk1WithEnrichedName, hk2WithEnrichedName, hk3, hk4WithEnrichedName, hk5, hk6, hk7WithEnrichedName), indexerSession)
   }
 
   "Koulutuksen toteutukset list" should "list all toteutukset for this and child organizations" in {
@@ -597,13 +609,13 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
   }
 
   "Toteutukseen liitetyt hakukohteet" should "list all hakukohteet mapped to given toteutus" in {
-    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), List(hk1, hk3, hk5, hk6))
+    list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), List(hk1WithEnrichedName, hk3, hk5, hk6))
   }
   it should "return 401 if no session is found" in {
     list(s"$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String]("organisaatioOid" -> t1.organisaatioOid.s), 401, Map.empty)
   }
   it should "allow access to a non-root user of the toteutus organization" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), crudSessions(ChildOid))
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2WithEnrichedName), crudSessions(ChildOid))
   }
   it should "return 404 if called without organisaatioOid parameter" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map.empty[String, String], 404, crudSessions(ChildOid))
@@ -612,7 +624,7 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> LonelyOid.s), List.empty[Hakukohde], crudSessions(LonelyOid))
   }
   it should "allow access for a non-root user of an ancestor organization" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ParentOid.s), List(hk2), crudSessions(ParentOid))
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ParentOid.s), List(hk2WithEnrichedName), crudSessions(ParentOid))
   }
   it should "deny access for a user of a descendant organization" in {
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> GrandChildOid.s), List.empty[Hakukohde], crudSessions(GrandChildOid))
@@ -621,14 +633,14 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
     list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> OphOid.s), 403, addTestSession(Role.Toteutus.Read, OphOid))
   }
   it should "allow access to the hakukohteet of any toteutus with the indexer role with the toteutus organisation" in {
-    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2), indexerSession)
+    list(s"$ToteutusPath/${t2.oid}/hakukohteet", Map[String, String]("organisaatioOid" -> ChildOid.s), List(hk2WithEnrichedName), indexerSession)
   }
 
   "Toteutukseen liitetyt hakukohteet for indexer" should "list all hakukohteet mapped to given toteutus for indexer" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1, hk3, hk5, hk6), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), List(hk1WithEnrichedName, hk3, hk5, hk6), indexerSession)
   }
   it should "list also poistetut hakukohteet if instructed" in {
-    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1, hk3, hk5, hk6, hk7), indexerSession)
+    list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map("vainOlemassaolevat" -> "false"), List(hk1WithEnrichedName, hk3, hk5, hk6, hk7WithEnrichedName), indexerSession)
   }
   it should "deny access to root user without indexer role" in {
     list(s"$IndexerPath$ToteutusPath/${t1.oid}/hakukohteet", Map[String,String](), 403)

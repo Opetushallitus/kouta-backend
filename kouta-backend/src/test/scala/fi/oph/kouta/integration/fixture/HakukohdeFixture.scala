@@ -89,7 +89,8 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
         mockOppijanumerorekisteriClient,
         mockKayttooikeusClient,
         toteutusServiceValidation,
-        koutaIndeksoijaClient
+        koutaIndeksoijaClient,
+        hakukohdeUtil
       ),
       hakukohdeServiceValidation,
       koutaIndeksoijaClient,
