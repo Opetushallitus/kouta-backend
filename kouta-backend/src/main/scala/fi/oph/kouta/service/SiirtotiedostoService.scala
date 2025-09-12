@@ -152,7 +152,7 @@ class SiirtotiedostoService(
       hri.copy(enrichedData =
         Some(
           new HakukohdeEnrichedDataRaporttiItem(
-            hakukohdeUtil.enrichHakukohde(hri.muokkaaja, hri.nimi, toteutusItem.flatMap(_.metadata), hri.hakukohdeKoodiUri)
+            hakukohdeUtil.getHakukohdeEnrichedData(hri.muokkaaja, hri.nimi, toteutusItem.flatMap(_.metadata), hri.hakukohdeKoodiUri)
           )
         )
       )

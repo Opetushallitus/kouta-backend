@@ -98,6 +98,8 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
     val lokalisointiClient      = new LokalisointiClient(urlProperties.get)
     val koodistoService         = new KoodistoService(new KoodistoClient(urlProperties.get))
     val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+    val hakukohdeUtil =
+      new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
@@ -121,7 +123,8 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       toteutusServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 }
@@ -129,11 +132,13 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
 trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
-  override def valintaperusteService = {
+  override def valintaperusteService: ValintaperusteService = {
     val organisaatioService             = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoService                 = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient           = new MockKoutaIndeksoijaClient
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoService, HakukohdeDAO)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    val hakukohdeUtil = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
     new ValintaperusteService(
       SqsInTransactionService,
       new AuditLog(MockAuditLogger),
@@ -141,7 +146,8 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       valintaperusteServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 }
@@ -193,7 +199,8 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
         mockOppijanumerorekisteriClient,
         mockKayttooikeusClient,
         toteutusServiceValidation,
-        koutaIndeksoijaClient
+        koutaIndeksoijaClient,
+        hakukohdeUtil
       ),
       hakukohdeServiceValidation,
       koutaIndeksoijaClient,

@@ -628,7 +628,7 @@ class KoulutusService(
       hakutiedot.map(hakutieto => {
         val updatedHaut = hakutieto.haut.map(haku => {
           val updatedHakukohteet = haku.hakukohteet.map(hakukohde => {
-            val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.getEnrichedHakukohdeData(
+            val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.getHakukohdeEnrichedData(
               hakukohde.muokkaaja,
               hakukohde.nimi,
               hakukohde.toteutusMetadata,

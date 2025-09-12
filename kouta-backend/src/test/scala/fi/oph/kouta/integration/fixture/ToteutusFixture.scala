@@ -8,7 +8,7 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, DefaultMocks, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO, ToteutusExtractors}
-import fi.oph.kouta.service.{KeywordService, KoodistoService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation, ToteutusTilaChangeResultObject}
+import fi.oph.kouta.service.{HakukohdeUtil, KeywordService, KoodistoService, OrganisaatioServiceImpl, ToteutusCopyResultObject, ToteutusService, ToteutusServiceValidation, ToteutusTilaChangeResultObject}
 import fi.oph.kouta.servlet.ToteutusServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -26,12 +26,14 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
   val mockEPerusteKoodiClient: EPerusteKoodiClient = mock[EPerusteKoodiClient]
 
   override protected lazy val auditLog = new AuditLog(MockAuditLogger)
+  override val koodistoService         = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   def toteutusService: ToteutusService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
-    val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
+    val hakukohdeUtil =
+      new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
@@ -54,7 +56,8 @@ trait ToteutusFixture extends KoulutusFixture with ToteutusDbFixture with Access
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       toteutusServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 

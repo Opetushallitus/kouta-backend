@@ -84,7 +84,7 @@ class HakukohdeService(
       case Some((h, i)) =>
         Some(
           h.copy(_enrichedData =
-            Some(hakukohdeUtil.enrichHakukohde(h.muokkaaja, h.nimi, h.toteutusOid, h.hakukohdeKoodiUri))
+            Some(hakukohdeUtil.getHakukohdeEnrichedData(h.muokkaaja, h.nimi, h.toteutusOid, h.hakukohdeKoodiUri))
           ),
           i
         )
@@ -421,7 +421,19 @@ class HakukohdeUtil(
     koodistoService: KoodistoService,
     lokalisointiClient: LokalisointiClient
 ) {
-  def generateHakukohdeEsitysnimi(hakukohdeNimi: Kielistetty, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
+
+  def enrichHakukohteet(hakukohteet: Seq[HakukohdeListItem]): Seq[HakukohdeListItem] = {
+    hakukohteet.map { hakukohde =>
+      val hakukohdeEnrichedData: HakukohdeEnrichedData = getHakukohdeEnrichedData(
+        hakukohde.muokkaaja,
+        hakukohde.nimi,
+        hakukohde.toteutusMetadata,
+        hakukohde.hakukohdeKoodiUri)
+      hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi, toteutusMetadata = None)
+    }
+  }
+
+  private def generateHakukohdeEsitysnimi(hakukohdeNimi: Kielistetty, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
     toteutusMetadata match {
       case Some(metadata) if metadata.tyyppi == Tuva =>
         val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
@@ -429,33 +441,20 @@ class HakukohdeUtil(
       case _ => hakukohdeNimi
     }
 
-  def getEnrichedHakukohdeData(
-      muokkaajaOid: UserOid,
-      nimi: Kielistetty,
-      toteutusMetadata: Option[ToteutusMetadata],
-      hakukohdeKoodiUri: Option[String]
-  ): HakukohdeEnrichedData =
-    enrichHakukohde(
-      muokkaajaOid,
-      nimi,
-      toteutusMetadata,
-      hakukohdeKoodiUri
-    )
-
-  def enrichHakukohde(
+  def getHakukohdeEnrichedData(
       muokkaajaOid: UserOid,
       nimi: Kielistetty,
       toteutusOid: ToteutusOid,
       hakukohdeKoodiUri: Option[String]
   ): HakukohdeEnrichedData =
-    enrichHakukohde(
+    getHakukohdeEnrichedData(
       muokkaajaOid,
       nimi,
       ToteutusDAO.get(toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1).flatMap(_.metadata),
       hakukohdeKoodiUri
     )
 
-  def enrichHakukohde(
+  def getHakukohdeEnrichedData(
       muokkaajaOid: UserOid,
       nimi: Kielistetty,
       toteutusMetadata: Option[ToteutusMetadata],

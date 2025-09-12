@@ -124,30 +124,19 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  private def enrichHakukohteet(hakukohteet: Seq[HakukohdeListItem]): Seq[HakukohdeListItem] = {
-    hakukohteet.map { hakukohde =>
-      val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.enrichHakukohde(
-        hakukohde.muokkaaja,
-        hakukohde.nimi,
-        hakukohde.toteutusOid,
-        hakukohde.hakukohdeKoodiUri)
-      hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi)
-    }
-  }
-
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis(organisaatioOid, readRules)(
       oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    withRootAccess(indexerRoles)(enrichHakukohteet(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
+    withRootAccess(indexerRoles)(hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
 
   def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
     val hakukohteet = withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
       case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())
       case x => HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, x)
     }
-    enrichHakukohteet(hakukohteet)
+    hakukohdeUtil.enrichHakukohteet(hakukohteet)
   }
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =

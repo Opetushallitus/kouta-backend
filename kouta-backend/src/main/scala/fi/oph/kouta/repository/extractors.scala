@@ -351,8 +351,8 @@ trait HakukohdeExtractors extends ExtractorBase {
   ))
 
   implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] =
-    GetResult(r => {
-      val item = HakukohdeListItem(
+    GetResult(r =>
+      HakukohdeListItem(
         oid = HakukohdeOid(r.nextString()),
         toteutusOid = ToteutusOid(r.nextString()),
         hakuOid = HakuOid(r.nextString()),
@@ -366,10 +366,7 @@ trait HakukohdeExtractors extends ExtractorBase {
         modified = timeStampToModified(r.nextTimestamp()),
         toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata])
       )
-      val esitysnimi = HakukohdeUtil.generateHakukohdeEsitysnimi(item.nimi, item.toteutusMetadata)
-      item.copy(nimi = esitysnimi, toteutusMetadata = None)
-    }
-  )
+    )
 
   implicit val getHakukohdeAndRelatedForCopyingResult: GetResult[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)] =
     GetResult(r => {
