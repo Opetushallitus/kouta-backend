@@ -97,15 +97,7 @@ class HakukohdeService(
     )
   }
 
-  def generateHakukohdeEsitysnimi(hakukohdeNimi: Kielistetty, toteutusMetadata: Option[ToteutusMetadata]): Kielistetty =
-    toteutusMetadata match {
-      case Some(metadata) if metadata.tyyppi == Tuva =>
-        val kaannokset = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.vaativanaErityisenaTukena")
-        NameHelper.generateHakukohdeDisplayNameForTuva(hakukohdeNimi, toteutusMetadata.get, kaannokset)
-      case _ => hakukohdeNimi
-    }
-
-  def populateNimiFromToteutusAsNeeded(hakukohde: Hakukohde): Hakukohde = {
+  private def populateNimiFromToteutusAsNeeded(hakukohde: Hakukohde): Hakukohde = {
     if (notFullyPopulated(hakukohde.nimi, hakukohde.kielivalinta)) {
       ToteutusDAO.get(hakukohde.toteutusOid, TilaFilter.onlyOlemassaolevat()) match {
         case Some((toteutus, _)) if toteutus.metadata.isDefined =>
