@@ -628,13 +628,13 @@ class KoulutusService(
       hakutiedot.map(hakutieto => {
         val updatedHaut = hakutieto.haut.map(haku => {
           val updatedHakukohteet = haku.hakukohteet.map(hakukohde => {
-            val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.enrichHakukohde(
+            val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeUtil.getEnrichedHakukohdeData(
               hakukohde.muokkaaja,
               hakukohde.nimi,
-              hakukohde.toteutusOid,
+              hakukohde.toteutusMetadata,
               hakukohde.hakukohdeKoodiUri
             )
-            hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi)
+            hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi, toteutusMetadata = None)
           })
           haku.copy(hakukohteet = updatedHakukohteet)
         })
