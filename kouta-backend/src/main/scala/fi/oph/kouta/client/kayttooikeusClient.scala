@@ -4,15 +4,14 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.logging.Logging
-import fi.oph.kouta.security.{AuthenticationFailedException, Authority, KayttooikeusUserDetails}
 import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{Await, Future}
 
 case class OrganisaatioHenkilo(organisaatioOid: String)
 
@@ -43,54 +42,9 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     .expireAfterWrite(45.minutes)
     .build()
 
-  def getUserByUsername(username: String): KayttooikeusUserDetails = {
-    val url = urlProperties.url(s"kayttooikeus-service.userDetails.byUsername", username)
-
-    val errorHandler = (_: String, status: Int, response: String) =>
-      status match {
-        case 404 => throw new AuthenticationFailedException(s"User not found with username: $username, got response $status $response")
-        case _ => throw new RuntimeException(s"Failed to get username $username details, got response $status $response")
-      }
-
-    get(url, errorHandler, followRedirects = true) { response =>
-      val kayttooikeusDto = parse(response).extract[KayttooikeusUserResp]
-      KayttooikeusUserDetails(
-        kayttooikeusDto.authorities
-          .map(a => Authority(a.authority.replace("ROLE_", "")))
-          .toSet,
-        kayttooikeusDto.username
-      )
-    }
-  }
-
   private def getOrganisaatiot(oid: UserOid): List[OrganisaatioHenkilo] =  {
     val url = urlProperties.url(s"kayttooikeus-service.organisaatiohenkilo", oid)
 
-    /*
-    try {
-      Uri.fromString(url)
-        .fold(Task.fail, url => {
-          client.fetch(Request(method = GET, uri = url)) {
-            case r if r.status.code == 200 =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .map(responseBody => {
-                  parse(responseBody).extract[List[OrganisaatioHenkilo]]
-                })
-            case r =>
-              r.bodyAsText
-                .runLog
-                .map(_.mkString)
-                .flatMap(_ => Task.fail(new RuntimeException(s"Failed to fetch organisaatiohenkilot for $oid: ${r.toString()}")))
-          }
-        }).unsafePerformSyncAttemptFor(Duration(5, TimeUnit.SECONDS)).fold(throw _, x => x)
-    } catch {
-      case error: CasClientException =>
-        logger.error(s"Authentication to CAS failed: $error")
-        throw error
-    }
-    */
     val request = new RequestBuilder().setMethod("GET").setUrl(url).build
     val future = Future {
       casClient.executeBlocking(request)
@@ -112,7 +66,3 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     }
   }
 }
-
-case class KayttooikeusUserResp(authorities: List[GrantedAuthority], username: String)
-
-case class GrantedAuthority(authority: String)
