@@ -1,13 +1,14 @@
 package fi.oph.kouta.security
 
-import java.util.UUID
-
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.logging.Logging
+import fi.oph.kouta.repository.SessionDAO
+import fi.vm.sade.javautils.nio.cas.UserDetails
+
+import java.util.UUID
 import javax.servlet.http.HttpServletRequest
+import scala.collection.JavaConverters._
 
 case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)
@@ -17,12 +18,9 @@ case class AuthenticationFailedException(msg: String, cause: Throwable) extends 
 case class KayttooikeusUserDetails(authorities: Set[Authority], oid: String)
 
 object CasSessionService extends CasSessionService(ProductionSecurityContext(KoutaConfigurationFactory.configuration.securityConfiguration),
-                                                   KayttooikeusClient,
                                                    AuditLog)
 
-abstract class CasSessionService(val securityContext: SecurityContext,
-                                 val userDetailsService: KayttooikeusClient,
-                                 auditLog: AuditLog) extends Logging {
+abstract class CasSessionService(val securityContext: SecurityContext, auditLog: AuditLog) extends Logging {
   logger.info(s"Using security context ${securityContext.getClass.getSimpleName}")
 
   val serviceIdentifier: String = securityContext.casServiceIdentifier
@@ -30,12 +28,12 @@ abstract class CasSessionService(val securityContext: SecurityContext,
 
   private val casClient = securityContext.casClient
 
-  private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, String] = {
+  private def validateServiceTicket(ticket: ServiceTicket): Either[Throwable, UserDetails] = {
     val ServiceTicket(s) = ticket
     try {
-      Right(casClient.validateServiceTicketWithVirkailijaUsernameBlocking(securityContext.casServiceIdentifier, ticket.s))
+      Right(casClient.validateServiceTicketWithVirkailijaUserDetailsBlocking(securityContext.casServiceIdentifier, ticket.s))
     } catch {
-      case e: Exception => Left(new AuthenticationFailedException(s"Failed to validate service ticket $s", e))
+      case e: Exception => Left(AuthenticationFailedException(s"Failed to validate service ticket $s", e))
     }
   }
 
@@ -48,10 +46,16 @@ abstract class CasSessionService(val securityContext: SecurityContext,
 
   private def createSession(ticket: ServiceTicket)(implicit request: HttpServletRequest): Either[Throwable, (UUID, CasSession)] = {
     validateServiceTicket(ticket)
-      .map(userDetailsService.getUserByUsername)
+      .map(extractUserDetails)
       .map(storeSession(ticket, _))
       .map { case (id, session) => auditLog.logLogin(id, session, ticket) }
   }
+
+  private def extractUserDetails(userDetails: UserDetails) =
+    KayttooikeusUserDetails(
+      userDetails.getRoles.asScala.map(a => Authority(a.replace("ROLE_", ""))).toSet,
+      userDetails.getHenkiloOid
+    )
 
   private def getSession(id: UUID): Either[Throwable, (UUID, Session)] =
     SessionDAO.get(id)
