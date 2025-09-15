@@ -66,7 +66,7 @@ class ToteutusService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     toteutusServiceValidation: ToteutusServiceValidation,
-    koutaIndeksoijaClient: KoutaIndeksoijaClient,
+    koutaIndeksoijaClient: KoutaIndeksoijaClient
 ) extends RoleEntityAuthorizationService[Toteutus]
     with TeemakuvaService[ToteutusOid, Toteutus] {
 

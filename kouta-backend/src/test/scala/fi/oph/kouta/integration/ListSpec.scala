@@ -4,7 +4,7 @@ import com.softwaremill.diffx._
 import com.softwaremill.diffx.generic.auto._
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.KkOpintojaksoToteutuksenMetatieto
+import fi.oph.kouta.TestData.{KkOpintojaksoToteutuksenMetatieto, muokkaajanNimi}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodistoElement
 import fi.oph.kouta.domain._
@@ -722,15 +722,15 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
           modified = Some(h1.modified),
           hakukohteet = Seq(
             HakutietoHakukohde(
-              hakukohdeOid = hk1WithEnrichedName.oid,
+              hakukohdeOid = hk1.oid,
               toteutusOid = t1.oid,
               hakuOid = h1.oid,
-              nimi = hk1WithEnrichedName.nimi,
-              hakukohdeKoodiUri = hk1WithEnrichedName.hakukohdeKoodiUri,
+              nimi = hk1.nimi,
+              hakukohdeKoodiUri = hk1.hakukohdeKoodiUri,
               jarjestyspaikkaOid = Some(OtherOid),
-              tila = hk1WithEnrichedName.tila,
+              tila = hk1.tila,
               esikatselu = true,
-              valintaperusteId = hk1WithEnrichedName.valintaperusteId,
+              valintaperusteId = hk1.valintaperusteId,
               koulutuksenAlkamiskausi = TestData.JulkaistuHakukohde.metadata.get.koulutuksenAlkamiskausi,
               kaytetaanHaunAlkamiskautta = TestData.JulkaistuHakukohde.metadata.get.kaytetaanHaunAlkamiskautta,
               hakulomaketyyppi = TestData.JulkaistuHakukohde.hakulomaketyyppi,
@@ -743,12 +743,15 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
               hakuajat = TestData.JulkaistuHakukohde.hakuajat,
               pohjakoulutusvaatimusKoodiUrit = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusKoodiUrit,
               pohjakoulutusvaatimusTarkenne = TestData.JulkaistuHakukohde.pohjakoulutusvaatimusTarkenne,
-              muokkaaja = hk1WithEnrichedName.muokkaaja,
-              organisaatioOid = hk1WithEnrichedName.organisaatioOid,
+              muokkaaja = hk1.muokkaaja,
+              organisaatioOid = hk1.organisaatioOid,
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
-              modified = Some(hk1WithEnrichedName.modified),
+              modified = Some(hk1.modified),
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
-              valintakoeIds = hk1valintakokeet))),
+              valintakoeIds = hk1valintakokeet,
+              _enrichedData = Some(HakukohdeEnrichedData(
+                esitysnimi = Map(Fi -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 fi", Sv -> "Perusopetuksen jälkeisen yhteishaun hakukohde 1 sv"),
+                muokkaajanNimi = Some(muokkaajanNimi)))))),
 
           HakutietoHaku(
             hakuOid = h2.oid,
@@ -791,7 +794,8 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
               modified = Some(hk3.modified),
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
-              valintakoeIds = hk3valintakokeet),
+              valintakoeIds = hk3valintakokeet,
+              _enrichedData = Some(HakukohdeEnrichedData(esitysnimi = hk3.nimi, muokkaajanNimi = Some(muokkaajanNimi)))),
               HakutietoHakukohde(
                 hakukohdeOid = hk5.oid,
                 toteutusOid = t1.oid,
@@ -818,7 +822,9 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
                 valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
                 modified = Some(hk5.modified),
                 kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
-                valintakoeIds = hk5valintakokeet))),
+                valintakoeIds = hk5valintakokeet,
+                _enrichedData = Some(HakukohdeEnrichedData(esitysnimi = hk5.nimi, muokkaajanNimi = Some(muokkaajanNimi)))
+              ))),
 
           HakutietoHaku(
             hakuOid = h3.oid,
@@ -860,7 +866,9 @@ class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationC
               valintatapaKoodiUrit = TestData.AmmValintaperusteMetadata.valintatavat.flatMap(_.valintatapaKoodiUri),
               modified = Some(hk6.modified),
               kynnysehto = Map(Fi -> "Kynnysehto fi", Sv -> "Kynnysehto sv"),
-              valintakoeIds = hk6valintakokeet))))),
+              valintakoeIds = hk6valintakokeet,
+              _enrichedData = Some(HakukohdeEnrichedData(esitysnimi = hk6.nimi, muokkaajanNimi = Some(muokkaajanNimi)))
+            ))))),
         Hakutieto(
           t2.oid,
           List(HakutietoHaku(

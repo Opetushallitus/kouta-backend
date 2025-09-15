@@ -634,7 +634,7 @@ class KoulutusService(
               hakukohde.toteutusMetadata,
               hakukohde.hakukohdeKoodiUri
             )
-            hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi, toteutusMetadata = None)
+            hakukohde.copy(_enrichedData = Option(hakukohdeEnrichedData), toteutusMetadata = None)
           })
           haku.copy(hakukohteet = updatedHakukohteet)
         })
