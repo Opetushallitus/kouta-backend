@@ -1,16 +1,18 @@
 package fi.oph.kouta.mocks
 
+import fi.oph.kouta.TestOids.TestUserOid
 import fi.oph.kouta.client.CallerId
-import fi.oph.kouta.security.{Authority, KayttooikeusUserDetails, SecurityContext}
+import fi.oph.kouta.security.{AuthenticationFailedException, Authority, SecurityContext}
 import fi.vm.sade.javautils.nio.cas.impl.{CasClientImpl, CasSessionFetcher}
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig, UserDetails}
 import org.apache.commons.lang3.concurrent.BasicThreadFactory
 import org.asynchttpclient.DefaultAsyncHttpClientConfig
-
-import java.util.concurrent.{CompletableFuture, ThreadFactory}
 import org.asynchttpclient.Dsl.asyncHttpClient
 
-class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, users: Map[String, KayttooikeusUserDetails]) extends SecurityContext with CallerId {
+import java.util.concurrent.{CompletableFuture, ThreadFactory}
+import scala.collection.JavaConverters._
+
+class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, defaultAuthorities: Set[Authority]) extends SecurityContext with CallerId {
 
   val casConfig: CasConfig = new CasConfig.CasConfigBuilder(
     "",
@@ -32,11 +34,18 @@ class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, 
     httpClient,
     casSessionFetcher
   ) {
-    override def validateServiceTicketWithVirkailijaUsername(service: String, ticket: String): CompletableFuture[String] = {
+    override def validateServiceTicketWithVirkailijaUsername(service: String, ticket: String): CompletableFuture[UserDetails] = {
       println(s"TEST: $service | $ticket | ${MockSecurityContext.ticketPrefix(service)}")
       if (ticket.startsWith(MockSecurityContext.ticketPrefix(service))) {
         val username = ticket.stripPrefix(MockSecurityContext.ticketPrefix(service))
-        CompletableFuture.completedFuture(username)
+        if (username == "testuser") {
+          val henkiloOid = TestUserOid.s
+          val roles = defaultAuthorities.map(a => s"ROLE_${a.role}").asJava
+          val userDetails = new UserDetails(username, henkiloOid, null, null, roles)
+          CompletableFuture.completedFuture(userDetails)
+        } else {
+          CompletableFuture.failedFuture(new AuthenticationFailedException(s"User not found with username: $username"))
+        }
       } else {
         CompletableFuture.failedFuture(new RuntimeException("unrecognized ticket: " + ticket))
       }
@@ -47,9 +56,7 @@ class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, 
 object MockSecurityContext {
 
   def apply(casUrl: String, casServiceIdentifier: String, defaultAuthorities: Set[Authority]): MockSecurityContext = {
-    val users = Map("testuser" -> KayttooikeusUserDetails(defaultAuthorities, "mockoid"))
-
-    new MockSecurityContext(casUrl, casServiceIdentifier, users)
+    new MockSecurityContext(casUrl, casServiceIdentifier, defaultAuthorities)
   }
 
   def ticketFor(service: String, username: String): String = ticketPrefix(service) + username
