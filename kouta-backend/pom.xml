@@ -30,7 +30,7 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>fi.vm.sade.java-utils</groupId>
+            <groupId>opiskelijavalinnat-utils</groupId>
             <artifactId>java-cas</artifactId>
             <exclusions>
                 <exclusion>
