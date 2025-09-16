@@ -1,15 +1,12 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.muokkaajanNimi
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
-import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, OrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.security.RoleEntity
 import fi.oph.kouta.util.OrganisaatioServiceUtil
 import org.json4s.jackson.Serialization.read
-
-import java.time.LocalDateTime
 
 class IndexerSpec extends KoutaIntegrationSpec with IndexerFixture {
 

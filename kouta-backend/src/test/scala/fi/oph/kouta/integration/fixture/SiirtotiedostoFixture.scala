@@ -1,11 +1,11 @@
 package fi.oph.kouta.integration.fixture
 
-import fi.oph.kouta.client.OrganisaatioServiceClient
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, OrganisaatioServiceClient}
 import fi.oph.kouta.domain.siirtotiedosto.SiirtotiedostoDateTimeFormat
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockSiirtotiedostoPalveluClient}
+import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
 import fi.oph.kouta.repository.SiirtotiedostoDAO
-import fi.oph.kouta.service.SiirtotiedostoService
+import fi.oph.kouta.service.{HakukohdeUtil, KoodistoService, SiirtotiedostoService}
 import fi.oph.kouta.servlet.SiirtotiedostoServlet
 import org.json4s.JValue
 import org.json4s.JsonAST.JArray
@@ -14,8 +14,8 @@ import org.scalatest.Assertion
 
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.time.{Duration, Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
+import java.time.{Duration, LocalDateTime}
 
 trait SiirtotiedostoFixture
     extends KoulutusFixture
@@ -30,7 +30,11 @@ trait SiirtotiedostoFixture
 
   this: KoutaIntegrationSpec =>
 
-  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+  override val mockOrganisaatioServiceClient: OrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
+  val lokalisointiClient = new LokalisointiClient(urlProperties.get)
+  val hakukohdeUtil =
+    new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
   val SiirtotiedostoPath = "/siirtotiedosto"
   val dayBefore       = Some(LocalDateTime.now.minus(Duration.of(1, ChronoUnit.DAYS)))
@@ -44,13 +48,12 @@ trait SiirtotiedostoFixture
       SiirtotiedostoDAO,
       koulutusService,
       toteutusService,
-      hakukohdeService,
       mockOppijanumerorekisteriClient,
-      siirtotiedostoPalveluClient
+      siirtotiedostoPalveluClient,
+      hakukohdeUtil,
     ) {
       override val maxNumberOfItemsInFile: Int = maxNumberOfItemsInOneWrite
     }
-
 
   override def beforeAll(): Unit = {
     super.beforeAll()

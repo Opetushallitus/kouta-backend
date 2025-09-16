@@ -355,21 +355,6 @@ class ToteutusService(
   def listHaut(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withRootAccess(indexerRoles)(HakuDAO.listByToteutusOid(oid, tilaFilter))
 
-  def listHakukohteet(oid: ToteutusOid, tilaFilter: TilaFilter)(implicit
-      authenticated: Authenticated
-  ): Seq[HakukohdeListItem] = {
-    withRootAccess(indexerRoles)(HakukohdeDAO.listByToteutusOid(oid, tilaFilter))
-  }
-
-  def listHakukohteet(oid: ToteutusOid, organisaatioOid: OrganisaatioOid)(implicit
-      authenticated: Authenticated
-  ): Seq[HakukohdeListItem] = {
-    withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByToteutusOid(oid, TilaFilter.onlyOlemassaolevat())
-      case organisaatioOids         => HakukohdeDAO.listByToteutusOidAndAllowedOrganisaatiot(oid, organisaatioOids)
-    }
-  }
-
   def listOpintojaksot(organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[ToteutusListItem] =
     withAuthorizedOrganizationOids(
       organisaatioOid,

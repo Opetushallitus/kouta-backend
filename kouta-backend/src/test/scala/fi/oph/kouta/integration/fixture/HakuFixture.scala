@@ -3,14 +3,13 @@ package fi.oph.kouta.integration.fixture
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.TestData.JulkaistuHaku
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
-import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.validation.AmmatillinenKoulutusServiceValidation
-import fi.oph.kouta.service.{HakuService, HakuServiceValidation, HakukohdeService, HakukohdeServiceValidation, KeywordService, KoodistoService, KoulutusService, KoulutusServiceValidation, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
+import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, SQLHelpers}
+import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.HakuServlet
 import fi.oph.kouta.util.TimeUtils
 
@@ -24,92 +23,15 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
   val ohjausparametritClient: MockOhjausparametritClient.type = MockOhjausparametritClient
   val auditLogger = new AuditLog(MockAuditLogger)
 
-  def kService: KoulutusService = {
-    val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoService              = new KoodistoService(new KoodistoClient(urlProperties.get))
-    val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
-    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
-    val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
-    val lokalisointiClient           = new LokalisointiClient(urlProperties.get)
-    val keywordService               = new KeywordService(auditLogger, organisaatioService)
-
-    val koulutusServiceValidation =
-      new KoulutusServiceValidation(
-        koodistoService,
-        organisaatioService,
-        ToteutusDAO,
-        SorakuvausDAO,
-        ammKoulutusServiceValidation
-      )
-
-    new KoulutusService(
-      SqsInTransactionServiceIgnoringIndexing,
-      MockS3ImageService,
-      new AuditLog(MockAuditLogger),
-      organisaatioService,
-      mockOppijanumerorekisteriClient,
-      mockKayttooikeusClient,
-      koodistoService,
-      koulutusServiceValidation,
-      mockKoutaSearchClient,
-      ePerusteKoodiClient,
-      koutaIndeksoijaClient,
-      lokalisointiClient,
-      keywordService
-    )
-  }
+  val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   def hakuService: HakuService = {
     val organisaatioService   = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val hakuServiceValidation = new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO, OrganisaatioServiceImpl)
     val lokalisointiClient = new LokalisointiClient(urlProperties.get)
-    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+    val hakukohdeUtil = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
-    val toteutusServiceValidation = new ToteutusServiceValidation(
-      koodistoService,
-      organisaatioService,
-      KoulutusDAO,
-      HakukohdeDAO,
-      SorakuvausDAO,
-      ToteutusDAO,
-      mockEPerusteKoodiClient
-    )
-    val hakukohdeServiceValidation = new HakukohdeServiceValidation(
-      koodistoService,
-      mockHakemusPalveluClient,
-      organisaatioService,
-      lokalisointiClient,
-      HakukohdeDAO,
-      HakuDAO
-    )
-
-    val hakukohdeService = new HakukohdeService(
-      SqsInTransactionServiceCheckingRowExistsWhenIndexing,
-      new AuditLog(MockAuditLogger),
-      organisaatioService,
-      lokalisointiClient,
-      mockOppijanumerorekisteriClient,
-      mockKayttooikeusClient,
-      koodistoService,
-      new ToteutusService(
-        SqsInTransactionServiceCheckingRowExistsWhenIndexing,
-        MockS3ImageService,
-        auditLogger,
-        new KeywordService(auditLogger, organisaatioService),
-        organisaatioService,
-        kService,
-        lokalisointiClient,
-        koodistoService,
-        mockOppijanumerorekisteriClient,
-        mockKayttooikeusClient,
-        toteutusServiceValidation,
-        koutaIndeksoijaClient
-      ),
-      hakukohdeServiceValidation,
-      koutaIndeksoijaClient
-    )
     new HakuService(
       SqsInTransactionServiceIgnoringIndexing,
       auditLogger,
@@ -119,7 +41,7 @@ trait HakuFixture extends SQLHelpers with AccessControlSpec {
       mockKayttooikeusClient,
       hakuServiceValidation,
       koutaIndeksoijaClient,
-      hakukohdeService
+      hakukohdeUtil
     )
   }
 

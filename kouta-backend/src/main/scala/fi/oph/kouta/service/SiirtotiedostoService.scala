@@ -5,8 +5,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.siirtotiedosto._
 import fi.oph.kouta.domain.{LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
-import fi.oph.kouta.repository.{KoutaDatabase, SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
-import fi.oph.kouta.servlet.Authenticated
+import fi.oph.kouta.repository.{SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
 import fi.oph.kouta.util.NameHelper
 
 import java.time.LocalDateTime
@@ -18,9 +17,9 @@ object SiirtotiedostoService
       SiirtotiedostoDAO,
       KoulutusService,
       ToteutusService,
-      HakukohdeService,
       OppijanumerorekisteriClient,
-      SiirtotiedostoPalveluClient
+      SiirtotiedostoPalveluClient,
+      HakukohdeUtil
     )
 
 object SiirtotiedostoRaportointiService
@@ -28,18 +27,18 @@ object SiirtotiedostoRaportointiService
       SiirtotiedostoRaportointiDAO,
       KoulutusService,
       ToteutusService,
-      HakukohdeService,
       OppijanumerorekisteriClient,
-      SiirtotiedostoPalveluClient
+      SiirtotiedostoPalveluClient,
+      HakukohdeUtil
     )
 
 class SiirtotiedostoService(
     siirtotiedostoDAO: SiirtotiedostoDAO,
     koulutusService: KoulutusService,
     toteutusService: ToteutusService,
-    hakukohdeService: HakukohdeService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
-    siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient
+    siirtotiedostoPalveluClient: SiirtotiedostoPalveluClient,
+    hakukohdeUtil: HakukohdeUtil
 ) {
   val maxNumberOfItemsInFile = KoutaConfigurationFactory.configuration.s3Configuration.transferFileMaxItemCount;
 
@@ -153,7 +152,7 @@ class SiirtotiedostoService(
       hri.copy(enrichedData =
         Some(
           new HakukohdeEnrichedDataRaporttiItem(
-            hakukohdeService.enrichHakukohde(hri.muokkaaja, hri.nimi, toteutusItem, hri.hakukohdeKoodiUri)
+            hakukohdeUtil.getHakukohdeEnrichedData(hri.muokkaaja, hri.nimi, toteutusItem.flatMap(_.metadata), hri.hakukohdeKoodiUri)
           )
         )
       )

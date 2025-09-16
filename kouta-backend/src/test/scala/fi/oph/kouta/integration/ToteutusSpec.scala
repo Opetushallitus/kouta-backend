@@ -3,15 +3,15 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.ServiceUtils
 import fi.oph.kouta.validation.Validations._
-import fi.oph.kouta.util.TimeUtils.instantToModified
 import org.json4s.jackson.{JsonMethods, Serialization}
 
 import java.time.LocalDateTime
@@ -30,6 +30,7 @@ class ToteutusSpec
     with HakuFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Toteutus, Role.Koulutus)
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   var koulutusOid: String = _
 
