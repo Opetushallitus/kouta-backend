@@ -67,6 +67,8 @@ trait KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    db.clean()
+    db.migrate()
     TestSetups.setupAwsKeysForSqs()
     addDefaultSession()
     addDefaultMocks()
@@ -74,8 +76,6 @@ trait KoutaIntegrationSpec
 
   override def afterAll(): Unit = {
     super.afterAll()
-    db.clean()
-    db.migrate()
   }
 }
 
