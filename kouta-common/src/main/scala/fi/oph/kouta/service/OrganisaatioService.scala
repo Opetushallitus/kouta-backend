@@ -62,6 +62,7 @@ trait OrganisaatioService {
     Try[OidAndChildren] {
       OidAndChildren(
         RootOrganisaatioOid,
+        Map("fi" -> "Opetushallitus"),
         cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
         RootOrganisaatioOid.s,
         None,
@@ -95,10 +96,10 @@ trait OrganisaatioService {
       .getOrElse(Seq())
   }
   private def oppilaitostyypitToKoulutustyypit(oppilaitostyypit: Seq[String]) =
-    oppilaitostyypit.map(Koulutustyyppi.fromOppilaitostyyppi).flatten.distinct
+    oppilaitostyypit.flatMap(Koulutustyyppi.fromOppilaitostyyppi).distinct
 
   @tailrec
-  private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
+  protected final def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
     level.find(pred) match {
       case None if level.isEmpty => None
       case Some(c)               => Some(c)
