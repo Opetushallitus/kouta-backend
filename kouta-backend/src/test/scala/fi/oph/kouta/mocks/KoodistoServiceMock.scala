@@ -2,7 +2,7 @@ package fi.oph.kouta.mocks
 
 import fi.oph.kouta.client.{KoodistoElement, KoodistoMetadataElement, KoodistoSubElement}
 import fi.oph.kouta.domain.{HakutapaKoodisto, HaunKohdejoukkoKoodisto, Kielistetty, KoulutusKoodisto, OsaamisalaKoodisto, ValintakoeTyyppiKoodisto}
-import org.mockserver.model.HttpRequest
+import com.github.tomakehurst.wiremock.stubbing.StubMapping
 
 object TestKoodistoElement {
   def apply(koodiUri: String, version: Int, nimi: Kielistetty): KoodistoElement = {
@@ -78,12 +78,12 @@ trait KoodistoServiceMock extends ServiceMockBase {
     mockGet(path, Map.empty, koodiUriResponse(koodisto, koodiUrit))
   }
 
-  def mockKoodistoNotFound(koodisto: String): HttpRequest = {
+  def mockKoodistoNotFound(koodisto: String): StubMapping = {
     val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
     mockGet(path, Map.empty, s"Koodisto $koodisto not found", 404)
   }
 
-  def mockKoodistoFailure(koodisto: String): HttpRequest = {
+  def mockKoodistoFailure(koodisto: String): StubMapping = {
     val path = getMockPath("koodisto-service.koodisto-koodit", Some(koodisto))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)
   }
