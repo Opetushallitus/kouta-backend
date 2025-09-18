@@ -1,16 +1,16 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.{TestData, TestOids}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.{OrganisaatioServiceClient, OrganisaatioServiceQueryException}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
-import fi.oph.kouta.domain.{Arkistoitu, OppilaitoksenOsa, OppilaitosEnrichedData, OppilaitosWithOrganisaatioData, OrganisaatioHierarkia}
-import fi.oph.kouta.integration.fixture.{MockS3Client, OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
+import fi.oph.kouta.domain._
+import fi.oph.kouta.integration.fixture.{OppilaitoksenOsaFixture, OppilaitosFixture, UploadFixture}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.util.OrganisaatioServiceUtil
 import fi.oph.kouta.validation.Validations._
+import fi.oph.kouta.{TestData, TestOids}
 import org.json4s.jackson.Serialization.read
 
 import java.time.{Instant, LocalDateTime}
@@ -20,12 +20,12 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   with OppilaitosFixture with UploadFixture {
 
   override val roleEntities = Seq(Role.Oppilaitos)
-  override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+  override val mockOrganisaatioServiceClient: OrganisaatioServiceClient = mock[OrganisaatioServiceClient]
 
-  var oppilaitoksenOsaOid = TestOids.GrandChildOid.toString
-  var oppilaitosOid = TestOids.ChildOid.toString
+  var oppilaitoksenOsaOid: String = TestOids.GrandChildOid.toString
+  var oppilaitosOid: String = TestOids.ChildOid.toString
   var defaultOppilaitoksenOsa: OppilaitoksenOsa = _
-  var defaultOrganisaatio = TestData.organisaatioChild
+  var defaultOrganisaatio: Organisaatio = TestData.organisaatioChild
   var defaulOppilaitosEnrichedData = OppilaitosEnrichedData(
     muokkaajanNimi = Some(TestData.muokkaajanNimi),
   )
@@ -43,6 +43,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   override def beforeEach(): Unit = {
+    mockImageService.storage.clear
     deleteOppilaitostenOsat()
 
     when(mockOrganisaatioServiceClient.getOrganisaatioWithOidFromCache(OrganisaatioOid(oppilaitoksenOsaOid))).
@@ -198,19 +199,19 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   it should "copy a temporary image to a permanent location while creating the oppilaitoksen osa" in {
-    saveLocalPng("temp/image.png")
+    mockSaveImage("temp/image.png")
     val oid = put(oppilaitoksenOsa(oppilaitoksenOsaOid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
 
     get(oid, defaultOppilaitoksenOsa.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksen-osa-teemakuva/$oid/image.png")))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
-    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+    assertImageLocation(s"oppilaitoksen-osa-teemakuva/$oid", "image.png")
   }
 
   it should "not touch an image that's not in the temporary location" in {
     val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oppilaitoksenOsaOid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(oppilaitoksenOsaWithImage)
-    MockS3Client.storage shouldBe empty
+
+    mockImageService.storage shouldBe empty
     get(oid, defaultOppilaitoksenOsa.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png")))
   }
 
@@ -317,7 +318,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
-    val oid = put(oppilaitoksenOsa(oppilaitoksenOsaOid))
+    put(oppilaitoksenOsa(oppilaitoksenOsaOid))
     post(OppilaitoksenOsaPath, bytes(defaultOppilaitoksenOsa), defaultHeaders) {
       status should equal (400)
       body should include (KoutaServlet.IfUnmodifiedSinceHeader)
@@ -361,13 +362,13 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
     val oid = put(oppilaitoksenOsa(oppilaitoksenOsaOid))
     val lastModified = get(oid, defaultOppilaitoksenOsa)
 
-    saveLocalPng("temp/image.png")
+    mockSaveImage("temp/image.png")
     val oppilaitoksenOsaWithImage = oppilaitoksenOsa(oid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
 
     update(oppilaitoksenOsaWithImage, lastModified)
     get(oid, defaultOppilaitoksenOsa.withTeemakuva(Some(s"$PublicImageServer/oppilaitoksen-osa-teemakuva/$oid/image.png")))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"oppilaitoksen-osa-teemakuva/$oid/image.png"))
+    assertImageLocation(s"oppilaitoksen-osa-teemakuva/$oid", "image.png")
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -377,7 +378,7 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
 
     update(oppilaitoksenOsaWithImage, lastModified)
 
-    MockS3Client.storage shouldBe empty
+    mockImageService.storage shouldBe empty
     get(oid, defaultOppilaitoksenOsa.withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png")))
   }
 

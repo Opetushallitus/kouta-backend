@@ -27,15 +27,23 @@ object S3ClientFactory {
     )
 }
 
+trait ImageService {
+  val publicUrl: Regex
+  val tempUrl: Regex
+  def getPublicUrl(key: String): String
+  def getTempKey(filename: String): String = s"temp/$filename"
+  def storeTempImage(image: Image)(implicit authenticated: Authenticated): String
+  def copyImage(fromKey: String, toKey: String)(implicit authenticated: Authenticated): String
+  def deleteImage(key: String)(implicit authenticated: Authenticated): Unit
+}
+
 object S3ImageService extends S3ImageService(S3ClientFactory.create(), AuditLog)
 
-class S3ImageService(private val s3Client: AmazonS3, auditLog: AuditLog) extends Logging {
+class S3ImageService(private val s3Client: AmazonS3, auditLog: AuditLog) extends ImageService with Logging {
 
   lazy val config: S3Configuration = KoutaConfigurationFactory.configuration.s3Configuration
 
-  def getPublicUrl(key: String) = s"${config.imageBucketPublicUrl}/$key"
-
-  def getTempKey(filename: String) = s"temp/$filename"
+  def getPublicUrl(key: String): String = s"${config.imageBucketPublicUrl}/$key"
 
   lazy val publicUrl: Regex = s"${config.imageBucketPublicUrl}/(.*)".r
   lazy val tempUrl: Regex = s"${config.imageBucketPublicUrl}/temp/(.*)".r
@@ -46,7 +54,7 @@ class S3ImageService(private val s3Client: AmazonS3, auditLog: AuditLog) extends
     storeImage(key, image)
   }
 
-  def storeImage(key: String, image: Image)(implicit authenticated: Authenticated): String = {
+  private def storeImage(key: String, image: Image)(implicit authenticated: Authenticated): String = {
     val metadata = new ObjectMetadata()
     metadata.setContentType(image.format.contentType)
     metadata.setContentLength(image.data.length)
