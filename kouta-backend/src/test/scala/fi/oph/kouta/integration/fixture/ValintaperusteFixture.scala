@@ -1,13 +1,13 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{KoodistoClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.repository.{HakukohdeDAO, ValintaperusteDAO}
-import fi.oph.kouta.service.{KoodistoService, OrganisaatioServiceImpl, ValintaperusteService, ValintaperusteServiceValidation}
+import fi.oph.kouta.service.{HakukohdeUtil, KoodistoService, OrganisaatioServiceImpl, ValintaperusteService, ValintaperusteServiceValidation}
 import fi.oph.kouta.servlet.ValintaperusteServlet
 import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.{SqsInTransactionServiceIgnoringIndexing, TestData}
@@ -20,12 +20,15 @@ trait ValintaperusteFixture extends AccessControlSpec {
   this: KoutaIntegrationSpec =>
 
   val ValintaperustePath = "/valintaperuste"
+  val koodistoService                 = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   def valintaperusteService: ValintaperusteService = {
     val organisaatioService             = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoService                 = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoService, HakukohdeDAO)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    val hakukohdeUtil = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
+
     new ValintaperusteService(
       SqsInTransactionServiceIgnoringIndexing,
       new AuditLog(MockAuditLogger),
@@ -33,7 +36,8 @@ trait ValintaperusteFixture extends AccessControlSpec {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       valintaperusteServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 
