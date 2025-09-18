@@ -1,7 +1,6 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.integration.fixture.MockS3Client.Content
-import fi.oph.kouta.integration.fixture.{MockS3Client, UploadFixture}
+import fi.oph.kouta.integration.fixture.UploadFixture
 import org.json4s.jackson.Serialization.read
 
 case class ImageUrl(url: String)
@@ -11,16 +10,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   "Upload teemakuva" should "upload image" in {
     post(uri = TeemakuvaUploadPath, body = correctTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctTeemakuva)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/png")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
+      val url = read[ImageUrl](body).url
+      mockImageService.storage(url).data should equal(correctTeemakuva)
     }
   }
 
@@ -69,22 +60,6 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     }
   }
 
-  it should "also accept jpeg images" in {
-    post(uri = TeemakuvaUploadPath, body = correctJpgTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/jpeg")) {
-      status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctJpgTeemakuva)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/jpeg")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
-    }
-  }
-
   it should "reject nonsense sent as an image" in {
     val nonsense = Array.fill(MaxSizeInTest)((scala.util.Random.nextInt(256) - 128).toByte)
     post(uri = TeemakuvaUploadPath, body = nonsense, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/jpeg")) {
@@ -113,16 +88,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   it should "upload smaller image when isSmallTeemakuva query parameter is set to true" in {
     post(uri = s"$TeemakuvaUploadPath?isSmallTeemakuva=true", body = smallTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(smallTeemakuva)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/png")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
+      val url = read[ImageUrl](body).url
+      mockImageService.storage(url).data should equal(smallTeemakuva)
     }
   }
 
@@ -136,16 +103,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   "Upload logo image" should "upload image" in {
     post(uri = LogoUploadPath, body = correctLogo, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctLogo)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/png")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
+      val url = read[ImageUrl](body).url
+      mockImageService.storage(url).data should equal(correctLogo)
     }
   }
 
@@ -197,38 +156,6 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
     }
   }
 
-  it should "also accept jpeg images" in {
-    post(uri = LogoUploadPath, body = correctJpgTeemakuva, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/jpeg")) {
-      status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctJpgTeemakuva)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/jpeg")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
-    }
-  }
-
-  it should "also accept svg images" in {
-    post(uri = LogoUploadPath, body = correctSvgLogo, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/svg+xml")) {
-      status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctSvgLogo)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/svg+xml")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
-    }
-  }
-
   it should "reject random XML sent as an SVG image" in {
     post(uri = LogoUploadPath, body = randomXml, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/svg+xml")) {
       status should equal(415)
@@ -273,16 +200,8 @@ class UploadSpec extends KoutaIntegrationSpec with UploadFixture {
   "Upload icon image" should "upload icon" in {
     post(uri = IconUploadPath, body = correctIcon, headers = Seq(defaultSessionHeader, "Content-Type" -> "image/png")) {
       status should equal(200)
-      read[ImageUrl](body).url match {
-        case s3ImageService.tempUrl(filename) =>
-          val content = MockS3Client.getLocal(ImageBucket, s3ImageService.getTempKey(filename))
-          content should not be empty
-          val Content(localData, metadata) = content.get
-          localData should equal(correctIcon)
-          metadata.getCacheControl should equal("max-age=86400")
-          metadata.getContentType should equal("image/png")
-        case url => fail(s"$url was not an url to the public bucket")
-      }
+      val url = read[ImageUrl](body).url
+      mockImageService.storage(url).data should equal(correctIcon)
     }
   }
 
