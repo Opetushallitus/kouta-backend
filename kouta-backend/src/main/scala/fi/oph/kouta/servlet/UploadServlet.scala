@@ -1,7 +1,7 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.images.{ImageServlet, S3ImageService}
+import fi.oph.kouta.images.{ImageService, ImageServlet, S3ImageService}
 import org.scalatra.Ok
 
 trait ImageSizeSpecs {
@@ -14,7 +14,7 @@ case class ImageWithMinSizeSpecs(maxSize: Int, minWidth: Int, minHeight: Int) ex
 
 case class ImageWithMaxSizeSpecs(maxSize: Int, minWidth: Int, minHeight: Int, maxWidth: Int, maxHeight: Int) extends ImageSizeSpecs
 
-class UploadServlet(val s3ImageService: S3ImageService) extends KoutaServlet with ImageServlet {
+class UploadServlet(val s3ImageService: ImageService) extends KoutaServlet with ImageServlet {
 
   def this() = this(S3ImageService)
 
