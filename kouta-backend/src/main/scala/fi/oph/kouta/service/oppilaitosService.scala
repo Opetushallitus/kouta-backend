@@ -63,13 +63,12 @@ class OppilaitosService(
   }
 
   def get(tarjoajaOids: List[OrganisaatioOid])(implicit authenticated: Authenticated): OppilaitoksetResponse = {
-    val hierarkia = organisaatioService.getOrganisaatioHierarkiaWithOids(tarjoajaOids)
-    val oids = OrganisaatioServiceUtil.getHierarkiaOids(hierarkia)
+    val hierarkiaOppilaitokset = organisaatioService.getOppilaitosOrganisaatioBranches(tarjoajaOids)
+    val oids = hierarkiaOppilaitokset.organisaatiot.map(org => OrganisaatioOid(org.oid))
     val oppilaitokset = oppilaitosDAO.get(oids).groupBy(oppilaitosAndOsa => oppilaitosAndOsa.oppilaitos.oid)
-
     val oppilaitoksetWithOsat = oppilaitokset.map(oppilaitosAndOsatByOid => {
       val oppilaitos = oppilaitosAndOsatByOid._2.head.oppilaitos
-      val osat = oppilaitosAndOsatByOid._2.map(oppilaitosAndOsa => oppilaitosAndOsa.osa).flatten
+      val osat = oppilaitosAndOsatByOid._2.flatMap(_.osa)
 
         try {
           Some(authorizeGet(oppilaitos.copy(osat = Some(osat)), AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true)))
@@ -80,7 +79,7 @@ class OppilaitosService(
         }
     }).toList.flatten
     OppilaitoksetResponse(
-      oppilaitokset = oppilaitoksetWithOsat, organisaatioHierarkia = hierarkia
+      oppilaitokset = oppilaitoksetWithOsat, organisaatioHierarkia = hierarkiaOppilaitokset
     )
   }
 
