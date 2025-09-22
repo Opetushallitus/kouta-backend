@@ -29,6 +29,7 @@ trait CachedOrganisaatioHierarkiaClient extends HttpClient with GenericKoutaJson
 case class OrganisaatioResponse(numHits: Int, organisaatiot: List[OidAndChildren])
 
 case class OidAndChildren(oid: OrganisaatioOid,
+                          nimi: Map[String, String] = Map(),
                           children: List[OidAndChildren],
                           parentOidPath: String,
                           oppilaitostyyppi: Option[String],
