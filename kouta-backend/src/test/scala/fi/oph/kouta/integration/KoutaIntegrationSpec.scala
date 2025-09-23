@@ -267,7 +267,15 @@ trait DefaultKoodistoMocks extends KoodistoServiceMock {
     )
 
     mockKoodistoResponse("painotettavatoppiaineetlukiossa", Seq(("painotettavatoppiaineetlukiossa_b3pt",1,None), ("painotettavatoppiaineetlukiossa_b1lt",1,None)))
-    mockKoodistoResponse("kieli", Seq(("kieli_fi",1,None), ("kieli_sv",1,None)))
+    mockKoodistoResponse("kieli", Seq(
+      ("kieli_EN", 1, None),
+      ("kieli_DE", 1, None),
+      ("kieli_SV", 1, None),
+      ("kieli_FR", 1, None),
+      ("kieli_ES", 1, None),
+      ("kieli_FI", 1, None),
+      ("kieli_ET", 1, None)
+    ))
     mockKoodiUriVersionResponse("lukiopainotukset_1", 1)
   }
 
