@@ -3,7 +3,7 @@ package fi.oph.kouta.repository
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.service.{HakukohdeService, Pistetieto, ToteutusService}
+import fi.oph.kouta.service.{HakukohdeUtil, Pistetieto, ToteutusService}
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.timeStampToModified
 import org.json4s.jackson.Serialization.read
@@ -351,8 +351,8 @@ trait HakukohdeExtractors extends ExtractorBase {
   ))
 
   implicit val getHakukohdeListItemResult: GetResult[HakukohdeListItem] =
-    GetResult(r => {
-      val item = HakukohdeListItem(
+    GetResult(r =>
+      HakukohdeListItem(
         oid = HakukohdeOid(r.nextString()),
         toteutusOid = ToteutusOid(r.nextString()),
         hakuOid = HakuOid(r.nextString()),
@@ -366,10 +366,7 @@ trait HakukohdeExtractors extends ExtractorBase {
         modified = timeStampToModified(r.nextTimestamp()),
         toteutusMetadata = r.nextStringOption().map(read[ToteutusMetadata])
       )
-      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(item.nimi, item.toteutusMetadata)
-      item.copy(nimi = esitysnimi, toteutusMetadata = None)
-    }
-  )
+    )
 
   implicit val getHakukohdeAndRelatedForCopyingResult: GetResult[(Hakukohde, Toteutus, Liite, Valintakoe, HakukohdeHakuaika)] =
     GetResult(r => {
@@ -606,8 +603,7 @@ trait HakutietoExtractors extends ExtractorBase {
           kynnysehto = extractKielistetty(r.nextStringOption()),
           valintakoeIds = extractArray[UUID](r.nextObjectOption()))
 
-      val esitysnimi = HakukohdeService.generateHakukohdeEsitysnimi(ht.nimi, ht.toteutusMetadata)
-      (toteutusOid, hakuOid, ht.copy(nimi = esitysnimi, toteutusMetadata = None))
+      (toteutusOid, hakuOid, ht)
     })
 }
 

@@ -386,19 +386,9 @@ sealed trait ToteutusSQL extends ToteutusExtractors with ToteutusModificationSQL
              on conflict on constraint toteutusten_tarjoajat_pkey do nothing"""
   }
 
-  def deleteTarjoajat(oid: Option[ToteutusOid], exclude: List[OrganisaatioOid]): DBIO[Int] = {
-    sqlu"""delete from toteutusten_tarjoajat
-           where toteutus_oid = $oid and tarjoaja_oid not in (#${createOidInParams(exclude)})"""
-  }
-
   def deleteTarjoajatByOids(oid: Option[ToteutusOid], deletedOids: List[OrganisaatioOid]): DBIO[Int] = {
     sqlu"""delete from toteutusten_tarjoajat
            where toteutus_oid = $oid and tarjoaja_oid in (#${createOidInParams(deletedOids)})"""
-  }
-
-  def deleteTarjoajat(oid: Option[ToteutusOid]): DBIO[Int] = {
-    sqlu"""delete from toteutusten_tarjoajat
-           where toteutus_oid = $oid"""
   }
 
   val selectToteutusListSql =

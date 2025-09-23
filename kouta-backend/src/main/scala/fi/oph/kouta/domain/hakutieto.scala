@@ -234,4 +234,5 @@ case class HakutietoHakukohde(hakukohdeOid: HakukohdeOid,
                               modified: Option[Modified],
                               toteutusMetadata: Option[ToteutusMetadata] = None,
                               kynnysehto: Kielistetty = Map(),
-                              valintakoeIds: Seq[UUID] = Seq())
+                              valintakoeIds: Seq[UUID] = Seq(),
+                              _enrichedData: Option[HakukohdeEnrichedData] = None)

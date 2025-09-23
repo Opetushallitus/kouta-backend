@@ -1,6 +1,7 @@
 package fi.oph.kouta.integration
 
-import fi.oph.kouta.client.OrganisaatioServiceClient
+import fi.oph.kouta.client.{KoodistoClient, OrganisaatioServiceClient}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.servlet.{IndexerServlet, SearchServlet}
 
 import java.util.UUID
@@ -27,6 +28,7 @@ trait IndexerFixture
   this: KoutaIntegrationSpec =>
   val IndexerPath = "/indexer"
   override val mockOrganisaatioServiceClient = mock[OrganisaatioServiceClient]
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   override def beforeAll(): Unit = {
     super.beforeAll()
@@ -54,6 +56,8 @@ trait SearchFixture
     with HakukohdeFixture
     with ValintaperusteFixture {
   this: KoutaIntegrationSpec =>
+
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   val SearchPath = "/search"
 

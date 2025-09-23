@@ -2,18 +2,15 @@ package fi.oph.kouta.service
 
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, KoutaIndeksoijaClient, KoutaSearchClient, OppijanumerorekisteriClient}
+import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, OrganisaatioOid}
 import fi.oph.kouta.domain.searchResults.ValintaperusteSearchResult
-import fi.oph.kouta.domain._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeValintaperuste}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ValintaperusteDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
-import fi.oph.kouta.validation.{IsValid, NoErrors}
-import slick.dbio.DBIO
 
 import java.time.Instant
 import java.util.UUID
@@ -27,7 +24,8 @@ object ValintaperusteService
       OppijanumerorekisteriClient,
       KayttooikeusClient,
       ValintaperusteServiceValidation,
-      KoutaIndeksoijaClient
+      KoutaIndeksoijaClient,
+      HakukohdeUtil
     )
 
 class ValintaperusteService(
@@ -37,7 +35,8 @@ class ValintaperusteService(
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
     kayttooikeusClient: KayttooikeusClient,
     valintaperusteServiceValidation: ValintaperusteServiceValidation,
-    koutaIndeksoijaClient: KoutaIndeksoijaClient
+    koutaIndeksoijaClient: KoutaIndeksoijaClient,
+    hakukohdeUtil: HakukohdeUtil
 ) extends RoleEntityAuthorizationService[Valintaperuste] {
 
   override val roleEntity: RoleEntity = Role.Valintaperuste
@@ -148,7 +147,7 @@ class ValintaperusteService(
       authenticated: Authenticated
   ): Seq[HakukohdeListItem] =
     withRootAccess(Role.Hakukohde.readRoles) {
-      HakukohdeDAO.listByValintaperusteId(valintaperusteId, tilaFilter)
+      hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByValintaperusteId(valintaperusteId, tilaFilter))
     }
 
   def search(organisaatioOid: OrganisaatioOid, params: SearchParams)(implicit
