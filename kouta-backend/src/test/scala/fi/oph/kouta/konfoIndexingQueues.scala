@@ -1,7 +1,5 @@
 package fi.oph.kouta
 
-import cloud.localstack.Localstack.{INSTANCE => localstack}
-import cloud.localstack.docker.annotation.LocalstackDockerConfiguration
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.regions.Regions
@@ -14,7 +12,9 @@ import org.scalatest.enablers.Retrying
 import org.scalatest.time.SpanSugar._
 import org.scalatest.time.{Nanoseconds, Span}
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
-
+import org.testcontainers.containers.localstack.LocalStackContainer
+import org.testcontainers.containers.localstack.LocalStackContainer.Service
+import org.testcontainers.utility.DockerImageName
 import scala.annotation.tailrec
 import scala.collection.JavaConverters._
 import scala.util.Try
@@ -22,18 +22,8 @@ import scala.util.Try
 trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
   this: Suite =>
 
-  def dockerConfig: LocalstackDockerConfiguration = {
-    LocalstackDockerConfiguration.builder()
-      .environmentVariables(Map(
-        "SKIP_SSL_CERT_DOWNLOAD" -> "1",
-        "SKIP_INFRA_DOWNLOADS" -> "1",
-        "DISABLE_EVENTS" -> "1"
-      ).asJava)
-      .randomizePorts(false)
-      .pullNewImage(false)
-      .imageTag("1.0.4")
-      .build()
-  }
+  val localstackImage: DockerImageName = DockerImageName.parse("localstack/localstack:3.5.0")
+  val localstack: LocalStackContainer = new LocalStackContainer(localstackImage).withServices(Service.SQS)
 
   private val queueNames: Seq[String] = Seq("koutaIndeksoijaPriority")
   lazy val indexingQueue: String = getQueue("koutaIndeksoijaPriority")
@@ -47,7 +37,7 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
 
   override def beforeAll(): Unit = {
     super.beforeAll()
-    localstack.startup(dockerConfig)
+    localstack.start()
     createAndVerifyQueues() // so if test creates data in beforeAll block we don't get errors from them
   }
 
@@ -67,7 +57,7 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
       case e: Exception if retry > 0 =>
         // Localstack seems to be little bit unreliable and sometimes get Bad Gateway error, restart instance
         localstack.stop()
-        localstack.startup(dockerConfig)
+        localstack.start()
 
         createAndVerifyQueues(retry - 1)
       case e: Exception => throw new Exception(s"Failed to create test queues. ${e.getMessage}")
