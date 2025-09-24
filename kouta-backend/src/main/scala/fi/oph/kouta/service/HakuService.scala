@@ -13,19 +13,16 @@ import fi.oph.kouta.repository._
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.{MiscUtils, NameHelper, ServiceUtils}
-import fi.oph.kouta.validation.CrudOperations.CrudOperation
-import fi.oph.kouta.validation.{IsValid, NoErrors}
-import fi.oph.kouta.validation.Validations.{assertTrue, integrityViolationMsg, validateIfTrue, validateStateChange}
 import slick.dbio.DBIO
 
-import java.time.{Instant, LocalDateTime}
 import java.time.temporal.ChronoUnit
+import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
-object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient, HakukohdeService)
+object HakuService extends HakuService(SqsInTransactionService, AuditLog, OhjausparametritClient, OrganisaatioServiceImpl, OppijanumerorekisteriClient, KayttooikeusClient, HakuServiceValidation, KoutaIndeksoijaClient, HakukohdeUtil)
 
-  class HakuService(sqsInTransactionService: SqsInTransactionService,
+class HakuService(sqsInTransactionService: SqsInTransactionService,
                   auditLog: AuditLog,
                   ohjausparametritClient: OhjausparametritClient,
                   val organisaatioService: OrganisaatioService,
@@ -33,7 +30,7 @@ object HakuService extends HakuService(SqsInTransactionService, AuditLog, Ohjaus
                   kayttooikeusClient: KayttooikeusClient,
                   hakuServiceValidation: HakuServiceValidation,
                   koutaIndeksoijaClient: KoutaIndeksoijaClient,
-                  hakukohdeService: HakukohdeService
+                  hakukohdeUtil: HakukohdeUtil
                  )
   extends RoleEntityAuthorizationService[Haku] {
 
@@ -127,27 +124,12 @@ object HakuService extends HakuService(SqsInTransactionService, AuditLog, Ohjaus
     }
   }
 
-  private def enrichHakukohteet(hakukohteet: Seq[HakukohdeListItem]): Seq[HakukohdeListItem]= {
-    hakukohteet.map { hakukohde =>
-      val hakukohdeEnrichedData: HakukohdeEnrichedData = hakukohdeService.enrichHakukohde(hakukohde.muokkaaja, hakukohde.nimi, hakukohde.toteutusOid, hakukohde.hakukohdeKoodiUri)
-      hakukohde.copy(nimi = hakukohdeEnrichedData.esitysnimi)
-    }
-  }
-
   def list(organisaatioOid: OrganisaatioOid, tilaFilter: TilaFilter, yhteishaut: Boolean)(implicit authenticated: Authenticated): Seq[HakuListItem] =
     withAuthorizedOrganizationOidsAndRelevantKoulutustyyppis(organisaatioOid, readRules)(
       oidsAndTyypit => HakuDAO.listByAllowedOrganisaatiot(oidsAndTyypit._1, tilaFilter, getYhteishakuFilter(yhteishaut, oidsAndTyypit._2)))
 
   def listHakukohteet(hakuOid: HakuOid, tilaFilter: TilaFilter)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] =
-    withRootAccess(indexerRoles)(enrichHakukohteet(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
-
-  def listHakukohteet(hakuOid: HakuOid, organisaatioOid: OrganisaatioOid)(implicit authenticated: Authenticated): Seq[HakukohdeListItem] = {
-    val hakukohteet = withAuthorizedChildOrganizationOids(organisaatioOid, Role.Hakukohde.readRoles) {
-      case Seq(RootOrganisaatioOid) => HakukohdeDAO.listByHakuOid(hakuOid, TilaFilter.onlyOlemassaolevat())
-      case x => HakukohdeDAO.listByHakuOidAndAllowedOrganisaatiot(hakuOid, x)
-    }
-    enrichHakukohteet(hakukohteet)
-  }
+    withRootAccess(indexerRoles)(hakukohdeUtil.enrichHakukohteet(HakukohdeDAO.listByHakuOid(hakuOid, tilaFilter)))
 
   def listKoulutukset(hakuOid: HakuOid)(implicit authenticated: Authenticated): Seq[KoulutusListItem] =
     withRootAccess(indexerRoles)(KoulutusDAO.listByHakuOid(hakuOid))

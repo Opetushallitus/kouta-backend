@@ -2,13 +2,13 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData.{LukioHakukohteenLinja, LukioKoulutus}
 import fi.oph.kouta.TestOids.OphOid
-import fi.oph.kouta.client.{JononAlimmatPisteet, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
+import fi.oph.kouta.client.{JononAlimmatPisteet, KoodistoClient, ValintaTulosServiceClient, ValintaperusteetServiceClient, ValintatapajonoDTO}
 import fi.oph.kouta.domain.{Aloituspaikat, Julkaistu}
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, ValintaperusteFixture}
-import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockHakemusPalveluClient, SpecWithMocks}
+import fi.oph.kouta.mocks.{LokalisointiServiceMock, SpecWithMocks}
 import fi.oph.kouta.security.{Authority, CasSession, ServiceTicket}
-import fi.oph.kouta.service.PistehistoriaService
+import fi.oph.kouta.service.{KoodistoService, PistehistoriaService}
 import fi.oph.kouta.servlet.Authenticated
 import slick.jdbc.PostgresProfile.api._
 
@@ -27,6 +27,7 @@ class PistehistoriaServiceSpec
   var pistehistoriaService: PistehistoriaService                           = _
   val mockValintaTulosServiceClient: MockValintaTulosServiceClient2        = new MockValintaTulosServiceClient2()
   val mockValintaperusteetServiceClient: MockValintaperusteetServiceClient = new MockValintaperusteetServiceClient()
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   val authenticatedPaakayttaja = Authenticated(
     UUID.randomUUID().toString,
