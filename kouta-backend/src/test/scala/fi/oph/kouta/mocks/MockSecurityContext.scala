@@ -34,7 +34,7 @@ class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, 
     httpClient,
     casSessionFetcher
   ) {
-    override def validateServiceTicketWithVirkailijaUsername(service: String, ticket: String): CompletableFuture[UserDetails] = {
+    override def validateServiceTicketWithVirkailijaUserDetails(service: String, ticket: String): CompletableFuture[UserDetails] = {
       println(s"TEST: $service | $ticket | ${MockSecurityContext.ticketPrefix(service)}")
       if (ticket.startsWith(MockSecurityContext.ticketPrefix(service))) {
         val username = ticket.stripPrefix(MockSecurityContext.ticketPrefix(service))
