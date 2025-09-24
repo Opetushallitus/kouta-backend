@@ -168,6 +168,14 @@ package object toteutus {
       |           format: date-time
       |           description: Toteutuksen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        koulutuksetKoodiUri:
+      |          type: array
+      |          description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
+      |          items:
+      |            type: string
+      |          example:
+      |            - koulutus_371101#1
+      |            - koulutus_201001#1
       |""".stripMargin
 
   val ToteutusListItemModel =
