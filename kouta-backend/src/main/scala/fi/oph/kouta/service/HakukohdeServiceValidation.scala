@@ -480,9 +480,18 @@ class HakukohdeServiceValidation(
       hakukohde: Hakukohde,
       isOphPaakayttaja: Boolean,
       crudOperation: CrudOperation,
-      hakukohdeDiffResolver: HakukohdeDiffResolver
+      hakukohdeDiffResolver: HakukohdeDiffResolver,
   ) = {
-    val dependencyInfo = hakukohdeDAO.getDependencyInformation(hakukohde)
+
+    // Järjestyspaikkaa vastaavan oppilaitoksen oid. Urheilijan ammatillisen koulutuksen järjestäminen pitää katsoa myös
+    // oppilaitos-tasolta. Tämä täytyy noutaa organisaatiohierarkiasta, koska järjestyspaikka voi olla toimipiste,
+    // jota ei ole tallennettu koutaan.
+    val jarjestyspaikkaOppilaitosOid = organisaatioService
+                                        .findMatchingOppilaitosBranches(hakukohde.jarjestyspaikkaOid.toList)
+                                        .map(_.oid)
+                                        .headOption
+
+    val dependencyInfo = hakukohdeDAO.getDependencyInformation(hakukohde, jarjestyspaikkaOppilaitosOid)
 
     val haku = hakuDAO.get(hakukohde.hakuOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
 
@@ -493,6 +502,7 @@ class HakukohdeServiceValidation(
     val koulutuksetKoodiUri = dependencyInfo.map(_.toteutus.koulutusKoodiUrit).getOrElse(Seq())
     val tarjoajat           = dependencyInfo.map(_.toteutus.tarjoajat).getOrElse(Seq())
     val vCtx                = ValidationContext(hakukohde.tila, hakukohde.kielivalinta, crudOperation)
+
     val osaamisalaKoodit: Seq[String] = dependencyInfo
       .flatMap(_.toteutus.metadata)
       .filter(_.isInstanceOf[AmmatillinenToteutusMetadata])
@@ -538,7 +548,7 @@ class HakukohdeServiceValidation(
           jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.contains(true) || !hakukohdeDiffResolver
             .jarjestaaUrheilijanAmmatillistakoulutustaChanged(),
           "metadata.jarjestaaUrheilijanAmmKoulutusta",
-          invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
+          invalidJarjestyspaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
             jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.getOrElse(false)
           )
         )

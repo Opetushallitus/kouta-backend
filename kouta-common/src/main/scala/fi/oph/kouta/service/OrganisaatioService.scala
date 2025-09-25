@@ -14,6 +14,23 @@ trait OrganisaatioService {
 
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
+  private def findMatchingTopLevelOrgs(pred: OidAndChildren => Boolean, orgs: Seq[OidAndChildren]): Seq[OidAndChildren] = {
+    orgs.flatMap(
+      org => {
+        if (pred(org)) Some(org)
+        else if (org.children.nonEmpty) findMatchingTopLevelOrgs(pred, org.children)
+        else None
+      }
+    )
+  }
+
+  def findMatchingOppilaitosBranches(organisaatioOids: Seq[OrganisaatioOid]): List[OidAndChildren] = {
+    if (organisaatioOids.isEmpty) List()
+    else findMatchingTopLevelOrgs(
+      org => !org.isPassiivinen && org.isOppilaitos && find(o => organisaatioOids.contains(o.oid), Set(org)).isDefined,
+      cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot).toList
+  }
+
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
     case _                   => children(getPartialHierarkia(oid, lakkautetut))
@@ -62,6 +79,7 @@ trait OrganisaatioService {
     Try[OidAndChildren] {
       OidAndChildren(
         RootOrganisaatioOid,
+        Map("fi" -> "Opetushallitus"),
         cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot,
         RootOrganisaatioOid.s,
         None,
@@ -95,10 +113,10 @@ trait OrganisaatioService {
       .getOrElse(Seq())
   }
   private def oppilaitostyypitToKoulutustyypit(oppilaitostyypit: Seq[String]) =
-    oppilaitostyypit.map(Koulutustyyppi.fromOppilaitostyyppi).flatten.distinct
+    oppilaitostyypit.flatMap(Koulutustyyppi.fromOppilaitostyyppi).distinct
 
   @tailrec
-  private def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
+  protected final def find(pred: OidAndChildren => Boolean, level: Set[OidAndChildren]): Option[OidAndChildren] =
     level.find(pred) match {
       case None if level.isEmpty => None
       case Some(c)               => Some(c)

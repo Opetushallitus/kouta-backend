@@ -1,12 +1,12 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus, MinHakukohde}
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, JulkaistuOppilaitos, Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus, MinHakukohde}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, KoulutusFixture, ValintaperusteFixture}
+import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, KoulutusFixture, OppilaitosFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
@@ -22,7 +22,8 @@ class HakukohdeSpec
     with KoulutusFixture
     with HakuFixture
     with ValintaperusteFixture
-    with LokalisointiServiceMock {
+    with LokalisointiServiceMock
+    with OppilaitosFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
 
@@ -140,6 +141,28 @@ class HakukohdeSpec
       400,
       "jarjestyspaikkaOid",
       missingMsg
+    )
+  }
+
+  it should "fail to store hakukohde with jarjestaaUrheilijanAmmKoulutusta when jarjestyspaikka doesn't allow it" in {
+    put(
+      HakukohdePath,
+      withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(
+      metadata = JulkaistuHakukohde.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true))))),
+      400,
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      invalidJarjestyspaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(false)
+    )
+  }
+
+  it should "succeed in storing hakukohde with jarjestaaUrheilijanAmmKoulutusta when jarjestyspaikka parent oppilaitos allows it" in {
+    val oppilaitosOid = ChildOid
+    put(JulkaistuOppilaitos.copy(oid = oppilaitosOid, metadata = JulkaistuOppilaitos.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), ophSession)
+
+    put(
+      withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(
+        jarjestyspaikkaOid = Some(GrandChildOid),
+        metadata = JulkaistuHakukohde.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true))))),
     )
   }
 

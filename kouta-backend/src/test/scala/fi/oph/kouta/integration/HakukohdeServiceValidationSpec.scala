@@ -2,7 +2,7 @@ package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids.{ChildOid, GrandChildOid, OphOid, OtherOid, ParentOid, UnknownOid}
-import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient}
+import fi.oph.kouta.client.{HakemusPalveluClient, HakukohdeInfo, KoodistoElement, LokalisointiClient, OidAndChildren}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid}
 import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO}
@@ -135,8 +135,10 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     None
   )
 
+
   def initMockSeq(hakukohde: Hakukohde): Hakukohde = {
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(Some(dependencies))
+    when(organisaatioService.findMatchingOppilaitosBranches(hakukohde.jarjestyspaikkaOid.toList)).thenAnswer(List.empty[OidAndChildren])
+    when(hakukohdeDao.getDependencyInformation(hakukohde, None)).thenAnswer(Some(dependencies))
     hakukohde
   }
 
@@ -145,7 +147,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       toteutusMetadata: ToteutusMetadata,
       koulutusKoodiUrit: Seq[String] = Seq()
   ): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+    when(hakukohdeDao.getDependencyInformation(hakukohde, None)).thenAnswer(
       Some(
         HakukohdeDependencyInformation(
           HakukohdeToteutusDependencyInfo(
@@ -171,7 +173,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
 
   private def initMockDepsWithToteutusOidAndTila(hakukohde: Hakukohde, toteutusOid: String, tila: Julkaisutila): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+    when(hakukohdeDao.getDependencyInformation(hakukohde, None)).thenAnswer(
       Some(
         dependencies.copy(toteutus =
           HakukohdeToteutusDependencyInfo(
@@ -193,7 +195,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       tila: Julkaisutila,
       koulutustyyppi: Koulutustyyppi = Amm
   ): Unit =
-    when(hakukohdeDao.getDependencyInformation(hakukohde)).thenAnswer(
+    when(hakukohdeDao.getDependencyInformation(hakukohde, None)).thenAnswer(
       Some(
         dependencies.copy(valintaperuste =
           Some(
@@ -247,8 +249,8 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
     when(koodistoService.getKaannokset("failure")).thenAnswer(Left(new RuntimeException()))
 
-    when(hakukohdeDao.getDependencyInformation(max)).thenAnswer(Some(dependencies))
-    when(hakukohdeDao.getDependencyInformation(min)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
+    when(hakukohdeDao.getDependencyInformation(max, None)).thenAnswer(Some(dependencies))
+    when(hakukohdeDao.getDependencyInformation(min, None)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
     when(hakuDao.get(HakuOid("1.2.246.562.29.123"), TilaFilter.onlyOlemassaolevat()))
       .thenAnswer(Some((haku, ZonedDateTime.now().toInstant)))
     when(hakuDao.get(yhteisHakuHakuOid, TilaFilter.onlyOlemassaolevat()))
@@ -303,14 +305,24 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     }
 
   "Hakukohde validation" should "succeed when new valid hakukohde" in {
-    passesValidation(max)
+    passesValidation(initMockSeq(max))
   }
 
   it should "succeed when new incomplete luonnos" in {
-    passesValidation(min)
+    passesValidation(initMockSeq(min))
   }
 
-  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta when orgganisaatio is allowed" in {
+  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta when organisaatio is allowed" in {
+    passesValidation(
+      initMockSeq(
+        max.copy(
+          metadata = Some(maxMetadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))
+        )
+      )
+    )
+  }
+
+  it should "succeed when new amm-hakukohde with jarjestaaUrheilijanAmmKoulutusta when järjestyspaikka parent oppilaitos is allowed" in {
     passesValidation(
       initMockSeq(
         max.copy(
@@ -330,21 +342,21 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       )
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     failsValidation(
       lkHakukohde,
       Seq(
         ValidationError(
           "metadata.jarjestaaUrheilijanAmmKoulutusta",
           ErrorMessage(
-            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
+            "Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on lk",
             "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
           )
         ),
         ValidationError(
           "metadata.jarjestaaUrheilijanAmmKoulutusta",
           ErrorMessage(
-            "Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on false",
+            "Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheilijan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on false",
             "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
           )
         )
@@ -438,7 +450,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       nimi = Map(Fi -> "Lukion yleislinja", Sv -> "Gymnasium allmän linje"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
@@ -449,7 +461,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))))
       )
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
@@ -462,7 +474,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       )
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
@@ -502,7 +514,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja))),
       toinenAsteOnkoKaksoistutkinto = Some(true)
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde)
   }
 
@@ -644,7 +656,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       nimi = Map(Fi -> "Nimi fi", Sv -> "Nimi sv"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     passesValidation(lkHakukohde, Some(lkHakukohde))
   }
 
@@ -939,7 +951,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
 
   it should "fail when valintakokeentyyppi is not found due to relation" in {
     val copyWithDifferentKoe = max.copy(valintakokeet = List(Valintakoe1.copy(tyyppiKoodiUri = Some("valintakokeentyyppi_8#1"))))
-    when(hakukohdeDao.getDependencyInformation(copyWithDifferentKoe)).thenAnswer(Some(dependencies))
+    when(hakukohdeDao.getDependencyInformation(copyWithDifferentKoe, None)).thenAnswer(Some(dependencies))
     failsValidation(
       copyWithDifferentKoe,
       "valintakokeet",
@@ -1036,7 +1048,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       valintaperusteId = None,
       metadata = Some(maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
     )
-    when(hakukohdeDao.getDependencyInformation(hk)).thenAnswer(None)
+    when(hakukohdeDao.getDependencyInformation(hk, None)).thenAnswer(None)
     failsValidation(hk, "toteutusOid", nonExistent("Toteutusta", hk.toteutusOid))
   }
 
@@ -1075,7 +1087,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       valintaperusteId = Some(valintaperusteId2),
       metadata = Some(maxMetadata.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
     )
-    when(hakukohdeDao.getDependencyInformation(hk)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
+    when(hakukohdeDao.getDependencyInformation(hk, None)).thenAnswer(Some(dependencies.copy(valintaperuste = None)))
     failsValidation(hk, "valintaperusteId", nonExistent("Valintaperustetta", valintaperusteId2))
   }
 
@@ -1405,7 +1417,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       nimi = Map(Fi -> "nimi", Sv -> "nimi sv"),
       metadata = Some(maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja)))
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     failsValidation(
       lkHakukohde,
       Seq(
@@ -1422,7 +1434,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         maxMetadata.copy(hakukohteenLinja = Some(LukioHakukohteenLinja.copy(linja = Some("lukiopainotukset_1#1"))))
       )
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     failsValidation(
       lkHakukohde,
       Seq(
@@ -1441,7 +1453,7 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
         )
       )
     )
-    when(hakukohdeDao.getDependencyInformation(lkHakukohde)).thenAnswer(Some(lukioDependencies))
+    when(hakukohdeDao.getDependencyInformation(lkHakukohde, None)).thenAnswer(Some(lukioDependencies))
     failsValidation(
       lkHakukohde,
       Seq(

@@ -1,6 +1,6 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OrganisaatioServiceClient}
+import fi.oph.kouta.client.{CachedOrganisaatioHierarkiaClient, CallerId, OidAndChildren, OrganisaatioServiceClient}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid}
 import fi.oph.kouta.domain.{Organisaatio, OrganisaatioHierarkia, OrganisaatioServiceOrg, oppilaitostyypitForAvoinKorkeakoulutus}
@@ -22,8 +22,16 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
         urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", RootOrganisaatioOid.s)
     }
 
-  def getOrganisaatioHierarkiaWithOids(oids: List[OrganisaatioOid]): OrganisaatioHierarkia =
-    organisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(oids)
+  /**
+   * Etsii organisaatio-listasta ne oppilaitos-haarat, jotka sisältävät jonkin annetuista oideista (oppilaitos tai toimipiste).
+   * @param oids Lista organisaatio-oideja (oppilaitos tai toimipiste), joiden perusteella etsitään oppilaitos-haaroja
+   * @return Organisaatiohierarkia, jossa löydetyt ylätason oppilaitos-haarat
+   */
+  def getOppilaitosOrganisaatioBranches(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
+    val oppilaitokset = findMatchingOppilaitosBranches(oids)
+      .map(org => OrganisaatioServiceUtil.oidAndChildrenToOrganisaatio(org))
+    OrganisaatioHierarkia(organisaatiot = oppilaitokset)
+  }
 
   def getOrganisaatio(organisaatioOid: OrganisaatioOid): Either[Throwable, OrganisaatioServiceOrg] = {
     Try[OrganisaatioServiceOrg] {

@@ -1,5 +1,6 @@
 package fi.oph.kouta.util
 
+import fi.oph.kouta.client.OidAndChildren
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 
@@ -127,6 +128,29 @@ object OrganisaatioServiceUtil {
       oppilaitostyyppiUri = getOppilaitostyyppiUri(organisaatio),
       kieletUris = organisaatio.kieletUris,
       organisaatiotyyppiUris = getOrganisaatiotyyppiUris(organisaatio)
+    )
+  }
+
+  def oidAndChildrenToOrganisaatio(oidAndChildren: OidAndChildren): Organisaatio = {
+    val parentOids = getParentOids(oidAndChildren.parentOidPath)
+    Organisaatio(
+      oid = oidAndChildren.oid.toString,
+      parentOid = parentOids.lastOption,
+      parentOids = parentOids,
+      nimi = oidAndChildren.nimi.map{ case (k, nimi) =>
+       k match {
+         case "fi" => (Fi, nimi)
+         case "sv" => (Sv, nimi)
+         case "en" => (En, nimi)
+         case _ => throw new IllegalArgumentException(s"Unknown language code: $k")
+       }},
+      kieletUris = List(),
+      yhteystiedot = None,
+      status = oidAndChildren.status,
+      kotipaikkaUri = None,
+      children = Option(oidAndChildren.children.map(oidAndChildrenToOrganisaatio)),
+      oppilaitostyyppiUri = oidAndChildren.oppilaitostyyppi.map(MiscUtils.withoutKoodiVersion),
+      organisaatiotyyppiUris = Option(oidAndChildren.organisaatiotyypit.map(MiscUtils.withoutKoodiVersion))
     )
   }
 }
