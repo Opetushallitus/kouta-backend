@@ -104,7 +104,6 @@
         <dependency>
             <groupId>com.github.blemale</groupId>
             <artifactId>scaffeine_2.12</artifactId>
-            <version>5.2.1</version>
         </dependency>
 
         <!-- Test dependencies -->
