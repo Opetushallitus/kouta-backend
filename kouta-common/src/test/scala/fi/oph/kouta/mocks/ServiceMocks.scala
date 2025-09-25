@@ -25,7 +25,7 @@ abstract class ServiceMocker extends Logging {
 
   def startServiceMocking(port: Int): Unit = {
     val config = wireMockConfig()
-      .port(8099)
+      .port(port)
     mockServer = Some(new WireMockServer(config))
     mockServer.foreach(_.start())
     mockPort = mockServer.get.port()
