@@ -16,5 +16,6 @@
             <AppenderRef ref="AUDIT"/>
         </Logger>
         <Logger name="com.amazonaws.http" level="INFO"/>
+        <Logger name="org.wiremock" level="WARN"/>
     </Loggers>
 </Configuration>
