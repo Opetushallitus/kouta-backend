@@ -1,13 +1,16 @@
 package fi.oph.kouta.ovara
 
-import com.zaxxer.hikari.HikariConfig
-import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.oph.kouta.domain.siirtotiedosto.{SiirtotiedostoDateTimeFormat, Siirtotiedosto, SiirtotiedostoCounts, SiirtotiedostoInfo}
-import fi.oph.kouta.repository.{KoutaDatabaseAccessor, SimpleDatabaseAccessor}
+import fi.oph.kouta.domain.siirtotiedosto.{
+  Siirtotiedosto,
+  SiirtotiedostoCounts,
+  SiirtotiedostoDateTimeFormat,
+  SiirtotiedostoInfo
+}
+import fi.oph.kouta.logging.Logging
+import fi.oph.kouta.repository.SimpleDatabaseAccessor
 import fi.oph.kouta.service.SiirtotiedostoRaportointiService
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.oph.kouta.logging.Logging
 import org.json4s.jackson.Serialization.writePretty
 
 import java.time.LocalDateTime
