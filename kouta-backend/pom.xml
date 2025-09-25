@@ -63,6 +63,15 @@
             <artifactId>jsoup</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sqs</artifactId>
+        </dependency>
 
         <!-- Utility dependencies -->
         <dependency>
@@ -183,31 +192,6 @@
             <version>${jdbc.version}</version>
         </dependency>
 
-        <!-- Indexing queues -->
-        <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-sqs_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- Scheduler -->
         <dependency>
             <groupId>com.github.kagkarlsson</groupId>
@@ -222,26 +206,6 @@
                 <exclusion>
                     <groupId>io.netty</groupId>
                     <artifactId>netty-resolver</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-s3_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
