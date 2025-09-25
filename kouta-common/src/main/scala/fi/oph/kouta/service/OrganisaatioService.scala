@@ -14,6 +14,23 @@ trait OrganisaatioService {
 
   protected def cachedOrganisaatioHierarkiaClient: CachedOrganisaatioHierarkiaClient
 
+  private def findMatchingTopLevelOrgs(pred: OidAndChildren => Boolean, orgs: Seq[OidAndChildren]): Seq[OidAndChildren] = {
+    orgs.flatMap(
+      org => {
+        if (pred(org)) Some(org)
+        else if (org.children.nonEmpty) findMatchingTopLevelOrgs(pred, org.children)
+        else None
+      }
+    )
+  }
+
+  def findMatchingOppilaitosBranches(organisaatioOids: Seq[OrganisaatioOid]): List[OidAndChildren] = {
+    if (organisaatioOids.isEmpty) List()
+    else findMatchingTopLevelOrgs(
+      org => !org.isPassiivinen && org.isOppilaitos && find(o => organisaatioOids.contains(o.oid), Set(org)).isDefined,
+      cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached().organisaatiot).toList
+  }
+
   def getAllChildOidsFlat(oid: OrganisaatioOid, lakkautetut: Boolean = false): Seq[OrganisaatioOid] = oid match {
     case RootOrganisaatioOid => Seq(RootOrganisaatioOid)
     case _                   => children(getPartialHierarkia(oid, lakkautetut))

@@ -22,32 +22,14 @@ class OrganisaatioServiceImpl(urlProperties: OphProperties, organisaatioServiceC
         urlProperties.url("organisaatio-service.organisaatio.oid.jalkelaiset", RootOrganisaatioOid.s)
     }
 
-  private def findMatchingTopLevelOrgs(pred: OidAndChildren => Boolean, orgs: List[OidAndChildren]): List[OidAndChildren] = {
-    orgs.flatMap(
-      org => {
-        if (pred(org)) Some(org)
-        else if (org.children.nonEmpty) findMatchingTopLevelOrgs(pred, org.children)
-        else None
-      }
-    )
-  }
-
   /**
    * Etsii organisaatio-listasta ne oppilaitos-haarat, jotka sisältävät jonkin annetuista oideista (oppilaitos tai toimipiste).
    * @param oids Lista organisaatio-oideja (oppilaitos tai toimipiste), joiden perusteella etsitään oppilaitos-haaroja
    * @return Organisaatiohierarkia, jossa löydetyt ylätason oppilaitos-haarat
    */
   def getOppilaitosOrganisaatioBranches(oids: List[OrganisaatioOid]): OrganisaatioHierarkia = {
-    val hierarkia = cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached()
-
-    val oppilaitokset = findMatchingTopLevelOrgs(o => !o.isPassiivinen && o.isOppilaitos, hierarkia.organisaatiot)
-      .flatMap(org =>
-        if (find(o => oids.contains(o.oid), Set(org)).isDefined) {
-          Some(OrganisaatioServiceUtil.oidAndChildrenToOrganisaatio(org))
-        } else {
-          None
-        }
-      )
+    val oppilaitokset = findMatchingOppilaitosBranches(oids)
+      .map(org => OrganisaatioServiceUtil.oidAndChildrenToOrganisaatio(org))
     OrganisaatioHierarkia(organisaatiot = oppilaitokset)
   }
 
