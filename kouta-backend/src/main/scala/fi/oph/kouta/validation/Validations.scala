@@ -389,14 +389,14 @@ object Validations {
       koulutustyyppi: Option[Koulutustyyppi]
   ): ErrorMessage = ErrorMessage(
     msg =
-      s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on ${koulutustyyppi.getOrElse("").toString}",
+      s"Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos koulutuksen koulutustyyppi on Amm. Hakukohteen koulutustyyppi on ${koulutustyyppi.getOrElse("").toString}",
     id = "invalidKoulutustyyppiForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
-  def invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
+  def invalidJarjestyspaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(
       jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta: Boolean
   ): ErrorMessage = ErrorMessage(
     msg =
-      s"Hakukohde saa järjestää ammatillista urheiljan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheiljan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
+      s"Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheilijan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
     id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
