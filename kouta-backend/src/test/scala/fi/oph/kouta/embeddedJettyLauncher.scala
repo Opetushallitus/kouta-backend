@@ -1,15 +1,19 @@
 package fi.oph.kouta
 
-import com.amazonaws.services.sqs.AmazonSQSClient
 import fi.oph.kouta.TestOids.OphOid
 import fi.oph.kouta.config.KoutaConfigurationFactory.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.indexing.SqsService
+import fi.oph.kouta.indexing.SqsService.sqsClient
 import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
 import fi.oph.kouta.util.CommandLine
 import fi.oph.kouta.logging.Logging
-import io.atlassian.aws.sqs.SQSClient
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.SqsClient
 
+import java.net.URI
 import java.util.UUID
 import scala.util.Try
 
@@ -46,10 +50,20 @@ object TestSetups extends Logging {
     logSqsQueues()
   }
   def logSqsQueues(): Unit = {
-    val config                     = KoutaConfigurationFactory.configuration.indexingConfiguration
-    val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
     import scala.collection.JavaConverters._
-    val queues = sqsClient.listQueues().getQueueUrls.asScala
+
+    val config = KoutaConfigurationFactory.configuration.indexingConfiguration
+
+    val credentials = AwsBasicCredentials.create("test", "test")
+    val staticCredentialsProvider = StaticCredentialsProvider.create(credentials)
+    SqsService.sqsClient = SqsClient
+      .builder()
+      .credentialsProvider(staticCredentialsProvider)
+      .region(Region.EU_WEST_1)
+      .endpointOverride(new URI(config.endpoint.get))
+      .build()
+
+    val queues = sqsClient.listQueues().queueUrls().asScala
     logger.info(s"Found ${queues.size} SQS queues:")
     queues.foreach(queueUrl => logger.info(queueUrl))
   }
