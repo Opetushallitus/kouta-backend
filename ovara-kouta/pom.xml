@@ -27,38 +27,6 @@
             <artifactId>dokumenttipalvelu</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-s3_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
             <groupId>fi.oph.kouta</groupId>
             <artifactId>kouta-backend</artifactId>
             <version>${project.version}</version>
@@ -70,14 +38,6 @@
                 <exclusion>
                     <groupId>fi.vm.sade.java-utils</groupId>
                     <artifactId>java-http</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.atlassian.aws-scala</groupId>
-                    <artifactId>aws-scala-sqs_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.atlassian.aws-scala</groupId>
-                    <artifactId>aws-scala-s3_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

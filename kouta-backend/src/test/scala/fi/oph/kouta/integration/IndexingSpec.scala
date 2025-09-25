@@ -1,8 +1,12 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.domain._
+import fi.oph.kouta.indexing.SqsService
 import fi.oph.kouta.integration.fixture.IndexingFixture
 import fi.oph.kouta.{EventuallyMessages, KonfoIndexingQueues, TestData}
+import software.amazon.awssdk.auth.credentials.{AwsBasicCredentials, StaticCredentialsProvider}
+import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.SqsClient
 
 import java.util.UUID
 
@@ -15,6 +19,17 @@ class IndexingSpec extends KoutaIntegrationSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    val localstackEndpoint = localstack.getEndpoint
+
+    val credentials = AwsBasicCredentials.create("test", "test")
+    val staticCredentialsProvider = StaticCredentialsProvider.create(credentials)
+    SqsService.sqsClient = SqsClient
+      .builder()
+      .credentialsProvider(staticCredentialsProvider)
+      .region(Region.EU_WEST_1)
+      .endpointOverride(localstackEndpoint)
+      .build()
+
     koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid))
     hakuOid = put(haku)
