@@ -7,14 +7,14 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.6.1-SNAPSHOT</version>
+        <version>7.6.2-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>7.6.1-SNAPSHOT</version>
+    <version>7.6.2-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.23.1-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.23.2-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -288,9 +288,8 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.mock-server</groupId>
-            <artifactId>mockserver-netty</artifactId>
-            <version>5.5.1</version>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock-standalone</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

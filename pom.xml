@@ -7,7 +7,7 @@
     <groupId>fi.oph.kouta</groupId>
     <artifactId>kouta-backend-parent</artifactId>
     <packaging>pom</packaging>
-    <version>7.6.1-SNAPSHOT</version>
+    <version>7.6.2-SNAPSHOT</version>
     <name>kouta-backend-parent</name>
 
     <modules>
@@ -402,9 +402,9 @@
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.mock-server</groupId>
-                <artifactId>mockserver-netty</artifactId>
-                <version>5.5.1</version>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock-standalone</artifactId>
+                <version>3.13.1</version>
             </dependency>
             <dependency>
                 <groupId>org.scala-lang</groupId>
