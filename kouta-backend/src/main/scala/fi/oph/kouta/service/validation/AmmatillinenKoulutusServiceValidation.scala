@@ -1,7 +1,7 @@
 package fi.oph.kouta.service.validation
 
+import fi.oph.kouta.client.EPerusteKoodiClient
 import fi.oph.kouta.client.KoodiUriUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
-import fi.oph.kouta.client.{EPerusteKoodiClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoodistoService, KoodistoValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
@@ -11,16 +11,16 @@ object AmmatillinenKoulutusServiceValidation
     extends AmmatillinenKoulutusServiceValidation(KoodistoService, EPerusteKoodiClient)
 
 class AmmatillinenKoulutusServiceValidation(
-                                             val koodistoService: KoodistoService,
-                                             ePerusteKoodiClient: EPerusteKoodiClient
+    val koodistoService: KoodistoService,
+    ePerusteKoodiClient: EPerusteKoodiClient
 ) extends KoodistoValidator
     with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
     val koulutusDiffResolver = KoulutusDiffResolver(koulutus, oldKoulutus)
 
     val upperLevelErrors = koulutus.koulutustyyppi match {
-      case Amm => {
-        if (koulutus.isAmmTutkintoWithoutEPeruste) {
+      case Amm =>
+        if (koulutus.isAmmTutkintoWithoutEPeruste()) {
           and(
             assertNotDefined(koulutus.ePerusteId, "ePerusteId"),
             validateKoulutusKoodiUrit(
@@ -64,7 +64,6 @@ class AmmatillinenKoulutusServiceValidation(
             )
           )
         }
-      }
       case AmmOsaamisala =>
         and(
           validateKoulutusKoodiUrit(
@@ -99,8 +98,8 @@ class AmmatillinenKoulutusServiceValidation(
     val metadataErrors = koulutus.metadata match {
       case Some(metadata) =>
         metadata match {
-          case m: AmmatillinenKoulutusMetadata => {
-            if (koulutus.isAmmTutkintoWithoutEPeruste) {
+          case m: AmmatillinenKoulutusMetadata =>
+            if (koulutus.isAmmTutkintoWithoutEPeruste()) {
               and(
                 validateOpintojenLaajuusNumero(m.opintojenLaajuusNumero, vCtx),
                 validateOpintojenLaajuusYksikko(
@@ -108,17 +107,20 @@ class AmmatillinenKoulutusServiceValidation(
                   koulutusDiffResolver.hasLaajuusyksikkoChanged(),
                   vCtx
                 ),
-                assertTutkintonimikeKoodiUrit(koulutusDiffResolver.newTutkintonimikeKoodiUrit(), vCtx, TutkintonimikkeetKoodisto),
+                assertTutkintonimikeKoodiUrit(
+                  koulutusDiffResolver.newTutkintonimikeKoodiUrit(),
+                  vCtx,
+                  TutkintonimikkeetKoodisto
+                ),
                 assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx)
               )
             } else {
-              NoErrors
+              assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
             }
-          }
           case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
             validateAmmTutkinnonosaMetadata(
               vCtx,
-              m.tutkinnonOsat,
+              m,
               koulutusDiffResolver.newTutkinnonosat().nonEmpty
             )
           case m: AmmatillinenOsaamisalaKoulutusMetadata =>
@@ -176,7 +178,11 @@ class AmmatillinenKoulutusServiceValidation(
                     "notUsed",
                     (koulutusKoodiUri, notUsedPath) =>
                       assertTrue(
-                        koodiUriWithEqualOrHigherVersioNbrInList(koulutusKoodiUri, koodiUritForEperuste, false),
+                        koodiUriWithEqualOrHigherVersioNbrInList(
+                          koulutusKoodiUri,
+                          koodiUritForEperuste,
+                          checkVersio = false
+                        ),
                         path,
                         invalidEPerusteIdForKoulutusKoodiUri(ePerusteId, koulutusKoodiUri)
                       )
@@ -190,12 +196,14 @@ class AmmatillinenKoulutusServiceValidation(
 
   private def validateAmmTutkinnonosaMetadata(
       vCtx: ValidationContext,
-      tutkinnonOsat: Seq[TutkinnonOsa],
+      metadata: AmmatillinenTutkinnonOsaKoulutusMetadata,
       newTutkinnonOsat: Boolean
   ): IsValid = {
-    val path = "metadata.tutkinnonOsat"
+    val tutkinnonOsatPath = "metadata.tutkinnonOsat"
+    val tutkinnonOsat     = metadata.tutkinnonOsat
     and(
-      validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, path)),
+      validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, tutkinnonOsatPath)),
+      assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       validateIfTrue(
         newTutkinnonOsat,
         validateIfSuccessful(
@@ -203,7 +211,7 @@ class AmmatillinenKoulutusServiceValidation(
             newTutkinnonOsat,
             validateIfNonEmpty[TutkinnonOsa](
               tutkinnonOsat,
-              path,
+              tutkinnonOsatPath,
               (osa, path) =>
                 validateEPeruste(
                   osa.ePerusteId,
@@ -215,17 +223,17 @@ class AmmatillinenKoulutusServiceValidation(
             ePerusteKoodiClient.getTutkinnonosatForEPerusteetFromCache(
               tutkinnonOsat.filter(_.ePerusteId.isDefined).map(_.ePerusteId.get)
             ) match {
-              case Left(_) => error(s"$path.ePerusteId", ePerusteServiceFailureMsg)
+              case Left(_) => error(s"$tutkinnonOsatPath.ePerusteId", ePerusteServiceFailureMsg)
               case Right(tutkinnonOsaIdsByEPerusteId) =>
                 validateIfNonEmpty[TutkinnonOsa](
                   tutkinnonOsat,
-                  path,
+                  tutkinnonOsatPath,
                   _.validate(vCtx, _, tutkinnonOsaIdsByEPerusteId)
                 )
               case _ =>
                 validateIfNonEmpty[TutkinnonOsa](
                   tutkinnonOsat,
-                  path,
+                  tutkinnonOsatPath,
                   _.validate(vCtx, _, Map())
                 )
             }
@@ -246,6 +254,7 @@ class AmmatillinenKoulutusServiceValidation(
         tila,
         assertNotOptional(osaamisalaMetadata.osaamisalaKoodiUri, "metadata.osaamisalaKoodiUri")
       ),
+      assertEmptyKielistetty(osaamisalaMetadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       validateIfTrue(
         koulutusDiffResolver
           .newOsaamisalaKoodiUri()
