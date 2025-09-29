@@ -764,11 +764,11 @@ object TestData {
     metadata = Some(
       AikuistenPerusopetusKoulutusMetadata(
         kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
         opintojenLaajuusNumero = Some(10),
         linkkiEPerusteisiin = Map(Fi -> "http://testilinkki.fi", Sv -> "http://testlink.sv"),
         isMuokkaajaOphVirkailija = Some(true),
-        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     ),
     tarjoajat = List(GrandChildOid, EvilGrandChildOid, EvilCousin),
@@ -1242,6 +1242,7 @@ object TestData {
 
   val LukioToteutuksenMetatieto: LukioToteutusMetadata = LukioToteutusMetadata(
     kuvaus = Map(),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "tutkija")),
     ammattinimikkeet = List(),
@@ -1280,6 +1281,7 @@ object TestData {
 
   val YoToteutuksenMetatieto: YliopistoToteutusMetadata = YliopistoToteutusMetadata(
     kuvaus = Map(),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetusWithApuraha),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
@@ -1312,6 +1314,7 @@ object TestData {
   val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata =
     KkOpintokokonaisuusToteutusMetadata(
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opintojenLaajuusNumero = Some(10),
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
       opetus = Some(ToteutuksenOpetus),
@@ -1332,6 +1335,7 @@ object TestData {
 
   val MuuToteutuksenMetatieto: MuuToteutusMetadata = MuuToteutusMetadata(
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opintojenLaajuusNumeroMin = Some(10),
     opintojenLaajuusNumeroMax = Some(20),
     opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
@@ -1352,6 +1356,7 @@ object TestData {
   val ErikoistumiskoulutusToteutuksenMetatieto: ErikoistumiskoulutusToteutusMetadata =
     ErikoistumiskoulutusToteutusMetadata(
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       isHakukohteetKaytossa = Some(false),
@@ -1425,6 +1430,7 @@ object TestData {
   val AmmOpettajaToteutuksenMetatieto = AmmOpeErityisopeJaOpoToteutusMetadata(
     tyyppi = AmmOpeErityisopeJaOpo,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     yhteyshenkilot = Seq(Yhteystieto1),
@@ -1443,6 +1449,7 @@ object TestData {
   val TuvaToteutuksenMetatieto: TuvaToteutusMetadata = TuvaToteutusMetadata(
     tyyppi = Tuva,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     jarjestetaanErityisopetuksena = true,
@@ -1456,6 +1463,7 @@ object TestData {
   val TelmaToteutuksenMetatieto: TelmaToteutusMetadata = TelmaToteutusMetadata(
     tyyppi = Telma,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     yhteyshenkilot = Seq(Yhteystieto1),
@@ -1469,6 +1477,7 @@ object TestData {
     VapaaSivistystyoOpistovuosiToteutusMetadata(
       tyyppi = VapaaSivistystyoOpistovuosi,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       yhteyshenkilot = Seq(Yhteystieto1),
@@ -1482,6 +1491,7 @@ object TestData {
   val VapaaSivistystyoMuuToteutusMetatieto: VapaaSivistystyoMuuToteutusMetadata = VapaaSivistystyoMuuToteutusMetadata(
     tyyppi = VapaaSivistystyoMuu,
     kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
     opetus = Some(ToteutuksenOpetus),
     asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
     isHakukohteetKaytossa = Some(false),
@@ -1539,6 +1549,7 @@ object TestData {
     AikuistenPerusopetusToteutusMetadata(
       tyyppi = AikuistenPerusopetus,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       yhteyshenkilot = Seq(Yhteystieto1),
@@ -1562,6 +1573,7 @@ object TestData {
     TaiteenPerusopetusToteutusMetadata(
       tyyppi = TaiteenPerusopetus,
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_6#1"),
       opintojenLaajuusNumeroMin = Some(10),
       opintojenLaajuusNumeroMax = Some(16),
@@ -1597,28 +1609,28 @@ object TestData {
     )
   )
 
+  val ammOsaamisalaToteutuksenMetatieto = AmmatillinenOsaamisalaToteutusMetadata(
+    tyyppi = AmmOsaamisala,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    isHakukohteetKaytossa = Some(false),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+    aloituspaikat = Some(23),
+    aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    isMuokkaajaOphVirkailija = Some(false),
+    hasJotpaRahoitus = Some(false)
+  )
+
   val AmmOsaamisalaToteutus: Toteutus = JulkaistuAmmToteutus.copy(
-    metadata = Some(
-      AmmatillinenOsaamisalaToteutusMetadata(
-        tyyppi = AmmOsaamisala,
-        kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-        opetus = Some(ToteutuksenOpetus),
-        asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-        ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-        yhteyshenkilot = Seq(Yhteystieto1),
-        isHakukohteetKaytossa = Some(false),
-        hakutermi = Some(Hakeutuminen),
-        hakulomaketyyppi = Some(MuuHakulomake),
-        hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
-        lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
-        aloituspaikat = Some(23),
-        aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        isMuokkaajaOphVirkailija = Some(false),
-        hasJotpaRahoitus = Some(false)
-      )
-    )
+    metadata = Some(ammOsaamisalaToteutuksenMetatieto)
   )
 
   val LukioToteutus: Toteutus = Toteutus(
@@ -1691,28 +1703,28 @@ object TestData {
       hasJotpaRahoitus = Some(false)
     )
 
+  val ammTutkinnonOsaToteutuksenMetatieto = AmmatillinenTutkinnonOsaToteutusMetadata(
+    tyyppi = AmmTutkinnonOsa,
+    kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+    opetus = Some(ToteutuksenOpetus),
+    asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
+    ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
+    yhteyshenkilot = Seq(Yhteystieto1),
+    isHakukohteetKaytossa = Some(false),
+    hakutermi = Some(Hakeutuminen),
+    hakulomaketyyppi = Some(MuuHakulomake),
+    hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
+    lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
+    aloituspaikat = Some(22),
+    aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
+    isMuokkaajaOphVirkailija = Some(false),
+    hasJotpaRahoitus = Some(false)
+  )
+
   val AmmTutkinnonOsaToteutus: Toteutus = JulkaistuAmmToteutus.copy(
-    metadata = Some(
-      AmmatillinenTutkinnonOsaToteutusMetadata(
-        tyyppi = AmmTutkinnonOsa,
-        kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
-        opetus = Some(ToteutuksenOpetus),
-        asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
-        ammattinimikkeet = List(Keyword(Fi, "insinööri"), Keyword(Fi, "koneinsinööri")),
-        yhteyshenkilot = Seq(Yhteystieto1),
-        isHakukohteetKaytossa = Some(false),
-        hakutermi = Some(Hakeutuminen),
-        hakulomaketyyppi = Some(MuuHakulomake),
-        hakulomakeLinkki = Map(Fi -> "http://www.linkki.fi", Sv -> "http://www.linkki.se"),
-        lisatietoaHakeutumisesta = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        lisatietoaValintaperusteista = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        hakuaika = Some(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
-        aloituspaikat = Some(22),
-        aloituspaikkakuvaus = Map(Fi -> "Lisätieto", Sv -> "Lisätieto sv"),
-        isMuokkaajaOphVirkailija = Some(false),
-        hasJotpaRahoitus = Some(false)
-      )
-    )
+    metadata = Some(ammTutkinnonOsaToteutuksenMetatieto)
   )
 
   val AmmTutkinnonOsaToteutusMetadataHakemuspalvelu: AmmatillinenTutkinnonOsaToteutusMetadata =
@@ -1758,6 +1770,7 @@ object TestData {
   val AmmMuuToteutusMetatieto: AmmatillinenMuuToteutusMetadata =
     AmmatillinenMuuToteutusMetadata(
       kuvaus = Map(Fi -> "Kuvaus", Sv -> "Kuvaus sv"),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
       opetus = Some(ToteutuksenOpetus),
       asiasanat = List(Keyword(Fi, "robotiikka"), Keyword(Fi, "robottiautomatiikka")),
       isHakukohteetKaytossa = Some(false),
