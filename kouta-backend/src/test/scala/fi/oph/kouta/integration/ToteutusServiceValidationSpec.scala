@@ -982,6 +982,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         tila = Tallennettu,
         metadata = Some(
           AmmatillinenMuuToteutusMetadata(
+            osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
             hakulomakeLinkki = Map(Fi -> "puppu fi", Sv -> "puppu sv"),
             hakuaika = Some(ajanjakso),
             aloituspaikat = Some(-1),
@@ -2384,5 +2385,45 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "pass validation of pelastusalan amm koulutus with empty osaamisalat" in {
     passesValidation(pelastusalanAmmToteutus)
+  }
+
+  "Osaamistavoitteet validation" should "fail for osaamismerkki toteutus that has osaamistavoitteet defined" in {
+    failsValidation(vstOsaamismerkkiToteutus.copy(
+      metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for amm toteutus that has osaamistavoitteet defined" in {
+    failsValidation(JulkaistuAmmToteutus.copy(
+      metadata = Some(AmmToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for amm-osaamisala toteutus that has osaamistavoitteet defined" in {
+    failsValidation(ammOsaamisalaToteutus.copy(
+      metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for amm-tutkinnonosatoteutus that has osaamistavoitteet defined" in {
+    failsValidation(ammTutkinnonOsaToteutus.copy(
+      metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for yo-toteutus that doesn't have osaamistavoitteet defined" in {
+    failsValidation(yoToteutus.copy(
+      metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map()))),
+      "metadata.osaamistavoitteet",
+      invalidKielistetty(List(Fi, Sv))
+    )
   }
 }

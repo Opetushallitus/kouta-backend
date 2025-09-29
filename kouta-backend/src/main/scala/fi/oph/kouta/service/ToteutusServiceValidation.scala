@@ -135,6 +135,14 @@ class ToteutusServiceValidation(
               assertNotOptional(metadata.opetus, "metadata.opetus")
             )
           ),
+          validateIfFalse(
+            Set[Koulutustyyppi](Amm, AmmOsaamisala, AmmTutkinnonOsa, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
+            validateKielistetty(
+              vCtx.kielivalinta,
+              metadata.osaamistavoitteet,
+              "metadata.osaamistavoitteet"
+            )
+          ),
           metadata match {
             case ammMetadata: AmmatillinenToteutusMetadata =>
               and(
@@ -150,7 +158,8 @@ class ToteutusServiceValidation(
                 validateIfTrue(
                   ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true),
                   validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri", vCtx)
-                )
+                ),
+                assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet")
               )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
@@ -183,8 +192,13 @@ class ToteutusServiceValidation(
                       hakukohteenLiittaminenNotAllowed(koulutusTyyppi)
                     ),
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
-                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                    assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet")
                   )
+                case m: AmmatillinenOsaamisalaToteutusMetadata =>
+                  assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
+                case m: AmmatillinenTutkinnonOsaToteutusMetadata =>
+                  assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
                     vCtx,
