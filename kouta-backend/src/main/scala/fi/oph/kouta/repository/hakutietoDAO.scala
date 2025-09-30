@@ -1,7 +1,7 @@
 package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde, Valintakoe}
+import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde}
 import slick.jdbc.PostgresProfile.api._
 
 import scala.concurrent.ExecutionContext.Implicits.global

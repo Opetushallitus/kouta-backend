@@ -1,23 +1,23 @@
 package fi.oph.kouta.integration.fixture
 
-import java.util.UUID
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, Valintakoe1}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
-import fi.oph.kouta.TestData.LukioHakukohteenLinja
+import fi.oph.kouta.client.{EPerusteKoodiClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{IndexType, IndexTypeHakukohde, IndexTypeKoulutus, Priority}
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
-import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, SQLHelpers, SorakuvausDAO, ToteutusDAO}
-import fi.oph.kouta.service.{HakukohdeCopyResultObject, HakukohdeService, HakukohdeServiceValidation, HakukohdeTilaChangeResultObject, KeywordService, KoodistoService, OrganisaatioServiceImpl, ToteutusService, ToteutusServiceValidation}
+import fi.oph.kouta.repository._
+import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.HakukohdeServlet
 import fi.oph.kouta.util.TimeUtils
 import org.junit.Assert
 import org.scalactic.Equality
 import slick.jdbc.PostgresProfile.api._
+
+import java.util.UUID
 
 object SqsInTransactionServiceCheckingRowExistsWhenIndexing extends SqsInTransactionService {
   override def toSQSQueue(priority: Priority, index: IndexType, value: String): List[String] = {
@@ -48,9 +48,9 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   def hakukohdeService: HakukohdeService = {
     val organisaatioService = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
-    val koodistoService     = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+    val hakukohdeUtil = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val toteutusServiceValidation = new ToteutusServiceValidation(
       koodistoService,
@@ -75,7 +75,6 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
       new AuditLog(MockAuditLogger),
       organisaatioService,
       lokalisointiClient,
-      mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       koodistoService,
       new ToteutusService(
@@ -93,7 +92,8 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
         koutaIndeksoijaClient
       ),
       hakukohdeServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 
@@ -103,7 +103,7 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
   }
 
   val hakukohde: Hakukohde = JulkaistuHakukohde
-  val hakukohdeWoValintaperusteenValintakokeet = JulkaistuHakukohde.copy(metadata =
+  val hakukohdeWoValintaperusteenValintakokeet: Hakukohde = JulkaistuHakukohde.copy(metadata =
     Some(JulkaistuHakukohde.metadata.get.copy(valintaperusteenValintakokeidenLisatilaisuudet = Seq()))
   )
 
