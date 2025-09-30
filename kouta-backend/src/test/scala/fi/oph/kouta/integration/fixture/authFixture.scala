@@ -1,8 +1,6 @@
 package fi.oph.kouta.integration.fixture
 
-import fi.oph.kouta.TestOids.TestUserOid
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.KayttooikeusClient
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.mocks.{MockAuditLogger, MockSecurityContext}
 import fi.oph.kouta.security._
@@ -19,7 +17,7 @@ trait AuthFixture {
 
   override val securityContext: SecurityContext = MockSecurityContext(casUrl, serviceIdentifier, defaultAuthorities)
 
-  object MockCasSessionService extends CasSessionService(securityContext, mockKayttooikeusClient, new AuditLog(MockAuditLogger))
+  object MockCasSessionService extends CasSessionService(securityContext, new AuditLog(MockAuditLogger))
 
   addServlet(new AuthServlet(MockCasSessionService), authPath)
 
