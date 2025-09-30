@@ -841,7 +841,8 @@ case class AmmatillinenTutkinnonOsaToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenOsaamisalaToteutusMetadata(
@@ -863,7 +864,8 @@ case class AmmatillinenOsaamisalaToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata
 
 case class AmmatillinenMuuToteutusMetadata(
@@ -885,7 +887,8 @@ case class AmmatillinenMuuToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata {
   override def allowSorakuvaus: Boolean = false
 }
@@ -965,6 +968,7 @@ case class KkOpintojaksoToteutusMetadata(
     isTaydennyskoulutus: Boolean = false,
     isTyovoimakoulutus: Boolean = false,
     isAvoinKorkeakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Boolean = false,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadata
@@ -994,6 +998,7 @@ case class KkOpintokokonaisuusToteutusMetadata(
     isTyovoimakoulutus: Boolean = false,
     liitetytOpintojaksot: Seq[ToteutusOid] = Seq(),
     isAvoinKorkeakoulutus: Option[Boolean] = None,
+    isPieniOsaamiskokonaisuus: Boolean = false,
     tunniste: Option[String] = None,
     opinnonTyyppiKoodiUri: Option[String] = None
 ) extends TutkintoonJohtamatonToteutusMetadata
@@ -1110,7 +1115,8 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadata(
     isTyovoimakoulutus: Boolean = false,
     suoritetaanNayttona: Boolean = false,
     liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
-) extends ToteutusMetadata with VapaaSivistystyoToteutusMetadata
+) extends ToteutusMetadata
+    with VapaaSivistystyoToteutusMetadata
 
 case class VapaaSivistystyoMuuToteutusMetadata(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
@@ -1132,9 +1138,11 @@ case class VapaaSivistystyoMuuToteutusMetadata(
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
     isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false,
     suoritetaanNayttona: Boolean = false,
     liitetytOsaamismerkit: Seq[KoulutusOid] = Seq()
-) extends TutkintoonJohtamatonToteutusMetadata with VapaaSivistystyoToteutusMetadata {
+) extends TutkintoonJohtamatonToteutusMetadata
+    with VapaaSivistystyoToteutusMetadata {
 
   override def allowSorakuvaus: Boolean = false
 }
@@ -1159,6 +1167,7 @@ case class VapaaSivistystyoOsaamismerkkiToteutusMetadata(
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
     isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false,
     suoritetaanNayttona: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata {
 
@@ -1219,7 +1228,8 @@ case class ErikoistumiskoulutusToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata
 
 case class TaiteenPerusopetusToteutusMetadata(
@@ -1271,7 +1281,8 @@ case class MuuToteutusMetadata(
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
     hasJotpaRahoitus: Option[Boolean] = None,
     isTaydennyskoulutus: Boolean = false,
-    isTyovoimakoulutus: Boolean = false
+    isTyovoimakoulutus: Boolean = false,
+    isPieniOsaamiskokonaisuus: Boolean = false
 ) extends TutkintoonJohtamatonToteutusMetadata
     with LaajuusMinMax {
 

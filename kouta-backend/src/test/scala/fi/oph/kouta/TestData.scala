@@ -1287,7 +1287,8 @@ object TestData {
     aloituspaikkakuvaus = Map(),
     isMuokkaajaOphVirkailija = Some(false),
     hasJotpaRahoitus = Some(false),
-    isAvoinKorkeakoulutus = Some(false)
+    isAvoinKorkeakoulutus = Some(false),
+    isPieniOsaamiskokonaisuus = true
   )
 
   val KkOpintokokonaisuusToteutuksenMetatieto: KkOpintokokonaisuusToteutusMetadata =
