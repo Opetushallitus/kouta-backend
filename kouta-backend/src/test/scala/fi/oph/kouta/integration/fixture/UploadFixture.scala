@@ -1,20 +1,20 @@
 package fi.oph.kouta.integration.fixture
 
-import java.nio.file.{Files, Paths}
-import com.amazonaws.services.s3.model.ObjectMetadata
-import fi.oph.kouta.images.{ImageServlet, S3ImageService}
+import fi.oph.kouta.images.Image
+import fi.oph.kouta.images.ImageFormat.Png
 import fi.oph.kouta.integration.KoutaIntegrationSpec
-import fi.oph.kouta.integration.fixture.MockS3Client.Content
 import fi.oph.kouta.mocks.MockS3ImageService
-import fi.oph.kouta.servlet.{ImageSizeSpecs, ImageWithMinSizeSpecs, UploadServlet}
-import org.scalatest.BeforeAndAfterEach
+import fi.oph.kouta.servlet.{ImageWithMinSizeSpecs, UploadServlet}
+import org.scalatest.{Assertion, BeforeAndAfterEach}
+
+import java.nio.file.{Files, Paths}
 
 trait UploadFixture extends BeforeAndAfterEach {
   this: KoutaIntegrationSpec =>
 
   override def afterEach(): Unit = {
     super.afterEach()
-    MockS3Client.reset()
+    mockImageService.storage.clear
   }
 
   val UploadPath          = "/upload"
@@ -22,10 +22,10 @@ trait UploadFixture extends BeforeAndAfterEach {
   val LogoUploadPath      = s"$UploadPath/logo"
   val IconUploadPath      = s"$UploadPath/icon"
 
-  val ImageBucket       = MockS3ImageService.config.imageBucket
-  val PublicImageServer = MockS3ImageService.config.imageBucketPublicUrl
+  val ImageBucket: String = MockS3ImageService.config.imageBucket
+  val PublicImageServer: String = MockS3ImageService.config.imageBucketPublicUrl
 
-  protected lazy val s3ImageService: S3ImageService = MockS3ImageService
+  protected lazy val mockImageService: MockS3ImageService = MockS3ImageService
 
   val MaxSizeInTest = 20000
 
@@ -46,23 +46,18 @@ trait UploadFixture extends BeforeAndAfterEach {
   lazy val randomXml: Array[Byte]           = getResourceImage("random-xml.svg")
   lazy val correctIcon: Array[Byte]         = getResourceImage("correct-icon.png")
 
-  def saveLocalPng(key: String): Unit = {
-    val metadata = new ObjectMetadata()
-    metadata.setCacheControl("max-age=1337")
-    metadata.setContentType("image/png")
-    MockS3Client.putLocal(ImageBucket, key, correctTeemakuva, metadata)
+  def mockSaveImage(key: String): Unit = {
+    mockImageService.storage.put(s"$ImageBucket/$key", Image(Png, correctTeemakuva))
   }
 
-  def checkLocalPng(content: Option[Content]) = {
-    content should not be empty
-    val Content(imageData, returnedMeta) = content.get
-    imageData should equal(correctTeemakuva)
-    returnedMeta.getCacheControl should equal("max-age=1337")
-    returnedMeta.getContentLength should equal(correctTeemakuva.length)
-    returnedMeta.getContentType should equal("image/png")
+  def assertImageLocation(path: String, filename: String): Assertion = {
+    val key = s"$ImageBucket/$path/$filename"
+    val tempKey = s"$ImageBucket/temp/$filename"
+    mockImageService.storage.get(key) should not be empty
+    mockImageService.storage.get(tempKey) shouldBe empty
   }
 
-  object TestUploadServlet extends UploadServlet(s3ImageService) {
+  object TestUploadServlet extends UploadServlet(mockImageService) {
     override val teemakuvaSizes: ImageWithMinSizeSpecs = ImageWithMinSizeSpecs(maxSize = MaxSizeInTest, minWidth = 1260, minHeight = 400)
     override val logoSizes: ImageWithMinSizeSpecs = ImageWithMinSizeSpecs(maxSize = MaxSizeInTest, minWidth = 100, minHeight = 100)
   }

@@ -46,6 +46,10 @@ class ToteutusSpec
     mockLokalisointiResponse("yleiset.osaamismerkki")
   }
 
+  override def beforeEach(): Unit = {
+    mockImageService.storage.clear
+  }
+
   "Get toteutus by oid" should "return 404 if toteutus not found" in {
     get(s"$ToteutusPath/123", headers = defaultHeaders) {
       status should equal(404)
@@ -234,20 +238,19 @@ class ToteutusSpec
   }
 
   it should "copy a temporary image to a permanent location while creating the toteutus" in {
-    saveLocalPng("temp/image.png")
+    mockSaveImage("temp/image.png")
     val oid = put(toteutus(koulutusOid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png")))
 
     get(oid, toteutus(oid, koulutusOid).withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
-    MockS3Client.getLocal("konfo-files", s"temp/image.png") shouldBe empty
+    assertImageLocation(s"toteutus-teemakuva/$oid", "image.png")
   }
 
   it should "not touch an image that's not in the temporary location" in {
     val toteutusWithImage =
       toteutus(koulutusOid).withTeemakuva(Some(s"$PublicImageServer/kuvapankki-tai-joku/image.png"))
     val oid = put(toteutusWithImage)
-    MockS3Client.storage shouldBe empty
+    mockImageService.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
   }
 
@@ -811,13 +814,13 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid))
     val lastModified = get(oid, toteutus(oid, koulutusOid))
 
-    saveLocalPng("temp/image.png")
+    mockSaveImage("temp/image.png")
     val toteutusWithImage = toteutus(oid, koulutusOid).withTeemakuva(Some(s"$PublicImageServer/temp/image.png"))
 
     update(toteutusWithImage, lastModified)
     get(oid, toteutusWithImage.withTeemakuva(Some(s"$PublicImageServer/toteutus-teemakuva/$oid/image.png")))
 
-    checkLocalPng(MockS3Client.getLocal("konfo-files", s"toteutus-teemakuva/$oid/image.png"))
+    assertImageLocation(s"toteutus-teemakuva/$oid", "image.png")
   }
 
   it should "not touch an image that's not in the temporary location" in {
@@ -828,7 +831,7 @@ class ToteutusSpec
 
     update(toteutusWithImage, lastModified)
 
-    MockS3Client.storage shouldBe empty
+    mockImageService.storage shouldBe empty
     get(oid, toteutusWithImage.copy(oid = Some(ToteutusOid(oid))))
   }
 

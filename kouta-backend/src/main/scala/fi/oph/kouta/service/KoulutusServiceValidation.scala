@@ -1,6 +1,7 @@
 package fi.oph.kouta.service
 
-import fi.oph.kouta.domain.Koulutustyyppi.isAmmatillinen
+import fi.oph.kouta.client.EPerusteKoodiClient
+import fi.oph.kouta.domain.Koulutustyyppi.{ammatilliset, isAmmatillinen}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.ToteutusOid
 import fi.oph.kouta.repository.{SorakuvausDAO, ToteutusDAO}
@@ -334,10 +335,20 @@ class KoulutusServiceValidation(
       ),
       validateIfJulkaistu(
         validationContext.tila,
-        validateIfTrueOrElse(
-          koulutustyypitWithMandatoryKuvaus.contains(tyyppi),
-          validateKielistetty(validationContext.kielivalinta, metadata.kuvaus, "metadata.kuvaus"),
-          validateOptionalKielistetty(validationContext.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
+        and(
+          validateIfTrueOrElse(
+            koulutustyypitWithMandatoryKuvaus.contains(tyyppi),
+            validateKielistetty(validationContext.kielivalinta, metadata.kuvaus, "metadata.kuvaus"),
+            validateOptionalKielistetty(validationContext.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
+          ),
+          validateIfFalse(
+            Set[Koulutustyyppi](Amm, AmmOsaamisala, AmmTutkinnonOsa, VapaaSivistystyoOsaamismerkki).contains(tyyppi),
+            validateKielistetty(
+              validationContext.kielivalinta,
+              metadata.osaamistavoitteet,
+              "metadata.osaamistavoitteet"
+            )
+          )
         )
       )
     )
@@ -819,6 +830,7 @@ class KoulutusServiceValidation(
       ),
       assertEmptyKielistetty(metadata.linkkiEPerusteisiin, "metadata.linkkiEPerusteisiin"),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
+      assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       assertNotOptional(
         metadata.opintojenLaajuusNumero,
         "metadata.opintojenLaajuusNumero"
