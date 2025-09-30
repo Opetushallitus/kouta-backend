@@ -87,15 +87,6 @@ class OrganisaatioServiceClient extends HttpClient with CallerId with Logging wi
     }
   }
 
-  def getOrganisaatioHierarkiaWithOidsFromCache(oids: Seq[OrganisaatioOid]): OrganisaatioHierarkia = {
-    organisaatioHierarkiaWithOidsCache.get(
-      oids,
-      oids => {
-        getOrganisaatioHierarkia(OrganisaatioHierarkiaQueryParams(oids))
-      }
-    )
-  }
-
   def getOrganisaatioHierarkiaFromCache(
       params: Option[Params],
       multiParams: Option[MultiParams],
