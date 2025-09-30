@@ -25,7 +25,7 @@ object Tester {
     //println(HakukohdeDAO.get(HakukohdeOid("1.2.246.562.20.00000000000000016744"), TilaFilter.onlyOlemassaolevat()))
     val hk = Hakukohde(organisaatioOid=OrganisaatioOid("1.2.246.562.10.13803815193"), oid = Some(HakukohdeOid("1.2.246.562.20.00000000000000016744")), toteutusOid = ToteutusOid("1.2.246.562.17.00000000000000000417"),
       hakuOid = HakuOid("1.2.246.562.29.00000000000000012989"), tila = Julkaistu, muokkaaja = UserOid("1.2.246.562.24.41529289358"), valintaperusteId = Some(UUID.fromString("f9c68838-2fe8-4333-a8fd-599835d9ae79")))
-    println(HakukohdeDAO.getDependencyInformation(hk))
+    println(HakukohdeDAO.getDependencyInformation(hk, None))
     //HakukohdeDAO.getDependencyInformation(JulkaistuHakukohde.copy(oid = Some(HakukohdeOid("1.2.246.562.20.00000000000000004244")), toteutusOid = ToteutusOid("1.2.246.562.17.00000000000000003366"),
     //  hakuOid = HakuOid("1.2.246.562.29.00000000000000002821"), valintaperusteId = Some(UUID.fromString("0c3e3cc6-8892-4b82-8663-0c2bc79c02bb")))).get("1.2.246.562.17.00000000000000003366").get._4.get.foreach(println(_))
 
