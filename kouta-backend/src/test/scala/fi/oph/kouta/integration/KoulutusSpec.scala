@@ -460,7 +460,8 @@ class KoulutusSpec
           lisatiedot = metadata.lisatiedot.map(
             _.copy(teksti = Map(Fi -> "lisatiedot", Sv -> "Lisatiedot sv", En -> "Lisatiedot en"))
           ),
-          kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en")
+          kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv", En -> "kuvaus en"),
+          osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv", En -> "osaamistavoitteet")
         )
       ),
       _enrichedData = createdKoulutus._enrichedData.map(_.copy(esitysnimi = Map(Fi -> "kiva nimi", Sv -> "nimi sv", En -> "nice name")))
@@ -772,13 +773,17 @@ class KoulutusSpec
   }
 
   it should "set opintojen laajuus of Yo -koulutus automatically if not given" in {
-    val yoKoulutus = YoKoulutus.copy(metadata = Some(YliopistoKoulutusMetadata(opintojenLaajuusNumero = Some(10))))
+    val yoKoulutus = YoKoulutus.copy(metadata = Some(YliopistoKoulutusMetadata(
+      opintojenLaajuusNumero = Some(10),
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
+    )))
     val oid        = put(yoKoulutus)
     val expectedMetadata = Some(
       YliopistoKoulutusMetadata(
         opintojenLaajuusNumero = Some(10),
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     )
     get(oid, yoKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
@@ -786,41 +791,51 @@ class KoulutusSpec
 
   it should "set opintojen laajuus of Amk -koulutus automatically if not given" in {
     val amkKoulutus =
-      AmkKoulutus.copy(metadata = Some(AmmattikorkeakouluKoulutusMetadata(opintojenLaajuusNumero = Some(10))))
+      AmkKoulutus.copy(metadata = Some(AmmattikorkeakouluKoulutusMetadata(
+        opintojenLaajuusNumero = Some(10),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
+      )))
     val oid = put(amkKoulutus)
     val expectedMetadata = Some(
       AmmattikorkeakouluKoulutusMetadata(
         opintojenLaajuusNumero = Some(10),
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     )
     get(oid, amkKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
   }
 
   it should "set opintojen laajuus and koulutusala of AmmOpe -koulutus automatically if not given" in {
-    val ammOpeKoulutus = AmmOpettajaKoulutus.copy(metadata = Some(AmmOpeErityisopeJaOpoKoulutusMetadata()))
+    val ammOpeKoulutus = AmmOpettajaKoulutus.copy(metadata = Some(AmmOpeErityisopeJaOpoKoulutusMetadata(
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
+    )))
     val oid            = put(ammOpeKoulutus)
     val expectedMetadata = Some(
       AmmOpeErityisopeJaOpoKoulutusMetadata(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         opintojenLaajuusNumero = Some(60),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01#1"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     )
     get(oid, ammOpeKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
   }
 
   it should "set opintojen laajuus and koulutusala of opettajien pedagogiset koulutukset automatically if not given" in {
-    val yoOpeKoulutus = YoOpettajaKoulutus.copy(metadata = Some(OpePedagOpinnotKoulutusMetadata()))
+    val yoOpeKoulutus = YoOpettajaKoulutus.copy(metadata = Some(OpePedagOpinnotKoulutusMetadata(
+      osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
+    )))
     val oid           = put(yoOpeKoulutus)
     val expectedMetadata = Some(
       OpePedagOpinnotKoulutusMetadata(
         opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
         opintojenLaajuusNumero = Some(60),
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso1_01#1"),
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     )
     get(oid, yoOpeKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
@@ -867,7 +882,8 @@ class KoulutusSpec
           KkOpintojaksoKoulutusMetadata(
             opintojenLaajuusNumeroMin = Some(10),
             opintojenLaajuusNumeroMax = Some(10),
-            kuvaus = defaultKuvaus
+            kuvaus = defaultKuvaus,
+            osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
           )
         )
       )
@@ -881,7 +897,8 @@ class KoulutusSpec
           opintojenLaajuusNumeroMax = Some(10),
           opintojenLaajuusyksikkoKoodiUri = Some("opintojenlaajuusyksikko_2#1"),
           korkeakoulutustyypit = Seq(Korkeakoulutustyyppi(Amk, Seq())),
-          isMuokkaajaOphVirkailija = Some(false)
+          isMuokkaajaOphVirkailija = Some(false),
+          osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
         )
       )
     )
@@ -916,13 +933,17 @@ class KoulutusSpec
 
   it should "set koulutusala of erikoislääkäri-koulutus automatically if not given" in {
     val elKoulutus =
-      ErikoislaakariKoulutus.copy(metadata = Some(ErikoislaakariKoulutusMetadata(kuvaus = defaultKuvaus)))
+      ErikoislaakariKoulutus.copy(metadata = Some(ErikoislaakariKoulutusMetadata(
+        kuvaus = defaultKuvaus,
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
+      )))
     val oid = put(elKoulutus)
     val expectedMetadata = Some(
       ErikoislaakariKoulutusMetadata(
         koulutusalaKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusalataso2_091#1"),
         kuvaus = defaultKuvaus,
-        isMuokkaajaOphVirkailija = Some(false)
+        isMuokkaajaOphVirkailija = Some(false),
+        osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv")
       )
     )
     get(oid, elKoulutus.copy(oid = Some(KoulutusOid(oid)), muokkaaja = TestUserOid, metadata = expectedMetadata))
@@ -1061,6 +1082,19 @@ class KoulutusSpec
         status should equal(400)
       }
       body should include(s"""errorType":"invalidStateChangeForLiitetty""")
+    }
+  }
+
+  it should "fail to create Amm koulutus that has osaamistavoitteet defined" in {
+    val ammKoulutusWithOsaamistavoitteet = AmmKoulutus.copy(
+      metadata = Some(AmmKoulutusMetadata.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
+    )
+    put(KoulutusPath, bytes(ammKoulutusWithOsaamistavoitteet), headers = Seq(sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should include(s"""path":"metadata.osaamistavoitteet""")
+      body should include(s"""errorType":"notEmptyMsg""")
     }
   }
 }
