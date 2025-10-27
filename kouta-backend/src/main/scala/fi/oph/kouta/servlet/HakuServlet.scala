@@ -168,48 +168,4 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
         Ok(hakuService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut), yhteishaut))
     }
   }
-
-  registerPath( "/haku/{oid}/hakukohteet/list",
-    """    get:
-      |      summary: Listaa kaikki organisaatiolle kuuluvat hakukohteet, jotka on liitetty hakuun
-      |      operationId: Listaa haun hakukohteet
-      |      description: Listaa ne hakuun liitetyt hakukohteet, jotka ovat organisaatiolla on oikeus nähdä.
-      |        Jos organisaatio-oidia ei ole annettu,
-      |        listaa haun kaikki hakukohteet, mikäli käyttäjällä on oikeus nähdä ne
-      |      tags:
-      |        - Haku
-      |      parameters:
-      |        - in: path
-      |          name: oid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Haku-oid
-      |          example: 1.2.246.562.29.00000000000000000009
-      |        - in: query
-      |          name: organisaatioOid
-      |          schema:
-      |            type: string
-      |          required: true
-      |          description: Organisaatio-oid
-      |          example: 1.2.246.562.10.00101010101
-      |      responses:
-      |        '200':
-      |          description: Ok
-      |          content:
-      |            application/json:
-      |              schema:
-      |                type: array
-      |                items:
-      |                  $ref: '#/components/schemas/HakukohdeListItem'
-      |""".stripMargin)
-  get("/:oid/hakukohteet/list") {
-
-    implicit val authenticated: Authenticated = authenticate()
-
-    params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
-      case Some(organisaatioOid) => Ok(hakuService.listHakukohteet(HakuOid(params("oid")), organisaatioOid))
-    }
-  }
 }

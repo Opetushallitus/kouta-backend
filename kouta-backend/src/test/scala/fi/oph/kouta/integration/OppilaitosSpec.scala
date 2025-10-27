@@ -11,6 +11,8 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
+import org.json4s.JValue
+import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.read
 
 import java.time.LocalDateTime
@@ -34,16 +36,16 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
     List(
       Organisaatio(
         oid,
-        Some(OrganisaatioOid("1.2.246.562.10.47941294986")),
-        List(OrganisaatioOid(oid), OrganisaatioOid("1.2.246.562.10.47941294986"), OrganisaatioOid("1.2.246.562.10.00000000001")),
-        Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
+        parentOid = Some(OrganisaatioOid("1.2.246.562.10.47941294986")),
+        parentOids = List(OrganisaatioOid(oid), OrganisaatioOid("1.2.246.562.10.47941294986"), OrganisaatioOid("1.2.246.562.10.00000000001")),
+        nimi = Map(Fi -> "Opisto fi", Sv -> "Opisto sv", En -> "Opisto en"),
         kieletUris = List(),
         yhteystiedot = None,
         status = "AKTIIVINEN",
         kotipaikkaUri = None,
         children = None,
         oppilaitostyyppiUri = Some("oppilaitostyyppi_63#1"),
-        Some(List("organisaatiotyyppi_02")))))
+        organisaatiotyyppiUris = Some(List("organisaatiotyyppi_02")))))
 
   val notSavedInKoutaOrgOid = OrganisaatioOid("1.2.246.562.10.404")
 
@@ -608,30 +610,49 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       logo = Some(s"$PublicImageServer/temp/logo.png")
     )
     update(oppilaitosWithImages, lastModified1)
-
     get(oid2, createdOppilaitos2)
   }
 
   "Get oppilaitokset by oids" should "not return oppilaitos data for oppilaitos not in kouta" in {
-    val organisaatioServiceHierarkia = organisaatioHierarkia(UnknownOid.toString)
-    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(List(UnknownOid))).thenReturn(organisaatioServiceHierarkia)
-    when(mockOppilaitosDao.get(List(UnknownOid))).thenReturn(Vector())
-    post(s"$OppilaitosPath/oppilaitokset", bytes(List(UnknownOid)), headers = defaultHeaders) {
+    // organisaatiot (jalkelaiset-rajapinta) alustettu organisaatio.json-tiedostosta (OrganisaatioServiceMock)
+    val unknownOid = HkiYoOid
+    when(mockOppilaitosDao.get(List(unknownOid))).thenReturn(Vector())
+    post(s"$OppilaitosPath/oppilaitokset", bytes(List(unknownOid)), headers = defaultHeaders) {
       status should equal (200)
       body should include ("{\"oppilaitokset\":[]")
+      val parsedBody = JsonMethods.parse(body)
+      val oppilaitokset = (parsedBody \ "oppilaitokset").extract[List[JValue]]
+      oppilaitokset should have size 0
+      val organisaatiot = (parsedBody \ "organisaatioHierarkia" \ "organisaatiot").extract[List[JValue]]
+      organisaatiot should have size 1
+      val organisaatio = organisaatiot.head
+      (organisaatio \ "oid").extract[String] should equal(unknownOid.toString)
     }
   }
 
-  it should "succeed in sending oppilaitos data for existing oppilaitos" in {
-    val oid = put(oppilaitos)
-    val organisaatioServiceHierarkia = organisaatioHierarkia(oid)
-    when(mockOrganisaatioServiceClient.getOrganisaatioHierarkiaWithOidsFromCache(List(OrganisaatioOid(oid)))).thenReturn(organisaatioServiceHierarkia)
-    when(mockOppilaitosDao.get(List(OrganisaatioOid(oid)))).thenReturn(
-      Vector(OppilaitosAndOsa(oppilaitos = oppilaitos.copy(oid = OrganisaatioOid(oid)), osa = Some(oppilaitoksenOsa))))
-
-    post(s"$OppilaitosPath/oppilaitokset", bytes(List(oid)), headers = defaultHeaders) {
+  it should "succeed in returning oppilaitos data for existing oppilaitos" in {
+    // organisaatiot (jalkelaiset-rajapinta) alustettu organisaatio.json-tiedostosta (OrganisaatioServiceMock)
+    val oppilaitosOid = HkiYoOid
+    val toimipisteOid = "1.2.246.562.10.27277224708" // Helsingin yliopisto, Lääketieteellinen tiedekunta, Ammatillinen jatkokoulutus
+    when(mockOppilaitosDao.get(List(oppilaitosOid))).thenReturn(
+      Vector(OppilaitosAndOsa(oppilaitos = oppilaitos.copy(oid = oppilaitosOid),
+                              osa = Some(oppilaitoksenOsa(toimipisteOid)))))
+    post(s"$OppilaitosPath/oppilaitokset", bytes(List(toimipisteOid)), headers = defaultHeaders) {
       status should equal (200)
-      body should include (s"""{\"oppilaitokset\":[{\"oid\":\"$oid\"""")
+      val parsedBody = JsonMethods.parse(body)
+      val oppilaitokset = (parsedBody \ "oppilaitokset").extract[List[JValue]]
+      oppilaitokset should have size 1
+      val oppilaitos = oppilaitokset.head
+      (oppilaitos \ "oid").extract[String] should equal(oppilaitosOid.toString)
+      val osat = (oppilaitos \ "osat").extract[List[JValue]]
+      osat should have size 1
+      val osa = osat.head
+      (osa \ "oid").extract[String] should equal(toimipisteOid)
+
+      val organisaatiot = (parsedBody \ "organisaatioHierarkia" \ "organisaatiot").extract[List[JValue]]
+      organisaatiot should have size 1
+      val organisaatio = organisaatiot.head
+      (organisaatio \ "oid").extract[String] should equal(oppilaitosOid.toString)
     }
   }
 }

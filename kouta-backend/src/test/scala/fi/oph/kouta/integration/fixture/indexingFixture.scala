@@ -18,63 +18,21 @@ trait IndexingFixture
     with HakukohdeFixtureWithIndexing
     with SorakuvausFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
+
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 }
 
 trait HakuFixtureWithIndexing extends HakuFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
-  override def hakuService = {
+  override def hakuService: HakuService = {
     val organisaatioService   = new OrganisaatioServiceImpl(urlProperties.get)
-    val koodistoService       = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient = new MockKoutaIndeksoijaClient
     val hakuServiceValidation =
       new HakuServiceValidation(koodistoService, mockHakemusPalveluClient, HakukohdeDAO, OrganisaatioServiceImpl)
     val lokalisointiClient = new LokalisointiClient(urlProperties.get)
-    val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+    val hakukohdeUtil      = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
-    val toteutusServiceValidation = new ToteutusServiceValidation(
-      koodistoService,
-      organisaatioService,
-      KoulutusDAO,
-      HakukohdeDAO,
-      SorakuvausDAO,
-      ToteutusDAO,
-      mockEPerusteKoodiClient
-    )
-    val hakukohdeServiceValidation = new HakukohdeServiceValidation(
-      koodistoService,
-      mockHakemusPalveluClient,
-      organisaatioService,
-      lokalisointiClient,
-      HakukohdeDAO,
-      HakuDAO
-    )
-
-    val hakukohdeService = new HakukohdeService(
-      SqsInTransactionServiceCheckingRowExistsWhenIndexing,
-      new AuditLog(MockAuditLogger),
-      organisaatioService,
-      lokalisointiClient,
-      mockOppijanumerorekisteriClient,
-      mockKayttooikeusClient,
-      koodistoService,
-      new ToteutusService(
-        SqsInTransactionServiceCheckingRowExistsWhenIndexing,
-        MockS3ImageService,
-        auditLogger,
-        new KeywordService(auditLogger, organisaatioService),
-        organisaatioService,
-        kService,
-        lokalisointiClient,
-        koodistoService,
-        mockOppijanumerorekisteriClient,
-        mockKayttooikeusClient,
-        toteutusServiceValidation,
-        koutaIndeksoijaClient
-      ),
-      hakukohdeServiceValidation,
-      koutaIndeksoijaClient
-    )
     new HakuService(
       SqsInTransactionService,
       new AuditLog(MockAuditLogger),
@@ -84,7 +42,7 @@ trait HakuFixtureWithIndexing extends HakuFixture {
       mockKayttooikeusClient,
       hakuServiceValidation,
       koutaIndeksoijaClient,
-      hakukohdeService
+      hakukohdeUtil
     )
   }
 }
@@ -93,7 +51,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
   override protected lazy val auditLog = new AuditLog(MockAuditLogger)
 
-  override def koulutusService = {
+  override def koulutusService: KoulutusService = {
     val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoService              = new KoodistoService(new KoodistoClient(urlProperties.get))
     val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
@@ -101,6 +59,8 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
     val lokalisointiClient           = new LokalisointiClient(urlProperties.get)
     val keywordService               = new KeywordService(auditLog, organisaatioService)
+    val hakukohdeUtil =
+      new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val koulutusServiceValidation =
       new KoulutusServiceValidation(
@@ -124,7 +84,8 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
       ePerusteKoodiClient,
       koutaIndeksoijaClient,
       lokalisointiClient,
-      keywordService
+      keywordService,
+      hakukohdeUtil
     )
   }
 }
@@ -132,7 +93,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
 trait ToteutusFixtureWithIndexing extends ToteutusFixture {
   this: KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture =>
 
-  override def toteutusService = {
+  override def toteutusService: ToteutusService = {
     val organisaatioService     = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient      = new LokalisointiClient(urlProperties.get)
     val koodistoService         = new KoodistoService(new KoodistoClient(urlProperties.get))
@@ -168,11 +129,13 @@ trait ToteutusFixtureWithIndexing extends ToteutusFixture {
 trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
   this: KoutaIntegrationSpec with AccessControlSpec =>
 
-  override def valintaperusteService = {
+  override def valintaperusteService: ValintaperusteService = {
     val organisaatioService             = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoService                 = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient           = new MockKoutaIndeksoijaClient
     val valintaperusteServiceValidation = new ValintaperusteServiceValidation(koodistoService, HakukohdeDAO)
+    val lokalisointiClient  = new LokalisointiClient(urlProperties.get)
+    val hakukohdeUtil = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
     new ValintaperusteService(
       SqsInTransactionService,
       new AuditLog(MockAuditLogger),
@@ -180,7 +143,8 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
       mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       valintaperusteServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 }
@@ -188,12 +152,13 @@ trait ValintaperusteFixtureWithIndexing extends ValintaperusteFixture {
 trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
   this: KoutaIntegrationSpec with AccessControlSpec with KoulutusFixture =>
 
-  override def hakukohdeService = {
+  override def hakukohdeService: HakukohdeService = {
     val organisaatioService     = new OrganisaatioServiceImpl(urlProperties.get)
     val lokalisointiClient      = new LokalisointiClient(urlProperties.get)
     val koodistoService         = new KoodistoService(new KoodistoClient(urlProperties.get))
     val koutaIndeksoijaClient   = new MockKoutaIndeksoijaClient
     val mockEPerusteKoodiClient = mock[EPerusteKoodiClient]
+    val hakukohdeUtil           = new HakukohdeUtil(mockOppijanumerorekisteriClient, koodistoService, lokalisointiClient)
 
     val hakukohdeServiceValidation = new HakukohdeServiceValidation(
       koodistoService,
@@ -217,7 +182,6 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
       new AuditLog(MockAuditLogger),
       organisaatioService,
       lokalisointiClient,
-      mockOppijanumerorekisteriClient,
       mockKayttooikeusClient,
       koodistoService,
       new ToteutusService(
@@ -235,7 +199,8 @@ trait HakukohdeFixtureWithIndexing extends HakukohdeFixture {
         koutaIndeksoijaClient
       ),
       hakukohdeServiceValidation,
-      koutaIndeksoijaClient
+      koutaIndeksoijaClient,
+      hakukohdeUtil
     )
   }
 }

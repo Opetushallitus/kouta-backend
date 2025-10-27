@@ -19,21 +19,17 @@ trait HakukohdeDAO extends EntityModificationDAO[HakukohdeOid] {
   def get(oid: HakukohdeOid, tilaFilter: TilaFilter): Option[(Hakukohde, Instant)]
   def getHakukohteetByHakuOid(hakuOid: HakuOid, tilaFilter: TilaFilter): Seq[Hakukohde]
   def listByToteutusOid(oid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakukohdeListItem]
-  def listByToteutusOidAndAllowedOrganisaatiot(
-      toteutusOid: ToteutusOid,
-      organisaatioOids: Seq[OrganisaatioOid]
-  ): Seq[HakukohdeListItem]
+
   def listByHakuOid(hakuOid: HakuOid, tilaFilter: TilaFilter): Seq[HakukohdeListItem]
   def listByHakuOidAndAllowedOrganisaatiot(
       hakuOid: HakuOid,
       organisaatioOids: Seq[OrganisaatioOid]
   ): Seq[HakukohdeListItem]
   def listByValintaperusteId(valintaperusteId: UUID, tilaFilter: TilaFilter): Seq[HakukohdeListItem]
-  def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem]
 
   def archiveHakukohdesByHakukohdeOids(hakukohdeOids: Seq[HakukohdeOid]): Int
   def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid]
-  def getDependencyInformation(hakukohde: Hakukohde): Option[HakukohdeDependencyInformation]
+  def getDependencyInformation(hakukohde: Hakukohde, jarjestyspaikanOppilaitosOid: Option[OrganisaatioOid]): Option[HakukohdeDependencyInformation]
   def removeJarjestaaUrheilijanAmmatillistaKoulutustaByJarjestyspaikkaOid(
       jarjestyspaikkaOid: OrganisaatioOid
   ): DBIO[Int]
@@ -136,24 +132,10 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   override def listByToteutusOid(toteutusOid: ToteutusOid, tilaFilter: TilaFilter): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByToteutusOid(toteutusOid, tilaFilter))
 
-  override def listByToteutusOidAndAllowedOrganisaatiot(
-      toteutusOid: ToteutusOid,
-      organisaatioOids: Seq[OrganisaatioOid]
-  ): Seq[HakukohdeListItem] = organisaatioOids match {
-    case Nil => Seq()
-    case _   => KoutaDatabase.runBlocking(selectByToteutusOidAndAllowedOrganisaatiot(toteutusOid, organisaatioOids))
-  }
-
   override def listByValintaperusteId(valintaperusteId: UUID, tilaFilter: TilaFilter): Seq[HakukohdeListItem] =
     KoutaDatabase.runBlocking(selectByValintaperusteId(valintaperusteId, tilaFilter))
 
-  override def listByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): Seq[HakukohdeListItem] =
-    organisaatioOids match {
-      case Nil => Seq()
-      case _   => KoutaDatabase.runBlocking(selectByAllowedOrganisaatiot(organisaatioOids))
-    }
-
-  override def getDependencyInformation(hakukohde: Hakukohde): Option[HakukohdeDependencyInformation] = {
+  override def getDependencyInformation(hakukohde: Hakukohde, jarjestyspaikanOppilaitosOid: Option[OrganisaatioOid]): Option[HakukohdeDependencyInformation] = {
     val toteutusDependencyInfo: Option[HakukohdeToteutusDependencyInfo] =
       KoutaDatabase.runBlocking(selectToteutusDependencyInformation(hakukohde))
     val valintaperusteDependencyInfo: Option[HakukohdeValintaperusteDependencyInfo] =
@@ -161,7 +143,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val jarjestyspaikkaDependencyInfo: Option[HakukohdeJarjestyspaikkaDependencyInfo] =
       hakukohde.jarjestyspaikkaOid match {
         case Some(jarjestyspaikkaOid) =>
-          KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid))
+          KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid, jarjestyspaikanOppilaitosOid))
         case None => None
       }
     toteutusDependencyInfo match {
@@ -552,31 +534,10 @@ last_modified from hakukohteet
           where ha.toteutus_oid = $toteutusOid #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakukohdeListItem]
   }
 
-  def selectByToteutusOidAndAllowedOrganisaatiot(
-      toteutusOid: ToteutusOid,
-      organisaatioOids: Seq[OrganisaatioOid]
-  ): DBIO[Vector[HakukohdeListItem]] = {
-    sql"""#$selectHakukohdeListSql
-          left join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
-          where (ha.organisaatio_oid in (#${createOidInParams(
-      organisaatioOids
-    )}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))
-          and ha.toteutus_oid = $toteutusOid and ha.tila != 'poistettu'::julkaisutila""".as[HakukohdeListItem]
-  }
-
   def selectByValintaperusteId(valintaperusteId: UUID, tilaFilter: TilaFilter): DBIO[Vector[HakukohdeListItem]] = {
     sql"""#$selectHakukohdeListSql
           where ha.valintaperuste_id = ${valintaperusteId.toString}::uuid
           #${tilaConditions(tilaFilter, "ha.tila")}""".as[HakukohdeListItem]
-  }
-
-  def selectByAllowedOrganisaatiot(organisaatioOids: Seq[OrganisaatioOid]): DBIO[Vector[HakukohdeListItem]] = {
-    sql"""#$selectHakukohdeListSql
-          inner join toteutusten_tarjoajat tt on ha.toteutus_oid = tt.toteutus_oid
-          where ha.tila != 'poistettu'::julkaisutila and
-            (ha.organisaatio_oid in (#${createOidInParams(
-      organisaatioOids
-    )}) or tt.tarjoaja_oid in (#${createOidInParams(organisaatioOids)}))""".as[HakukohdeListItem]
   }
 
   def selectOidsByJarjestyspaikkaOids(jarjestyspaikkaOids: Seq[OrganisaatioOid], tilaFilter: TilaFilter) = {
@@ -611,9 +572,12 @@ last_modified from hakukohteet
     """.as[HakukohdeValintaperusteDependencyInfo].headOption
 
   def selectJarjestyspaikkaDependencyInformation(
-      jarjestyspaikkaOid: OrganisaatioOid
+      jarjestyspaikkaOid: OrganisaatioOid,
+      jarjestyspaikanOppilaitosOid: Option[OrganisaatioOid]
   ): DBIO[Option[HakukohdeJarjestyspaikkaDependencyInfo]] =
-    sql"""select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitokset where oid = ${jarjestyspaikkaOid.toString}
+    sql"""select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta
+          from oppilaitokset
+          where oid in (#${createOidInParams(List(Some(jarjestyspaikkaOid), jarjestyspaikanOppilaitosOid).flatten.distinct)})
           union
           select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitosten_osat where oid = ${jarjestyspaikkaOid.toString}
        """.as[HakukohdeJarjestyspaikkaDependencyInfo].headOption

@@ -1,14 +1,15 @@
 package fi.oph.kouta.integration
 
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.{JulkaistuHakukohde, Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus, MinHakukohde}
+import fi.oph.kouta.TestData.{JulkaistuHakukohde, JulkaistuOppilaitos, Liite1, Liite2, LukioHakukohteenLinja, LukioKoulutus, MinHakukohde}
 import fi.oph.kouta.TestOids._
-import fi.oph.kouta.auditlog.AuditLog
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
-import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, KoulutusFixture, ValintaperusteFixture}
+import fi.oph.kouta.integration.fixture.{HakuFixture, HakukohdeFixture, KoulutusFixture, OppilaitosFixture, ValintaperusteFixture}
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
 import org.json4s.jackson.Serialization.read
@@ -22,9 +23,11 @@ class HakukohdeSpec
     with KoulutusFixture
     with HakuFixture
     with ValintaperusteFixture
-    with LokalisointiServiceMock {
+    with LokalisointiServiceMock
+    with OppilaitosFixture {
 
   override val roleEntities: Seq[RoleEntity] = Seq(Role.Hakukohde)
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   var (koulutusOid, toteutusOid, hakuOid, yhteisHakuOid) = ("", "", "", "")
   var valintaperusteId: UUID                             = _
@@ -143,6 +146,28 @@ class HakukohdeSpec
     )
   }
 
+  it should "fail to store hakukohde with jarjestaaUrheilijanAmmKoulutusta when jarjestyspaikka doesn't allow it" in {
+    put(
+      HakukohdePath,
+      withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(
+      metadata = JulkaistuHakukohde.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true))))),
+      400,
+      "metadata.jarjestaaUrheilijanAmmKoulutusta",
+      invalidJarjestyspaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta(false)
+    )
+  }
+
+  it should "succeed in storing hakukohde with jarjestaaUrheilijanAmmKoulutusta when jarjestyspaikka parent oppilaitos allows it" in {
+    val oppilaitosOid = ChildOid
+    put(JulkaistuOppilaitos.copy(oid = oppilaitosOid, metadata = JulkaistuOppilaitos.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), ophSession)
+
+    put(
+      withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(
+        jarjestyspaikkaOid = Some(GrandChildOid),
+        metadata = JulkaistuHakukohde.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true))))),
+    )
+  }
+
   it should "store ammatillinen tutkinnon osa hakukohde if toteutus uses hakemuspalvelu" in {
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(
@@ -157,7 +182,10 @@ class HakukohdeSpec
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(
       koulutusOid = KoulutusOid(koulutusOid),
-      metadata = Some(TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu.copy(hakulomaketyyppi = None, isHakukohteetKaytossa = Some(true)))
+      metadata = Some(
+        TestData.AmmTutkinnonOsaToteutusMetadataHakemuspalvelu
+          .copy(hakulomaketyyppi = None, isHakukohteetKaytossa = Some(true))
+      )
     )
     val toteutusOid = put(ammToToteutus)
     put(hakukohde(toteutusOid, hakuOid))
@@ -402,7 +430,12 @@ class HakukohdeSpec
     val thisHakukohde = tallennettuHakukohde(oid).copy(tila = Tallennettu, jarjestyspaikkaOid = None)
     val lastModified  = get(oid, thisHakukohde)
     MockAuditLogger.clean()
-    update(thisHakukohde, lastModified, expectUpdate = true, crudSessions(hakukohde.organisaatioOid)) // muokkaaja changed
+    update(
+      thisHakukohde,
+      lastModified,
+      expectUpdate = true,
+      crudSessions(hakukohde.organisaatioOid)
+    ) // muokkaaja changed
     MockAuditLogger.logs should not be empty
     get(s"$HakukohdePath/${oid}", headers = Seq(sessionHeader(defaultSessionId))) {
       withClue(body) {
@@ -509,9 +542,11 @@ class HakukohdeSpec
   }
 
   it should "update hakukohteen muokkaaja on hakuajat change" in {
-    val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
-    val ophTallennettuHakukohde = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
-      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
+    val ophTallennettuHakukohde = tallennettuHakukohde(oid).copy(
+      muokkaaja = OphUserOid,
+      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
     val lastModified = get(oid, ophTallennettuHakukohde)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(
@@ -529,7 +564,8 @@ class HakukohdeSpec
       hakuajat = hakuajat,
       liitteet = List(),
       valintakokeet = List(),
-      metadata = Some(withValintaperusteenValintakokeet(uusiHakukohde).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+      metadata =
+        Some(withValintaperusteenValintakokeet(uusiHakukohde).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
     )
     val oid                = put(eiJulkaistuHakukohde, ophSession)
     val eiJulkaistuWithOid = eiJulkaistuHakukohde.copy(oid = Some(HakukohdeOid(oid)), muokkaaja = OphUserOid)
@@ -633,9 +669,11 @@ class HakukohdeSpec
   }
 
   it should "update muokkaaja on liitteet change" in {
-    val oid         = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
-    val tallennettu = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
-      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
+    val tallennettu = tallennettuHakukohde(oid).copy(
+      muokkaaja = OphUserOid,
+      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
@@ -647,8 +685,10 @@ class HakukohdeSpec
 
   it should "update muokkaaja on liitteet delete" in {
     val oid = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
-    val tallennettu = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
-      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val tallennettu = tallennettuHakukohde(oid).copy(
+      muokkaaja = OphUserOid,
+      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     var lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
@@ -666,9 +706,11 @@ class HakukohdeSpec
   }
 
   it should "update muokkaaja on valintakokeet change" in {
-    val oid         = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
-    val tallennettu = tallennettuHakukohde(oid).copy(muokkaaja = OphUserOid,
-      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true))))
+    val oid = put(withValintaperusteenValintakokeet(uusiHakukohde), ophSession)
+    val tallennettu = tallennettuHakukohde(oid).copy(
+      muokkaaja = OphUserOid,
+      metadata = Some(tallennettuHakukohde(oid).metadata.get.copy(isMuokkaajaOphVirkailija = Some(true)))
+    )
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid.toString)
     val lastModified = get(oid, tallennettu)
     val muokattuHakukohde = tallennettu.copy(
@@ -700,7 +742,8 @@ class HakukohdeSpec
     var lastModified = get(oid, hakukohdeWithTwoValintakokeetWithIds)
     // delete one valintakoe
     val hakukohdeWithOneValintakokeet = hakukohdeWithTwoValintakokeetWithIds.copy(
-      valintakokeet = List(hakukohdeWithTwoValintakokeetWithIds.valintakokeet.head))
+      valintakokeet = List(hakukohdeWithTwoValintakokeetWithIds.valintakokeet.head)
+    )
     update(hakukohdeWithOneValintakokeet, lastModified, expectUpdate = true, ophSession2)
     assert(readHakukohdeMuokkaaja(oid) == OphUserOid2.toString)
     val hakukohdeWithNoValintakokeet = hakukohdeWithOneValintakokeet.copy(

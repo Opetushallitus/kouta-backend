@@ -1,10 +1,12 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.TestOids.{OphUserOid, TestUserOid}
+import fi.oph.kouta.client.KoodistoClient
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.security.{Authority, ExternalSession}
+import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.servlet.{Authenticated, ExternalServlet}
 import slick.jdbc.PostgresProfile.api._
 
@@ -19,6 +21,8 @@ trait ExternalFixture
     with ValintaperusteFixture
     with SorakuvausFixture {
   this: KoutaIntegrationSpec =>
+
+  override val koodistoService = new KoodistoService(new KoodistoClient(urlProperties.get))
 
   val ExternalKoulutusPath       = "/external/koulutus"
   val ExternalToteutusPath       = "/external/toteutus"
