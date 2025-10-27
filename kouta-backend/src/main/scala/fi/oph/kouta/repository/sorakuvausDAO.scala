@@ -4,6 +4,7 @@ import fi.oph.kouta.domain.{Julkaisutila, Koulutustyyppi, Sorakuvaus, Sorakuvaus
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.Instant
 import java.util.UUID
@@ -35,7 +36,7 @@ object SorakuvausDAO extends SorakuvausDAO with SorakuvausSQL {
     } yield optionWhen(v > 0)(sorakuvaus.withModified(m.get))
 
   override def get(id: UUID, tilaFilter: TilaFilter): Option[(Sorakuvaus, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally(for {
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(for {
       v <- selectSorakuvaus(id, tilaFilter)
       l <- selectLastModified(id)
     } yield (v, l) match {

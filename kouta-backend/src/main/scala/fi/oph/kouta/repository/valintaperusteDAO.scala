@@ -6,6 +6,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.Instant
 import java.util.UUID
@@ -39,7 +40,7 @@ object ValintaperusteDAO extends ValintaperusteDAO with ValintaperusteSQL {
     } yield optionWhen(v + k > 0)(valintaperuste.withModified(m.get))
 
   override def get(id: UUID, tilaFilter: TilaFilter): Option[(Valintaperuste, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally(
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(
       for {
         v <- selectValintaperuste(id, tilaFilter).as[Valintaperuste].headOption
         k <- selectValintakokeet(id)
@@ -206,12 +207,9 @@ sealed trait ValintaperusteSQL extends ValintaperusteExtractors with Valintaperu
 
   def updateValintakokeet(valintaperuste: Valintaperuste): DBIO[Int] = {
     val (valintaperusteId, valintakokeet, muokkaaja) = (valintaperuste.id, valintaperuste.valintakokeet, valintaperuste.muokkaaja)
-    val oldValintakokeet = KoutaDatabase.runBlockingTransactionally(
-      for {
-        k <- selectValintakokeet(valintaperusteId.get)
-      } yield k.toList)
+    val oldValintakokeet = KoutaDatabase.runBlocking(selectValintakokeet(valintaperusteId.get)).toList
     val (insert, update) = valintakokeet.partition(_.id.isEmpty)
-    val deleted = oldValintakokeet.get.map(_.id).filterNot(uuid => update.map(_.id).contains(uuid))
+    val deleted = oldValintakokeet.map(_.id).filterNot(uuid => update.map(_.id).contains(uuid))
     val insertSQL = insert.map(v => insertValintakoe(valintaperusteId, v.copy(id = Some(UUID.randomUUID())), muokkaaja))
     val updateSQL = update.map(v => updateValintakoe(valintaperusteId, v, muokkaaja))
     deleted.nonEmpty match {

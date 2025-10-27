@@ -7,6 +7,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.Instant
 import java.util.UUID
@@ -57,7 +58,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
 
   override def get(oid: HakukohdeOid, tilaFilter: TilaFilter): Option[(Hakukohde, Instant)] = {
     KoutaDatabase
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally(isolation = ReadCommitted)(for {
         h <- selectHakukohde(oid, tilaFilter)
         a <- selectHakuajat(oid)
         k <- selectValintakokeet(oid)
@@ -158,11 +159,7 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
   }
 
   def getHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) = {
-    KoutaDatabase
-      .runBlockingTransactionally(
-        selectHakukohdeAndRelatedEntities(hakukohdeOids)
-      )
-      .get
+    KoutaDatabase.runBlocking(selectHakukohdeAndRelatedEntities(hakukohdeOids))
   }
 
   override def listArchivableHakukohdeOidsByHakuOids(hakuOids: Seq[HakuOid]): Seq[HakukohdeOid] = {
