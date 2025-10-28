@@ -70,10 +70,11 @@ abstract class KoutaDatabaseAccessor extends Logging {
     try {
       Success[R](runBlocking(operations.transactionally.withTransactionIsolation(isolation), timeout))
     } catch {
-      case e: PSQLException if e
-        .getSQLState == SERIALIZATION_VIOLATION && retries > 0 => logger.warn("Failed due to serialization violation, retrying")
+      case e: PSQLException if e.getSQLState == SERIALIZATION_VIOLATION && retries > 0 =>
+        logger.warn("Failed due to serialization violation, retrying")
         runBlockingTransactionally(timeout, isolation, retries - 1)(operations)
-      case e: Exception => logger.error("Error in transactional db query", e)
+      case e: Exception =>
+        logger.error("Error in transactional db query", e)
         Failure(e)
     }
   }
