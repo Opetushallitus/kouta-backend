@@ -6,6 +6,7 @@ import fi.oph.kouta.domain.{Julkaisutila, Oppilaitos, OppilaitosAndOsa}
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -28,7 +29,7 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
     } yield oppilaitos.withModified(m.get)
 
   override def get(oid: OrganisaatioOid): Option[(Oppilaitos, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally(
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(
       for {
         k <- selectOppilaitos(oid)
         l <- selectLastModified(oid)
@@ -40,11 +41,7 @@ object OppilaitosDAO extends OppilaitosDAO with OppilaitosSQL {
   }
 
   override def get(oids: List[OrganisaatioOid]): Vector[OppilaitosAndOsa] = {
-    KoutaDatabase.runBlockingTransactionally(
-      for {
-        oppilaitokset <- selectOppilaitokset(oids).as[OppilaitosAndOsa]
-      } yield oppilaitokset
-    ).get
+    KoutaDatabase.runBlocking(selectOppilaitokset(oids).as[OppilaitosAndOsa])
   }
 
   override def getUpdateActions(oppilaitos: Oppilaitos): DBIO[Option[Oppilaitos]] =

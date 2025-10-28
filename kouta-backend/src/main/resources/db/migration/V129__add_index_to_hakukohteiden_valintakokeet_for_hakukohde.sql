@@ -1,0 +1,1 @@
+CREATE INDEX hakukohteiden_valintakokeet_hakukohde_index on hakukohteiden_valintakokeet (hakukohde_oid);
