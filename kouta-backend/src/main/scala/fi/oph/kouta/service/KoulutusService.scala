@@ -7,7 +7,7 @@ import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid, RootOrganisaatioOid, UserOid}
 import fi.oph.kouta.domain.searchResults.{KoulutusSearchResult, KoulutusSearchResultFromIndex}
-import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
+import fi.oph.kouta.images.{ImageService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeKoulutus}
 import fi.oph.kouta.logging.Logging
@@ -78,7 +78,7 @@ object KoulutusService
 
 class KoulutusService(
     sqsInTransactionService: SqsInTransactionService,
-    val s3ImageService: S3ImageService,
+    val s3ImageService: ImageService,
     auditLog: AuditLog,
     val organisaatioService: OrganisaatioService,
     oppijanumerorekisteriClient: OppijanumerorekisteriClient,
