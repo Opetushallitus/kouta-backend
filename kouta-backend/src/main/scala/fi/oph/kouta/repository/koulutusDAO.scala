@@ -7,6 +7,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 import slick.sql.SqlStreamingAction
 
 import java.util.UUID
@@ -53,7 +54,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   override def get(oid: KoulutusOid, tilaFilter: TilaFilter): Option[(Koulutus, Instant)] = {
     KoutaDatabase
-      .runBlockingTransactionally(
+      .runBlockingTransactionally(isolation = ReadCommitted)(
         for {
           k <- selectKoulutus(oid, tilaFilter).as[Koulutus].headOption
           t <- selectKoulutuksenTarjoajat(oid).as[Tarjoaja]
@@ -67,9 +68,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
   }
 
   override def get(oid: KoulutusOid): Option[Koulutus] = {
-    KoutaDatabase
-      .runBlockingTransactionally(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption)
-      .get
+    KoutaDatabase.runBlocking(selectKoulutus(oid, TilaFilter.onlyOlemassaolevat()).as[Koulutus].headOption)
   }
 
   override def get(oids: List[KoulutusOid]) = {
@@ -97,14 +96,11 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   def updateKoulutuksenTarjoajat(koulutus: Koulutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (koulutus.oid, koulutus.tarjoajat, koulutus.muokkaaja)
-    val oldTarjoajat = KoutaDatabase.runBlockingTransactionally(
-      for {
-        t <- selectKoulutuksenTarjoajat(oid.get).as[Tarjoaja]
-      } yield t.toList)
-    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.get.map(_.tarjoajaOid).contains(oid))
-    val deleted = oldTarjoajat.get.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
+    val oldTarjoajat = KoutaDatabase.runBlocking(selectKoulutuksenTarjoajat(oid.get).as[Tarjoaja]).toList
+    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.map(_.tarjoajaOid).contains(oid))
+    val deleted = oldTarjoajat.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
     (inserted.nonEmpty, deleted.nonEmpty) match {
-      case (true, any) =>
+      case (true, _) =>
         val actions = inserted.map(insertTarjoaja(oid, _, muokkaaja)) :+ deleteTarjoajatByOids(oid, deleted.map(_.tarjoajaOid))
         DBIOHelpers.sumIntDBIOs(actions)
       case (false, true) =>
@@ -116,7 +112,7 @@ object KoulutusDAO extends KoulutusDAO with KoulutusSQL {
 
   private def listWithTarjoajat(selectListItems: => DBIO[Seq[KoulutusListItem]]): Seq[KoulutusListItem] =
     KoutaDatabase
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally( isolation = ReadCommitted)(for {
         koulutukset <- selectListItems
         tarjoajat   <- selectKoulutustenTarjoajat(koulutukset.map(_.oid).toList).as[Tarjoaja]
       } yield (koulutukset, tarjoajat))

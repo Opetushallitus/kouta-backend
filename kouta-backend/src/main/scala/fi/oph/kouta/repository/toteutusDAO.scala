@@ -7,6 +7,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -62,7 +63,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def get(oid: ToteutusOid, tilaFilter: TilaFilter): Option[(Toteutus, Instant)] = {
     KoutaDatabase
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally(isolation = ReadCommitted)(for {
         t  <- selectToteutus(oid, tilaFilter).as[Toteutus].headOption
         tt <- selectToteutuksenTarjoajat(oid).as[Tarjoaja]
       } yield (t, tt))
@@ -82,11 +83,9 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   def updateToteutuksenTarjoajat(toteutus: Toteutus): DBIO[Int] = {
     val (oid, tarjoajat, muokkaaja) = (toteutus.oid, toteutus.tarjoajat, toteutus.muokkaaja)
-    val oldTarjoajat = KoutaDatabase.runBlockingTransactionally(for {
-      t <- selectToteutuksenTarjoajat(oid.get).as[Tarjoaja]
-    } yield t.toList)
-    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.get.map(_.tarjoajaOid).contains(oid))
-    val deleted  = oldTarjoajat.get.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
+    val oldTarjoajat = KoutaDatabase.runBlocking(selectToteutuksenTarjoajat(oid.get).as[Tarjoaja]).toList
+    val inserted = tarjoajat.filterNot(oid => oldTarjoajat.map(_.tarjoajaOid).contains(oid))
+    val deleted  = oldTarjoajat.filterNot(t => tarjoajat.contains(t.tarjoajaOid))
 
     (inserted.nonEmpty, deleted.nonEmpty) match {
       case (true, any) =>
@@ -107,7 +106,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   override def getByKoulutusOid(koulutusOid: KoulutusOid, tilaFilter: TilaFilter): Seq[Toteutus] = {
     KoutaDatabase
-      .runBlockingTransactionally(
+      .runBlockingTransactionally(isolation = ReadCommitted)(
         for {
           toteutukset <- selectToteutuksetByKoulutusOid(koulutusOid, tilaFilter).as[Toteutus]
           tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)
@@ -126,7 +125,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   private def listWithTarjoajat(selectListItems: () => DBIO[Seq[ToteutusListItem]]): Seq[ToteutusListItem] =
     KoutaDatabase
-      .runBlockingTransactionally(
+      .runBlockingTransactionally(isolation = ReadCommitted)(
         for {
           toteutukset <- selectListItems()
           tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid).toList)
@@ -172,7 +171,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
 
   def getToteutuksetByOids(toteutusOids: List[ToteutusOid]): Seq[Toteutus] = {
     KoutaDatabase
-      .runBlockingTransactionally(
+      .runBlockingTransactionally(isolation = ReadCommitted)(
         for {
           toteutukset <- selectToteutuksetOrderedByOids(toteutusOids).as[Toteutus]
           tarjoajat   <- selectToteutustenTarjoajat(toteutukset.map(_.oid.get).toList)

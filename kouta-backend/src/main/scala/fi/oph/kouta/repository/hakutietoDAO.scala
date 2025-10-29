@@ -3,6 +3,7 @@ package fi.oph.kouta.repository
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.{Ajanjakso, Hakutieto, HakutietoHaku, HakutietoHakukohde}
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -12,7 +13,7 @@ trait HakutietoDAO {
 
 object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
   override def getByKoulutusOid(koulutusOid: KoulutusOid): Seq[Hakutieto] = {
-    KoutaDatabase.runBlockingTransactionally(
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(
       for {
         haut <- selectHakujenHakutiedot(koulutusOid)
         hakujenHakuajat <- selectHakujenHakuajat(haut)

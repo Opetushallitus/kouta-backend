@@ -29,19 +29,23 @@ object SessionDAO extends SessionDAO with SessionSQL {
   override def store(session: CasSession): UUID = {
     val CasSession(ServiceTicket(ticket), personOid, authorities) = session
     val id = UUID.randomUUID()
-    runBlockingTransactionally(storeCasSession(id, ticket, personOid, authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
+    runBlockingTransactionally(timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted) {
+      storeCasSession(id, ticket, personOid, authorities)
+    }
       .map(_ => id).get
   }
 
   override def store(session: CasSession, id: UUID): UUID =
-    runBlockingTransactionally(storeCasSession(id, session.casTicket.s, session.personOid, session.authorities), timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted)
+    runBlockingTransactionally(timeout = Duration(1, TimeUnit.MINUTES), ReadCommitted) {
+      storeCasSession(id, session.casTicket.s, session.personOid, session.authorities)
+    }
       .map(_ => id).get
 
   override def delete(id: UUID): Boolean =
-    runBlockingTransactionally(deleteSession(id), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get
+    runBlockingTransactionally(timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted)(deleteSession(id)).get
 
   override def delete(ticket: ServiceTicket): Boolean =
-    runBlockingTransactionally(deleteSession(ticket), timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted).get
+    runBlockingTransactionally(timeout = Duration(15, TimeUnit.SECONDS), ReadCommitted)(deleteSession(ticket)).get
 
   override def get(id: UUID): Option[Session] = {
     runBlocking(getSessionInfo(id), timeout = Duration(15, TimeUnit.SECONDS))

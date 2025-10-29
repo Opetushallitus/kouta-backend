@@ -7,6 +7,7 @@ import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
 import fi.oph.kouta.repository.ToteutusDAO.getToteutusResult
 import slick.dbio.{DBIO, DBIOAction}
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.{Instant, LocalDateTime}
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -53,7 +54,7 @@ class SiirtotiedostoDAO(
       offset: Int
   ): Seq[HakukohdeRaporttiItem] = {
     databaseAccessor
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally(isolation = ReadCommitted)(for {
         hakukohteet   <- selectHakukohteet(startTime, endTime, limit, offset)
         hakuajat      <- selectHakukohteidenHakuajat(hakukohteet)
         liitteet      <- selectHakukohteidenLiitteet(hakukohteet)
@@ -80,7 +81,7 @@ class SiirtotiedostoDAO(
       offset: Int
   ): Seq[HakuRaporttiItem] =
     databaseAccessor
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally(isolation = ReadCommitted)(for {
         haut     <- selectHaut(startTime, endTime, limit, offset)
         hakuajat <- selectHakujenHakuajat(haut)
       } yield (haut, hakuajat))
@@ -100,7 +101,7 @@ class SiirtotiedostoDAO(
       offset: Int
   ): Seq[ValintaperusteRaporttiItem] =
     databaseAccessor
-      .runBlockingTransactionally(for {
+      .runBlockingTransactionally(isolation = ReadCommitted)(for {
         vp   <- selectValintaperusteet(startTime, endTime, limit, offset)
         vpvk <- selectValintaperusteidenValintakokeet(vp)
       } yield (vp, vpvk))

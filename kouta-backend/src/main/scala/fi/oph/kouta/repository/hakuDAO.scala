@@ -7,6 +7,7 @@ import fi.oph.kouta.util.MiscUtils.optionWhen
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,10 +33,10 @@ object HakuDAO extends HakuDAO with HakuSQL {
     } yield haku.withOid(oid).withModified(m.get)
 
   override def get(oid: HakuOid, tilaFilter: TilaFilter): Option[(Haku, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally( for {
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(for {
       h <- selectHaku(oid, tilaFilter)
       a <- selectHaunHakuajat(oid)
-    } yield (h, a) ).map {
+    } yield (h, a)).map {
       case (Some(h), a) => Some((
         h.copy(
           hakuajat = a.map(x => domain.Ajanjakso(x.alkaa, x.paattyy)).toList),

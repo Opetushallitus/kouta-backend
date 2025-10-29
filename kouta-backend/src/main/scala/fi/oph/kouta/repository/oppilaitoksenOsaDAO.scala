@@ -7,6 +7,7 @@ import fi.oph.kouta.servlet.EntityNotFoundException
 import fi.oph.kouta.util.MiscUtils.optionWhen
 import slick.dbio.DBIO
 import slick.jdbc.PostgresProfile.api._
+import slick.jdbc.TransactionIsolation.ReadCommitted
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -34,7 +35,7 @@ object OppilaitoksenOsaDAO extends OppilaitoksenOsaDAO with OppilaitoksenOsaSQL 
     } yield oppilaitoksenOsa.withModified(m.get)
 
   override def get(oid: OrganisaatioOid): Option[(OppilaitoksenOsa, Instant)] = {
-    KoutaDatabase.runBlockingTransactionally(
+    KoutaDatabase.runBlockingTransactionally(isolation = ReadCommitted)(
       for {
         k <- selectOppilaitoksenOsa(oid)
         l <- selectLastModified(oid)
