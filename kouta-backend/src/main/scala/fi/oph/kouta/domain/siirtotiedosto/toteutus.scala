@@ -9,6 +9,7 @@ import java.util.UUID
 sealed trait ToteutusMetadataRaporttiItem {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
+  val osaamistavoitteet: Kielistetty
   val opetus: Option[OpetusRaporttiItem]
   val asiasanat: List[Keyword]
   val ammattinimikkeet: List[Keyword]
@@ -61,6 +62,7 @@ case class ToteutusRaporttiItem(
 case class AmmatillinenToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     osaamisalat: List[AmmatillinenOsaamisalaRaporttiItem] = List(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
@@ -89,6 +91,7 @@ trait TutkintoonJohtamatonToteutusMetadataRaporttiItem extends ToteutusMetadataR
 case class AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -112,6 +115,7 @@ case class AmmatillinenTutkinnonOsaToteutusMetadataRaporttiItem(
 case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -135,6 +139,7 @@ case class AmmatillinenOsaamisalaToteutusMetadataRaporttiItem(
 case class AmmatillinenMuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmMuu,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -158,6 +163,7 @@ case class AmmatillinenMuuToteutusMetadataRaporttiItem(
 case class YliopistoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Yo,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -172,6 +178,7 @@ case class YliopistoToteutusMetadataRaporttiItem(
 case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amk,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -186,6 +193,7 @@ case class AmmattikorkeakouluToteutusMetadataRaporttiItem(
 case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -200,6 +208,7 @@ case class AmmOpeErityisopeJaOpoToteutusMetadataRaporttiItem(
 case class OpePedagOpinnotToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -214,6 +223,7 @@ case class OpePedagOpinnotToteutusMetadataRaporttiItem(
 case class KkOpintojaksoToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintojakso,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     opetus: Option[OpetusRaporttiItem] = None,
@@ -243,6 +253,7 @@ case class KkOpintojaksoToteutusMetadataRaporttiItem(
 case class KkOpintokokonaisuusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
     opetus: Option[OpetusRaporttiItem] = None,
@@ -273,6 +284,7 @@ case class KkOpintokokonaisuusToteutusMetadataRaporttiItem(
 case class LukioToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Lk,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -292,6 +304,7 @@ case class LukioToteutusMetadataRaporttiItem(
 case class TuvaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Tuva,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -307,6 +320,7 @@ case class TuvaToteutusMetadataRaporttiItem(
 case class TelmaToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Telma,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -371,6 +385,7 @@ case class LukiodiplomiTietoRaporttiItem(
 case class VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOpistovuosi,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -385,6 +400,7 @@ case class VapaaSivistystyoOpistovuosiToteutusMetadataRaporttiItem(
 case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoMuu,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -408,6 +424,7 @@ case class VapaaSivistystyoMuuToteutusMetadataRaporttiItem(
 case class VapaaSivistystyoOsaamismerkkiToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = VapaaSivistystyoOsaamismerkki,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -432,6 +449,7 @@ case class VapaaSivistystyoOsaamismerkkiToteutusMetadataRaporttiItem(
 case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -455,6 +473,7 @@ case class AikuistenPerusopetusToteutusMetadataRaporttiItem(
 case class ErikoislaakariToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoislaakari,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -469,6 +488,7 @@ case class ErikoislaakariToteutusMetadataRaporttiItem(
 case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opetus: Option[OpetusRaporttiItem] = None,
     asiasanat: List[Keyword] = List(),
     ammattinimikkeet: List[Keyword] = List(),
@@ -492,6 +512,7 @@ case class ErikoistumiskoulutusToteutusMetadataRaporttiItem(
 case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
@@ -520,6 +541,7 @@ case class TaiteenPerusopetusToteutusMetadataRaporttiItem(
 case class MuuToteutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Muu,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumeroMin: Option[Double] = None,
     opintojenLaajuusNumeroMax: Option[Double] = None,
