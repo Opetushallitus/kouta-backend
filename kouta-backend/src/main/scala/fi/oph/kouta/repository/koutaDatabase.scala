@@ -60,19 +60,19 @@ abstract class KoutaDatabaseAccessor extends Logging {
     )
   }
 
-  def runBlockingTransactionally[R](
-      operations: DBIO[R],
-      timeout: Duration = Duration(20, TimeUnit.SECONDS),
-      isolation: TransactionIsolation = Serializable,
-      retries: Int = 2
-  ): Try[R] = {
+  def runBlockingTransactionally[R](operations: DBIO[R]):Try[R]=
+    runBlockingTransactionally()(operations)
+
+  def runBlockingTransactionally[R](timeout: Duration = Duration(20, TimeUnit.SECONDS),
+                                    isolation: TransactionIsolation = Serializable,
+                                    retries: Int = 2)(operations: DBIO[R]): Try[R] = {
     val SERIALIZATION_VIOLATION = "40001"
     try {
       Success[R](runBlocking(operations.transactionally.withTransactionIsolation(isolation), timeout))
     } catch {
       case e: PSQLException if e.getSQLState == SERIALIZATION_VIOLATION && retries > 0 =>
         logger.warn("Failed due to serialization violation, retrying")
-        runBlockingTransactionally(operations, timeout, isolation, retries - 1)
+        runBlockingTransactionally(timeout, isolation, retries - 1)(operations)
       case e: Exception =>
         logger.error("Error in transactional db query", e)
         Failure(e)
