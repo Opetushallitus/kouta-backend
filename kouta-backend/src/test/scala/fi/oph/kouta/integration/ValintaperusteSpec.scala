@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import java.time.LocalDateTime
 import java.util.UUID
 import fi.oph.kouta.TestData
-import fi.oph.kouta.TestData.MinYoValintaperuste
+import fi.oph.kouta.TestData.{AmmValintaperusteMetadata, MinYoValintaperuste}
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain.{Fi, Sv, _}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, UserOid}
@@ -174,8 +174,23 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
     val lastModified = get(id, valintaperuste(id))
     MockAuditLogger.clean()
     update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
-    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update")
-    get(id, valintaperuste(id, Arkistoitu))
+    MockAuditLogger.findFieldChange("tila", "julkaistu", "arkistoitu", id.toString, "valintaperuste_update") shouldBe defined
+  }
+
+  it should "write valintaperuste update to audit log without truncating long values" in {
+    val id           = put(valintaperuste)
+    val lastModified = get(id, valintaperuste(id))
+    MockAuditLogger.clean(true)
+    val part = "Jukolan talo, eteläisessä Hämeessä, seisoo erään mäen pohjoisella rinteellä, liki Toukolan kylää."
+    val longString = (1 to 4000 / part.length).map(_=>part).mkString(" ")
+    val hakukelpoisuus = Map(Fi -> "hakukelpoisuus", Sv -> longString)
+    val updated = valintaperuste(id).copy(metadata = Some(AmmValintaperusteMetadata.copy(hakukelpoisuus = hakukelpoisuus)))
+
+    update(getIds(updated), lastModified)
+
+    val logRow = MockAuditLogger.find("metadata.hakukelpoisuus.sv")
+    logRow shouldBe defined
+    logRow.get should include(longString)
   }
 
   it should "not update valintaperuste" in {
