@@ -416,7 +416,7 @@ object Validations {
     id = "invalidKielistetty"
   )
   def notAllowedKielistetty(values: Seq[Kieli]): ErrorMessage = ErrorMessage(
-    msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}",
+    msg = s"Kielistetyssä kentässä ei ole sallittu arvoa kielillä [${values.mkString(",")}]",
     id = "notAllowedKielistetty"
   )
 
