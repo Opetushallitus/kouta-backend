@@ -1,7 +1,5 @@
 package fi.oph.kouta.domain
 
-import fi.oph.kouta.domain.keyword.Keyword
-
 package object koulutusMetadata {
 
   val KoulutusMetadataModel: String =
@@ -12,6 +10,10 @@ package object koulutusMetadata {
       |          type: object
       |          description: Koulutuksen kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |        osaamistavoitteet:
+      |          type: object
+      |          description: Koulutuksen osaamistavoitteet eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Osaamistavoitteet'
       |        lisatiedot:
       |          type: array
       |          description: Koulutukseen liittyviä lisätietoja, jotka näkyvät oppijalle Opintopolussa

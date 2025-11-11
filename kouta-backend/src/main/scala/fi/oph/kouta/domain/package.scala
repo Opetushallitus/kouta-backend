@@ -128,6 +128,24 @@ package object domain {
       |          description: "Englanninkielinen kuvaus, jos kielivalinnassa on 'en'"
       |""".stripMargin
 
+  val OsaamistavoitteetModel: String =
+    """    Osaamistavoitteet:
+      |      type: object
+      |      properties:
+      |        fi:
+      |          type: string
+      |          example: Suomenkielinen osaamistavoitekuvaus
+      |          description: "Suomenkielinen osaamistavoitekuvaus, jos kielivalinnassa on 'fi'"
+      |        sv:
+      |          type: string
+      |          example: Ruotsinkielinen osaamistavoitekuvaus
+      |          description: "Ruotsinkielinen osaamistavoitekuvaus, jos kielivalinnassa on 'sv'"
+      |        en:
+      |          type: string
+      |          example: Englanninkielinen osaamistavoitekuvaus
+      |          description: "Englanninkielinen osaamistavoitekuvaus, jos kielivalinnassa on 'en'"
+      |""".stripMargin
+
   val LinkkiModel: String =
     """    Linkki:
       |      type: object
@@ -572,6 +590,7 @@ package object domain {
     TekstiModel,
     NimiModel,
     KuvausModel,
+    OsaamistavoitteetModel,
     LinkkiModel,
     LisatietoModel,
     YhteyshenkiloModel,

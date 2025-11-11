@@ -128,6 +128,10 @@ package object toteutusMetadata {
       |          type: object
       |          description: Toteutuksen kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |        osaamistavoitteet:
+      |          type: object
+      |          description: Toteutuksen osaamistavoitteet eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
+      |          $ref: '#/components/schemas/Osaamistavoitteet'
       |        opetus:
       |          type: object
       |          $ref: '#/components/schemas/Opetus'
