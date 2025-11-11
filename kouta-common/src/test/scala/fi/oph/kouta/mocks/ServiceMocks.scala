@@ -51,18 +51,25 @@ abstract class ServiceMocker extends Logging {
   def clearMock(url: String, method: String): Unit = {
     assertInitialized()
     mockServer.foreach { server =>
-      server.removeStub(server.listAllStubMappings().getMappings.asScala.find { stub =>
+      val stub = server.listAllStubMappings().getMappings.asScala.find { stub =>
         stub.getRequest.getMethod.getName.equalsIgnoreCase(method) &&
-        stub.getRequest.getUrl == url
-      }.orNull)
+          stub.getRequest.getUrl == url
+      }
+
+      stub match {
+        case Some(stub) => server.removeStub(stub)
+        case None =>
+      }
     }
   }
 
   def mockRequest(method: String, path: String, queryParams: Map[String, String],
                   headers: Map[String, String], requestBody: Option[String],
-                  responseString: String, statusCode: Int): StubMapping = {
+                  responseString: String, statusCode: Int,
+                  ignoreArrayOrder: Boolean = false,
+                  ignoreExtraElements: Boolean = false): StubMapping = {
     assertInitialized()
-    
+
     val requestBuilder = request(method, urlPathEqualTo(path))
 
     queryParams.foreach { case (key, value) =>
@@ -74,7 +81,7 @@ abstract class ServiceMocker extends Logging {
     }
 
     requestBody.foreach { body =>
-      requestBuilder.withRequestBody(equalToJson(body))
+      requestBuilder.withRequestBody(equalToJson(body, ignoreArrayOrder, ignoreExtraElements))
     }
 
     mockServer.get.stubFor(
@@ -128,10 +135,12 @@ trait ServiceMockBase extends UrlProperties {
       params: Map[String, String] = Map.empty,
       responseString: String,
       statusCode: Int = 200,
-      headers: Map[String, String] = Map.empty
+      headers: Map[String, String] = Map.empty,
+      ignoreArrayOrder: Boolean = false,
+      ignoreExtraElements: Boolean = false
   )(implicit jsonFormats: Formats): StubMapping = {
     val jsonBody = write[B](body)
-    mocker.mockRequest("POST", path, params, headers, Some(jsonBody), responseString, statusCode)
+    mocker.mockRequest("POST", path, params, headers, Some(jsonBody), responseString, statusCode, ignoreArrayOrder, ignoreExtraElements)
   }
 
   def mockPut[B <: AnyRef](
@@ -140,9 +149,11 @@ trait ServiceMockBase extends UrlProperties {
       params: Map[String, String] = Map.empty,
       responseString: String,
       statusCode: Int = 200,
-      headers: Map[String, String] = Map.empty
+      headers: Map[String, String] = Map.empty,
+      ignoreArrayOrder: Boolean = false,
+      ignoreExtraElements: Boolean = false
   )(implicit jsonFormats: Formats): StubMapping = {
     val jsonBody = write[B](body)
-    mocker.mockRequest("PUT", path, params, headers, Some(jsonBody), responseString, statusCode)
+    mocker.mockRequest("PUT", path, params, headers, Some(jsonBody), responseString, statusCode, ignoreArrayOrder, ignoreExtraElements)
   }
 }
