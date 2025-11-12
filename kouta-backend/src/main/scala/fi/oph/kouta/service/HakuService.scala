@@ -221,7 +221,10 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       // Tämä on true, koska käyttöliittymässä parametri on päin vastoin eli "Vain yksi hakemus -rajoitus"
       useitaHakemuksia = Some(true),
       jarjestetytHakutoiveet = Some(false),
-      hakutoiveidenMaaraRajoitettu = Some(false)))
+      hakutoiveidenMaaraRajoitettu = Some(false),
+      liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa = Some(false),
+      liitteidenMuokkauksenHakukohtainenTakarajaKellonaika = Some("15:00"),
+      PH_LMT = Some(IntParametriDTO(7))))
     ).toDBIO
   }
 }

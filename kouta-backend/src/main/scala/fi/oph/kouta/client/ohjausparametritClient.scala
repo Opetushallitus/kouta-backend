@@ -24,7 +24,10 @@ case class HaunOhjausparametritDTO(PH_OPVP: Option[DateParametriDTO],
                                    sijoittelu: Option[Boolean],
                                    useitaHakemuksia: Option[Boolean],
                                    jarjestetytHakutoiveet: Option[Boolean],
-                                   hakutoiveidenMaaraRajoitettu: Option[Boolean])
+                                   hakutoiveidenMaaraRajoitettu: Option[Boolean],
+                                   liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa: Option[Boolean],
+                                   liitteidenMuokkauksenHakukohtainenTakarajaKellonaika: Option[String],
+                                   PH_LMT: Option[IntParametriDTO])
 
 case class HaunOhjausparametrit(hakuOid: HakuOid,
                                 paikanVastaanottoPaattyy: Option[Instant],
@@ -33,7 +36,10 @@ case class HaunOhjausparametrit(hakuOid: HakuOid,
                                 sijoittelu: Option[Boolean],
                                 useitaHakemuksia: Option[Boolean],
                                 jarjestetytHakutoiveet: Option[Boolean],
-                                hakutoiveidenMaaraRajoitettu: Option[Boolean])
+                                hakutoiveidenMaaraRajoitettu: Option[Boolean],
+                                liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa: Option[Boolean],
+                                liitteidenMuokkauksenHakukohtainenTakarajaKellonaika: Option[String],
+                                PH_LMT: Option[IntParametriDTO])
 
 trait OhjausparametritClient {
   def postHaunOhjausparametrit(haunOhjausparametrit: HaunOhjausparametrit): Unit
@@ -64,7 +70,10 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
       sijoittelu = haunOhjausparametrit.sijoittelu,
       useitaHakemuksia = haunOhjausparametrit.useitaHakemuksia,
       jarjestetytHakutoiveet = haunOhjausparametrit.jarjestetytHakutoiveet,
-      hakutoiveidenMaaraRajoitettu = haunOhjausparametrit.hakutoiveidenMaaraRajoitettu
+      hakutoiveidenMaaraRajoitettu = haunOhjausparametrit.hakutoiveidenMaaraRajoitettu,
+      liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa = haunOhjausparametrit.liitteidenMuokkauksenHakemuskohtainenTakarajaKaytossa,
+      liitteidenMuokkauksenHakukohtainenTakarajaKellonaika = haunOhjausparametrit.liitteidenMuokkauksenHakukohtainenTakarajaKellonaika,
+      PH_LMT = haunOhjausparametrit.PH_LMT
     ))
     val bodyString = compact(render(body))
 
