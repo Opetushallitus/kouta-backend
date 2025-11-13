@@ -17,34 +17,34 @@
     </modules>
 
     <properties>
-        <scala.version>2.12.20</scala.version>
+        <scala.version>2.13.15</scala.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <!-- Korjaa käännösvirheen:
              [ERROR] Source option 5 is no longer supported. Use 6 or later.
              [ERROR] Target option 1.5 is no longer supported. Use 1.6 or later. -->
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
 
         <!-- Utility properties -->
         <auditlogger.version>9.2.6-SNAPSHOT</auditlogger.version>
-        <json4s.version>3.6.12</json4s.version>
+        <json4s.version>4.0.1</json4s.version>
         <jackson.version>2.18.1</jackson.version>
         <logback-access.version>1.3.0</logback-access.version>
 
         <!-- Http related properties -->
-        <scalatra.version>2.7.0</scalatra.version>
+        <scalatra.version>2.8.4</scalatra.version>
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
         <netty.version>4.1.124.Final</netty.version>
 
         <!-- Database related properties -->
-        <flyway.version>8.5.12</flyway.version>
-        <slick.version>3.4.1</slick.version>
+        <flyway.version>11.17.0</flyway.version>
+        <slick.version>3.5.2</slick.version>
         <jdbc.version>42.7.2</jdbc.version>
 
         <!-- Test properties -->
-        <scalatest.version>3.2.0-M4</scalatest.version>
-        <scalatra-scalatest.version>2.7.0</scalatra-scalatest.version>
+        <scalatest.version>3.2.19</scalatest.version>
+        <scalatra-scalatest.version>2.8.4</scalatra-scalatest.version>
         <jetty.version>9.4.57.v20241219</jetty.version>
 
         <commons.io.version>2.16.1</commons.io.version>
@@ -57,21 +57,45 @@
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
         <plugin.maven-assembly-plugin.version>3.1.1</plugin.maven-assembly-plugin.version>
         <plugin.maven-jar-plugin.version>3.1.1</plugin.maven-jar-plugin.version>
-        <plugin.maven-surefire-plugin.version>2.22.0</plugin.maven-surefire-plugin.version>
+        <plugin.maven-surefire-plugin.version>3.5.4</plugin.maven-surefire-plugin.version>
         <plugin.scalatest-maven-plugin.version>1.0</plugin.scalatest-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
             <dependency>
+                <groupId>org.scalaz</groupId>
+                <artifactId>scalaz-core_2.12</artifactId>
+                <version>7.2.12</version>
+            </dependency>
+            <dependency>
+                <groupId>org.typelevel</groupId>
+                <artifactId>cats-core_2.13</artifactId>
+                <version>2.10.0</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-scala_2.12</artifactId>
+                <artifactId>jackson-module-scala_2.13</artifactId>
                 <version>2.18.1</version>
             </dependency>
             <dependency>
                 <groupId>com.sksamuel.elastic4s</groupId>
-                <artifactId>elastic4s-json-jackson_2.12</artifactId>
+                <artifactId>elastic4s-json-jackson_2.13</artifactId>
                 <version>8.5.0</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.json4s</groupId>
+                        <artifactId>json4s-core_2.12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.json4s</groupId>
+                        <artifactId>json4s-jackson_2.12</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.json4s</groupId>
+                        <artifactId>json4s-ext_2.12</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>jakarta.activation</groupId>
@@ -217,8 +241,8 @@
             </dependency>
             <dependency>
                 <groupId>org.log4s</groupId>
-                <artifactId>log4s_2.12</artifactId>
-                <version>1.9.0</version>
+                <artifactId>log4s_2.13</artifactId>
+                <version>1.10.0</version>
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
@@ -232,7 +256,7 @@
             </dependency>
             <dependency>
                 <groupId>org.http4s</groupId>
-                <artifactId>blaze-core_2.12</artifactId>
+                <artifactId>blaze-core_2.13</artifactId>
                 <version>0.14.15</version>
             </dependency>
             <dependency>
@@ -242,13 +266,18 @@
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-collection-compat_2.12</artifactId>
-                <version>2.12.0</version>
+                <artifactId>scala-collection-compat_2.13</artifactId>
+                <version>2.13.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-parallel-collections_2.13</artifactId>
+                <version>1.0.4</version>
             </dependency>
             <dependency>
                 <groupId>org.scalatra.scalate</groupId>
-                <artifactId>scalate-core_2.12</artifactId>
-                <version>1.10.1</version>
+                <artifactId>scalate-core_2.13</artifactId>
+                <version>1.9.7</version>
             </dependency>
             <dependency>
                 <groupId>com.hubspot.jinjava</groupId>
@@ -257,7 +286,7 @@
             </dependency>
             <dependency>
                 <groupId>org.scalaj</groupId>
-                <artifactId>scalaj-http_2.12</artifactId>
+                <artifactId>scalaj-http_2.13</artifactId>
                 <version>2.4.2</version>
                 <exclusions>
                     <exclusion>
@@ -283,8 +312,8 @@
             </dependency>
             <dependency>
                 <groupId>com.github.blemale</groupId>
-                <artifactId>scaffeine_2.12</artifactId>
-                <version>5.2.1</version>
+                <artifactId>scaffeine_2.13</artifactId>
+                <version>5.3.0</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -368,32 +397,32 @@
             </dependency>
             <dependency>
                 <groupId>org.http4s</groupId>
-                <artifactId>http4s-core_2.12</artifactId>
+                <artifactId>http4s-core_2.13</artifactId>
                 <version>0.16.6a</version>
             </dependency>
             <dependency>
                 <groupId>org.http4s</groupId>
-                <artifactId>http4s-json4s-jackson_2.12</artifactId>
+                <artifactId>http4s-json4s-jackson_2.13</artifactId>
                 <version>0.16.6a</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
-                <artifactId>json4s-ast_2.12</artifactId>
+                <artifactId>json4s-ast_2.13</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
-                <artifactId>json4s-core_2.12</artifactId>
+                <artifactId>json4s-core_2.13</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
-                <artifactId>json4s-ext_2.12</artifactId>
+                <artifactId>json4s-ext_2.13</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
-                <artifactId>json4s-jackson_2.12</artifactId>
+                <artifactId>json4s-jackson_2.13</artifactId>
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
@@ -413,23 +442,23 @@
             </dependency>
             <dependency>
                 <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-xml_2.12</artifactId>
-                <version>1.2.0</version>
+                <artifactId>scala-xml_2.13</artifactId>
+                <version>2.3.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scalacheck</groupId>
-                <artifactId>scalacheck_2.12</artifactId>
-                <version>1.14.0</version>
+                <artifactId>scalacheck_2.13</artifactId>
+                <version>1.18.1</version>
             </dependency>
             <dependency>
                 <groupId>org.scalaz</groupId>
-                <artifactId>scalaz-concurrent_2.12</artifactId>
-                <version>7.2.30</version>
+                <artifactId>scalaz-concurrent_2.13</artifactId>
+                <version>7.2.36</version>
             </dependency>
             <dependency>
                 <groupId>org.scalaz</groupId>
-                <artifactId>scalaz-core_2.12</artifactId>
-                <version>7.2.30</version>
+                <artifactId>scalaz-core_2.13</artifactId>
+                <version>7.2.36</version>
             </dependency>
             <dependency>
                 <groupId>org.slf4j</groupId>
@@ -437,19 +466,67 @@
                 <version>1.7.30</version>
             </dependency>
             <dependency>
-                <groupId>org.spire-math</groupId>
-                <artifactId>jawn-parser_2.12</artifactId>
-                <version>0.10.4</version>
+                <groupId>org.typelevel</groupId>
+                <artifactId>jawn-parser_2.13</artifactId>
+                <version>1.6.0</version>
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-matchers-core_2.12</artifactId>
+                <artifactId>scalatest-matchers-core_2.13</artifactId>
                 <version>${scalatest.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-shouldmatchers_2.12</artifactId>
+                <artifactId>scalatest-shouldmatchers_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-core_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-funspec_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-wordspec_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-flatspec_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-freespec_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-featurespec_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-funsuite_2.13</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-mustmatchers_2.13</artifactId>
                 <version>${scalatest.version}</version>
                 <scope>test</scope>
             </dependency>
@@ -481,7 +558,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest_2.12</artifactId>
+            <artifactId>scalatra-scalatest_2.13</artifactId>
             <version>${scalatra-scalatest.version}</version>
             <scope>test</scope>
             <exclusions>
@@ -495,7 +572,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatest</groupId>
-                    <artifactId>scalatest_2.12</artifactId>
+                    <artifactId>scalatest_2.13</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.apache.httpcomponents</groupId>
@@ -507,7 +584,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalatra.scalate</groupId>
-                    <artifactId>scalate-core_2.12</artifactId>
+                    <artifactId>scalate-core_2.13</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>

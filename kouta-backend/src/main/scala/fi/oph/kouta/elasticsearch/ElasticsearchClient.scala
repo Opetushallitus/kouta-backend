@@ -27,7 +27,7 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
 
   implicit val json4s: Serialization = org.json4s.jackson.Serialization
 
-  private def mapResponseToSearchResult[T: HitReader](response: RequestSuccess[SearchResponse]) = {
+  private def mapResponseToSearchResult[T: HitReader: ClassTag](response: RequestSuccess[SearchResponse]) = {
     SearchResult[T](
       totalCount = response.result.totalHits,
       result = response.result.hits.hits.flatMap(_.safeTo[T].toOption)

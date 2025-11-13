@@ -26,6 +26,7 @@
             <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
             <artifactId>dokumenttipalvelu</artifactId>
         </dependency>
+        <!-- Note: aws-scala doesn't have 2.13 versions, using 2.12 for binary compatibility -->
         <dependency>
             <groupId>io.atlassian.aws-scala</groupId>
             <artifactId>aws-scala-s3_2.12</artifactId>
@@ -49,7 +50,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
+                    <artifactId>scalaz-effect_2.13</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>joda-time</groupId>
@@ -121,8 +122,6 @@
                 </executions>
                 <configuration>
                     <args>
-                        <arg>-Xmax-classfile-name</arg>
-                        <arg>140</arg>
                         <arg>-deprecation</arg>
                         <arg>-feature</arg>
                     </args>

@@ -59,6 +59,11 @@
         </dependency>
 
         <dependency>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parallel-collections_2.13</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.jsoup</groupId>
             <artifactId>jsoup</artifactId>
         </dependency>
@@ -81,15 +86,15 @@
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-core_2.12</artifactId>
+            <artifactId>json4s-core_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ext_2.12</artifactId>
+            <artifactId>json4s-ext_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_2.12</artifactId>
+            <artifactId>json4s-jackson_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -134,25 +139,25 @@
         <!-- Diffson for calculating audit log changes -->
         <dependency>
             <groupId>org.gnieh</groupId>
-            <artifactId>diffson-circe_2.12</artifactId>
-            <version>4.3.0</version>
+            <artifactId>diffson-circe_2.13</artifactId>
+            <version>4.6.0</version>
         </dependency>
 
         <!-- Http related dependencies -->
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.12</artifactId>
+            <artifactId>scalatra_2.13</artifactId>
             <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.12</artifactId>
+                    <artifactId>scala-parser-combinators_2.13</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json_2.12</artifactId>
+            <artifactId>scalatra-json_2.13</artifactId>
             <version>${scalatra.version}</version>
         </dependency>
         <dependency>
@@ -168,13 +173,18 @@
             <version>${flyway.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick_2.12</artifactId>
+            <artifactId>slick_2.13</artifactId>
             <version>${slick.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
-            <artifactId>slick-hikaricp_2.12</artifactId>
+            <artifactId>slick-hikaricp_2.13</artifactId>
             <version>${slick.version}</version>
         </dependency>
         <dependency>
@@ -184,6 +194,7 @@
         </dependency>
 
         <!-- Indexing queues -->
+        <!-- Note: aws-scala doesn't have 2.13 versions, using 2.12 for binary compatibility -->
         <dependency>
             <groupId>io.atlassian.aws-scala</groupId>
             <artifactId>aws-scala-sqs_2.12</artifactId>
@@ -195,7 +206,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
+                    <artifactId>scalaz-effect_2.13</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>joda-time</groupId>
@@ -226,6 +237,7 @@
             </exclusions>
         </dependency>
 
+        <!-- Note: aws-scala doesn't have 2.13 versions, using 2.12 for binary compatibility -->
         <dependency>
             <groupId>io.atlassian.aws-scala</groupId>
             <artifactId>aws-scala-s3_2.12</artifactId>
@@ -237,7 +249,7 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
+                    <artifactId>scalaz-effect_2.13</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>joda-time</groupId>
@@ -248,24 +260,24 @@
 
         <dependency>
             <groupId>com.softwaremill.odelay</groupId>
-            <artifactId>odelay-core_2.12</artifactId>
-            <version>0.3.0</version>
+            <artifactId>odelay-core_2.13</artifactId>
+            <version>0.4.1</version>
         </dependency>
         <!-- override version because of conflicting versions in aws-scala -->
         <!-- the version of http4s used in scala-cas requires this version (7.1.13) of scalaz -->
         <dependency>
             <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-core_2.12</artifactId>
+            <artifactId>scalaz-core_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-concurrent_2.12</artifactId>
+            <artifactId>scalaz-concurrent_2.13</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.12</artifactId>
+            <artifactId>scalatest_2.13</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
@@ -278,13 +290,13 @@
         </dependency>
         <dependency>
             <groupId>com.softwaremill.diffx</groupId>
-            <artifactId>diffx-scalatest-should_2.12</artifactId>
-            <version>0.8.2</version>
+            <artifactId>diffx-scalatest-should_2.13</artifactId>
+            <version>0.9.0</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_2.12</artifactId>
+            <artifactId>scalacheck_2.13</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -294,13 +306,13 @@
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
-            <artifactId>mockito-scala-scalatest_2.12</artifactId>
-            <version>1.17.7</version>
+            <artifactId>mockito-scala-scalatest_2.13</artifactId>
+            <version>1.17.37</version>
             <scope>test</scope>
             <exclusions>
                 <exclusion>
                     <groupId>org.scalactic</groupId>
-                    <artifactId>scalactic_2.12</artifactId>
+                    <artifactId>scalactic_2.13</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -389,22 +401,22 @@
         <!-- Elasticsearch dependencies -->
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-client-esjava_2.12</artifactId>
+            <artifactId>elastic4s-client-esjava_2.13</artifactId>
             <version>8.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-core_2.12</artifactId>
+            <artifactId>elastic4s-core_2.13</artifactId>
             <version>8.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-json-json4s_2.12</artifactId>
+            <artifactId>elastic4s-json-json4s_2.13</artifactId>
             <version>8.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-json-jackson_2.12</artifactId>
+            <artifactId>elastic4s-json-jackson_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -445,8 +457,6 @@
                 </executions>
                 <configuration>
                     <args>
-                        <arg>-Xmax-classfile-name</arg>
-                        <arg>140</arg>
                         <arg>-deprecation</arg>
                         <arg>-feature</arg>
                     </args>

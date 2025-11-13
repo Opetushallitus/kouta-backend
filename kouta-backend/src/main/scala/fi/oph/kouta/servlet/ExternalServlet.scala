@@ -4,9 +4,9 @@ import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
 import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Sorakuvaus, CreateResult, UpdateResult, Valintaperuste, ValintaperusteCreateResult}
 import fi.oph.kouta.domain.oid.{RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.properties.OphProperties
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service._
-import fi.vm.sade.scalaproperties.OphProperties
 import org.scalatra.{ActionResult, Ok}
 
 import java.util.UUID

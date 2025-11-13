@@ -10,7 +10,7 @@ import org.json4s.{CustomSerializer, Extraction, Formats}
 import scala.util.Try
 
 trait KoutaJsonFormats extends GenericKoutaJsonFormats with DefaultKoutaJsonFormats {
-  override implicit def jsonFormats: Formats = koutaJsonFormats
+  override implicit lazy val jsonFormats: Formats = koutaJsonFormats
 }
 
 sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {

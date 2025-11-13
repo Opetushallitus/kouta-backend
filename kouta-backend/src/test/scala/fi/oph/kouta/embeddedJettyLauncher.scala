@@ -17,7 +17,7 @@ object EmbeddedJettyLauncher extends Logging {
 
   val DefaultPort = "8099"
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     System.setProperty("kouta-backend.useSecureCookies", "false")
     KoutaConfigurationFactory.setupWithDevTemplate()
     TestSetups.setupPostgres()
@@ -48,7 +48,7 @@ object TestSetups extends Logging {
   def logSqsQueues(): Unit = {
     val config                     = KoutaConfigurationFactory.configuration.indexingConfiguration
     val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
-    import scala.collection.JavaConverters._
+    import scala.jdk.CollectionConverters._
     val queues = sqsClient.listQueues().getQueueUrls.asScala
     logger.info(s"Found ${queues.size} SQS queues:")
     queues.foreach(queueUrl => logger.info(queueUrl))
@@ -78,7 +78,7 @@ object TestSetups extends Logging {
       Option(System.getProperty(SYSTEM_PROPERTY_NAME_TEMPLATE))
     ) match {
       case (Some(CONFIG_PROFILE_TEMPLATE), None) => KoutaConfigurationFactory.setupWithDefaultTemplateFile()
-      case _                                     => Unit
+      case _                                     => ()
     }
 
   def setupFixedCasSessionId(): UUID = {
