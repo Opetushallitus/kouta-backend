@@ -39,18 +39,18 @@ object HakutietoDAO extends HakutietoDAO with HakutietoSQL {
 
     val hakukohdeMap = hakukohteet
       .groupBy { case (toteutusOid, hakuOid, _) => (toteutusOid, hakuOid) }
-      .mapValues(_.map { case (_, _, hakukohde) =>
+      .view.mapValues(_.map { case (_, _, hakukohde) =>
         hakukohde.copy(hakuajat = hakukohteidenHakuajatMap.getOrElse(hakukohde.hakukohdeOid, Seq()))
-      })
+      }).toMap
 
     val hakuMap = haut
       .groupBy { case (toteutusOid, _) => toteutusOid }
-      .mapValues(_.map { case (toteutusOid, haku) =>
+      .view.mapValues(_.map { case (toteutusOid, haku) =>
         haku.copy(
           hakuajat = hakujenHakuajatMap.getOrElse(haku.hakuOid, Seq()),
           hakukohteet = hakukohdeMap.getOrElse((toteutusOid, haku.hakuOid), Seq())
         )
-      })
+      }).toMap
 
     haut.map(_._1).distinct.map { toteutusOid => {
       Hakutieto(

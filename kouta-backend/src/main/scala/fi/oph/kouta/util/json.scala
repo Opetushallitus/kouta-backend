@@ -2,7 +2,8 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.siirtotiedosto._
-import fi.oph.kouta.security.{ExternalSession, Session}
+import fi.oph.kouta.security.{Authority, ExternalSession, Session}
+import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
 import org.json4s.JsonAST.{JInt, JObject, JString}
 import org.json4s.{CustomSerializer, Extraction, Formats}
@@ -23,6 +24,8 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     sisaltoSerializer,
     valintaperusteMetadataSerializer,
     sessionSerializer,
+    authoritySerializer,
+    authenticatedSerializer,
     organisaationYhteystietoSerializer,
     osaamismerkkiSerializer
   )
@@ -237,12 +240,38 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
   private def sessionSerializer = new CustomSerializer[Session](_ =>
     (
       { case s: JObject =>
-        implicit def formats: Formats = genericKoutaFormats
+        implicit def formats: Formats = genericKoutaFormats + authoritySerializer
 
         s.extract[ExternalSession]
       },
       { case j: ExternalSession =>
-        implicit def formats: Formats = genericKoutaFormats
+        implicit def formats: Formats = genericKoutaFormats + authoritySerializer
+
+        Extraction.decompose(j)
+      }
+    )
+  )
+
+  private def authoritySerializer = new CustomSerializer[Authority](_ =>
+    (
+      { case JString(s) =>
+        Authority(s)
+      },
+      { case j: Authority =>
+        JString(j.authority)
+      }
+    )
+  )
+
+  private def authenticatedSerializer = new CustomSerializer[Authenticated](_ =>
+    (
+      { case s: JObject =>
+        implicit def formats: Formats = genericKoutaFormats + authoritySerializer + sessionSerializer
+
+        s.extract[Authenticated]
+      },
+      { case j: Authenticated =>
+        implicit def formats: Formats = genericKoutaFormats + authoritySerializer + sessionSerializer
 
         Extraction.decompose(j)
       }

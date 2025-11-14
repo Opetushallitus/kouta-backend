@@ -18,7 +18,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
     KoutaDatabase.runBlocking(
       searchKeywordsByPrefix(search).zip(searchKeywordsByMatch(search))
     ) match {
-      case (l1, l2) => l1.union(l2).distinct.take(search.limit).toList
+      case (l1, l2) => l1.concat(l2).distinct.take(search.limit).toList
     }
 
   def putActions(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]] = insertKeywords(`type`, keywords)

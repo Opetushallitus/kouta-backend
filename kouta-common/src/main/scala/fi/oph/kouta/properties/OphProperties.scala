@@ -1,7 +1,7 @@
 package fi.oph.kouta.properties
 
 import java.util
-import scala.collection.Map
+import scala.collection.immutable.Map
 
 /**
  * Extends OphProperties with scala types
@@ -10,9 +10,9 @@ class OphProperties(files: String*) extends fi.vm.sade.properties.OphProperties(
   private val excludeCCFields = List("$outer")
   private def caseClassToMap(cc: Product) = {
     val declaredFields = cc.getClass.getDeclaredFields.toList.filter( f => !excludeCCFields.contains(f.getName))
-    (Map[AnyRef, AnyRef]() /: declaredFields) {(a, f) =>
+    declaredFields.foldLeft(Map[AnyRef, AnyRef]()) {(a, f) =>
       f.setAccessible(true)
-      a + (f.getName -> f.get(cc))
+      a.updated(f.getName, f.get(cc))
     }
   }
 

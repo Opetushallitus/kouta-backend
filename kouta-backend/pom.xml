@@ -71,8 +71,8 @@
 
         <!-- Utility dependencies -->
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-properties</artifactId>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
@@ -193,30 +193,16 @@
             <version>${jdbc.version}</version>
         </dependency>
 
-        <!-- Indexing queues -->
-        <!-- Note: aws-scala doesn't have 2.13 versions, using 2.12 for binary compatibility -->
+        <!-- AWS SDK -->
         <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-sqs_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.13</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
+            <version>1.12.529</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>1.12.529</version>
         </dependency>
 
         <!-- Scheduler -->
@@ -237,34 +223,11 @@
             </exclusions>
         </dependency>
 
-        <!-- Note: aws-scala doesn't have 2.13 versions, using 2.12 for binary compatibility -->
-        <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-s3_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.13</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <dependency>
             <groupId>com.softwaremill.odelay</groupId>
             <artifactId>odelay-core_2.13</artifactId>
             <version>0.4.1</version>
         </dependency>
-        <!-- override version because of conflicting versions in aws-scala -->
-        <!-- the version of http4s used in scala-cas requires this version (7.1.13) of scalaz -->
         <dependency>
             <groupId>org.scalaz</groupId>
             <artifactId>scalaz-core_2.13</artifactId>

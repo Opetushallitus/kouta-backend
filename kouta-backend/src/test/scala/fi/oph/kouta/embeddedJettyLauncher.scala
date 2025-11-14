@@ -1,6 +1,7 @@
 package fi.oph.kouta
 
-import com.amazonaws.services.sqs.AmazonSQSClient
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.services.sqs.{AmazonSQS, AmazonSQSClientBuilder}
 import fi.oph.kouta.TestOids.OphOid
 import fi.oph.kouta.config.KoutaConfigurationFactory.{CONFIG_PROFILE_TEMPLATE, SYSTEM_PROPERTY_NAME_CONFIG_PROFILE, SYSTEM_PROPERTY_NAME_TEMPLATE}
 import fi.oph.kouta.config.KoutaConfigurationFactory
@@ -8,7 +9,6 @@ import fi.oph.kouta.repository.SessionDAO
 import fi.oph.kouta.security.{Authority, CasSession, RoleEntity, ServiceTicket}
 import fi.oph.kouta.util.CommandLine
 import fi.oph.kouta.logging.Logging
-import io.atlassian.aws.sqs.SQSClient
 
 import java.util.UUID
 import scala.util.Try
@@ -46,8 +46,15 @@ object TestSetups extends Logging {
     logSqsQueues()
   }
   def logSqsQueues(): Unit = {
-    val config                     = KoutaConfigurationFactory.configuration.indexingConfiguration
-    val sqsClient: AmazonSQSClient = config.endpoint.map(SQSClient.withEndpoint).getOrElse(SQSClient.default)
+    val config = KoutaConfigurationFactory.configuration.indexingConfiguration
+    val sqsClient: AmazonSQS = config.endpoint match {
+      case Some(endpoint) =>
+        AmazonSQSClientBuilder.standard()
+          .withEndpointConfiguration(new EndpointConfiguration(endpoint, "us-east-1"))
+          .build()
+      case None =>
+        AmazonSQSClientBuilder.defaultClient()
+    }
     import scala.jdk.CollectionConverters._
     val queues = sqsClient.listQueues().getQueueUrls.asScala
     logger.info(s"Found ${queues.size} SQS queues:")

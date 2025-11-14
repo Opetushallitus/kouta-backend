@@ -45,5 +45,8 @@ trait HttpClient {
   private def defaultErrorHandler(url: String, statusCode: Int, response: String) =
     throw new RuntimeException(s"Url $url returned status code $statusCode $response")
 
-  def toQueryParams(params: (String, String)*): JavaMap[String, String] = scala.collection.JavaConverters.mapAsJavaMap(Map(params:_*))
+  def toQueryParams(params: (String, String)*): JavaMap[String, String] = {
+    import scala.jdk.CollectionConverters._
+    Map(params:_*).asJava
+  }
 }
