@@ -30,7 +30,7 @@ trait ElasticsearchClient { this: KoutaJsonFormats with Logging =>
   private def mapResponseToSearchResult[T: HitReader: ClassTag](response: RequestSuccess[SearchResponse]) = {
     SearchResult[T](
       totalCount = response.result.totalHits,
-      result = response.result.hits.hits.flatMap(_.safeTo[T].toOption)
+      result = response.result.hits.hits.toIndexedSeq.flatMap(_.safeTo[T].toOption)
     )
   }
 

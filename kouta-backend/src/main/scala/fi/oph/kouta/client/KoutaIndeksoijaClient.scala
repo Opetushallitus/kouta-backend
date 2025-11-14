@@ -22,7 +22,7 @@ object KoutaIndeksoijaClient extends KoutaIndeksoijaClient
 
 class KoutaIndeksoijaClient extends HttpClient with CallerId with Logging {
   private lazy val urlProperties = KoutaConfigurationFactory.configuration.urlProperties
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
   private val quickIndexTimeout: Int = KoutaConfigurationFactory.configuration.quickIndexTimeoutSeconds
 
   def quickIndexEntity(tyyppi: String, oid: String): List[String] = {

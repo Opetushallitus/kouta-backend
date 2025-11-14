@@ -36,17 +36,17 @@ object TilaFilter {
 
   def vainJulkaistutOrVainOlemassaolevat(vainJulkaistut: Boolean, vainOlemassaolevat: Boolean): TilaFilter = {
     (vainJulkaistut, vainOlemassaolevat) match {
-      case (true, _) => onlyJulkaistut
-      case (false, true) => onlyOlemassaolevat
-      case (_, _) => all
+      case (true, _) => onlyJulkaistut()
+      case (false, true) => onlyOlemassaolevat()
+      case (_, _) => all()
     }
   }
 
   def alsoPoistetutAddedToOthers(alsoPoistetut: Boolean): TilaFilter = {
-    if (alsoPoistetut) all else onlyOlemassaolevat
+    if (alsoPoistetut) all() else onlyOlemassaolevat()
   }
 
   def alsoArkistoidutAddedToOlemassaolevat(alsoArkistoidut: Boolean): TilaFilter = {
-    if (alsoArkistoidut) onlyOlemassaolevat else onlyOlemassaolevatAndArkistoimattomat
+    if (alsoArkistoidut) onlyOlemassaolevat() else onlyOlemassaolevatAndArkistoimattomat()
   }
 }

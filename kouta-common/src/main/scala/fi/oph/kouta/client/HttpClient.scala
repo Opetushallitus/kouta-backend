@@ -27,7 +27,7 @@ trait HttpClient {
   def get[T](url: String, errorHandler: (String, Int, String) => Nothing = defaultErrorHandler, followRedirects: Boolean = false)(parse: String => T): T =
     DefaultHttpClient.httpGet(url, defaultOptions(followRedirects):_*)(callerId)
       .header(HeaderClientSubSystemCode._1, HeaderClientSubSystemCode._2)
-      .responseWithHeaders match {
+      .responseWithHeaders() match {
       case (200, _, response) => parse(response)
       case (xxx, _, response) => errorHandler(url, xxx, response)
     }
@@ -37,7 +37,7 @@ trait HttpClient {
       .header(HeaderClientSubSystemCode._1, HeaderClientSubSystemCode._2)
       .header(HeaderContentTypeJson._1, HeaderContentTypeJson._2)
       .header(HeaderAcceptJson._1, HeaderAcceptJson._2)
-      .responseWithHeaders match {
+      .responseWithHeaders() match {
       case (200, _, response) => parse(response)
       case (xxx, _, response) => errorHandler(url, xxx, response)
     }
