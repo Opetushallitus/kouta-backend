@@ -7,10 +7,10 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.6.4-SNAPSHOT</version>
+        <version>8.0.0-SNAPSHOT_2.13</version>
     </parent>
     <artifactId>ovara-kouta</artifactId>
-    <version>7.6.4-SNAPSHOT</version>
+    <version>8.0.0-SNAPSHOT_2.13</version>
     <name>ovara-kouta</name>
 
     <dependencies>
