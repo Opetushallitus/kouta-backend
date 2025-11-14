@@ -1,8 +1,9 @@
 package fi.oph.kouta.images
 
+import com.amazonaws.regions.{RegionUtils, Regions}
+
 import java.io.ByteArrayInputStream
 import java.util.UUID
-
 import com.amazonaws.services.s3.model.{CannedAccessControlList, CopyObjectRequest, ObjectMetadata, PutObjectRequest}
 import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import fi.oph.kouta.auditlog.AuditLog
@@ -15,10 +16,9 @@ import scala.util.matching.Regex
 object S3ClientFactory {
   def create(): AmazonS3 = {
     val builder = AmazonS3ClientBuilder.standard()
-
-    KoutaConfigurationFactory.configuration.s3Configuration.region.foreach { regionName =>
-      builder.withRegion(regionName)
-    }
+    val region: String = KoutaConfigurationFactory.configuration.s3Configuration.region.getOrElse(throw new RuntimeException(s"AWS Region puuttuu"))
+    println(s"S3ClientFactory: $region")
+    builder.withRegion(region)
 
     builder.build()
   }
