@@ -14,7 +14,7 @@
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.23.4-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>8.0.0-SNAPSHOT_2.13</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
