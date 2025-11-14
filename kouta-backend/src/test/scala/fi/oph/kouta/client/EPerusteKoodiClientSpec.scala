@@ -81,23 +81,26 @@ import fi.oph.kouta.domain.{En, Fi, Kielistetty, Sv}
 
   "When koulutusKoodiUri query failed" should "return error status" in {
     mockKoulutusKoodiUritForEPerusteFailure(66)
-    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L).left.get.getMessage should
-      equal("Failed to get ePerusteet with id 66 after retry, got response 500, " +
-        "Failure in eperuste-service for ePerusteId 66")
+    koodiClient.getKoulutusKoodiUritForEPerusteFromCache(66L).left.exists(
+      _.getMessage == "Failed to get ePerusteet with id 66 after retry, got response 500, " +
+        "Failure in eperuste-service for ePerusteId 66"
+    ) shouldBe true
   }
 
   "When tutkinnonosa query failed" should "return error status" in {
     mockTutkinnonOsatByEPeruste(123, Seq((125, 1235)))
     mockTutkinnonOsatFailure(66)
-    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123, 66)).left.get.getMessage should
-      equal("Failed to get tutkinnonosat for ePeruste with id 66 after retry, got response 500, " +
-        "Failure in eperuste-service for tutkinnonosat by ePerusteId 66")
+    koodiClient.getTutkinnonosatForEPerusteetFromCache(Seq(123, 66)).left.exists(
+      _.getMessage == "Failed to get tutkinnonosat for ePeruste with id 66 after retry, got response 500, " +
+        "Failure in eperuste-service for tutkinnonosat by ePerusteId 66"
+    ) shouldBe true
   }
 
   "When osaamisala query failed" should "return error status" in {
     mockOsaamisalaKoodiUritFailure(66L)
-    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L).left.get.getMessage should
-      equal("Failed to get osaamisalat for ePeruste with id 66 after retry, got response 500, " +
-      "Failure in eperuste-service for osaamisalat by ePerusteId 66")
+    koodiClient.getOsaamisalaKoodiuritForEPerusteFromCache(66L).left.exists(
+      _.getMessage == "Failed to get osaamisalat for ePeruste with id 66 after retry, got response 500, " +
+      "Failure in eperuste-service for osaamisalat by ePerusteId 66"
+    ) shouldBe true
   }
 }

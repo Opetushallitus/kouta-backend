@@ -56,7 +56,7 @@ object SiirtotiedostoApp extends Logging with KoutaJsonFormats {
     }
     SiirtotiedostoRaportointiService.saveSiirtotiedostoData(updatedSiirtotiedostoData)
     SimpleDatabaseAccessor.destroy()
-    exit
+    exit()
   }
 
   private def siirtotiedostoData(opId: UUID, windowStart: Option[String], currentDatetime: LocalDateTime) =

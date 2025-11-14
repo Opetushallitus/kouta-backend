@@ -10,7 +10,7 @@ import org.asynchttpclient.DefaultAsyncHttpClientConfig
 import org.asynchttpclient.Dsl.asyncHttpClient
 
 import java.util.concurrent.{CompletableFuture, ThreadFactory}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, defaultAuthorities: Set[Authority]) extends SecurityContext with CallerId {
 

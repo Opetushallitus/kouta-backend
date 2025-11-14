@@ -139,7 +139,7 @@ class ToteutusServiceValidation(
             case ammMetadata: AmmatillinenToteutusMetadata =>
               and(
                 validateIfFalse(
-                  koulutus.map(_.isAmmTutkintoWithoutEPeruste).getOrElse(false),
+                  koulutus.map(_.isAmmTutkintoWithoutEPeruste()).getOrElse(false),
                   validateIfNonEmptySeq[AmmatillinenOsaamisala](
                     ammMetadata.osaamisalat,
                     toteutusDiffResolver.newAmmatillisetOsaamisalat(),
@@ -221,7 +221,7 @@ class ToteutusServiceValidation(
 
     and(
       validateIfTrue(
-        koulutus.map(_.isAvoinKorkeakoulutus).getOrElse(false), {
+        koulutus.map(_.isAvoinKorkeakoulutus()).getOrElse(false), {
           assertTrue(
             isToteutusAvoinKorkeakoulutus == koulutus.get.isAvoinKorkeakoulutus(),
             "metadata.isAvoinKorkeakoulutus",

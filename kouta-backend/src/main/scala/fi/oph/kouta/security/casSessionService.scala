@@ -8,7 +8,7 @@ import fi.vm.sade.javautils.nio.cas.UserDetails
 
 import java.util.UUID
 import javax.servlet.http.HttpServletRequest
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {
   def this(msg: String) = this(msg, null)

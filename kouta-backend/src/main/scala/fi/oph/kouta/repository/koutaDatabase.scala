@@ -86,7 +86,7 @@ abstract class KoutaDatabaseAccessor extends Logging {
 }
 
 object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
-  private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password)
+  private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password).cleanDisabled(false)
 
   logger.warn(settings.username)
 

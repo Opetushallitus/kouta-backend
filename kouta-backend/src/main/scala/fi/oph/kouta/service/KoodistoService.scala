@@ -44,7 +44,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     koodistoClient.getRinnasteisetKoodit(removeVersio(koodiUri)) match {
       case Right(result) => result.view
         .filter(element => element.belongsToKoodisto(koodisto))
-        .filter(isKoodiVoimassa)
+        .filter(isKoodiVoimassa).toSeq
       case Left(exp) if exp.status.exists(_ == 404) => Seq.empty
       case Left(exp) => {
         logger.error("Rinnasteisten koodien haku epäonnistui: ", exp)
@@ -87,7 +87,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
       case Right(result) => Right(result.view
         .filter(isKoodiVoimassa)
         .filter(element => element.koodisto.exists(_.koodistoUri == "koulutus"))
-        .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)))
+        .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo)).toSeq)
       case Left(err) if err.status.exists(_ == 404) =>
         logger.warn(s"No koulutukset were found for yläkoodi ${ylakoodi}")
         Right(Seq.empty)
@@ -124,7 +124,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
         val koulutusOrOsaamisalaValid = koulutuksetValid || osaamisalatValid
         koulutusOrOsaamisalaValid && hakutapaValid && kohdejoukkoValid
       })
-      .map(koodi => koodi.withYlaRelaatiot(Seq.empty)))
+      .map(koodi => koodi.withYlaRelaatiot(Seq.empty)).toSeq)
       case Left(err) => Left(err)
     }
   }
@@ -138,7 +138,7 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
           .filter(isKoodiVoimassa)
           .filter(element => !isKoulutusValiotsikkoKoodiUri(element.koodiArvo))
           .filter(koodistoElement => sallitutKoodiUrit.exists(sallittuKoodiUri => koodistoElement.koodiUri == sallittuKoodiUri)
-          )
+          ).toSeq
         fromBoolean(contains(koodiUri, koulutusKoodiUrit))
       case Left(_) => queryFailed
     }

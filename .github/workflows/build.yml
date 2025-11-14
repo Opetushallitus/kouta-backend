@@ -40,7 +40,7 @@ jobs:
           set -euo pipefail
           git clone https://github.com/Opetushallitus/ci-tools.git
           source ci-tools/common/setup-tools.sh
-          mvn clean package -B --settings settings.xml
+          mvn clean install -B --settings settings.xml
 
       - uses: actions/cache@v3
         id: restore-build
@@ -110,7 +110,7 @@ jobs:
   deploy_to_artifactory:
     runs-on: ubuntu-latest
     needs: test_and_build
-    if: github.ref == 'refs/heads/master'
+    #if: github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@v3
@@ -120,6 +120,13 @@ jobs:
         with:
           path: ci-tools
           key: ${{ github.sha }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'corretto'
+          cache: 'maven'
 
       - name: Deploy to artifactory
         env:

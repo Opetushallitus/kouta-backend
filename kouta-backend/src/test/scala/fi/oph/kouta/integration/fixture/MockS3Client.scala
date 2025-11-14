@@ -446,6 +446,4 @@ object MockS3Client extends AmazonS3 {
   override def getUrl(s: String, s1: String): URL = ???
 
   override def waiters(): AmazonS3Waiters = ???
-
-  override def listBuckets(listBucketsPaginatedRequest: ListBucketsPaginatedRequest): ListBucketsPaginatedResult = ???
 }

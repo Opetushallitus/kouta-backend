@@ -16,7 +16,7 @@ import org.scalatest.time.{Nanoseconds, Span}
 import org.scalatest.{Assertion, BeforeAndAfterAll, BeforeAndAfterEach, Suite}
 
 import scala.annotation.tailrec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
 
 trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with PatienceConfiguration {
@@ -111,7 +111,7 @@ trait KonfoIndexingQueues extends BeforeAndAfterAll with BeforeAndAfterEach with
     sqs.receiveMessage(new ReceiveMessageRequest(queue)
       .withMaxNumberOfMessages(10)
       .withVisibilityTimeout(0)
-    ).getMessages.asScala
+    ).getMessages.asScala.toList
   }
 
   def getQueue(name: String): String = sqs.getQueueUrl(name).getQueueUrl

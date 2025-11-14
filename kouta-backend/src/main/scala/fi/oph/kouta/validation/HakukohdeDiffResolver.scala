@@ -88,7 +88,7 @@ case class HakukohdeDiffResolver(hakukohde: Hakukohde, oldHakukohde: Option[Haku
     val oldValue: Option[Boolean] = oldHakukohde.flatMap(hk => hk.metadata.flatMap(m => m.jarjestaaUrheilijanAmmKoulutusta))
     val newValue: Option[Boolean] = hakukohde.metadata.flatMap(m => m.jarjestaaUrheilijanAmmKoulutusta)
     (oldValue, newValue) match {
-      case (Some(o), Some(n))   => !o.equals(n)
+      case (Some(o), Some(n))   => o != n
       case (None, None)         => false
       case (_, _)               => true
     }

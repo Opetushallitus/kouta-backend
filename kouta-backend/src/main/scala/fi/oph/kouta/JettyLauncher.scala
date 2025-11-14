@@ -15,7 +15,7 @@ import javax.servlet.DispatcherType
 object JettyLauncher extends Logging {
   val DEFAULT_PORT = "8080"
 
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     val port = System.getProperty("kouta-backend.port", DEFAULT_PORT).toInt
     logger.info(s"Starting standalone Kouta-backend Jetty on port ${port}...")
     new JettyLauncher(port).start.join

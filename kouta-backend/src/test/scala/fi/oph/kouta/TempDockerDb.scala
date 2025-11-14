@@ -21,7 +21,7 @@ object TempDockerDb extends Logging {
   val startStopRetries             = 100
   val startStopRetryIntervalMillis = 100
 
-  def start() {
+  def start(): Unit = {
     try {
       if (!databaseIsRunning()) {
         startDatabaseContainer()
@@ -31,7 +31,7 @@ object TempDockerDb extends Logging {
     }
   }
 
-  def stop() {
+  def stop(): Unit = {
     try {
       logger.info("Killing PostgreSQL container")
       runBlocking(s"docker kill $containerName")

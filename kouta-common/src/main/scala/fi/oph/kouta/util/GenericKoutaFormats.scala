@@ -14,7 +14,7 @@ import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Format
 import scala.util.control.NonFatal
 
 trait GenericKoutaJsonFormats extends GenericKoutaFormats {
-  implicit def jsonFormats: Formats = genericKoutaFormats
+  implicit lazy val jsonFormats: Formats = genericKoutaFormats
 
   def toJson(data: AnyRef): String = write(data)
 }
@@ -55,7 +55,7 @@ trait GenericKoutaFormats {
         LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -68,7 +68,7 @@ trait GenericKoutaFormats {
         Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -86,12 +86,12 @@ trait GenericKoutaFormats {
 
   private def stringSerializer[A>:Null: Manifest](construct: String => A, deconstruct: A => String) =
     new CustomSerializer[A](_ => ( {
-      case JString(s) => 
+      case JString(s) =>
         try {
           construct(s)
         } catch {
           case NonFatal(e) =>
-            throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+            throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
         }
       case JNull => null
     }, {

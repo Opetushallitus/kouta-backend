@@ -9,7 +9,7 @@ import com.fasterxml.jackson.databind.`type`.MapType
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import org.fusesource.scalate.{TemplateEngine, TemplateSource}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object TemplateProcessor {
   val engine = new TemplateEngine
