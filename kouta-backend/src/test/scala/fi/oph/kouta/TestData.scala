@@ -143,7 +143,7 @@ object TestData {
   )
 
   val AmmKoulutusMetadata = AmmatillinenKoulutusMetadata(
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    kuvaus = Map(),
     lisatiedot = Seq(
       Lisatieto(
         otsikkoKoodiUri = "koulutuksenlisatiedot_03#1",
@@ -490,7 +490,7 @@ object TestData {
 
   val ammTutkinnonOsaKoulutusMetadata = AmmatillinenTutkinnonOsaKoulutusMetadata(
     tyyppi = AmmTutkinnonOsa,
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    kuvaus = Map(),
     lisatiedot = Seq(Lisatieto1),
     tutkinnonOsat = Seq(TutkinnonOsa(Some(123L), Some("koulutus_371101#1"), Some(1234L), Some(122L))),
     isMuokkaajaOphVirkailija = Some(false)
@@ -521,7 +521,7 @@ object TestData {
 
   val AmmOsaamisalaKoulutusMetadata = AmmatillinenOsaamisalaKoulutusMetadata(
     tyyppi = AmmOsaamisala,
-    kuvaus = Map(Fi -> "kuvaus", Sv -> "kuvaus sv"),
+    kuvaus = Map(),
     lisatiedot = Seq(Lisatieto1),
     osaamisalaKoodiUri = Some("osaamisala_01"),
     isMuokkaajaOphVirkailija = Some(false)

@@ -115,7 +115,10 @@ class AmmatillinenKoulutusServiceValidation(
                 assertKoulutusalaKoodiUrit(koulutusDiffResolver.newKoulutusalaKoodiUrit(), vCtx)
               )
             } else {
-              assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
+              and(
+                assertEmptyKielistetty(m.kuvaus, "metadata.kuvaus"),
+                assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
+              )
             }
           case m: AmmatillinenTutkinnonOsaKoulutusMetadata =>
             validateAmmTutkinnonosaMetadata(
@@ -203,6 +206,7 @@ class AmmatillinenKoulutusServiceValidation(
     val tutkinnonOsat     = metadata.tutkinnonOsat
     and(
       validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, tutkinnonOsatPath)),
+      assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
       assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       validateIfTrue(
         newTutkinnonOsat,
@@ -254,6 +258,7 @@ class AmmatillinenKoulutusServiceValidation(
         tila,
         assertNotOptional(osaamisalaMetadata.osaamisalaKoodiUri, "metadata.osaamisalaKoodiUri")
       ),
+      assertEmptyKielistetty(osaamisalaMetadata.kuvaus, "metadata.kuvaus"),
       assertEmptyKielistetty(osaamisalaMetadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       validateIfTrue(
         koulutusDiffResolver
