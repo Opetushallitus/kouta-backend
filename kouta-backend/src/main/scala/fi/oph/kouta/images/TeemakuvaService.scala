@@ -10,7 +10,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Try
 
 trait TeemakuvaService[ID, T <: HasTeemakuva[T] with HasPrimaryId[ID, T] with HasModified[T]] extends Logging {
-  val s3ImageService: S3ImageService
+  val s3ImageService: ImageService
 
   def teemakuvaPrefix: String
 

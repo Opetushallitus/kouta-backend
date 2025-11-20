@@ -7,7 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.keyword.{Ammattinimike, Asiasana}
 import fi.oph.kouta.domain.oid.{OrganisaatioOid, RootOrganisaatioOid, ToteutusOid, UserOid}
 import fi.oph.kouta.domain.searchResults.ToteutusSearchResultFromIndex
-import fi.oph.kouta.images.{S3ImageService, TeemakuvaService}
+import fi.oph.kouta.images.{ImageService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeToteutus}
 import fi.oph.kouta.repository._
@@ -56,7 +56,7 @@ case class ToteutusTilaChangeResultObject(
 
 class ToteutusService(
     sqsInTransactionService: SqsInTransactionService,
-    val s3ImageService: S3ImageService,
+    val s3ImageService: ImageService,
     auditLog: AuditLog,
     keywordService: KeywordService,
     val organisaatioService: OrganisaatioService,
