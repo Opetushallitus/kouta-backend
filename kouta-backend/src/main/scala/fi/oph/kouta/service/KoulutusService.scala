@@ -520,7 +520,7 @@ class KoulutusService(
         val result = authorizeUpdate(oldKoulutusWithInstant, newKoulutus, rules) { (_, k) =>
           val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
           koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, Some(oldKoulutus)) {
-            doUpdate(_, notModifiedSince, oldKoulutus)
+            doUpdate(_, notModifiedSince, oldKoulutus, fromExternal)
           }
         }
         result
@@ -767,7 +767,7 @@ class KoulutusService(
     }.get
   }
 
-  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus)(implicit
+  private def doUpdate(koulutus: Koulutus, notModifiedSince: Instant, before: Koulutus, fromExternal: Boolean)(implicit
       authenticated: Authenticated
   ): UpdateResult = {
     KoutaDatabase.runBlockingTransactionally {
@@ -780,7 +780,12 @@ class KoulutusService(
       } yield (teemakuva, k)
     }.map { case (teemakuva, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teemakuva)
-      val warnings = quickIndex(k.flatMap(_.oid)) ++ index(k)
+      val warnings =
+        if (fromExternal) {
+          quickIndex(k.flatMap(_.oid)) ++ index(k)
+        } else {
+          index(k)
+        }
       UpdateResult(updated = k.isDefined, warnings)
     }.get
   }
