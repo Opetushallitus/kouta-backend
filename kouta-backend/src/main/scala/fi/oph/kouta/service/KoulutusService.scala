@@ -782,9 +782,9 @@ class KoulutusService(
       maybeDeleteTempImage(teemakuva)
       val warnings =
         if (fromExternal) {
-          quickIndex(k.flatMap(_.oid)) ++ index(k)
-        } else {
           index(k)
+        } else {
+          quickIndex(k.flatMap(_.oid)) ++ index(k)
         }
       UpdateResult(updated = k.isDefined, warnings)
     }.get
