@@ -481,7 +481,7 @@ class KoulutusService(
     )
   }
 
-  def put(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult = {
+  def put(koulutus: Koulutus, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult = {
     val rules = if (koulutus.isSavingAllowedOnlyForOPH()) {
       List(AuthorizationRules(Seq(Role.Paakayttaja)))
     } else {
@@ -499,7 +499,7 @@ class KoulutusService(
     authorizePut(koulutus, rules) { k =>
       val enrichedKoulutusWithFixedDefaultValues = enrichAndPopulateFixedDefaultValues(k)
       koulutusServiceValidation.withValidation(enrichedKoulutusWithFixedDefaultValues, None) { ek =>
-        doPut(ek)
+        doPut(ek, fromExternal)
       }
     }
   }
@@ -750,7 +750,7 @@ class KoulutusService(
     keywordService.insertLuokittelutermit(koulutus.metadata.map(_.luokittelutermit).getOrElse(Seq()))
   }
 
-  private def doPut(koulutus: Koulutus)(implicit authenticated: Authenticated): CreateResult = {
+  private def doPut(koulutus: Koulutus, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult = {
     KoutaDatabase.runBlockingTransactionally {
       for {
         (teemakuva, k) <- checkAndMaybeClearTeemakuva(koulutus)
@@ -762,7 +762,7 @@ class KoulutusService(
       } yield (teemakuva, k)
     }.map { case (teemakuva, k: Koulutus) =>
       maybeDeleteTempImage(teemakuva)
-      val warnings = quickIndex(k.oid) ++ index(Some(k))
+      val warnings = quickIndex(k.oid, fromExternal) ++ index(Some(k))
       CreateResult(k.oid.get, warnings)
     }.get
   }
@@ -780,12 +780,7 @@ class KoulutusService(
       } yield (teemakuva, k)
     }.map { case (teemakuva, k: Option[Koulutus]) =>
       maybeDeleteTempImage(teemakuva)
-      val warnings =
-        if (fromExternal) {
-          index(k)
-        } else {
-          quickIndex(k.flatMap(_.oid)) ++ index(k)
-        }
+      val warnings = quickIndex(k.flatMap(_.oid), fromExternal) ++ index(k)
       UpdateResult(updated = k.isDefined, warnings)
     }.get
   }
@@ -793,10 +788,10 @@ class KoulutusService(
   def index(koulutus: Option[Koulutus]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeKoulutus, koulutus.map(_.oid.get.toString))
 
-  private def quickIndex(koulutusOid: Option[KoulutusOid]): List[String] = {
-    koulutusOid match {
-      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("koulutus", oid.toString)
-      case None      => List.empty
+  private def quickIndex(koulutusOid: Option[KoulutusOid], fromExternal: Boolean): List[String] = {
+    (koulutusOid, fromExternal) match {
+      case (Some(oid), false) => koutaIndeksoijaClient.quickIndexEntity("koulutus", oid.toString)
+      case _                  => List.empty
     }
   }
 

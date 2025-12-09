@@ -80,7 +80,7 @@ class ValintaperusteService(
     }
   }
 
-  def put(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): ValintaperusteCreateResult = {
+  def put(valintaperuste: Valintaperuste, fromExternal: Boolean)(implicit authenticated: Authenticated): ValintaperusteCreateResult = {
     authorizePut(
       valintaperuste,
       AuthorizationRules(
@@ -91,12 +91,12 @@ class ValintaperusteService(
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste                           = v.copy(metadata = enrichedMetadata)
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, None) { valpe =>
-        doPut(valpe)
+        doPut(valpe, fromExternal)
       }
     }
   }
 
-  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant)(implicit
+  def update(valintaperuste: Valintaperuste, notModifiedSince: Instant, fromExternal: Boolean)(implicit
       authenticated: Authenticated
   ): UpdateResult = {
     val oldValintaPerusteWithTime = ValintaperusteDAO.get(valintaperuste.id.get, TilaFilter.onlyOlemassaolevat())
@@ -106,7 +106,7 @@ class ValintaperusteService(
       val enrichedMetadata: Option[ValintaperusteMetadata] = enrichValintaperusteMetadata(v)
       val enrichedValintaperuste                           = v.copy(metadata = enrichedMetadata)
       valintaperusteServiceValidation.withValidation(enrichedValintaperuste, Some(oldValintaperuste)) { v =>
-        doUpdate(v, notModifiedSince, oldValintaperuste)
+        doUpdate(v, notModifiedSince, oldValintaperuste, fromExternal)
       }
     }
   }
@@ -158,18 +158,18 @@ class ValintaperusteService(
       case valintaperusteIds => KoutaSearchClient.searchValintaperusteet(valintaperusteIds, params)
     }
 
-  private def doPut(valintaperuste: Valintaperuste)(implicit authenticated: Authenticated): ValintaperusteCreateResult =
+  private def doPut(valintaperuste: Valintaperuste, fromExternal: Boolean)(implicit authenticated: Authenticated): ValintaperusteCreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         v <- ValintaperusteDAO.getPutActions(valintaperuste)
         _ <- auditLog.logCreate(v)
       } yield v
     }.map { v: Valintaperuste =>
-      val warnings = quickIndex(v.id) ++ index(Some(v))
+      val warnings = quickIndex(v.id, fromExternal) ++ index(Some(v))
       ValintaperusteCreateResult(v.id, created = v.id.isDefined, warnings)
     }.get
 
-  private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste)(implicit
+  private def doUpdate(valintaperuste: Valintaperuste, notModifiedSince: Instant, before: Valintaperuste, fromExternal: Boolean)(implicit
       authenticated: Authenticated
   ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
@@ -179,17 +179,17 @@ class ValintaperusteService(
         _ <- auditLog.logUpdate(before, v)
       } yield v
     }.map { v: Option[Valintaperuste] =>
-      val warnings = quickIndex(v.flatMap(_.id)) ++ index(v)
+      val warnings = quickIndex(v.flatMap(_.id), fromExternal) ++ index(v)
       UpdateResult(v.isDefined, warnings)
     }.get
 
   private def index(valintaperuste: Option[Valintaperuste]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeValintaperuste, valintaperuste.map(_.id.get.toString))
 
-  private def quickIndex(valintaperusteId: Option[UUID]): List[String] = {
-    valintaperusteId match {
-      case Some(id) => koutaIndeksoijaClient.quickIndexValintaperuste(id.toString)
-      case None => List.empty
+  private def quickIndex(valintaperusteId: Option[UUID], fromExternal: Boolean): List[String] = {
+    (valintaperusteId, fromExternal) match {
+      case (Some(id), false) => koutaIndeksoijaClient.quickIndexValintaperuste(id.toString)
+      case _ => List.empty
     }
   }
 }

@@ -83,7 +83,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    toteutusService.put(parsedBody.extract[Toteutus]) match {
+    toteutusService.put(parsedBody.extract[Toteutus], fromExternal = false) match {
       case res: CreateResult => Ok(res)
     }
   }
@@ -113,7 +113,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince) match {
+    toteutusService.update(parsedBody.extract[Toteutus], getIfUnmodifiedSince, fromExternal = false) match {
       case res: UpdateResult => Ok(res)
     }
   }
@@ -203,7 +203,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val copyResult = toteutusService.copy(parsedBody.extract[List[ToteutusOid]])
+    val copyResult = toteutusService.copy(parsedBody.extract[List[ToteutusOid]], fromExternal = false)
     if (copyResult.isEmpty) {
       NotFound("error" -> "Unknown toteutus oid")
     } else {
@@ -288,7 +288,7 @@ class ToteutusServlet(toteutusService: ToteutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val toteutusStateChangeResults = toteutusService.changeTila(parsedBody.extract[List[ToteutusOid]], params("tila"), getIfUnmodifiedSince)
+    val toteutusStateChangeResults = toteutusService.changeTila(parsedBody.extract[List[ToteutusOid]], params("tila"), getIfUnmodifiedSince, fromExternal=false)
     if (toteutusStateChangeResults.isEmpty) {
       NotFound("error" -> "No toteutus state was changed")
     } else {

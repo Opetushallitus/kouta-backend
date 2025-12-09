@@ -83,7 +83,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakukohdeService.put(parsedBody.extract[Hakukohde]) match {
+    hakukohdeService.put(parsedBody.extract[Hakukohde], fromExternal = false) match {
       case res: CreateResult => Ok(res)
     }
   }
@@ -129,7 +129,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val hakukohdeCopyResults = hakukohdeService.copy(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")))
+    val hakukohdeCopyResults =
+      hakukohdeService.copy(parsedBody.extract[List[HakukohdeOid]], HakuOid(params("hakuOid")), fromExternal = false)
     if (hakukohdeCopyResults.isEmpty) {
       NotFound("error" -> "No hakukohde was copied")
     } else {
@@ -162,7 +163,7 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince) match {
+    hakukohdeService.update(parsedBody.extract[Hakukohde], getIfUnmodifiedSince, fromExternal = false) match {
       case res: UpdateResult => Ok(res)
     }
   }
@@ -247,7 +248,8 @@ class HakukohdeServlet(hakukohdeService: HakukohdeService) extends KoutaServlet 
 
     implicit val authenticated: Authenticated = authenticate()
 
-    val hakukohdeStateChangeResults = hakukohdeService.changeTila(parsedBody.extract[List[HakukohdeOid]], params("tila"), getIfUnmodifiedSince)
+    val hakukohdeStateChangeResults = hakukohdeService.changeTila(parsedBody
+      .extract[List[HakukohdeOid]], params("tila"), getIfUnmodifiedSince, fromExternal = false)
     if (hakukohdeStateChangeResults.isEmpty) {
       NotFound("error" -> "No hakukohde state was changed")
     } else {
