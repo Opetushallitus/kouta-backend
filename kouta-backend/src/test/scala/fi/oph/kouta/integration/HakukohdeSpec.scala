@@ -168,6 +168,17 @@ class HakukohdeSpec
     )
   }
 
+  it should "succeed in storing hakukohde with jarjestaaUrheilijanAmmKoulutusta when jarjestyspaikka oppilaitos allows it" in {
+    val oppilaitosOid = GrandChildOid
+    put(JulkaistuOppilaitos.copy(oid = oppilaitosOid, metadata = JulkaistuOppilaitos.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true)))), ophSession)
+
+    put(
+      withValintaperusteenValintakokeet(hakukohde(toteutusOid, hakuOid, valintaperusteId).copy(
+        jarjestyspaikkaOid = Some(GrandChildOid),
+        metadata = JulkaistuHakukohde.metadata.map(metadata => metadata.copy(jarjestaaUrheilijanAmmKoulutusta = Some(true))))),
+    )
+  }
+
   it should "store ammatillinen tutkinnon osa hakukohde if toteutus uses hakemuspalvelu" in {
     val koulutusOid = put(TestData.AmmTutkinnonOsaKoulutus)
     val ammToToteutus = TestData.AmmTutkinnonOsaToteutus.copy(

@@ -22,7 +22,6 @@ case class HakukohdeValintaperusteDependencyInfo(
 )
 
 case class HakukohdeJarjestyspaikkaDependencyInfo(
-    oid: OrganisaatioOid,
     jarjestaaUrheilijanAmmKoulutusta: Option[Boolean]
 )
 

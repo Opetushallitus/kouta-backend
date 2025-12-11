@@ -144,7 +144,11 @@ object HakukohdeDAO extends HakukohdeDAO with HakukohdeSQL {
     val jarjestyspaikkaDependencyInfo: Option[HakukohdeJarjestyspaikkaDependencyInfo] =
       hakukohde.jarjestyspaikkaOid match {
         case Some(jarjestyspaikkaOid) =>
-          KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid, jarjestyspaikanOppilaitosOid))
+          val dependencyInfos = KoutaDatabase.runBlocking(selectJarjestyspaikkaDependencyInformation(jarjestyspaikkaOid, jarjestyspaikanOppilaitosOid))
+          dependencyInfos.find(_.jarjestaaUrheilijanAmmKoulutusta.contains(true)) match {
+            case Some(info) => Some(info)
+            case None => dependencyInfos.headOption
+          }
         case None => None
       }
     toteutusDependencyInfo match {
@@ -571,13 +575,14 @@ last_modified from hakukohteet
   def selectJarjestyspaikkaDependencyInformation(
       jarjestyspaikkaOid: OrganisaatioOid,
       jarjestyspaikanOppilaitosOid: Option[OrganisaatioOid]
-  ): DBIO[Option[HakukohdeJarjestyspaikkaDependencyInfo]] =
-    sql"""select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta
+  ): DBIO[Seq[HakukohdeJarjestyspaikkaDependencyInfo]] =
+    sql"""select metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta
           from oppilaitokset
           where oid in (#${createOidInParams(List(Some(jarjestyspaikkaOid), jarjestyspaikanOppilaitosOid).flatten.distinct)})
           union
-          select oid, metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta from oppilaitosten_osat where oid = ${jarjestyspaikkaOid.toString}
-       """.as[HakukohdeJarjestyspaikkaDependencyInfo].headOption
+          select metadata ->> 'jarjestaaUrheilijanAmmKoulutusta' as jarjestaaUrheilijanAmmKoulutusta
+          from oppilaitosten_osat where oid = ${jarjestyspaikkaOid.toString}
+       """.as[HakukohdeJarjestyspaikkaDependencyInfo]
 
   def selectHakukohdeAndRelatedEntities(hakukohdeOids: List[HakukohdeOid]) =
     sql"""select
