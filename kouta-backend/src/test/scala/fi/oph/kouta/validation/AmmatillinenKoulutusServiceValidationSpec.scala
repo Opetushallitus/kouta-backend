@@ -1,6 +1,6 @@
 package fi.oph.kouta.validation
 
-import fi.oph.kouta.TestData.{AmmKoulutus, AmmMuuKoulutus, AmmOsaamisalaKoulutus, AmmTutkinnonOsaKoulutus, PelastusalanAmmKoulutus}
+import fi.oph.kouta.TestData._
 import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
 import fi.oph.kouta.client._
 import fi.oph.kouta.domain._
