@@ -468,7 +468,6 @@ trait HakukohdeExtractors extends ExtractorBase {
   ))
 
   implicit val getHakukohdeJarjestyspaikkaDependencyInfoResult: GetResult[HakukohdeJarjestyspaikkaDependencyInfo] = GetResult(r => HakukohdeJarjestyspaikkaDependencyInfo(
-    oid = OrganisaatioOid(r.nextString()),
     jarjestaaUrheilijanAmmKoulutusta = r.nextBooleanOption()
   ))
 
