@@ -109,7 +109,6 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
       )
     ),
     Some(HakukohdeJarjestyspaikkaDependencyInfo(
-      oid = OrganisaatioOid("DUMMY"),
       jarjestaaUrheilijanAmmKoulutusta = Some(true)
     ))
   )
