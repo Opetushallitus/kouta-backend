@@ -17,10 +17,9 @@ import fi.oph.kouta.service.KoodistoService.getKaannokset
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
 import fi.oph.kouta.util.{NameHelper, ServiceUtils}
-import org.joda.time.LocalDate
 import slick.dbio.DBIO
 
-import java.time.Instant
+import java.time.{Instant, LocalDate, ZoneId}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.language.postfixOps
 import scala.util.{Failure, Success, Try}
@@ -441,11 +440,11 @@ class KoulutusService(
   def enrichKoulutusNimiWithEPerusteVoimaantulo(nimiBase: Kielistetty, ep: Option[EPeruste]): Kielistetty = {
     ep match {
       case Some(ep: EPeruste) if ep.voimassaoloAlkaa.exists(alku => alku > System.currentTimeMillis()) =>
-        val voimaantuloDate: LocalDate = new LocalDate(ep.voimassaoloAlkaa.get)
+        val voimaantuloDate: LocalDate = LocalDate.ofInstant(Instant.ofEpochMilli(ep.voimassaoloAlkaa.get), ZoneId.systemDefault())
         val voimaantuloTranslations    = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.eperusteVoimaantulo")
         nimiBase.map(lang => {
           val suffix =
-            s" (${voimaantuloTranslations.getOrElse(lang._1, "voimaantulo")} ${voimaantuloDate.getDayOfMonth}.${voimaantuloDate.getMonthOfYear}.${voimaantuloDate.getYear})"
+            s" (${voimaantuloTranslations.getOrElse(lang._1, "voimaantulo")} ${voimaantuloDate.getDayOfMonth}.${voimaantuloDate.getMonthValue}.${voimaantuloDate.getYear})"
           (lang._1, lang._2 + suffix)
         })
       case _ => nimiBase
@@ -665,7 +664,7 @@ class KoulutusService(
       organisaatioOids match {
         case Seq(RootOrganisaatioOid) => k.toteutukset.length
         case _ =>
-          val oidStrings = organisaatioOids.map(_.toString())
+          val oidStrings = organisaatioOids.map(_.toString)
           k.toteutukset.count(t =>
             t.tila != Arkistoitu && t.tila != Poistettu && t.organisaatiot.exists(o => oidStrings.contains(o))
           )

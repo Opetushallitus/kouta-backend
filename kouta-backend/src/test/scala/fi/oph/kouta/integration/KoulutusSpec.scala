@@ -13,10 +13,11 @@ import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
-import org.joda.time.LocalDate
+
+import java.time.{Duration, Instant, LocalDate, LocalDateTime, ZoneId}
 import org.json4s.jackson.Serialization.read
 
-import java.time.{Duration, Instant, LocalDateTime}
+import java.time.temporal.{ChronoUnit, TemporalUnit}
 import java.util.UUID
 import scala.util.Success
 
@@ -138,14 +139,14 @@ class KoulutusSpec
   it should "enrich name with voimaantulo date if eperuste voimaantulo is in the future" in {
     mockLokalisointiResponse("yleiset.eperusteVoimaantulo")
     val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
-    val futureDate = new LocalDate(futureMillis)
+    val futureDate = LocalDate.ofInstant(Instant.ofEpochMilli(futureMillis), ZoneId.systemDefault())
     mockKoulutusKoodiUritForEPerusteResponse(556, voimassaoloAlkaa = Some(futureMillis),
       None, Seq("koulutus_371107", "koulutus_371108"))
 
     val foo: (Koulutus, Instant) = insertKoulutus(koulutus.copy(ePerusteId = Some(556)))
     get(s"$KoulutusPath/${foo._1.oid.get}", headers = defaultHeaders) {
       status should equal(200)
-      assert(body.contains(s"(yleiset.eperusteVoimaantulo fi ${futureDate.getDayOfMonth}.${futureDate.getMonthOfYear}.${futureDate.getYear})"))
+      assert(body.contains(s"(yleiset.eperusteVoimaantulo fi ${futureDate.getDayOfMonth}.${futureDate.getMonthValue}.${futureDate.getYear})"))
     }
   }
 
