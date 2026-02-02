@@ -440,7 +440,7 @@ class KoulutusService(
   def enrichKoulutusNimiWithEPerusteVoimaantulo(nimiBase: Kielistetty, ep: Option[EPeruste]): Kielistetty = {
     ep match {
       case Some(ep: EPeruste) if ep.voimassaoloAlkaa.exists(alku => alku > System.currentTimeMillis()) =>
-        val voimaantuloDate: LocalDate = LocalDate.ofInstant(Instant.ofEpochMilli(ep.voimassaoloAlkaa.get), ZoneId.systemDefault())
+        val voimaantuloDate: LocalDate = LocalDate.ofInstant(Instant.ofEpochMilli(ep.voimassaoloAlkaa.get), ZoneId.of("Europe/Helsinki"))
         val voimaantuloTranslations    = lokalisointiClient.getKaannoksetWithKeyFromCache("yleiset.eperusteVoimaantulo")
         nimiBase.map(lang => {
           val suffix =
