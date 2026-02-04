@@ -62,7 +62,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
       enrichedHaku,
       AuthorizationRules(roleEntity.readRoles, allowAccessToParentOrganizations = true, additionalAuthorizedOrganisaatioOids = liittajaOrganisaatiot))
   }
-  def put(haku: Haku)(implicit authenticated: Authenticated): CreateResult = {
+  def put(haku: Haku, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult = {
     val rules = if (MiscUtils.isYhteishakuHakutapa(haku.hakutapaKoodiUri)) {
       AuthorizationRules(Seq(Role.Paakayttaja))
     } else {
@@ -72,11 +72,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     authorizePut(haku, rules) { h =>
       val enrichedMetadata: Option[HakuMetadata] = enrichHakuMetadata(h)
       val enrichedHaku = h.copy(metadata = enrichedMetadata)
-      hakuServiceValidation.withValidation(enrichedHaku, None)(doPut(_))
+      hakuServiceValidation.withValidation(enrichedHaku, None)(doPut(_, fromExternal))
     }
   }
 
-  def update(haku: Haku, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
+  def update(haku: Haku, notModifiedSince: Instant, fromExternal: Boolean)(implicit authenticated: Authenticated): UpdateResult = {
     val oldHaku = HakuDAO.get(haku.oid.get, TilaFilter.onlyOlemassaolevat())
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(haku, oldHaku)
 
@@ -88,7 +88,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         h.copy(metadata = enrichedMetadata)
       }
 
-      hakuServiceValidation.withValidation(enrichedHaku, Some(oldHaku))(doUpdate(_, notModifiedSince, oldHaku))
+      hakuServiceValidation.withValidation(enrichedHaku, Some(oldHaku))(doUpdate(_, notModifiedSince, oldHaku, fromExternal))
     }
   }
 
@@ -175,7 +175,7 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
     }
   }
 
-  private def doPut(haku: Haku)(implicit authenticated: Authenticated): CreateResult =
+  private def doPut(haku: Haku, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakuDAO.getPutActions(haku)
@@ -183,11 +183,11 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- auditLog.logCreate(h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.oid) ++ index(Some(h))
+      val warnings = quickIndex(h.oid, fromExternal) ++ index(Some(h))
       CreateResult(h.oid.get, warnings)
     }.get
 
-  private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku)(implicit authenticated: Authenticated): UpdateResult =
+  private def doUpdate(haku: Haku, notModifiedSince: Instant, before: Haku, fromExternal: Boolean)(implicit authenticated: Authenticated): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         _ <- HakuDAO.checkNotModified(haku.oid.get, notModifiedSince)
@@ -195,14 +195,14 @@ class HakuService(sqsInTransactionService: SqsInTransactionService,
         _ <- auditLog.logUpdate(before, h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.flatMap(_.oid)) ++ index(h)
+      val warnings = quickIndex(h.flatMap(_.oid), fromExternal) ++ index(h)
       UpdateResult(updated = h.isDefined, warnings)
     }.get
 
-  private def quickIndex(hakuOid: Option[HakuOid]): List[String] = {
-    hakuOid match {
-      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("haku", oid.toString)
-      case None => List.empty
+  private def quickIndex(hakuOid: Option[HakuOid], fromExternal: Boolean): List[String] = {
+    (hakuOid, fromExternal) match {
+      case (Some(oid), false) => koutaIndeksoijaClient.quickIndexEntity("haku", oid.toString)
+      case _ => List.empty
     }
   }
   private def index(haku: Option[Haku]): List[String] =
