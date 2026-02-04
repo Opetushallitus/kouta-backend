@@ -151,7 +151,7 @@ trait AccessControlSpec extends ScalatraFlatSpec {
     indexerSession = addTestSession(Seq(Role.Indexer), Seq(OphOid), None, Option(indexerSession))
     fakeIndexerSession = addTestSession(Seq(Role.Indexer), Seq(ChildOid), None, Option(fakeIndexerSession))
     otherRoleSession = addTestSession(Seq(Role.UnknownRole("APP_OTHER")), Seq(ChildOid), None, Option(otherRoleSession))
-    raportointiSession = addTestSession(Seq(Role.Reporter), Seq(OphOid), None, Option(raportointiSession))
+    raportointiSession = addTestSession(Seq(Role.Paakayttaja), Seq(OphOid), None, Option(raportointiSession))
   }
 }
 
