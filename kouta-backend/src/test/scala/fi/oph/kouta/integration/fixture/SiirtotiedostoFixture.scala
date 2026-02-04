@@ -16,6 +16,7 @@ import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.temporal.ChronoUnit
 import java.time.{Duration, LocalDateTime}
+import java.util.UUID
 
 trait SiirtotiedostoFixture
     extends KoulutusFixture
@@ -73,6 +74,25 @@ trait SiirtotiedostoFixture
       case (_, _)                           => ""
     }
     get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(raportointiSession))) {
+      status should equal(expectedStatusCode)
+      body
+    }
+  }
+
+  def get(
+      entityPath: String,
+      startTime: Option[LocalDateTime],
+      endTime: Option[LocalDateTime],
+      session: UUID,
+      expectedStatusCode: Int
+  ): String = {
+    val queryParams = (startTime, endTime) match {
+      case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"
+      case (Some(startTime), None)          => s"?startTime=${dateParam(startTime)}"
+      case (None, Some(endTime))            => s"?endTime=${dateParam(endTime)}"
+      case (_, _)                           => ""
+    }
+    get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(session))) {
       status should equal(expectedStatusCode)
       body
     }
