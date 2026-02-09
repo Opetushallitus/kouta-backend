@@ -55,7 +55,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
     Map("keys" -> operationResults.keys.mkString(", "), "count" -> operationResults.count.toString, "success" -> "true")
 
   private val ForbiddenResponse =
-    Forbidden("error" -> "Käyttäjällä ei ole oikeutta siirtotiedostojen muodostamiseen rajapinnan kautta")
+    Forbidden("error" -> "Käyttäjällä ei ole oikeutta siirtotiedostojen muodostamiseen rajapinnan kautta.")
 
   registerPath(
     "/siirtotiedosto/koulutukset",
