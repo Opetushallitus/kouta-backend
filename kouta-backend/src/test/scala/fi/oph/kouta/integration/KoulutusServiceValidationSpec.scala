@@ -1028,8 +1028,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.koulutusalaKoodiUrit",
           illegalValueForFixedValueSeqMsg(koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
-        ),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        )
       )
     )
   }
@@ -1056,8 +1055,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.koulutusalaKoodiUrit",
           illegalValueForFixedValueSeqMsg(koodiUriTipText("kansallinenkoulutusluokitus2016koulutusalataso1_01"))
-        ),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        )
       )
     )
   }
@@ -1092,8 +1090,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError(
           "metadata.opintojenLaajuusyksikkoKoodiUri",
           illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_2"))
-        ),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        )
       )
     )
   }
@@ -1138,8 +1135,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_8"))
         ),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
-        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -1164,8 +1160,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_6"))
         ),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
-        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -1218,8 +1213,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           illegalValueForFixedValueMsg(koodiUriTipText("opintojenlaajuusyksikko_2"))
         ),
         ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
-        ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.opintojenLaajuusNumero", missingMsg)
       )
     )
   }
@@ -1264,8 +1258,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ),
         ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
-        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -1309,8 +1302,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
         ValidationError("metadata.opintojenLaajuusyksikkoKoodiUri", missingMsg),
         ValidationError("metadata.opintojenLaajuusNumero", missingMsg),
-        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.linkkiEPerusteisiin", invalidKielistetty(Seq(Sv)))
       )
     )
   }
@@ -1347,8 +1339,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       KkOpintojaksoKoulutus.copy(metadata = Some(KkOpintojaksoKoulutusMetadata())),
       Seq(
-        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
       )
     )
   }
@@ -1396,8 +1387,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       KkOpintokokonaisuusKoulutus.copy(metadata = Some(KkOpintokokonaisuusKoulutusMetadata())),
       Seq(
-        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv)))
       )
     )
   }
@@ -1750,8 +1740,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
       ErikoistumisKoulutus.copy(metadata = Some(ErikoistumiskoulutusMetadata())),
       Seq(
         ValidationError("metadata.kuvaus", invalidKielistetty(Seq(Fi, Sv))),
-        ValidationError("metadata.erikoistumiskoulutusKoodiUri", missingMsg),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.erikoistumiskoulutusKoodiUri", missingMsg)
       )
     )
   }
@@ -1874,15 +1863,15 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
-  it should "fail to create Amk koulutus that doesn't have osaamistavoitteet defined" in {
+  it should "fail to create Amk koulutus that has only Fi osaamistavoitteet defined even though Fi and Sv selected as languages" in {
     val amkKoulutusWithoutOsaamistavoitteet = AmkKoulutus.copy(
-      metadata = Some(amkKoulutusMetadata.copy(osaamistavoitteet = Map()))
+      metadata = Some(amkKoulutusMetadata.copy(osaamistavoitteet = Map(Fi -> "Suomenkieliset osaamistavoitteet")))
     )
 
     failsValidation(
       amkKoulutusWithoutOsaamistavoitteet,
       Seq(
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Sv)))
       )
     )
   }
@@ -1905,8 +1894,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
           illegalValueForFixedValueSeqMsg("koulutus_999907#<versionumero>, esim. koulutus_999907#1")
         ),
         ValidationError("metadata.linkkiEPerusteisiin.fi", invalidUrl("puppua suomeksi")),
-        ValidationError("metadata.linkkiEPerusteisiin", kielistettyWoSvenskaError),
-        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Fi, Sv)))
+        ValidationError("metadata.linkkiEPerusteisiin", kielistettyWoSvenskaError)
       )
     )
   }

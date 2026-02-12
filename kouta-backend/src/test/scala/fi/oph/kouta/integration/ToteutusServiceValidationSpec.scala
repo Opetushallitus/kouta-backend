@@ -2419,11 +2419,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail for yo-toteutus that doesn't have osaamistavoitteet defined" in {
+  it should "fail for yo-toteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
     failsValidation(yoToteutus.copy(
-      metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map()))),
+      metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "Suomenkieliset osaamistavoitteet")))),
       "metadata.osaamistavoitteet",
-      invalidKielistetty(List(Fi, Sv))
+      invalidKielistetty(List(Sv))
     )
   }
 }
