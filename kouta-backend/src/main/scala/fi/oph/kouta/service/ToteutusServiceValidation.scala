@@ -132,15 +132,15 @@ class ToteutusServiceValidation(
                 validateKielistetty(vCtx.kielivalinta, metadata.kuvaus, "metadata.kuvaus"),
                 validateOptionalKielistetty(vCtx.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
               ),
+              validateIfFalse(
+                Set[Koulutustyyppi](Amm, AmmOsaamisala, AmmTutkinnonOsa, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
+                validateOptionalKielistetty(
+                  vCtx.kielivalinta,
+                  metadata.osaamistavoitteet,
+                  "metadata.osaamistavoitteet"
+                )
+              ),
               assertNotOptional(metadata.opetus, "metadata.opetus")
-            )
-          ),
-          validateIfFalse(
-            Set[Koulutustyyppi](Amm, AmmOsaamisala, AmmTutkinnonOsa, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
-            validateKielistetty(
-              vCtx.kielivalinta,
-              metadata.osaamistavoitteet,
-              "metadata.osaamistavoitteet"
             )
           ),
           metadata match {
