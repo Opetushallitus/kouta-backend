@@ -110,7 +110,7 @@ jobs:
   deploy_to_artifactory:
     runs-on: ubuntu-latest
     needs: test_and_build
-    if: github.ref == 'refs/heads/master'
+    if: github.ref == 'refs/heads/master' || github.ref == 'OY-5477-vaihdetaa-joda-time-java-timeen'
 
     steps:
       - uses: actions/checkout@v3
