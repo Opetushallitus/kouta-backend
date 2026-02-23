@@ -2411,11 +2411,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail for amm-tutkinnonosatoteutus that has osaamistavoitteet defined" in {
+  it should "fail for amm-tutkinnonosatoteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
     failsValidation(ammTutkinnonOsaToteutus.copy(
       metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
       "metadata.osaamistavoitteet",
-      notEmptyMsg
+      invalidKielistetty(List(Sv))
     )
   }
 

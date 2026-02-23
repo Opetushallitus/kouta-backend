@@ -491,6 +491,7 @@ object TestData {
   val ammTutkinnonOsaKoulutusMetadata = AmmatillinenTutkinnonOsaKoulutusMetadata(
     tyyppi = AmmTutkinnonOsa,
     kuvaus = Map(),
+    osaamistavoitteet = Map(Fi -> "Koulutuksen osaamistavoitteet", Sv -> "Koulutuksen osaamistavoitteet sv"),
     lisatiedot = Seq(Lisatieto1),
     tutkinnonOsat = Seq(TutkinnonOsa(Some(123L), Some("koulutus_371101#1"), Some(1234L), Some(122L))),
     isMuokkaajaOphVirkailija = Some(false)

@@ -207,7 +207,6 @@ class AmmatillinenKoulutusServiceValidation(
     and(
       validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, tutkinnonOsatPath)),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
-      assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet"),
       validateIfTrue(
         newTutkinnonOsat,
         validateIfSuccessful(

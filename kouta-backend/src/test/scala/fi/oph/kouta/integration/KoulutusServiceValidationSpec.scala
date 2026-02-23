@@ -1837,7 +1837,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     )
   }
 
-  it should "fail to create AmmTutkinnonOsa koulutus that has osaamistavoitteet defined" in {
+  it should "fail to create AmmTutkinnonOsa koulutus that has only Fi osaamistavoitteet defined even though Fi and Sv selected as languages" in {
     val ammTutkinnonOsaKoulutus = AmmTutkinnonOsaKoulutus.copy(
       metadata = Some(ammTutkinnonOsaKoulutusMetadata.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
     )
@@ -1845,7 +1845,7 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
     failsValidation(
       ammTutkinnonOsaKoulutus,
       Seq(
-        ValidationError("metadata.osaamistavoitteet", notEmptyMsg)
+        ValidationError("metadata.osaamistavoitteet", invalidKielistetty(List(Sv)))
       )
     )
   }

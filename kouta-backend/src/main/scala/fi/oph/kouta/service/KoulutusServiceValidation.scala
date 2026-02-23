@@ -342,7 +342,7 @@ class KoulutusServiceValidation(
             validateOptionalKielistetty(validationContext.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
           ),
           validateIfFalse(
-            Set[Koulutustyyppi](Amm, AmmOsaamisala, AmmTutkinnonOsa, VapaaSivistystyoOsaamismerkki).contains(tyyppi),
+            Set[Koulutustyyppi](Amm, AmmOsaamisala, VapaaSivistystyoOsaamismerkki).contains(tyyppi),
             validateOptionalKielistetty(
               validationContext.kielivalinta,
               metadata.osaamistavoitteet,
