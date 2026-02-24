@@ -133,7 +133,7 @@ class ToteutusServiceValidation(
                 validateOptionalKielistetty(vCtx.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
               ),
               validateIfFalse(
-                Set[Koulutustyyppi](Amm, AmmOsaamisala, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
+                Set[Koulutustyyppi](AmmOsaamisala, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
                 validateOptionalKielistetty(
                   vCtx.kielivalinta,
                   metadata.osaamistavoitteet,
@@ -158,8 +158,7 @@ class ToteutusServiceValidation(
                 validateIfTrue(
                   ammMetadata.ammatillinenPerustutkintoErityisopetuksena.contains(true),
                   validateAmmatillinenPerustutkintoErityisopetuksena(toteutus, "koulutuksetKoodiUri", vCtx)
-                ),
-                assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet")
+                )
               )
             case tutkintoonJohtamatonToteutusMetadata: TutkintoonJohtamatonToteutusMetadata =>
               tutkintoonJohtamatonToteutusMetadata match {
