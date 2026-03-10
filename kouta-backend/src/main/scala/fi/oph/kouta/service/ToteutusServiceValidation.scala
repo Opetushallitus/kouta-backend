@@ -49,7 +49,10 @@ class ToteutusServiceValidation(
         case Some(_: KkOpintojaksoToteutusMetadata) =>
           errors = validateLiitettyEntityIntegrity(toteutus)
         case Some(metadata) =>
-          errors = if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu) validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated) else NoErrors
+          errors =
+            if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu)
+              validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated)
+            else NoErrors
         case None =>
       }
     }
@@ -803,10 +806,13 @@ class ToteutusServiceValidation(
   )
 
   def validateLiitettyEntityIntegrity(toteutus: Toteutus): IsValid = {
-    LiitettyEntityValidation.validateLiitettyEntityIntegrity(toteutus, toteutus.oid match {
-      case Some(oid) => toteutusDAO.get(oid)
-      case None => Vector()
-    })
+    LiitettyEntityValidation.validateLiitettyEntityIntegrity(
+      toteutus,
+      toteutus.oid match {
+        case Some(oid) => toteutusDAO.get(oid)
+        case None      => Vector()
+      }
+    )
   }
 
   def validateLiitetytEntitiesIntegrity(
