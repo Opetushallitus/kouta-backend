@@ -103,7 +103,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     InetAddress.getByName("127.0.0.1")
   )
   val nimiNotMatchingDefault = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")
-  val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
+  val pastMillis             = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
 
   private def ammToteutusWithOpetusParameters(
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
@@ -397,7 +397,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(futureMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(futureMillis)))
+    )
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
@@ -1111,14 +1113,41 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo or amk" in {
+  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
     failsValidation(
-      ammToteutusWithOpetusParameters(
-        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-        maksullisuustyyppi = Some(Lukuvuosimaksu)
+      ammMuuToteutus.copy(metadata =
+        Some(
+          AmmMuuToteutusMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(maksullisuustyyppi = Some(Lukuvuosimaksu))))
+        )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(Amm))
+        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for amm koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+        maksullisuustyyppi = Some(Lukuvuosimaksu)
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for lk koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      lukioToteutus.copy(metadata =
+        Some(
+          LukioToteutuksenMetatieto.copy(opetus =
+            Some(
+              ToteutuksenOpetus.copy(
+                opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+                maksullisuustyyppi = Some(Lukuvuosimaksu)
+              )
+            )
+          )
+        )
       )
     )
   }
@@ -1873,7 +1902,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "fail if the attached osaamismerkki is deprecated (voimassaolo on päättynyt)" in {
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis)))
+    )
 
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
     when(koulutusDao.get(List(koulutusOid1)))
@@ -1901,14 +1932,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val julkaistuKkOpintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(
       oid = Some(toteutusOid2),
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = List(toteutusOid))),
-      modified = Some(Modified(LocalDateTime.now().minusDays(1))))
+      modified = Some(Modified(LocalDateTime.now().minusDays(1)))
+    )
     when(toteutusDao.get(toteutusOid))
       .thenAnswer(Vector(MinimalExistingToteutus(julkaistuKkOpintokokonaisuusToteutus)))
 
     failsLiitetytValidation(
       julkaistuKkOpintojaksoToteutus.copy(tila = Tallennettu),
       julkaistuKkOpintojaksoToteutus,
-      Seq(ValidationError("metadata.tila", invalidStateChangeForLiitetty(toteutusOid, List(Some(toteutusOid2)), Vector(toteutusOid2))))
+      Seq(
+        ValidationError(
+          "metadata.tila",
+          invalidStateChangeForLiitetty(toteutusOid, List(Some(toteutusOid2)), Vector(toteutusOid2))
+        )
+      )
     )
   }
 
@@ -1938,10 +1975,16 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "succeed to arkistoida toteutus when liitetty osaamismerkki is deprecated" in {
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1083")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis)))
+    )
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
     val osaamismerkkiKoulutus2 =
-      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu, osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1"))
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+        oid = koulutusOid2,
+        tila = Tallennettu,
+        osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1")
+      )
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
       .thenAnswer(
         Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
@@ -1960,7 +2003,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ) == vstToteutus
     )
   }
-
 
   "Muu validation" should "fail if ammattinimikkeet given" in {
     failsValidation(
