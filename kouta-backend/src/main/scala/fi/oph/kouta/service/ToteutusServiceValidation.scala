@@ -390,13 +390,16 @@ class ToteutusServiceValidation(
       validateIfTrue(
         opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
         and(
-          assertTrue(
-            opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
-            s"$path.maksullisuustyyppi",
-            invalidOpetuskieliWithLukuvuosimaksu
+          validateIfTrue(
+            isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
+            assertTrue(
+              opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
+              s"$path.maksullisuustyyppi",
+              invalidOpetuskieliWithLukuvuosimaksu
+            )
           ),
           assertTrue(
-            isTutkintoonJohtavaKorkeakoulutus,
+            isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
             s"$path.maksullisuustyyppi",
             invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
           ),

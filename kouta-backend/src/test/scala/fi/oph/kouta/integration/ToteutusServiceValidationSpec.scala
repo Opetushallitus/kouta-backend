@@ -1112,14 +1112,41 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo or amk" in {
+  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
     failsValidation(
-      ammToteutusWithOpetusParameters(
-        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-        maksullisuustyyppi = Some(Lukuvuosimaksu)
+      ammMuuToteutus.copy(metadata =
+        Some(
+          AmmMuuToteutusMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(maksullisuustyyppi = Some(Lukuvuosimaksu))))
+        )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(Amm))
+        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for amm koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+        maksullisuustyyppi = Some(Lukuvuosimaksu)
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for lk koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      lukioToteutus.copy(metadata =
+        Some(
+          LukioToteutuksenMetatieto.copy(opetus =
+            Some(
+              ToteutuksenOpetus.copy(
+                opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+                maksullisuustyyppi = Some(Lukuvuosimaksu)
+              )
+            )
+          )
+        )
       )
     )
   }
