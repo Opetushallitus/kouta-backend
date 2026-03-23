@@ -83,7 +83,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    koulutusService.put(parsedBody.extract[Koulutus]) match {
+    koulutusService.put(parsedBody.extract[Koulutus], fromExternal = false) match {
       case res: CreateResult => Ok(res)
     }
   }

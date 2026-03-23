@@ -82,7 +82,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
   put("/") {
     implicit val authenticated: Authenticated = authenticate()
 
-    hakuService.put(parsedBody.extract[Haku]) match {
+    hakuService.put(parsedBody.extract[Haku], fromExternal = false) match {
       case res: CreateResult => Ok(res)
     }
   }
@@ -112,7 +112,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
 
     implicit val authenticated: Authenticated = authenticate()
 
-    hakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince) match {
+    hakuService.update(parsedBody.extract[Haku], getIfUnmodifiedSince, fromExternal = false) match {
       case res: UpdateResult => Ok(res)
     }
   }
