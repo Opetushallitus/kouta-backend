@@ -2,6 +2,7 @@
 ---
 host_postgresql_kouta: localhost
 host_postgresql_kouta_port: 5433
+kouta_backend_db_use_aws_jdbc_wrapper: false
 postgres_app_user: oph
 host_postgresql_kouta_app_password: oph
 host_virkailija: virkailija.hahtuvaopintopolku.fi
