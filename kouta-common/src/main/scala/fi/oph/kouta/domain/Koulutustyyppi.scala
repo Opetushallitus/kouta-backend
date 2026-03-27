@@ -42,6 +42,8 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
     Erikoistumiskoulutus
   )
   def tutkintoonJohtavat     = List(Amm, Lk, Yo, Amk)
+  def isTutkintoonJohtavaKorkeakoulutus(koulutustyyppi: Koulutustyyppi): Boolean =
+    Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
 
   // amm-koulutuksia saa tallentaa muut kuin OPH vain silloin kun on valittu tiettyjä koulutuskoodeja!
   def onlyOphCanSaveKoulutus: List[Koulutustyyppi] = List(Lk, Telma, Tuva, VapaaSivistystyoOpistovuosi, AikuistenPerusopetus, VapaaSivistystyoOsaamismerkki)
