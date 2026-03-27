@@ -583,7 +583,7 @@ object Validations {
 
   val invalidMaksullisuustyyppiWithApuraha: ErrorMessage =
     ErrorMessage(
-      msg = s"Apurahan voi asettaa vain toteutuksille, joille on asetettu lukuvuosimaksu",
+      msg = s"Apurahan voi asettaa vain tutkintoonjohtaville korkeakoulutoteutuksille, joille on asetettu lukuvuosimaksu",
       id = "invalidMaksullisuustyyppiWithApuraha"
     )
   val missingTarjoajatForNonJulkinenKoulutus: ErrorMessage =

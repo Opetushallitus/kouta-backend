@@ -109,6 +109,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
       opetusaikaKoodiUrit: Seq[String] = Seq("opetusaikakk_1#1"),
       opetustapaKoodiUrit: Seq[String] = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+      onkoApuraha: Boolean = false,
       apuraha: Option[Apuraha] = None,
       lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1),
       maksullisuustyyppi: Option[Maksullisuustyyppi] = Some(Maksullinen)
@@ -469,6 +470,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       Seq("oppilaitoksenopetuskieli_9#1"),
       Seq("opetusaikakk_9#1"),
       Seq("opetuspaikkakk_9#1"),
+      onkoApuraha = false,
       ToteutuksenOpetus.apuraha,
       Seq(Lisatieto1.copy(otsikkoKoodiUri = "koulutuksenlisatiedot_99#1"))
     ).copy(oid = Some(toteutusOid))
@@ -1109,6 +1111,22 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ),
       Seq(
         ValidationError("metadata.opetus.apuraha", missingMsg)
+      )
+    )
+  }
+
+  it should "fail if apuraha is set for lukuvuosimaksullinen amm toteutus" in {
+    failsValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+        maksullisuustyyppi = Some(Lukuvuosimaksu),
+        onkoApuraha = true,
+        apuraha = Some(
+          Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
+        )
+      ),
+      Seq(
+        ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
       )
     )
   }
