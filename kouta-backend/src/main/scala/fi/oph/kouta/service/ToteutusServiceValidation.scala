@@ -307,7 +307,7 @@ class ToteutusServiceValidation(
       validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
       validateIfDefined[Apuraha](
         opetus.apuraha,
-        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus)
+        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, koulutustyyppi, apuraha, opetus)
       ),
       validateIfNonEmptySeq[Lisatieto](
         opetus.lisatiedot,
@@ -352,6 +352,7 @@ class ToteutusServiceValidation(
   private def validateApuraha(
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli],
+      koulutustyyppi: Koulutustyyppi,
       apuraha: Apuraha,
       opetus: Opetus
   ): IsValid = {
@@ -359,7 +360,13 @@ class ToteutusServiceValidation(
     val min  = apuraha.min
     val max  = apuraha.max
     and(
-      assertTrue(opetus.maksullisuustyyppi == Some(Lukuvuosimaksu), s"$path", invalidMaksullisuustyyppiWithApuraha),
+      assertTrue(
+        opetus.maksullisuustyyppi.contains(Lukuvuosimaksu) && Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(
+          koulutustyyppi
+        ),
+        s"$path",
+        invalidMaksullisuustyyppiWithApuraha
+      ),
       validateMinMax(min, max, s"$path.min"),
       validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
       validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
@@ -384,10 +391,9 @@ class ToteutusServiceValidation(
       koulutuskoodiurit: Seq[String],
       path: String
   ): IsValid = {
-    val isTutkintoonJohtavaKorkeakoulutus =
-      Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
-    val English         = "oppilaitoksenopetuskieli_4"
-    val Tohtorikoulutus = "tutkintotyyppi_16"
+    val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(koulutustyyppi)
+    val English                           = "oppilaitoksenopetuskieli_4"
+    val Tohtorikoulutus                   = "tutkintotyyppi_16"
 
     and(
       validateIfTrue(
