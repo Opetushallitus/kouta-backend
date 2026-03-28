@@ -204,7 +204,7 @@ object ToteutusDAO extends ToteutusDAO with ToteutusSQL {
   }
 
   def getOpintokokonaisuudet(oids: Seq[ToteutusOid]): Seq[OidAndNimi] = {
-    KoutaDatabase.runBlocking(selectOpintokokonaisuudet(oids, TilaFilter.onlyJulkaistut))
+    KoutaDatabase.runBlocking(selectOpintokokonaisuudet(oids, TilaFilter.onlyJulkaistut()))
   }
 }
 

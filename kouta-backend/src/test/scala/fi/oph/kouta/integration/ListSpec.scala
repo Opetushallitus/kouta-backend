@@ -19,12 +19,12 @@ import org.json4s.jackson.Serialization.read
 
 class ListSpec extends KoutaIntegrationSpec with IndexerFixture with ValidationConstants {
 
-  implicit val koulutusMatcher = ObjectMatcher.seq[KoulutusListItem].byValue(_.oid)
-  implicit val koulutusListDiff = Diff.summon[List[KoulutusListItem]]
+  implicit val koulutusMatcher: SeqMatcher[KoulutusListItem] = ObjectMatcher.seq[KoulutusListItem].byValue(_.oid)
+  implicit val koulutusListDiff: Diff[List[KoulutusListItem]] = Diff.summon[List[KoulutusListItem]]
 
   // Koulutuksen modified ja tarjoajat kentät muuttuu kun sen toteutusten tarjoajat muuttuu. Siksi jätetään ne testeissä
   // huomiotta, kun käytetään listDiffx-funktiota.
-  implicit val koulutusDiff = Diff.summon[KoulutusListItem].ignore(_.modified).ignore(_.tarjoajat)
+  implicit val koulutusDiff: Diff[KoulutusListItem] = Diff.summon[KoulutusListItem].ignore(_.modified).ignore(_.tarjoajat)
 
   override val roleEntities: List[RoleEntity] = RoleEntity.all
 

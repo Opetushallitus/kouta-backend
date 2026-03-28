@@ -18,7 +18,7 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
     KoutaDatabase.runBlocking(
       searchKeywordsByPrefix(search).zip(searchKeywordsByMatch(search))
     ) match {
-      case (l1, l2) => l1.union(l2).distinct.take(search.limit).toList
+      case (l1, l2) => l1.concat(l2).distinct.take(search.limit).toList
     }
 
   def putActions(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]] = insertKeywords(`type`, keywords)
@@ -28,11 +28,11 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
 
 sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
 
-  private def fieldAndTable(`type`: KeywordType) = `type` match {
+  private def fieldAndTable(`type`: KeywordType): (String, String) = `type` match {
     case Ammattinimike => ("ammattinimike", "ammattinimikkeet")
     case Asiasana => ("asiasana", "asiasanat")
     case Luokittelutermi => ("luokittelutermi", "luokittelutermit")
-    case _ =>
+    case _ => throw new IllegalArgumentException(s"Unknown keyword type: ${`type`}")
   }
 
   def searchKeywordsByPrefix(search: KeywordSearchBase): DBIO[Vector[String]] = {
@@ -50,19 +50,24 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
 
   private def searchKeywords(search: KeywordSearch)(like: String): DBIO[Vector[String]] = {
     val (field, table) = fieldAndTable(search.`type`)
+    val kieli: String = search.kieli.toString
+    val likePattern: String = like.toLowerCase
+    val limit: Int = search.limit
     sql"""select #$field from #$table
-          where kieli = ${search.kieli.toString}::kieli
-          and #$field like ${like.toLowerCase}
+          where kieli = $kieli::kieli
+          and #$field like $likePattern
           order by #$field asc
-          limit ${search.limit} """.as[String]
+          limit $limit """.as[String]
   }
 
   def insertKeywords(`type`: KeywordType, keywords: Seq[Keyword]): DBIO[Vector[Keyword]] = {
     val (field, table) = fieldAndTable(`type`)
     val pkey = s"${table}_pkey"
     val inserts = keywords.map { case Keyword(kieli, keyword) =>
+      val kieliStr: String = kieli.toString
+      val keywordLower: String = keyword.toLowerCase
       sql"""insert into #$table (#$field, kieli)
-            values (${keyword.toLowerCase}, ${kieli.toString}::kieli)
+            values ($keywordLower, $kieliStr::kieli)
             on conflict on constraint #$pkey do nothing
             returning kieli, #$field""".as[Keyword]
     }
@@ -71,18 +76,21 @@ sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
 
   private def searchLuokittelutermit(search: LuokittelutermiSearch)(like: String): DBIO[Vector[String]] = {
     val (field, table) = fieldAndTable(search.`type`)
+    val likePattern: String = like.toLowerCase
+    val limit: Int = search.limit
     sql"""select #$field from #$table
-          where #$field like ${like.toLowerCase}
+          where #$field like $likePattern
           order by #$field asc
-          limit ${search.limit} """.as[String]
+          limit $limit """.as[String]
   }
 
   def insertLuokittelutermitSQL(luokittelutermit: Seq[String]): DBIO[Vector[String]] = {
     val (field, table) = fieldAndTable(Luokittelutermi)
     val pkey = s"${table}_pkey"
     val inserts = luokittelutermit.map { case s: String =>
+      val sLower: String = s.toLowerCase
       sql"""insert into #$table
-            values (${s.toLowerCase})
+            values ($sLower)
             on conflict on constraint #$pkey do nothing
             returning #$field""".as[String]
     }

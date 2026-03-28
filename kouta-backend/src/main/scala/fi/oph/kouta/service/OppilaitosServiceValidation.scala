@@ -113,7 +113,7 @@ class OppilaitosServiceValidation(koodistoClient: KoodistoService) extends Valid
           invalidSomeKoodiUri(t._1)
         ),
         validateIfDefined[String](t._2, assertValidUrl(_, "metadata.some." + t._1)))
-      }.to[collection.immutable.Seq])
+      }.to(collection.immutable.Seq))
   }
 
   private def validateTietoaOpiskelusta(

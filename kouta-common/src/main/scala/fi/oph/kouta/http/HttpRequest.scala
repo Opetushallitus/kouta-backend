@@ -50,7 +50,7 @@ class DefaultHttpRequest(private val request: scalaj.http.HttpRequest) extends H
     }
   }
 
-  private def logUnexpectedError(t: Throwable) {
+  private def logUnexpectedError(t: Throwable): Unit = {
     logger.error("Unexpected error from " + request.method + " to " + request.url + " : " + t, t)
   }
 

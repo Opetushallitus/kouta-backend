@@ -66,7 +66,7 @@ sealed trait Session {
   def personOid: String
   def authorities: Set[Authority]
 
-  lazy val roleMap: Map[Role, Set[OrganisaatioOid]] = authorities.groupBy(_.role).mapValues(_.flatMap(_.organisaatioId))
+  lazy val roleMap: Map[Role, Set[OrganisaatioOid]] = authorities.groupBy(_.role).view.mapValues(_.flatMap(_.organisaatioId)).toMap
   lazy val roles: Set[Role] = roleMap.keySet
 
   def getOrganizationsForRoles(requiredRoles: Seq[Role]): Set[OrganisaatioOid] =

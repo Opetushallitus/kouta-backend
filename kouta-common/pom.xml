@@ -7,11 +7,11 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.6.4-SNAPSHOT</version>
+        <version>8.0.0-SNAPSHOT_2.13</version>
     </parent>
 
     <artifactId>kouta-common</artifactId>
-    <version>2.23.4-SNAPSHOT</version>
+    <version>8.0.0-SNAPSHOT_2.13</version>
     <name>kouta-common</name>
 
     <dependencies>
@@ -21,8 +21,8 @@
         </dependency>
 
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-properties</artifactId>
         </dependency>
 
         <dependency>
@@ -33,7 +33,7 @@
 
         <dependency>
             <groupId>org.scalaj</groupId>
-            <artifactId>scalaj-http_2.12</artifactId>
+            <artifactId>scalaj-http_2.13</artifactId>
         </dependency>
 
         <dependency>
@@ -62,7 +62,8 @@
 
         <dependency>
             <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-core_2.12</artifactId>
+            <artifactId>scalate-core_2.13</artifactId>
+            <version>1.9.7</version>
             <exclusions>
                 <exclusion>
                     <groupId>org.scala-lang</groupId>
@@ -70,7 +71,19 @@
                 </exclusion>
                 <exclusion>
                     <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.12</artifactId>
+                    <artifactId>scala-xml_2.13</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.json4s</groupId>
+                    <artifactId>json4s-core_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.json4s</groupId>
+                    <artifactId>json4s-jackson_2.12</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.json4s</groupId>
+                    <artifactId>json4s-ext_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -84,16 +97,16 @@
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-core_2.12</artifactId>
+            <artifactId>json4s-core_2.13</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-jackson_2.12</artifactId>
+            <artifactId>json4s-jackson_2.13</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.json4s</groupId>
-            <artifactId>json4s-ext_2.12</artifactId>
+            <artifactId>json4s-ext_2.13</artifactId>
         </dependency>
 
         <dependency>
@@ -103,20 +116,20 @@
 
         <dependency>
             <groupId>com.github.blemale</groupId>
-            <artifactId>scaffeine_2.12</artifactId>
+            <artifactId>scaffeine_2.13</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.12</artifactId>
+            <artifactId>scalatest_2.13</artifactId>
             <version>${scalatest.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_2.12</artifactId>
+            <artifactId>scalacheck_2.13</artifactId>
             <scope>test</scope>
         </dependency>
 
@@ -153,8 +166,6 @@
                 </executions>
                 <configuration>
                     <args>
-                        <arg>-Xmax-classfile-name</arg>
-                        <arg>140</arg>
                         <arg>-deprecation</arg>
                         <arg>-feature</arg>
                     </args>

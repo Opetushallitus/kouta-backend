@@ -46,6 +46,6 @@ case class OppilaitosOrOsaDiffResolver[E <: Validatable](oppilaitosOrOsa: E, old
       case osa: OppilaitoksenOsa => osa.metadata.flatMap(_.jarjestaaUrheilijanAmmKoulutusta)
       case _ => None
     }).getOrElse(false)
-    !oldValue.equals(newValue)
+    oldValue != newValue
   }
 }

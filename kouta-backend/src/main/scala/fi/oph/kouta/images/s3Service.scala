@@ -1,30 +1,27 @@
 package fi.oph.kouta.images
 
+import com.amazonaws.regions.{RegionUtils, Regions}
+
 import java.io.ByteArrayInputStream
 import java.util.UUID
-
-import com.amazonaws.regions.RegionUtils
 import com.amazonaws.services.s3.model.{CannedAccessControlList, CopyObjectRequest, ObjectMetadata, PutObjectRequest}
-import com.amazonaws.services.s3.{AmazonS3, AmazonS3Client}
+import com.amazonaws.services.s3.{AmazonS3, AmazonS3ClientBuilder}
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.config.{KoutaConfigurationFactory, S3Configuration}
 import fi.oph.kouta.servlet.Authenticated
 import fi.oph.kouta.logging.Logging
-import io.atlassian.aws.AmazonClientConnectionDef
-import io.atlassian.aws.s3.S3Client
 
 import scala.util.matching.Regex
 
 object S3ClientFactory {
-  def create(): AmazonS3Client =
-    S3Client.create(
-      config = Some(
-        AmazonClientConnectionDef.default.copy(
-          maxErrorRetry = Some(5),
-          region = KoutaConfigurationFactory.configuration.s3Configuration.region.map(RegionUtils.getRegion)
-        )
-      )
-    )
+  def create(): AmazonS3 = {
+    val builder = AmazonS3ClientBuilder.standard()
+    val region: String = KoutaConfigurationFactory.configuration.s3Configuration.region.getOrElse(throw new RuntimeException(s"AWS Region puuttuu"))
+    println(s"S3ClientFactory: $region")
+    builder.withRegion(region)
+
+    builder.build()
+  }
 }
 
 object S3ImageService extends S3ImageService(S3ClientFactory.create(), AuditLog)

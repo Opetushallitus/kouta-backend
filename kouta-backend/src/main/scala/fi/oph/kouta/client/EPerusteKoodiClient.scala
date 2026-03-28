@@ -11,7 +11,7 @@ import fi.oph.kouta.logging.Logging
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
-import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.{DurationInt, FiniteDuration}
 import scala.util.{Failure, Right, Success, Try}
 
 case class KoodistoQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
@@ -106,11 +106,11 @@ object EPerusteKoodiClient extends EPerusteKoodiClient(KoutaConfigurationFactory
 
 class EPerusteKoodiClient(urlProperties: OphProperties)  extends HttpClient with CallerId with Logging {
 
-  implicit val formats = DefaultFormats
+  implicit val formats: DefaultFormats.type = DefaultFormats
 
   val errorHandler = (url: String, status: Int, response: String) => throw KoodistoQueryException(url, status, response)
 
-  implicit val cacheTTL = 15.minutes
+  implicit val cacheTTL: FiniteDuration = 15.minutes
 
   implicit val ePerusteToKoodiuritCache: Cache[Long, Seq[KoodiUri]] = Scaffeine()
     .expireAfterWrite(cacheTTL)

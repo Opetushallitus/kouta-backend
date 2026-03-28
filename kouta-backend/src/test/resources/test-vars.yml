@@ -1,4 +1,5 @@
 ---
+aws_region: eu-west-1
 host_postgresql_kouta: localhost
 host_postgresql_kouta_port: 5433
 postgres_app_user: oph

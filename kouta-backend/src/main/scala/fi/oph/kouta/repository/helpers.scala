@@ -68,79 +68,79 @@ trait SQLHelpers extends KoutaJsonFormats with Logging {
   }
 
   implicit object SetHakuOid extends SetParameter[HakuOid] {
-    def apply(o: HakuOid, pp: PositionedParameters) {
+    def apply(o: HakuOid, pp: PositionedParameters): Unit = {
       pp.setString(o.toString)
     }
   }
 
   implicit object SetHakukohdeOid extends SetParameter[HakukohdeOid] {
-    def apply(o: HakukohdeOid, pp: PositionedParameters) {
+    def apply(o: HakukohdeOid, pp: PositionedParameters): Unit = {
       pp.setString(o.toString)
     }
   }
 
   implicit object SetLiitettyOid extends SetParameter[LiitettyOid] {
-    def apply(o: LiitettyOid, pp: PositionedParameters) {
+    def apply(o: LiitettyOid, pp: PositionedParameters): Unit = {
       pp.setString(o.toString)
     }
   }
 
   implicit object SetOrganisaatioOid extends SetParameter[OrganisaatioOid] {
-    def apply(o: OrganisaatioOid, pp: PositionedParameters) {
+    def apply(o: OrganisaatioOid, pp: PositionedParameters): Unit = {
       pp.setString(o.toString)
     }
   }
 
   implicit object SetUserOid extends SetParameter[UserOid] {
-    def apply(o: UserOid, pp: PositionedParameters) {
+    def apply(o: UserOid, pp: PositionedParameters): Unit = {
       pp.setString(o.toString)
     }
   }
 
   implicit object SetHakuOidOption extends SetParameter[Option[HakuOid]] {
-    def apply(o: Option[HakuOid], pp: PositionedParameters) {
+    def apply(o: Option[HakuOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetHakukohdeOidOption extends SetParameter[Option[HakukohdeOid]] {
-    def apply(o: Option[HakukohdeOid], pp: PositionedParameters) {
+    def apply(o: Option[HakukohdeOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetKoulutusOidOption extends SetParameter[Option[KoulutusOid]] {
-    def apply(o: Option[KoulutusOid], pp: PositionedParameters) {
+    def apply(o: Option[KoulutusOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetToteutusOidOption extends SetParameter[Option[ToteutusOid]] {
-    def apply(o: Option[ToteutusOid], pp: PositionedParameters) {
+    def apply(o: Option[ToteutusOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetOrganisaatioOidOption extends SetParameter[Option[OrganisaatioOid]] {
-    def apply(o: Option[OrganisaatioOid], pp: PositionedParameters) {
+    def apply(o: Option[OrganisaatioOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetUserOidOption extends SetParameter[Option[UserOid]] {
-    def apply(o: Option[UserOid], pp: PositionedParameters) {
+    def apply(o: Option[UserOid], pp: PositionedParameters): Unit = {
       pp.setStringOption(o.map(_.toString))
     }
   }
 
   implicit object SetStringSeq extends SetParameter[Seq[String]]   {
-    def apply(o: Seq[String], pp: PositionedParameters) {
+    def apply(o: Seq[String], pp: PositionedParameters): Unit = {
       pp.setObject(o.toArray, java.sql.Types.ARRAY)
     }
   }
 
   implicit object SetUUID extends SetParameter[UUID] {
-    def apply(v: UUID, pp: PositionedParameters) {
+    def apply(v: UUID, pp: PositionedParameters): Unit = {
       pp.setObject(v, JDBCType.BINARY.getVendorTypeNumber)
     }
   }

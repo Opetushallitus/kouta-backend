@@ -108,10 +108,10 @@ object NameHelper {
   def mergeNames(source: Kielistetty, target: Kielistetty, kielivalinta: Seq[Kieli]): Kielistetty = {
     val targetWoNulls = kielistettyWoNullValues(target)
     kielistettyWoNullValues(source)
-      .filterKeys(kielivalinta.contains(_))
+      .view.filterKeys(kielivalinta.contains(_))
       .map({ case (kieli, nameItem) =>
         if (targetWoNulls.getOrElse(kieli, "").isEmpty) (kieli, nameItem) else (kieli, target(kieli))
-      })
+      }).toMap
   }
 
   def concatAsEntityName(start: Kielistetty, separator: Option[String], end: Kielistetty = Map(), kielivalinta: Seq[Kieli] = List(Fi)): Kielistetty = {

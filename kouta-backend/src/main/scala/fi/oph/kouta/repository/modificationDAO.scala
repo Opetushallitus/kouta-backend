@@ -25,7 +25,7 @@ object ModificationDAO extends ModificationDAO {
       l <- OppilaitosDAO.selectModifiedSince(modifiedSince)
       o <- OppilaitoksenOsaDAO.selectModifiedSince(modifiedSince)
       s <- SorakuvausDAO.selectModifiedSince(modifiedSince)
-    } yield ListEverything(k, t, h, a, p, o.union(l), s))
+    } yield ListEverything(k, t, h, a, p, o.concat(l), s))
     .get
 }
 

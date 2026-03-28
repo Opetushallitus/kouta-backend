@@ -2,8 +2,8 @@ package fi.oph.kouta
 
 import fi.oph.kouta.client.OrganisaatioOidsAndOppilaitostyypitFlat
 
-import scala.collection.IterableView
+import scala.collection.View
 
 package object service {
-  type OrganisaatioOidsAndOppilaitostyypitFlatView = IterableView[OrganisaatioOidsAndOppilaitostyypitFlat, Iterable[_]]
+  type OrganisaatioOidsAndOppilaitostyypitFlatView = View[OrganisaatioOidsAndOppilaitostyypitFlat]
 }

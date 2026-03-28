@@ -1,4 +1,4 @@
-package fi.oph.kouta.integration
+  package fi.oph.kouta.integration
 
 import java.util.UUID
 import fi.oph.kouta.TestOids

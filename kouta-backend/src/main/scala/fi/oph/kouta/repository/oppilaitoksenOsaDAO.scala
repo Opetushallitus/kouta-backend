@@ -130,7 +130,7 @@ sealed trait OppilaitoksenOsaSQL extends OppilaitoksenOsaExtractors with Oppilai
   def selectJulkaistutByOppilaitosOid(oppilaitosOid: OrganisaatioOid): DBIO[Vector[OppilaitoksenOsa]] = {
     sql"""#$selectOppilaitoksenOsaSQL
           from oppilaitosten_osat
-          where oppilaitos_oid = $oppilaitosOid #${tilaConditions(TilaFilter.onlyJulkaistut)}""".as[OppilaitoksenOsa]
+          where oppilaitos_oid = $oppilaitosOid #${tilaConditions(TilaFilter.onlyJulkaistut())}""".as[OppilaitoksenOsa]
   }
 
   def insertOppilaitoksenOsa(oppilaitoksenOsa: OppilaitoksenOsa): DBIO[Int] = {

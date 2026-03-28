@@ -81,10 +81,10 @@ trait KoulutusToteutusValidatingService[E <: Validatable] extends ValidatingServ
 
     Try[(Seq[OrganisaatioOid], Seq[OrganisaatioOid])] {
       (
-        organisaatioService.withoutOppilaitostyypit(validTarjoajat, oppilaitostyypit),
+        organisaatioService.withoutOppilaitostyypit(validTarjoajat, oppilaitostyypit).toSeq,
         validTarjoajat.filterNot(
           organisaatioService.getAllChildOidsAndKoulutustyypitFlat(_)._2.contains(koulutustyyppi)
-        )
+        ).toSeq
       )
     } match {
       case Success((tarjoajaOidsWoRequiredOppilaitostyyppi, tarjoajaOidsWoRequiredKoulutustyyppi)) =>

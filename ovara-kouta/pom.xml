@@ -7,10 +7,10 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>7.6.4-SNAPSHOT</version>
+        <version>8.0.0-SNAPSHOT_2.13</version>
     </parent>
     <artifactId>ovara-kouta</artifactId>
-    <version>7.6.4-SNAPSHOT</version>
+    <version>8.0.0-SNAPSHOT_2.13</version>
     <name>ovara-kouta</name>
 
     <dependencies>
@@ -26,37 +26,6 @@
             <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
             <artifactId>dokumenttipalvelu</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.atlassian.aws-scala</groupId>
-            <artifactId>aws-scala-s3_2.12</artifactId>
-            <version>8.0.3</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-codec</groupId>
-                    <artifactId>commons-codec</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.joda</groupId>
-                    <artifactId>joda-convert</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scalaz</groupId>
-                    <artifactId>scalaz-effect_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>joda-time</groupId>
-                    <artifactId>joda-time</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
 
         <dependency>
             <groupId>fi.oph.kouta</groupId>
@@ -70,14 +39,6 @@
                 <exclusion>
                     <groupId>fi.vm.sade.java-utils</groupId>
                     <artifactId>java-http</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.atlassian.aws-scala</groupId>
-                    <artifactId>aws-scala-sqs_2.12</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>io.atlassian.aws-scala</groupId>
-                    <artifactId>aws-scala-s3_2.12</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
@@ -121,8 +82,6 @@
                 </executions>
                 <configuration>
                     <args>
-                        <arg>-Xmax-classfile-name</arg>
-                        <arg>140</arg>
                         <arg>-deprecation</arg>
                         <arg>-feature</arg>
                     </args>
