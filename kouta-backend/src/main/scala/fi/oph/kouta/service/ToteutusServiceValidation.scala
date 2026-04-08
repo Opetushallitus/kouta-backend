@@ -132,6 +132,14 @@ class ToteutusServiceValidation(
                 validateKielistetty(vCtx.kielivalinta, metadata.kuvaus, "metadata.kuvaus"),
                 validateOptionalKielistetty(vCtx.kielivalinta, metadata.kuvaus, "metadata.kuvaus")
               ),
+              validateIfFalse(
+                Set[Koulutustyyppi](AmmOsaamisala, VapaaSivistystyoOsaamismerkki).contains(metadata.tyyppi),
+                validateOptionalKielistetty(
+                  vCtx.kielivalinta,
+                  metadata.osaamistavoitteet,
+                  "metadata.osaamistavoitteet"
+                )
+              ),
               assertNotOptional(metadata.opetus, "metadata.opetus")
             )
           ),
@@ -183,8 +191,11 @@ class ToteutusServiceValidation(
                       hakukohteenLiittaminenNotAllowed(koulutusTyyppi)
                     ),
                     validateTutkintoonJohtamatonMetadata(vCtx, m),
-                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet")
+                    assertEmpty(m.ammattinimikkeet, "metadata.ammattinimikkeet"),
+                    assertEmptyKielistetty(metadata.osaamistavoitteet, "metadata.osaamistavoitteet")
                   )
+                case m: AmmatillinenOsaamisalaToteutusMetadata =>
+                  assertEmptyKielistetty(m.osaamistavoitteet, "metadata.osaamistavoitteet")
                 case _ =>
                   validateTutkintoonJohtamatonMetadata(
                     vCtx,

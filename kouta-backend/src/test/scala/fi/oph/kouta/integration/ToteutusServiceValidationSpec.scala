@@ -982,6 +982,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         tila = Tallennettu,
         metadata = Some(
           AmmatillinenMuuToteutusMetadata(
+            osaamistavoitteet = Map(Fi -> "osaamistavoitteet", Sv -> "osaamistavoitteet sv"),
             hakulomakeLinkki = Map(Fi -> "puppu fi", Sv -> "puppu sv"),
             hakuaika = Some(ajanjakso),
             aloituspaikat = Some(-1),
@@ -2384,5 +2385,45 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
 
   it should "pass validation of pelastusalan amm koulutus with empty osaamisalat" in {
     passesValidation(pelastusalanAmmToteutus)
+  }
+
+  "Osaamistavoitteet validation" should "fail for osaamismerkki toteutus that has osaamistavoitteet defined" in {
+    failsValidation(vstOsaamismerkkiToteutus.copy(
+      metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for amm toteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
+    failsValidation(JulkaistuAmmToteutus.copy(
+      metadata = Some(AmmToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      invalidKielistetty(List(Sv))
+    )
+  }
+
+  it should "fail for amm-osaamisala toteutus that has osaamistavoitteet defined" in {
+    failsValidation(ammOsaamisalaToteutus.copy(
+      metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      notEmptyMsg
+    )
+  }
+
+  it should "fail for amm-tutkinnonosatoteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
+    failsValidation(ammTutkinnonOsaToteutus.copy(
+      metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      invalidKielistetty(List(Sv))
+    )
+  }
+
+  it should "fail for yo-toteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
+    failsValidation(yoToteutus.copy(
+      metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "Suomenkieliset osaamistavoitteet")))),
+      "metadata.osaamistavoitteet",
+      invalidKielistetty(List(Sv))
+    )
   }
 }

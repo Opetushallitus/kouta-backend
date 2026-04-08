@@ -4,7 +4,7 @@ import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.client.{KayttooikeusClient, OppijanumerorekisteriClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid.OrganisaatioOid
-import fi.oph.kouta.images.{LogoService, S3ImageService, TeemakuvaService}
+import fi.oph.kouta.images.{ImageService, LogoService, S3ImageService, TeemakuvaService}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeOppilaitos}
 import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, OppilaitoksenOsaDAO, OppilaitosDAO}
@@ -20,7 +20,7 @@ object OppilaitosService extends OppilaitosService(SqsInTransactionService, S3Im
 
 class OppilaitosService(
   sqsInTransactionService: SqsInTransactionService,
-  val s3ImageService: S3ImageService,
+  val s3ImageService: ImageService,
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,
@@ -174,7 +174,7 @@ object OppilaitoksenOsaService extends OppilaitoksenOsaService(SqsInTransactionS
 
 class OppilaitoksenOsaService(
   sqsInTransactionService: SqsInTransactionService,
-  val s3ImageService: S3ImageService,
+  val s3ImageService: ImageService,
   auditLog: AuditLog,
   val organisaatioService: OrganisaatioServiceImpl,
   oppijanumerorekisteriClient: OppijanumerorekisteriClient,

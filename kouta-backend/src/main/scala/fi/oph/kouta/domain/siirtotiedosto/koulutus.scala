@@ -8,6 +8,7 @@ import java.util.UUID
 sealed trait KoulutusMetadataRaporttiItem {
   val tyyppi: Koulutustyyppi
   val kuvaus: Kielistetty
+  val osaamistavoitteet: Kielistetty
   val lisatiedot: Seq[LisatietoRaporttiItem]
   val luokittelutermit: Seq[String]
   val isMuokkaajaOphVirkailija: Option[Boolean]
@@ -70,6 +71,7 @@ trait KorkeakoulutusRelatedKoulutusMetadataRaporttiItem extends KoulutusMetadata
 case class AmmatillinenKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amm,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None,
@@ -82,6 +84,7 @@ case class AmmatillinenKoulutusMetadataRaporttiItem(
 case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmTutkinnonOsa,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     tutkinnonOsat: Seq[TutkinnonOsaRaporttiItem] = Seq(),
@@ -91,6 +94,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadataRaporttiItem(
 case class AmmatillinenOsaamisalaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOsaamisala,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     osaamisalaKoodiUri: Option[String] = None,
@@ -102,6 +106,7 @@ case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusyksikkoKoodiUri: Option[String] = None,
     opintojenLaajuusNumero: Option[Double] = None,
@@ -112,6 +117,7 @@ case class AmmatillinenMuuKoulutusMetadataRaporttiItem(
 case class YliopistoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Yo,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -124,6 +130,7 @@ case class YliopistoKoulutusMetadataRaporttiItem(
 case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Amk,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -136,6 +143,7 @@ case class AmmattikorkeakouluKoulutusMetadataRaporttiItem(
 case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AmmOpeErityisopeJaOpo,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -148,6 +156,7 @@ case class AmmOpeErityisopeJaOpoKoulutusMetadataRaporttiItem(
 case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = OpePedagOpinnot,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -160,6 +169,7 @@ case class OpePedagOpinnotKoulutusMetadataRaporttiItem(
 case class KkOpintojaksoKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintojakso,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -176,6 +186,7 @@ case class KkOpintojaksoKoulutusMetadataRaporttiItem(
 case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = KkOpintokokonaisuus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
@@ -192,6 +203,7 @@ case class KkOpintokokonaisuusKoulutusMetadataRaporttiItem(
 case class LukioKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Lk,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -204,6 +216,7 @@ case class LukioKoulutusMetadataRaporttiItem(
 case class TuvaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Tuva,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     luokittelutermit: Seq[String] = Seq(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
@@ -216,6 +229,7 @@ case class TuvaKoulutusMetadataRaporttiItem(
 case class TelmaKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Telma,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
@@ -227,6 +241,7 @@ case class TelmaKoulutusMetadataRaporttiItem(
 
 trait VapaaSivistystyoKoulutusMetadataRaporttiItem extends KoulutusMetadataRaporttiItem with LaajuusSingle {
   val kuvaus: Kielistetty
+  val osaamistavoitteet: Kielistetty
   val linkkiEPerusteisiin: Kielistetty
   val koulutusalaKoodiUrit: Seq[String]
 }
@@ -236,6 +251,7 @@ case class VapaaSivistystyoOpistovuosiKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -248,6 +264,7 @@ case class VapaaSivistystyoMuuKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -260,6 +277,7 @@ case class VapaaSivistystyoOsaamismerkkiKoulutusMetadataRaporttiItem(
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     linkkiEPerusteisiin: Kielistetty = Map(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),
     opintojenLaajuusNumero: Option[Double] = None,
@@ -271,6 +289,7 @@ case class VapaaSivistystyoOsaamismerkkiKoulutusMetadataRaporttiItem(
 case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = AikuistenPerusopetus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
@@ -283,6 +302,7 @@ case class AikuistenPerusopetusKoulutusMetadataRaporttiItem(
 case class ErikoislaakariKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoislaakari,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     tutkintonimikeKoodiUrit: Seq[String] = Seq(),
@@ -293,6 +313,7 @@ case class ErikoislaakariKoulutusMetadataRaporttiItem(
 case class ErikoistumiskoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Erikoistumiskoulutus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     erikoistumiskoulutusKoodiUri: Option[String] = None,
@@ -307,6 +328,7 @@ case class ErikoistumiskoulutusMetadataRaporttiItem(
 case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = TaiteenPerusopetus,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     linkkiEPerusteisiin: Kielistetty = Map(),
@@ -316,6 +338,7 @@ case class TaiteenPerusopetusKoulutusMetadataRaporttiItem(
 case class MuuKoulutusMetadataRaporttiItem(
     tyyppi: Koulutustyyppi = Muu,
     kuvaus: Kielistetty = Map(),
+    osaamistavoitteet: Kielistetty = Map(),
     lisatiedot: Seq[LisatietoRaporttiItem] = Seq(),
     luokittelutermit: Seq[String] = Seq(),
     koulutusalaKoodiUrit: Seq[String] = Seq(),

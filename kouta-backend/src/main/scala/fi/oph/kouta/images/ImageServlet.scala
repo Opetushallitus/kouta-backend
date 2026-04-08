@@ -13,7 +13,7 @@ import scala.xml.factory.XMLLoader
 trait ImageServlet {
   this: KoutaServlet =>
 
-  def s3ImageService: S3ImageService
+  def s3ImageService: ImageService
 
   def storeTempImage(sizeSpecs: ImageSizeSpecs)(implicit authenticated: Authenticated): String = {
     val image = readImage(sizeSpecs)
