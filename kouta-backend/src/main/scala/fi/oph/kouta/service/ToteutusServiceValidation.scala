@@ -304,7 +304,7 @@ class ToteutusServiceValidation(
           koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
-      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
+      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, s"$path.maksut"),
       validateIfDefined[Apuraha](
         opetus.apuraha,
         apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, koulutustyyppi, apuraha, opetus)
@@ -321,7 +321,6 @@ class ToteutusServiceValidation(
             koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
           )
       ),
-      validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
       validateIfDefined[Int](opetus.suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
       validateIfDefined[Int](
         opetus.suunniteltuKestoKuukaudet,
@@ -337,12 +336,14 @@ class ToteutusServiceValidation(
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetustapaKuvaus, s"$path.opetustapaKuvaus"),
-          assertNotOptional(opetus.maksullisuustyyppi, s"$path.maksullisuustyyppi"),
+          assertNotEmpty(opetus.maksut, s"$path.maksut"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
-          validateIfTrue(
-            opetus.maksullisuustyyppi.contains(Maksullinen) || opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
-            assertNotOptional(opetus.maksunMaara, s"$path.maksunMaara")
-          ),
+          opetus.maksut.flatMap(maksu => {
+            validateIfTrue(
+              maksu.maksullisuustyyppi == Maksullinen || maksu.maksullisuustyyppi == Lukuvuosimaksu,
+              assertNotOptional(maksu.maksunMaara, s"$path.maksunMaara")
+            )
+          }),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
         )
       )
@@ -359,11 +360,13 @@ class ToteutusServiceValidation(
     val path = "metadata.opetus.apuraha"
     val min  = apuraha.min
     val max  = apuraha.max
+
     and(
       assertTrue(
-        opetus.maksullisuustyyppi.contains(Lukuvuosimaksu) && Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(
-          koulutustyyppi
-        ),
+        opetus.maksut.exists(maksu => maksu.maksullisuustyyppi == Lukuvuosimaksu) && Koulutustyyppi
+          .isTutkintoonJohtavaKorkeakoulutus(
+            koulutustyyppi
+          ),
         s"$path",
         invalidMaksullisuustyyppiWithApuraha
       ),
@@ -394,40 +397,44 @@ class ToteutusServiceValidation(
     val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(koulutustyyppi)
     val English                           = "oppilaitoksenopetuskieli_4"
     val Tohtorikoulutus                   = "tutkintotyyppi_16"
+    val maksut                            = opetus.maksut
 
-    and(
-      validateIfTrue(
-        opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
-        and(
-          validateIfTrue(
-            isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
+    maksut.flatMap(maksu =>
+      and(
+        validateIfTrue(
+          maksu.maksullisuustyyppi == Lukuvuosimaksu,
+          and(
+            validateIfTrue(
+              isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
+              assertTrue(
+                opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
+                s"$path.maksullisuustyyppi",
+                invalidOpetuskieliWithLukuvuosimaksu
+              )
+            ),
             assertTrue(
-              opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
+              isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
               s"$path.maksullisuustyyppi",
-              invalidOpetuskieliWithLukuvuosimaksu
+              invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
+            ),
+            validateIfTrue(
+              isTutkintoonJohtavaKorkeakoulutus,
+              koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
+                case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
+                  val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
+                  val tohtorikoulutukset =
+                    tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                  assertEmpty(
+                    tohtorikoulutukset,
+                    s"$path.maksullisuustyyppi",
+                    invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
+                  )
+                case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+              }
             )
-          ),
-          assertTrue(
-            isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
-            s"$path.maksullisuustyyppi",
-            invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
-          ),
-          validateIfTrue(
-            isTutkintoonJohtavaKorkeakoulutus,
-            koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
-              case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
-                val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-                val tohtorikoulutukset =
-                  tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
-                assertEmpty(
-                  tohtorikoulutukset,
-                  s"$path.maksullisuustyyppi",
-                  invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
-                )
-              case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
-            }
           )
-        )
+        ),
+        validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path.maksunMaara"))
       )
     )
   }
