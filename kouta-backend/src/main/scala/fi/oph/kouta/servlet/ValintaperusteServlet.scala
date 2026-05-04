@@ -85,7 +85,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     implicit val authenticated: Authenticated = authenticate()
 
-    valintaperusteService.put(parsedBody.extract[Valintaperuste]) match {
+    valintaperusteService.put(parsedBody.extract[Valintaperuste], fromExternal = false) match {
       case res: ValintaperusteCreateResult => Ok(res)
     }
   }
@@ -115,7 +115,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
 
     implicit val authenticated: Authenticated = authenticate()
 
-    valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince) match {
+    valintaperusteService.update(parsedBody.extract[Valintaperuste], getIfUnmodifiedSince, fromExternal = false) match {
       case res: UpdateResult => Ok(res)
     }
   }
