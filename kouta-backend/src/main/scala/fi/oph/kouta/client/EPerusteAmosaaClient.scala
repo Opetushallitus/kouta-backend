@@ -20,4 +20,11 @@ class EPerusteAmosaaClient(urlProperties: OphProperties) extends HttpClient with
       parse(response)
     }
   }
+
+  def getPaikallisetTutkinnonosat(opetussuunnitelmaId: Long): JValue = {
+    val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelman-tutkinnonosat", opetussuunnitelmaId.toString) + "?tosa.tyyppi=oma"
+    get(url, errorHandler, followRedirects = true) { response =>
+      parse(response)
+    }
+  }
 }
