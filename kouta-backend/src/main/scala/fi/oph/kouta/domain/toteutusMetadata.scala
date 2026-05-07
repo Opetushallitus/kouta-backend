@@ -670,7 +670,7 @@ package object toteutusMetadata {
       |              description: Koulutuksen kielivalikoima
       |              $ref: '#/components/schemas/Kielivalikoima'
       |            yleislinja:
-      |              type: boolean,
+      |              type: boolean
       |              description: Onko lukio-toteutuksella yleislinja?
       |            painotukset:
       |              type: array
