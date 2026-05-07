@@ -12,10 +12,14 @@ package object organisaatio {
       |        - parentOids
       |        - nimi
       |        - kieletUris
+      |        - status
       |      properties:
       |        oid:
       |          type: string
       |          example: 1.2.246.562.10.66634895871
+      |        parentOid:
+      |          type: string
+      |          example: 1.2.246.562.10.594252633210
       |        parentOids:
       |          type: array
       |          items:
@@ -66,6 +70,9 @@ package object organisaatio {
       |            example:
       |              - organisaatiotyyppi_1
       |              - organisaatiotyyppi_2
+      |        status:
+      |          type: string
+      |          example: AKTIIVINEN
       |""".stripMargin
 
   val OrganisaatioHierarkiaModel =
