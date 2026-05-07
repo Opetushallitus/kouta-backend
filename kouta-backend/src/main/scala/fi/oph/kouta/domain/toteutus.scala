@@ -158,6 +158,10 @@ package object toteutus {
       |           format: date-time
       |           description: Toteutuksen viimeisin muokkausaika. Järjestelmän generoima
       |           example: 2019-08-23T09:55:17
+      |        sorakuvausId:
+      |          type: string
+      |          description: Toteutukseen liittyvän SORA-kuvauksen yksilöivä tunniste
+      |          example: "ea596a9c-5940-497e-b5b7-aded3a2352a7"
       |        koulutuksetKoodiUri:
       |          type: array
       |          description: Koulutuksen koodi URIt. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/koulutus/11)
