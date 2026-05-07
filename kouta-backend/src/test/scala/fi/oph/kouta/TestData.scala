@@ -1180,9 +1180,7 @@ object TestData {
     opetusaikaKuvaus = Map(Fi -> "Opetusaikakuvaus fi", Sv -> "Opetusaikakuvaus sv"),
     opetustapaKoodiUrit = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
     opetustapaKuvaus = Map(Fi -> "Opetustapakuvaus fi", Sv -> "Opetustapakuvaus sv"),
-    maksullisuustyyppi = None,
     maksullisuusKuvaus = Map(Fi -> "Maksullisuuskuvaus fi", Sv -> "Maksullisuuskuvaus sv"),
-    maksunMaara = None,
     maksut = Seq(Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(200.5))),
     koulutuksenAlkamiskausi = Some(
       KoulutuksenAlkamiskausi(
@@ -1212,7 +1210,6 @@ object TestData {
 
   val ToteutuksenOpetusWithApuraha: Opetus = ToteutuksenOpetus.copy(
     opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-    maksullisuustyyppi = Some(Lukuvuosimaksu),
     maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500))),
     onkoApuraha = true,
     apuraha = Some(

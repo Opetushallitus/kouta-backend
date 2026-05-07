@@ -685,7 +685,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           AmmatillinenToteutusMetadata(opetus =
             Some(
               ToteutuksenOpetus.copy(
-                maksunMaara = None,
                 suunniteltuKestoVuodet = Some(-1),
                 suunniteltuKestoKuukaudet = Some(-1),
                 maksut = Seq(Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(-1)))
