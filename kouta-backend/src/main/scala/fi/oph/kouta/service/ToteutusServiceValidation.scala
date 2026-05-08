@@ -339,9 +339,15 @@ class ToteutusServiceValidation(
           assertNotEmpty(opetus.maksut, s"$path.maksut"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
           opetus.maksut.flatMap(maksu => {
-            validateIfTrue(
-              maksu.maksullisuustyyppi == Maksullinen || maksu.maksullisuustyyppi == Lukuvuosimaksu,
-              assertNotOptional(maksu.maksunMaara, s"$path.maksunMaara")
+            and(
+              validateIfTrue(
+                maksu.maksullisuustyyppi == Maksullinen,
+                assertNotOptional(maksu.maksunMaara, s"$path.maksunMaara")
+              ),
+              validateIfTrue(
+                maksu.maksullisuustyyppi == Lukuvuosimaksu,
+                assertNotOptional(maksu.maksunMaara, s"$path.lukuvuosimaksunMaara")
+              )
             )
           }),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
