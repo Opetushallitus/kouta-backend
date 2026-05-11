@@ -453,6 +453,18 @@ package object domain {
       |          example: 2449201
       |""".stripMargin
 
+  val PaikallinenTutkinnonOsaModel: String =
+    """    PaikallinenTutkinnonOsa:
+      |      type: object
+      |      properties:
+      |        toteutusSunnitelmaId:
+      |          type: string
+      |          description: Paikallisen tutkinnon osan toteutussuunnitelman tunniste
+      |        tutkinnonosaId:
+      |          type: string
+      |          description: Paikallisen tutkinnon osan tunniste
+      |""".stripMargin
+
   val KoulutuksenAlkamiskausiModel: String =
     """    KoulutuksenAlkamiskausi:
       |      type: object
@@ -1011,6 +1023,7 @@ package object domain {
     ListEverythingModel,
     AuthenticatedModel,
     TutkinnonOsaModel,
+    PaikallinenTutkinnonOsaModel,
     KoulutuksenAlkamiskausiModel,
     NimettyLinkkiModel,
     ValintakokeenLisatilaisuudetModel,
@@ -1351,6 +1364,11 @@ package object domain {
     def idValuesPopulated(): Boolean =
       ePerusteId.isDefined && tutkinnonosaViite.isDefined && tutkinnonosaId.isDefined
   }
+
+  case class PaikallinenTutkinnonOsa(
+      toteutusSunnitelmaId: String,
+      tutkinnonosaId: String
+  )
 
   private def assertPostinumerokoodiuritValid(
       koodiUrit: List[String],
