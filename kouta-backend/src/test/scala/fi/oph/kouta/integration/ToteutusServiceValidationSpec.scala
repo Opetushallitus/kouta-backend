@@ -103,15 +103,16 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     InetAddress.getByName("127.0.0.1")
   )
   val nimiNotMatchingDefault = Map(Fi -> "eri nimi", Sv -> "eri nimi sv")
-  val pastMillis = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
+  val pastMillis             = System.currentTimeMillis() - (1000L * 60 * 60 * 24 * 30)
 
   private def ammToteutusWithOpetusParameters(
       opetuskieliKoodiUrit: Seq[String] = Seq("oppilaitoksenopetuskieli_1#1"),
       opetusaikaKoodiUrit: Seq[String] = Seq("opetusaikakk_1#1"),
       opetustapaKoodiUrit: Seq[String] = Seq("opetuspaikkakk_1#1", "opetuspaikkakk_2#1"),
+      onkoApuraha: Boolean = false,
       apuraha: Option[Apuraha] = None,
       lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1),
-      maksullisuustyyppi: Option[Maksullisuustyyppi] = Some(Maksullinen)
+      maksut: Seq[Maksu] = Seq(Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(200.5)))
   ): Toteutus = {
     val opetus: Opetus = ToteutuksenOpetus.copy(
       opetuskieliKoodiUrit = opetuskieliKoodiUrit,
@@ -119,7 +120,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetustapaKoodiUrit = opetustapaKoodiUrit,
       apuraha = apuraha,
       lisatiedot = lisatiedot,
-      maksullisuustyyppi = maksullisuustyyppi
+      maksut = maksut
     )
     JulkaistuAmmToteutus.copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(opetus))))
   }
@@ -133,8 +134,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
       ),
       lisatiedot: Seq[Lisatieto] = Seq(Lisatieto1),
-      maksullisuustyyppi: Option[Maksullisuustyyppi] = Some(Lukuvuosimaksu),
-      koulutusOid: Option[KoulutusOid] = Some(KoulutusOid("1.2.246.562.13.131"))
+      koulutusOid: Option[KoulutusOid] = Some(KoulutusOid("1.2.246.562.13.131")),
+      maksut: Seq[Maksu] = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(200.5)))
   ): Toteutus = {
     val opetus: Opetus = ToteutuksenOpetus.copy(
       opetuskieliKoodiUrit = opetuskieliKoodiUrit,
@@ -143,7 +144,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       onkoApuraha = onkoApuraha,
       apuraha = apuraha,
       lisatiedot = lisatiedot,
-      maksullisuustyyppi = maksullisuustyyppi
+      maksut = maksut
     )
     JulkaistuYoToteutus.copy(
       koulutusOid = koulutusOid.get,
@@ -397,7 +398,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val futureMillis = System.currentTimeMillis() + (1000L * 60 * 60 * 24 * 30)
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(futureMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(futureMillis)))
+    )
   }
 
   private def failSorakuvausValidation(toteutus: Toteutus): Assertion = {
@@ -467,6 +470,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       Seq("oppilaitoksenopetuskieli_9#1"),
       Seq("opetusaikakk_9#1"),
       Seq("opetuspaikkakk_9#1"),
+      onkoApuraha = false,
       ToteutuksenOpetus.apuraha,
       Seq(Lisatieto1.copy(otsikkoKoodiUri = "koulutuksenlisatiedot_99#1"))
     ).copy(oid = Some(toteutusOid))
@@ -681,20 +685,33 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           AmmatillinenToteutusMetadata(opetus =
             Some(
               ToteutuksenOpetus.copy(
-                maksunMaara = Some(-1),
                 suunniteltuKestoVuodet = Some(-1),
                 suunniteltuKestoKuukaudet = Some(-1),
-                maksullisuustyyppi = None
+                maksut = Seq(
+                  Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(-1)),
+                  Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = None)
+                )
               )
             )
           )
         )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksunMaara", notNegativeMsg),
+        ValidationError("metadata.opetus.maksut.maksunMaara", notNegativeMsg),
         ValidationError("metadata.opetus.suunniteltuKestoVuodet", notNegativeMsg),
         ValidationError("metadata.opetus.suunniteltuKestoKuukaudet", notNegativeMsg),
-        ValidationError("metadata.opetus.maksullisuustyyppi", missingMsg)
+        ValidationError("metadata.opetus.lukuvuosimaksunMaara", missingMsg)
+      )
+    )
+  }
+
+  it should "fail if invalid opetuksen maksunMaara parameters" in {
+    failsValidation(
+      JulkaistuAmmToteutus.copy(metadata =
+        Some(AmmatillinenToteutusMetadata(opetus = Some(ToteutuksenOpetus.copy(maksut = Seq()))))
+      ),
+      Seq(
+        ValidationError("metadata.opetus.maksut", missingMsg)
       )
     )
   }
@@ -707,7 +724,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           AmmatillinenToteutusMetadata(opetus =
             Some(
               Opetus(
-                maksullisuustyyppi = Some(Maksullinen),
+                maksut = Seq(),
                 onkoApuraha = true,
                 opetuskieletKuvaus = incompleteKielistetty,
                 opetusaikaKuvaus = incompleteKielistetty,
@@ -728,7 +745,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("metadata.opetus.opetusaikaKuvaus", invalidKielistetty(Seq(Sv))),
         ValidationError("metadata.opetus.opetustapaKuvaus", invalidKielistetty(Seq(Sv))),
         ValidationError("metadata.opetus.maksullisuusKuvaus", invalidKielistetty(Seq(Sv))),
-        ValidationError("metadata.opetus.maksunMaara", missingMsg),
+        ValidationError("metadata.opetus.maksut", missingMsg),
         ValidationError("metadata.opetus.suunniteltuKestoKuvaus", invalidKielistetty(Seq(Sv)))
       )
     )
@@ -1065,7 +1082,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   "validateApuraha" should "fail if invalid apuraha" in {
     val validKuvaus = Map(Fi -> "kuvaus fi", Sv -> "kuvaus sv")
     failsValidation(
-      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(-100), Some(-200), Some(Euro), validKuvaus))),
+      yoToteutusWithOpetusParameters(
+        apuraha = Some(Apuraha(Some(-100), Some(-200), Some(Euro), validKuvaus)),
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)))
+      ),
       Seq(
         ValidationError("metadata.opetus.apuraha.min", minmaxMsg(-100, -200)),
         ValidationError("metadata.opetus.apuraha.min", notNegativeMsg),
@@ -1073,12 +1093,18 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       )
     )
     failsValidation(
-      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(Some(50), Some(200), Some(Prosentti), validKuvaus))),
+      yoToteutusWithOpetusParameters(
+        apuraha = Some(Apuraha(Some(50), Some(200), Some(Prosentti), validKuvaus)),
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)))
+      ),
       "metadata.opetus.apuraha.max",
       lessOrEqualMsg(200, 100)
     )
     failsValidation(
-      yoToteutusWithOpetusParameters(apuraha = Some(Apuraha(None, None, None, Map(Fi -> "vain suomeksi")))),
+      yoToteutusWithOpetusParameters(
+        apuraha = Some(Apuraha(None, None, None, Map(Fi -> "vain suomeksi"))),
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)))
+      ),
       Seq(
         ValidationError("metadata.opetus.apuraha.kuvaus", invalidKielistetty(Seq(Sv))),
         ValidationError("metadata.opetus.apuraha.min", missingMsg),
@@ -1091,7 +1117,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failsValidation(
       yoToteutusWithOpetusParameters(
         opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-        maksullisuustyyppi = Some(Maksullinen)
+        maksut = Seq(Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(500)))
       ),
       Seq(
         ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
@@ -1112,14 +1138,57 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo or amk" in {
+  it should "fail if apuraha is set for lukuvuosimaksullinen amm toteutus" in {
     failsValidation(
       ammToteutusWithOpetusParameters(
-        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
-        maksullisuustyyppi = Some(Lukuvuosimaksu)
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1"), //Finnish
+        onkoApuraha = true,
+        apuraha = Some(
+          Apuraha(Some(100), Some(200), Some(Euro), Map(Fi -> "apurahakuvaus fi", Sv -> "apurahakuvaus sv"))
+        ),
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)))
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(Amm))
+        ValidationError("metadata.opetus.apuraha", invalidMaksullisuustyyppiWithApuraha)
+      )
+    )
+  }
+
+  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
+    failsValidation(
+      ammMuuToteutus.copy(metadata =
+        Some(
+          AmmMuuToteutusMetatieto.copy(opetus =
+            Some(ToteutuksenOpetus.copy(maksut = Seq(Maksu(Lukuvuosimaksu, Some(200)))))
+          )
+        )
+      ),
+      Seq(
+        ValidationError("metadata.opetus.maksut.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for amm koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
+      )
+    )
+  }
+
+  it should "succeed if lukuvuosimaksu is selected for lk koulutustyyppi even though opetuskieli is Finnish" in {
+    passesValidation(
+      lukioToteutus.copy(metadata =
+        Some(
+          LukioToteutuksenMetatieto.copy(opetus =
+            Some(
+              ToteutuksenOpetus.copy(
+                opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
+              )
+            )
+          )
+        )
       )
     )
   }
@@ -1127,11 +1196,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "fail if lukuvuosimaksu is selected and koulutus is tohtorikoulutus" in {
     failsValidation(
       yoToteutusWithOpetusParameters(
-        maksullisuustyyppi = Some(Lukuvuosimaksu),
         koulutusOid = Some(yoTohtoriKoulutus.oid.get)
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutusWithLukuvuosimaksu(Seq("koulutus_855101")))
+        ValidationError(
+          "metadata.opetus.maksut.maksullisuustyyppi",
+          invalidKoulutusWithLukuvuosimaksu(Seq("koulutus_855101"))
+        )
       )
     )
   }
@@ -1141,11 +1212,10 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       .thenReturn(Left(new RuntimeException()))
     failsValidation(
       yoToteutusWithOpetusParameters(
-        maksullisuustyyppi = Some(Lukuvuosimaksu),
         koulutusOid = Some(yoTohtoriKoulutus.oid.get)
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", koodistoServiceFailureMsg)
+        ValidationError("metadata.opetus.maksut.maksullisuustyyppi", koodistoServiceFailureMsg)
       )
     )
   }
@@ -1154,7 +1224,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failsValidation(
       yoToteutusWithOpetusParameters(opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1")),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidOpetuskieliWithLukuvuosimaksu)
+        ValidationError("metadata.opetus.maksut.maksullisuustyyppi", invalidOpetuskieliWithLukuvuosimaksu)
       )
     )
   }
@@ -1874,7 +1944,9 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "fail if the attached osaamismerkki is deprecated (voimassaolo on päättynyt)" in {
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1082")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis)))
+    )
 
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
     when(koulutusDao.get(List(koulutusOid1)))
@@ -1902,14 +1974,20 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     val julkaistuKkOpintokokonaisuusToteutus = kkOpintokokonaisuusToteutus.copy(
       oid = Some(toteutusOid2),
       metadata = Some(KkOpintokokonaisuusToteutuksenMetatieto.copy(liitetytOpintojaksot = List(toteutusOid))),
-      modified = Some(Modified(LocalDateTime.now().minusDays(1))))
+      modified = Some(Modified(LocalDateTime.now().minusDays(1)))
+    )
     when(toteutusDao.get(toteutusOid))
       .thenAnswer(Vector(MinimalExistingToteutus(julkaistuKkOpintokokonaisuusToteutus)))
 
     failsLiitetytValidation(
       julkaistuKkOpintojaksoToteutus.copy(tila = Tallennettu),
       julkaistuKkOpintojaksoToteutus,
-      Seq(ValidationError("metadata.tila", invalidStateChangeForLiitetty(toteutusOid, List(Some(toteutusOid2)), Vector(toteutusOid2))))
+      Seq(
+        ValidationError(
+          "metadata.tila",
+          invalidStateChangeForLiitetty(toteutusOid, List(Some(toteutusOid2)), Vector(toteutusOid2))
+        )
+      )
     )
   }
 
@@ -1939,10 +2017,16 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "succeed to arkistoida toteutus when liitetty osaamismerkki is deprecated" in {
     when(
       ePerusteKoodiClient.getOsaamismerkkiFromEPerusteCache("osaamismerkit_1083")
-    ).thenAnswer(Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis))))
+    ).thenAnswer(
+      Right(Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1082", voimassaoloLoppuu = Some(pastMillis)))
+    )
     val osaamismerkkiKoulutus1 = VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid1)
     val osaamismerkkiKoulutus2 =
-      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(oid = koulutusOid2, tila = Tallennettu, osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1"))
+      VapaaSivistystyoOsaamismerkkiKoulutusEntityListItem.copy(
+        oid = koulutusOid2,
+        tila = Tallennettu,
+        osaamismerkkiKoodiUri = Some("osaamismerkit_1083#1")
+      )
     when(koulutusDao.get(List(koulutusOid1, koulutusOid2)))
       .thenAnswer(
         Seq(osaamismerkkiKoulutus1, osaamismerkkiKoulutus2)
@@ -1961,7 +2045,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ) == vstToteutus
     )
   }
-
 
   "Muu validation" should "fail if ammattinimikkeet given" in {
     failsValidation(
@@ -2388,40 +2471,51 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   }
 
   "Osaamistavoitteet validation" should "fail for osaamismerkki toteutus that has osaamistavoitteet defined" in {
-    failsValidation(vstOsaamismerkkiToteutus.copy(
-      metadata = Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+    failsValidation(
+      vstOsaamismerkkiToteutus.copy(
+        metadata =
+          Some(VapaaSivistystyoOsaamismerkkiToteutusMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
+      ),
       "metadata.osaamistavoitteet",
       notEmptyMsg
     )
   }
 
   it should "fail for amm toteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
-    failsValidation(JulkaistuAmmToteutus.copy(
-      metadata = Some(AmmToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+    failsValidation(
+      JulkaistuAmmToteutus.copy(
+        metadata = Some(AmmToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
+      ),
       "metadata.osaamistavoitteet",
       invalidKielistetty(List(Sv))
     )
   }
 
   it should "fail for amm-osaamisala toteutus that has osaamistavoitteet defined" in {
-    failsValidation(ammOsaamisalaToteutus.copy(
-      metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+    failsValidation(
+      ammOsaamisalaToteutus.copy(
+        metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
+      ),
       "metadata.osaamistavoitteet",
       notEmptyMsg
     )
   }
 
   it should "fail for amm-tutkinnonosatoteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
-    failsValidation(ammTutkinnonOsaToteutus.copy(
-      metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))),
+    failsValidation(
+      ammTutkinnonOsaToteutus.copy(
+        metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "osaamistavoitteet")))
+      ),
       "metadata.osaamistavoitteet",
       invalidKielistetty(List(Sv))
     )
   }
 
   it should "fail for yo-toteutus that has only Fi osaamistavoitteet defined even though Fi and Sv are selected as languages" in {
-    failsValidation(yoToteutus.copy(
-      metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "Suomenkieliset osaamistavoitteet")))),
+    failsValidation(
+      yoToteutus.copy(
+        metadata = Some(YoToteutuksenMetatieto.copy(osaamistavoitteet = Map(Fi -> "Suomenkieliset osaamistavoitteet")))
+      ),
       "metadata.osaamistavoitteet",
       invalidKielistetty(List(Sv))
     )

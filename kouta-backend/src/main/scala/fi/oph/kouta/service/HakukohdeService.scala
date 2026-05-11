@@ -136,7 +136,7 @@ class HakukohdeService(
     }
   }
 
-  def put(hakukohde: Hakukohde)(implicit authenticated: Authenticated): CreateResult = {
+  def put(hakukohde: Hakukohde, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult = {
     val rules = hakukohde.jarjestyspaikkaOid match {
       case Some(oid) =>
         AuthorizationRules(
@@ -151,12 +151,12 @@ class HakukohdeService(
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hkWithNamePopulatedMaybe)
       val enrichedHakukohde                           = hkWithNamePopulatedMaybe.copy(metadata = enrichedMetadata)
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, None, authenticated) { hk =>
-        doPut(hk)
+        doPut(hk, fromExternal)
       }
     }
   }
 
-  def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid)(implicit
+  def copy(hakukohdeOids: List[HakukohdeOid], hakuOid: HakuOid, fromExternal: Boolean)(implicit
       authenticated: Authenticated
   ): List[HakukohdeCopyResultObject] = {
     val hakukohdeAndRelatedEntities = HakukohdeDAO.getHakukohdeAndRelatedEntities(hakukohdeOids).groupBy(_._1.oid.get)
@@ -175,7 +175,7 @@ class HakukohdeService(
           .map(hakuaika => Ajanjakso(alkaa = hakuaika.alkaa.get, paattyy = hakuaika.paattyy))
 
         val toteutusCopy    = toteutus.copy(oid = None, tila = Tallennettu)
-        val toteutusCopyOid = toteutusService.put(toteutusCopy).oid.asInstanceOf[ToteutusOid]
+        val toteutusCopyOid = toteutusService.put(toteutusCopy, fromExternal).oid.asInstanceOf[ToteutusOid]
 
         val hakukohdeCopyAsLuonnos = hk.copy(
           oid = None,
@@ -187,7 +187,7 @@ class HakukohdeService(
           hakuajat = hakuajat
         )
 
-        val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos).oid.asInstanceOf[HakukohdeOid]
+        val hakukohdeCopyOid = put(hakukohdeCopyAsLuonnos, fromExternal).oid.asInstanceOf[HakukohdeOid]
 
         HakukohdeCopyResultObject(
           oid = hk.oid.get,
@@ -218,7 +218,9 @@ class HakukohdeService(
     copyResultObjects ++ notFound
   }
 
-  def update(hakukohde: Hakukohde, notModifiedSince: Instant)(implicit authenticated: Authenticated): UpdateResult = {
+  def update(hakukohde: Hakukohde, notModifiedSince: Instant, fromExternal: Boolean)(implicit
+      authenticated: Authenticated
+  ): UpdateResult = {
     val oldHakukohdeWithTime = HakukohdeDAO.get(hakukohde.oid.get, TilaFilter.onlyOlemassaolevat())
 
     val rules: AuthorizationRules = getAuthorizationRulesForUpdate(hakukohde, oldHakukohdeWithTime)
@@ -228,7 +230,7 @@ class HakukohdeService(
       val enrichedMetadata: Option[HakukohdeMetadata] = enrichHakukohdeMetadata(hkWithNamePopulatedMaybe)
       val enrichedHakukohde                           = hkWithNamePopulatedMaybe.copy(metadata = enrichedMetadata)
       hakukohdeServiceValidation.withValidation(enrichedHakukohde, Some(oldHakukohde), authenticated) { h =>
-        doUpdate(h, notModifiedSince, oldHakukohde)
+        doUpdate(h, notModifiedSince, oldHakukohde, fromExternal)
       }
     }
   }
@@ -285,8 +287,8 @@ class HakukohdeService(
     }
   }
 
-  def changeTila(hakukohdeOids: Seq[HakukohdeOid], tila: String, unModifiedSince: Instant)(implicit
-      authenticated: Authenticated
+  def changeTila(hakukohdeOids: Seq[HakukohdeOid], tila: String, unModifiedSince: Instant, fromExternal: Boolean)(
+      implicit authenticated: Authenticated
   ): List[HakukohdeTilaChangeResultObject] = {
     val hakukohteet: Seq[Hakukohde] = hakukohdeOids.map(oid => {
       HakukohdeDAO.get(oid, TilaFilter.all())
@@ -299,7 +301,7 @@ class HakukohdeService(
     val tilaChangeResults = hakukohteet.toList.map(hakukohde => {
       try {
         val hakukohdeWithNewTila = hakukohde.copy(tila = Julkaisutila.withName(tila), muokkaaja = UserOid(authenticated.id))
-        if (update(hakukohdeWithNewTila, unModifiedSince).updated) {
+        if (update(hakukohdeWithNewTila, unModifiedSince, fromExternal).updated) {
           updatedHakukohdeOids += hakukohde.oid.get
           HakukohdeTilaChangeResultObject(
             oid = hakukohde.oid.get,
@@ -373,19 +375,19 @@ class HakukohdeService(
     tilaChangeResults ++ notFound
   }
 
-  private def doPut(hakukohde: Hakukohde)(implicit authenticated: Authenticated): CreateResult =
+  private def doPut(hakukohde: Hakukohde, fromExternal: Boolean)(implicit authenticated: Authenticated): CreateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
         h <- HakukohdeDAO.getPutActions(hakukohde)
         _ <- auditLog.logCreate(h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.oid) ++ index(Some(h))
+      val warnings = quickIndex(h.oid, fromExternal) ++ index(Some(h))
       CreateResult(h.oid.get, warnings)
     }.get
 
-  private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde)(implicit
-      authenticated: Authenticated
+  private def doUpdate(hakukohde: Hakukohde, notModifiedSince: Instant, before: Hakukohde, fromExternal: Boolean)(
+      implicit authenticated: Authenticated
   ): UpdateResult =
     KoutaDatabase.runBlockingTransactionally {
       for {
@@ -394,17 +396,17 @@ class HakukohdeService(
         _ <- auditLog.logUpdate(before, h)
       } yield h
     }.map { h =>
-      val warnings = quickIndex(h.flatMap(_.oid)) ++ index(h)
+      val warnings = quickIndex(h.flatMap(_.oid), fromExternal) ++ index(h)
       UpdateResult(updated = h.isDefined, warnings)
     }.get
 
   private def index(hakukohde: Option[Hakukohde]): List[String] =
     sqsInTransactionService.toSQSQueue(HighPriority, IndexTypeHakukohde, hakukohde.map(_.oid.get.toString))
 
-  private def quickIndex(hakukohdeOid: Option[HakukohdeOid]): List[String] = {
-    hakukohdeOid match {
-      case Some(oid) => koutaIndeksoijaClient.quickIndexEntity("hakukohde", oid.toString)
-      case None => List.empty
+  private def quickIndex(hakukohdeOid: Option[HakukohdeOid], fromExternal: Boolean): List[String] = {
+    (hakukohdeOid, fromExternal) match {
+      case (Some(oid), false) => koutaIndeksoijaClient.quickIndexEntity("hakukohde", oid.toString)
+      case _                  => List.empty
     }
   }
 }

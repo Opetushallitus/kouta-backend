@@ -1076,6 +1076,11 @@ case class Apuraha(
     kuvaus: Kielistetty = Map()
 )
 
+case class Maksu(
+    maksullisuustyyppi: Maksullisuustyyppi,
+    maksunMaara: Option[Double] = None
+)
+
 case class Opetus(
     opetuskieliKoodiUrit: Seq[String] = Seq(),
     opetuskieletKuvaus: Kielistetty = Map(),
@@ -1083,9 +1088,8 @@ case class Opetus(
     opetusaikaKuvaus: Kielistetty = Map(),
     opetustapaKoodiUrit: Seq[String] = Seq(),
     opetustapaKuvaus: Kielistetty = Map(),
-    maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
     maksullisuusKuvaus: Kielistetty = Map(),
-    maksunMaara: Option[Double] = None,
+    maksut: Seq[Maksu] = Seq(),
     koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
     lisatiedot: Seq[Lisatieto] = Seq(),
     onkoApuraha: Boolean = false,

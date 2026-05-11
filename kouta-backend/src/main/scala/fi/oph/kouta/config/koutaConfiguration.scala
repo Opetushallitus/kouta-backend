@@ -16,7 +16,8 @@ case class KoutaDatabaseConfiguration(
     minConnections: Option[Int],
     registerMbeans: Option[Boolean],
     initializationFailTimeout: Option[Int],
-    leakDetectionThresholdMillis: Option[Int]
+    leakDetectionThresholdMillis: Option[Int],
+    useAwsJdbcWrapper: Boolean
 )
 
 case class SecurityConfiguration(
@@ -70,7 +71,8 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     minConnections = Option(config.getInt("kouta-backend.db.minConnections")),
     registerMbeans = Option(config.getBoolean("kouta-backend.db.registerMbeans")),
     initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
-    leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis"))
+    leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis")),
+    useAwsJdbcWrapper = Try(config.getBoolean("kouta-backend.db.useAwsJdbcWrapper")).getOrElse(false)
   )
 
   val indexingConfiguration: IndexingConfiguration = IndexingConfiguration(

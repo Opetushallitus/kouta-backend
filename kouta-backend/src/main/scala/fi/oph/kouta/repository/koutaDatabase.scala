@@ -23,7 +23,12 @@ abstract class KoutaDatabaseAccessor extends Logging {
 
   def hikariConfig: HikariConfig = {
     val config = new HikariConfig()
-    config.setJdbcUrl(settings.url)
+    if (settings.useAwsJdbcWrapper) {
+      config.setDriverClassName("software.amazon.jdbc.Driver")
+      config.setJdbcUrl(settings.url.replace("jdbc:postgresql:", "jdbc:aws-wrapper:postgresql:"))
+    } else {
+      config.setJdbcUrl(settings.url)
+    }
     config.setUsername(settings.username)
     config.setPassword(settings.password)
     val maxPoolSize = settings.maxConnections.getOrElse(10)

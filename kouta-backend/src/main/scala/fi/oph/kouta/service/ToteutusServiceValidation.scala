@@ -49,7 +49,10 @@ class ToteutusServiceValidation(
         case Some(_: KkOpintojaksoToteutusMetadata) =>
           errors = validateLiitettyEntityIntegrity(toteutus)
         case Some(metadata) =>
-          errors = if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu) validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated) else NoErrors
+          errors =
+            if (toteutus.tila == Julkaistu || toteutus.tila == Tallennettu)
+              validateLiitetytEntitiesIntegrity(toteutus.tila, metadata, ePerusteKoodiClient, authenticated)
+            else NoErrors
         case None =>
       }
     }
@@ -301,10 +304,10 @@ class ToteutusServiceValidation(
           koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
-      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
+      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, s"$path.maksut"),
       validateIfDefined[Apuraha](
         opetus.apuraha,
-        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, apuraha, opetus)
+        apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, koulutustyyppi, apuraha, opetus)
       ),
       validateIfNonEmptySeq[Lisatieto](
         opetus.lisatiedot,
@@ -318,7 +321,6 @@ class ToteutusServiceValidation(
             koodistoService.koodiUriExistsInKoodisto(KoulutuksenLisatiedotKoodisto, _)
           )
       ),
-      validateIfDefined[Double](opetus.maksunMaara, assertNotNegative(_, s"$path.maksunMaara")),
       validateIfDefined[Int](opetus.suunniteltuKestoVuodet, assertNotNegative(_, s"$path.suunniteltuKestoVuodet")),
       validateIfDefined[Int](
         opetus.suunniteltuKestoKuukaudet,
@@ -334,12 +336,20 @@ class ToteutusServiceValidation(
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetuskieletKuvaus, s"$path.opetuskieletKuvaus"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetusaikaKuvaus, s"$path.opetusaikaKuvaus"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetustapaKuvaus, s"$path.opetustapaKuvaus"),
-          assertNotOptional(opetus.maksullisuustyyppi, s"$path.maksullisuustyyppi"),
+          assertNotEmpty(opetus.maksut, s"$path.maksut"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
-          validateIfTrue(
-            opetus.maksullisuustyyppi.contains(Maksullinen) || opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
-            assertNotOptional(opetus.maksunMaara, s"$path.maksunMaara")
-          ),
+          opetus.maksut.flatMap(maksu => {
+            and(
+              validateIfTrue(
+                maksu.maksullisuustyyppi == Maksullinen,
+                assertNotOptional(maksu.maksunMaara, s"$path.maksunMaara")
+              ),
+              validateIfTrue(
+                maksu.maksullisuustyyppi == Lukuvuosimaksu,
+                assertNotOptional(maksu.maksunMaara, s"$path.lukuvuosimaksunMaara")
+              )
+            )
+          }),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
         )
       )
@@ -349,14 +359,23 @@ class ToteutusServiceValidation(
   private def validateApuraha(
       tila: Julkaisutila,
       kielivalinta: Seq[Kieli],
+      koulutustyyppi: Koulutustyyppi,
       apuraha: Apuraha,
       opetus: Opetus
   ): IsValid = {
     val path = "metadata.opetus.apuraha"
     val min  = apuraha.min
     val max  = apuraha.max
+
     and(
-      assertTrue(opetus.maksullisuustyyppi == Some(Lukuvuosimaksu), s"$path", invalidMaksullisuustyyppiWithApuraha),
+      assertTrue(
+        opetus.maksut.exists(maksu => maksu.maksullisuustyyppi == Lukuvuosimaksu) && Koulutustyyppi
+          .isTutkintoonJohtavaKorkeakoulutus(
+            koulutustyyppi
+          ),
+        s"$path",
+        invalidMaksullisuustyyppiWithApuraha
+      ),
       validateMinMax(min, max, s"$path.min"),
       validateIfDefined[Int](min, assertNotNegative(_, s"$path.min")),
       validateIfDefined[Int](max, assertNotNegative(_, s"$path.max")),
@@ -381,41 +400,47 @@ class ToteutusServiceValidation(
       koulutuskoodiurit: Seq[String],
       path: String
   ): IsValid = {
-    val isTutkintoonJohtavaKorkeakoulutus =
-      Koulutustyyppi.isTutkintoonJohtava(koulutustyyppi) && Koulutustyyppi.isKorkeakoulu(koulutustyyppi)
-    val English         = "oppilaitoksenopetuskieli_4"
-    val Tohtorikoulutus = "tutkintotyyppi_16"
+    val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(koulutustyyppi)
+    val English                           = "oppilaitoksenopetuskieli_4"
+    val Tohtorikoulutus                   = "tutkintotyyppi_16"
+    val maksut                            = opetus.maksut
 
-    and(
-      validateIfTrue(
-        opetus.maksullisuustyyppi.contains(Lukuvuosimaksu),
-        and(
-          assertTrue(
-            opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
-            s"$path.maksullisuustyyppi",
-            invalidOpetuskieliWithLukuvuosimaksu
-          ),
-          assertTrue(
-            isTutkintoonJohtavaKorkeakoulutus,
-            s"$path.maksullisuustyyppi",
-            invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
-          ),
-          validateIfTrue(
-            isTutkintoonJohtavaKorkeakoulutus,
-            koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
-              case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
-                val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-                val tohtorikoulutukset =
-                  tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
-                assertEmpty(
-                  tohtorikoulutukset,
-                  s"$path.maksullisuustyyppi",
-                  invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
-                )
-              case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
-            }
+    maksut.flatMap(maksu =>
+      and(
+        validateIfTrue(
+          maksu.maksullisuustyyppi == Lukuvuosimaksu,
+          and(
+            validateIfTrue(
+              isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
+              assertTrue(
+                opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
+                s"$path.maksullisuustyyppi",
+                invalidOpetuskieliWithLukuvuosimaksu
+              )
+            ),
+            assertTrue(
+              isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
+              s"$path.maksullisuustyyppi",
+              invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
+            ),
+            validateIfTrue(
+              isTutkintoonJohtavaKorkeakoulutus,
+              koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
+                case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
+                  val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
+                  val tohtorikoulutukset =
+                    tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                  assertEmpty(
+                    tohtorikoulutukset,
+                    s"$path.maksullisuustyyppi",
+                    invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
+                  )
+                case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+              }
+            )
           )
-        )
+        ),
+        validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path.maksunMaara"))
       )
     )
   }
@@ -800,10 +825,13 @@ class ToteutusServiceValidation(
   )
 
   def validateLiitettyEntityIntegrity(toteutus: Toteutus): IsValid = {
-    LiitettyEntityValidation.validateLiitettyEntityIntegrity(toteutus, toteutus.oid match {
-      case Some(oid) => toteutusDAO.get(oid)
-      case None => Vector()
-    })
+    LiitettyEntityValidation.validateLiitettyEntityIntegrity(
+      toteutus,
+      toteutus.oid match {
+        case Some(oid) => toteutusDAO.get(oid)
+        case None      => Vector()
+      }
+    )
   }
 
   def validateLiitetytEntitiesIntegrity(

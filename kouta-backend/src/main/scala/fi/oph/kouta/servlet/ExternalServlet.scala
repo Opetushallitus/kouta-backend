@@ -1,15 +1,10 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
-import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, Haku, Sorakuvaus, CreateResult, UpdateResult, Valintaperuste, ValintaperusteCreateResult}
-import fi.oph.kouta.domain.oid.{RootOrganisaatioOid, ToteutusOid}
+import fi.oph.kouta.domain.{ExternalHakuRequest, ExternalHakukohdeRequest, ExternalKoulutusRequest, ExternalRequest, ExternalSorakuvausRequest, ExternalToteutusRequest, ExternalValintaperusteRequest, CreateResult, UpdateResult, ValintaperusteCreateResult}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service._
-import fi.vm.sade.scalaproperties.OphProperties
 import org.scalatra.{ActionResult, Ok}
-
-import java.util.UUID
 
 class ExternalServlet(
     koulutusService: KoulutusService,
@@ -65,7 +60,7 @@ class ExternalServlet(
       val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-      koulutusService.put(koulutusRequest.koulutus) match {
+      koulutusService.put(koulutusRequest.koulutus, fromExternal = true) match {
         case res: CreateResult => Ok(res)
       }
     } else {
@@ -108,7 +103,7 @@ class ExternalServlet(
       val koulutusRequest                       = parsedBody.extract[ExternalKoulutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(koulutusRequest)
 
-      koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince, true) match {
+      koulutusService.update(koulutusRequest.koulutus, getIfUnmodifiedSince, fromExternal = true) match {
         case res: UpdateResult => Ok(res)
       }
     } else {
@@ -158,7 +153,7 @@ class ExternalServlet(
       val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
-      toteutusService.put(toteutusRequest.toteutus) match {
+      toteutusService.put(toteutusRequest.toteutus, fromExternal = true) match {
         case res: CreateResult => Ok(res)
       }
     } else {
@@ -201,7 +196,7 @@ class ExternalServlet(
       val toteutusRequest                       = parsedBody.extract[ExternalToteutusRequest]
       implicit val authenticated: Authenticated = authenticateExternal(toteutusRequest)
 
-      toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince) match {
+      toteutusService.update(toteutusRequest.toteutus, getIfUnmodifiedSince, fromExternal = true) match {
         case res: UpdateResult => Ok(res)
       }
     } else {
@@ -251,7 +246,7 @@ class ExternalServlet(
       val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
       implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-      hakuService.put(hakuRequest.haku) match {
+      hakuService.put(hakuRequest.haku, fromExternal = true) match {
         case res: CreateResult => Ok(res)
       }
     } else {
@@ -294,7 +289,7 @@ class ExternalServlet(
       val hakuRequest                           = parsedBody.extract[ExternalHakuRequest]
       implicit val authenticated: Authenticated = authenticateExternal(hakuRequest)
 
-      hakuService.update(hakuRequest.haku, getIfUnmodifiedSince) match {
+      hakuService.update(hakuRequest.haku, getIfUnmodifiedSince, fromExternal = true) match {
         case res: UpdateResult => Ok(res)
       }
     } else {
@@ -344,7 +339,7 @@ class ExternalServlet(
       val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
       implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
 
-      hakukohdeService.put(hakukohdeRequest.hakukohde) match {
+      hakukohdeService.put(hakukohdeRequest.hakukohde, fromExternal = true) match {
         case res: CreateResult => Ok(res)
       }
     } else {
@@ -387,7 +382,7 @@ class ExternalServlet(
       val hakukohdeRequest                      = parsedBody.extract[ExternalHakukohdeRequest]
       implicit val authenticated: Authenticated = authenticateExternal(hakukohdeRequest)
 
-      hakukohdeService.update(hakukohdeRequest.hakukohde, getIfUnmodifiedSince) match {
+      hakukohdeService.update(hakukohdeRequest.hakukohde, getIfUnmodifiedSince, fromExternal = true) match {
         case res: UpdateResult => Ok(res)
       }
     } else {
@@ -437,7 +432,7 @@ class ExternalServlet(
       val valintaperusteRequest                 = parsedBody.extract[ExternalValintaperusteRequest]
       implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
 
-      valintaperusteService.put(valintaperusteRequest.valintaperuste) match {
+      valintaperusteService.put(valintaperusteRequest.valintaperuste, fromExternal = true) match {
         case res: ValintaperusteCreateResult if res.id.isDefined => Ok(res)
       }
     } else {
@@ -480,7 +475,7 @@ class ExternalServlet(
       val valintaperusteRequest                 = parsedBody.extract[ExternalValintaperusteRequest]
       implicit val authenticated: Authenticated = authenticateExternal(valintaperusteRequest)
 
-      valintaperusteService.update(valintaperusteRequest.valintaperuste, getIfUnmodifiedSince) match {
+      valintaperusteService.update(valintaperusteRequest.valintaperuste, getIfUnmodifiedSince, fromExternal = true) match {
         case res: UpdateResult => Ok(res)
       }
     } else {
