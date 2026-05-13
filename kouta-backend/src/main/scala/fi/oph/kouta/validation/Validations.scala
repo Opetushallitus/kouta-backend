@@ -592,6 +592,19 @@ object Validations {
       msg = s"Apurahan voi asettaa vain tutkintoonjohtaville korkeakoulutoteutuksille, joille on asetettu lukuvuosimaksu",
       id = "invalidMaksullisuustyyppiWithApuraha"
     )
+
+  val invalidMaksutonWhenMultipleMaksullisuustyypit: ErrorMessage =
+    ErrorMessage(
+      msg = "Opetus ei voi olla samanaikaisesti maksutonta ja maksullista/lukuvuosimaksullista",
+      id = "invalidMaksutonWhenMultipleMaksullisuustyypit"
+    )
+
+  val invalidMultipleMaksullisuustyypitForKoulutustyyppi: ErrorMessage =
+    ErrorMessage(
+      msg = "Vain ammatillisilla ja lukiokoulutuksilla voi olla useampi maksullisuustyypin samanaikaisesti",
+      id = "invalidMultipleMaksullisuustyypitForKoulutustyyppi"
+    )
+
   val missingTarjoajatForNonJulkinenKoulutus: ErrorMessage =
     ErrorMessage(
       msg = "Tämän tyyppiselle koulutukselle täytyy valita vähintään yksi järjestäjä, ellei koulutus ole julkinen",
