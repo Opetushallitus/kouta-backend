@@ -6,6 +6,8 @@ import fi.vm.sade.properties.OphProperties
 import org.json4s.DefaultFormats
 import org.json4s.jackson.JsonMethods.parse
 
+import java.net.URLEncoder
+
 case class EPerusteAmosaaQueryException(url: String, status: Int, message: String) extends RuntimeException(message)
 
 case class AmosaaLokalisoituTeksti(fi: Option[String] = None, sv: Option[String] = None, en: Option[String] = None)
@@ -151,8 +153,21 @@ class EPerusteAmosaaClient(urlProperties: OphProperties) extends HttpClient with
   val errorHandler = (url: String, status: Int, response: String) =>
     throw EPerusteAmosaaQueryException(url, status, response)
 
-  def getOpetussuunnitelmat(organisaatio: String): AmosaaOpetussuunnitelmatResponse = {
-    val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelmat") + s"?organisaatio=$organisaatio"
+  def getOpetussuunnitelmat(
+      organisaatio: Option[String],
+      nimi: Option[String],
+      sivu: Option[String]
+  ): AmosaaOpetussuunnitelmatResponse = {
+    def encodeParam(value: String): String = URLEncoder.encode(value, "UTF-8")
+
+    val queryParams = Seq(
+      organisaatio.map(org => s"organisaatio=${encodeParam(org)}"),
+      nimi.map(n => s"nimi=${encodeParam(n)}"),
+      sivu.map(s => s"sivu=${encodeParam(s)}")
+    ).flatten
+
+    val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelmat") +
+      (if (queryParams.nonEmpty) s"?${queryParams.mkString("&")}" else "")
     get(url, errorHandler, followRedirects = true) { response =>
       parse(response).extract[AmosaaOpetussuunnitelmatResponse]
     }
