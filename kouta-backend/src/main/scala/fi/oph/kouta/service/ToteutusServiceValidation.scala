@@ -304,7 +304,7 @@ class ToteutusServiceValidation(
           koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
-      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, s"$path.maksut"),
+      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, s"$path"),
       validateIfDefined[Apuraha](
         opetus.apuraha,
         apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, koulutustyyppi, apuraha, opetus)
@@ -405,42 +405,60 @@ class ToteutusServiceValidation(
     val Tohtorikoulutus                   = "tutkintotyyppi_16"
     val maksut                            = opetus.maksut
 
-    maksut.flatMap(maksu =>
-      and(
-        validateIfTrue(
-          maksu.maksullisuustyyppi == Lukuvuosimaksu,
-          and(
-            validateIfTrue(
-              isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
-              assertTrue(
-                opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
-                s"$path.maksullisuustyyppi",
-                invalidOpetuskieliWithLukuvuosimaksu
-              )
-            ),
-            assertTrue(
-              isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
-              s"$path.maksullisuustyyppi",
-              invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
-            ),
-            validateIfTrue(
-              isTutkintoonJohtavaKorkeakoulutus,
-              koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
-                case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
-                  val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
-                  val tohtorikoulutukset =
-                    tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
-                  assertEmpty(
-                    tohtorikoulutukset,
-                    s"$path.maksullisuustyyppi",
-                    invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
-                  )
-                case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
-              }
-            )
-          )
+    val maksullisuustyypit = maksut.map(maksu => maksu.maksullisuustyyppi)
+
+    and(
+      validateIfTrue(
+        maksullisuustyypit.length > 1,
+        and(assertFalse(
+          maksullisuustyypit.contains(Maksuton),
+          s"$path.maksullisuustyypit",
+          invalidMaksutonWhenMultipleMaksullisuustyypit
         ),
-        validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path.maksunMaara"))
+          assertTrue(
+            Seq(Amm, Lk).contains(koulutustyyppi),
+            s"$path.maksullisuustyypit",
+            invalidMultipleMaksullisuustyypitForKoulutustyyppi
+          )
+        )
+      ),
+      maksut.flatMap(maksu =>
+        and(
+          validateIfTrue(
+            maksu.maksullisuustyyppi == Lukuvuosimaksu,
+            and(
+              validateIfTrue(
+                isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
+                assertTrue(
+                  opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
+                  s"$path.maksullisuustyyppi",
+                  invalidOpetuskieliWithLukuvuosimaksu
+                )
+              ),
+              assertTrue(
+                isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
+                s"$path.maksullisuustyyppi",
+                invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
+              ),
+              validateIfTrue(
+                isTutkintoonJohtavaKorkeakoulutus,
+                koodistoService.getKoulutuksetByTutkintotyyppi(Tohtorikoulutus) match {
+                  case Right(tohtorikoulutuskoodiurit: Seq[KoodistoElement]) =>
+                    val koulutuskoodiuritWithoutVersion = koulutuskoodiurit.flatMap(_.split("#"))
+                    val tohtorikoulutukset =
+                      tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
+                    assertEmpty(
+                      tohtorikoulutukset,
+                      s"$path.maksullisuustyyppi",
+                      invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
+                    )
+                  case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+                }
+              )
+            )
+          ),
+          validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path.maksunMaara"))
+        )
       )
     )
   }
