@@ -304,7 +304,7 @@ class ToteutusServiceValidation(
           koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
         )
       ),
-      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, s"$path"),
+      validateMaksullisuus(opetus, koulutustyyppi, koulutuskoodiurit, path),
       validateIfDefined[Apuraha](
         opetus.apuraha,
         apuraha => validateApuraha(vCtx.tila, vCtx.kielivalinta, koulutustyyppi, apuraha, opetus)
@@ -373,7 +373,7 @@ class ToteutusServiceValidation(
           .isTutkintoonJohtavaKorkeakoulutus(
             koulutustyyppi
           ),
-        s"$path",
+        path,
         invalidMaksullisuustyyppiWithApuraha
       ),
       validateMinMax(min, max, s"$path.min"),
@@ -410,11 +410,12 @@ class ToteutusServiceValidation(
     and(
       validateIfTrue(
         maksullisuustyypit.length > 1,
-        and(assertFalse(
-          maksullisuustyypit.contains(Maksuton),
-          s"$path.maksullisuustyypit",
-          invalidMaksutonWhenMultipleMaksullisuustyypit
-        ),
+        and(
+          assertFalse(
+            maksullisuustyypit.contains(Maksuton),
+            s"$path.maksullisuustyypit",
+            invalidMaksutonWhenMultipleMaksullisuustyypit
+          ),
           assertTrue(
             Seq(Amm, Lk).contains(koulutustyyppi),
             s"$path.maksullisuustyypit",
