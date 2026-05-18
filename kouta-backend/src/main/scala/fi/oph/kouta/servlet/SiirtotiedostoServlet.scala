@@ -4,7 +4,7 @@ import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.domain.siirtotiedosto.{SiirtotiedostoDateTimeFormat, SiirtotiedostoOperationResults}
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.service.SiirtotiedostoService
-import org.scalatra.{Forbidden, Ok}
+import org.scalatra.{ActionResult, Forbidden, Ok}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -57,6 +57,21 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
   private val ForbiddenResponse =
     Forbidden("error" -> "Käyttäjällä ei ole oikeutta siirtotiedostojen muodostamiseen rajapinnan kautta")
 
+  private def saveWithStartAndEndIfOphPaakayttaja(
+      saveFunction: (UUID, Option[LocalDateTime], Option[LocalDateTime]) => SiirtotiedostoOperationResults
+  ): ActionResult = {
+    implicit val authenticated: Authenticated = authenticate()
+
+    if (isOphPaakayttaja(authenticated)) {
+      val (startTime, endTime) =
+        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
+
+      Ok(resultMap(saveFunction(UUID.randomUUID(), startTime, endTime)))
+    } else {
+      ForbiddenResponse
+    }
+  }
+
   registerPath(
     "/siirtotiedosto/koulutukset",
     s"""    get:
@@ -87,16 +102,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/koulutukset") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveKoulutukset(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveKoulutukset)
   }
 
   registerPath(
@@ -129,16 +135,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/toteutukset") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveToteutukset(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveToteutukset)
   }
 
   registerPath(
@@ -171,16 +168,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/hakukohteet") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveHakukohteet(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveHakukohteet)
   }
 
   registerPath(
@@ -213,16 +201,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/haut") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveHaut(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveHaut)
   }
 
   registerPath(
@@ -255,16 +234,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/valintaperusteet") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveValintaperusteet(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveValintaperusteet)
   }
 
   registerPath(
@@ -297,16 +267,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/sorakuvaukset") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveSorakuvaukset(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveSorakuvaukset)
   }
 
   registerPath(
@@ -340,16 +301,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/oppilaitoksetJaOsat") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.saveOppilaitoksetJaOsat(UUID.randomUUID(), startTime, endTime)))
-    } else {
-      ForbiddenResponse
-    }
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.saveOppilaitoksetJaOsat)
   }
 
   registerPath(
@@ -382,13 +334,14 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/pistehistoria") {
+    saveWithStartAndEndIfOphPaakayttaja(siirtotiedostoService.savePistehistoria)
+  }
+
+  private def saveIfOphPaakayttaja(saveFunction: UUID => SiirtotiedostoOperationResults): ActionResult = {
     implicit val authenticated: Authenticated = authenticate()
 
     if (isOphPaakayttaja(authenticated)) {
-      val (startTime, endTime) =
-        parseTimeRange(params.get("startTime"), params.get("endTime"), Some(LocalDateTime.now()))
-
-      Ok(resultMap(siirtotiedostoService.savePistehistoria(UUID.randomUUID(), startTime, endTime)))
+      Ok(resultMap(saveFunction(UUID.randomUUID())))
     } else {
       ForbiddenResponse
     }
@@ -408,13 +361,7 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/ammattinimikkeet") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      Ok(resultMap(siirtotiedostoService.saveAmmattinimikkeet(UUID.randomUUID())))
-    } else {
-      ForbiddenResponse
-    }
+    saveIfOphPaakayttaja(siirtotiedostoService.saveAmmattinimikkeet)
   }
 
   registerPath(
@@ -431,12 +378,6 @@ class SiirtotiedostoServlet(siirtotiedostoService: SiirtotiedostoService) extend
        |""".stripMargin
   )
   get("/asiasanat") {
-    implicit val authenticated: Authenticated = authenticate()
-
-    if (isOphPaakayttaja(authenticated)) {
-      Ok(resultMap(siirtotiedostoService.saveAsiasanat(UUID.randomUUID())))
-    } else {
-      ForbiddenResponse
-    }
+    saveIfOphPaakayttaja(siirtotiedostoService.saveAsiasanat)
   }
 }

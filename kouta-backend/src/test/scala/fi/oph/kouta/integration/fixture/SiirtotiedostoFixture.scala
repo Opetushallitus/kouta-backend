@@ -73,7 +73,7 @@ trait SiirtotiedostoFixture
       case (None, Some(endTime))            => s"?endTime=${dateParam(endTime)}"
       case (_, _)                           => ""
     }
-    get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(raportointiSession))) {
+    get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(ophSession))) {
       status should equal(expectedStatusCode)
       body
     }
