@@ -168,7 +168,7 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   }
 
   "Save entities with invalid time definition" should "return error" in {
-    get(s"$SiirtotiedostoPath/koulutukset?startTime=puppua", headers = Seq(sessionHeader(raportointiSession))) {
+    get(s"$SiirtotiedostoPath/koulutukset?startTime=puppua", headers = Seq(sessionHeader(ophSession))) {
       status should equal(400)
     }
   }
