@@ -61,30 +61,12 @@ trait SiirtotiedostoFixture
     addServlet(new SiirtotiedostoServlet(siirtotiedostoService), SiirtotiedostoPath)
   }
 
-  def get(
+  def doGet(
       entityPath: String,
       startTime: Option[LocalDateTime],
       endTime: Option[LocalDateTime],
-      expectedStatusCode: Int
-  ): String = {
-    val queryParams = (startTime, endTime) match {
-      case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"
-      case (Some(startTime), None)          => s"?startTime=${dateParam(startTime)}"
-      case (None, Some(endTime))            => s"?endTime=${dateParam(endTime)}"
-      case (_, _)                           => ""
-    }
-    get(s"$SiirtotiedostoPath/$entityPath$queryParams", headers = Seq(sessionHeader(ophSession))) {
-      status should equal(expectedStatusCode)
-      body
-    }
-  }
-
-  def get(
-      entityPath: String,
-      startTime: Option[LocalDateTime],
-      endTime: Option[LocalDateTime],
-      session: UUID,
-      expectedStatusCode: Int
+      expectedStatusCode: Int,
+      session: UUID = ophSession,
   ): String = {
     val queryParams = (startTime, endTime) match {
       case (Some(startTime), Some(endTime)) => s"?startTime=${dateParam(startTime)}&endTime=${dateParam(endTime)}"

@@ -84,86 +84,86 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   }
 
   "Save koulutukset" should "save koulutukset in bulks according to max limit with given timerange" in {
-    get("koulutukset", dayBefore, dayAfter, 200)
+    doGet("koulutukset", dayBefore, dayAfter, 200)
     verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
     nbrOfContentItems() should equal(2)
   }
 
   it should "fail to create koulutukset transfer file without OPH Pääkäyttäjä role" in {
-    get("koulutukset", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("koulutukset", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save toteutukset" should "save toteutukset in bulks according to max limit with given timerange" in {
     clearSiirtotiedostoContents()
-    get("toteutukset", None, dayAfter, 200)
+    doGet("toteutukset", None, dayAfter, 200)
     verifyLatestContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
     nbrOfContentItems() should equal(2)
   }
 
   it should "fail to create toteutukset transfer file without OPH Pääkäyttäjä role" in {
-    get("toteutukset", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("toteutukset", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save hakukohteet" should "save hakukohteet as requested with given timerange" in {
-    get("hakukohteet", dayBefore, dayAfter, 200)
+    doGet("hakukohteet", dayBefore, dayAfter, 200)
     verifyLatestContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
   }
 
   it should "fail to create hakukohteet transfer file without OPH Pääkäyttäjä role" in {
-    get("hakukohteet", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("hakukohteet", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save haut" should "save haut as requested with given timerange" in {
-    get("haut", None, dayAfter, 200)
+    doGet("haut", None, dayAfter, 200)
     verifyLatestContents(Seq(hakuOid1, hakuOid2, hakuOid3), "oid")
   }
 
   it should "fail to create haut transfer file without OPH Pääkäyttäjä role" in {
-    get("haut", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("haut", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save sorakuvaukset" should "save sorakuvaukset as requested with given timerange" in {
-    get("sorakuvaukset", dayBefore, dayAfter, 200)
+    doGet("sorakuvaukset", dayBefore, dayAfter, 200)
     verifyLatestContents(Seq(sorakuvausId1.toString, sorakuvausId2.toString, sorakuvausId3.toString), "id")
   }
 
   it should "fail to create sorakuvaukset transfer file without OPH Pääkäyttäjä role" in {
-    get("sorakuvaukset", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("sorakuvaukset", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save valintaperusteet" should "save valintaperusteet as requested with given timerange" in {
-    get("valintaperusteet", None, dayAfter, 200)
+    doGet("valintaperusteet", None, dayAfter, 200)
     verifyLatestContents(Seq(valintaperusteId1.toString, valintaperusteId2.toString, valintaperusteId3.toString), "id")
   }
 
   it should "fail to create valintaperusteet transfer file without OPH Pääkäyttäjä role" in {
-    get("valintaperusteet", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("valintaperusteet", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save oppilaitokset and osat" should "save oppilaitokset and osat in bulks according to max limit with given timerange" in {
     clearSiirtotiedostoContents()
-    get("oppilaitoksetJaOsat", dayBefore, dayAfter, 200)
+    doGet("oppilaitoksetJaOsat", dayBefore, dayAfter, 200)
     verifyFirstContents(initialOppilaitosOids ++ Seq(oppilaitosOid1.s,oppilaitosOid2.s, oppilaitosOid3.s, oppilaitoksenOsaOid1.s, oppilaitoksenOsaOid2.s), "oid")
     verifyLatestContents(Seq(oppilaitoksenOsaOid3.s), "oid")
     nbrOfContentItems() should equal(2)
   }
 
   it should "fail to create oppilaitokset ja osat transfer file without OPH Pääkäyttäjä role" in {
-    get("oppilaitoksetJaOsat", dayBefore, dayAfter, otherRoleSession, 403)
+    doGet("oppilaitoksetJaOsat", dayBefore, dayAfter, 403, otherRoleSession)
   }
 
   "Save ammattinimikkeet" should "save ammattinimikkeet as requested" in {
-    get("ammattinimikkeet", None, None, 200)
+    doGet("ammattinimikkeet", None, None, 200)
     verifyKeywordContents(ammattinimikkeet)
   }
 
   "Save asiasanat" should "save asiasanat as requested" in {
-    get("asiasanat", None, None, 200)
+    doGet("asiasanat", None, None, 200)
     verifyKeywordContents(asiasanat)
   }
 
   "Save entities without timerange" should "save entities ok" in {
-    get("koulutukset", None, None, 200)
+    doGet("koulutukset", None, None, 200)
     verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
   }
 
@@ -174,10 +174,10 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   }
 
   "Save entities with future situated starttime" should "return error" in {
-    get("koulutukset", dayAfter, None, 400)
+    doGet("koulutukset", dayAfter, None, 400)
   }
 
   "Save entities with illegal timerange" should "return error" in {
-    get("koulutukset", dayBefore, twoDaysBefore, 400)
+    doGet("koulutukset", dayBefore, twoDaysBefore, 400)
   }
 }
