@@ -583,6 +583,413 @@ package object domain {
       |            - 1.2.246.562.10.00101010102
       |""".stripMargin
 
+  val AmosaaLokalisoituTekstiModel: String =
+    """    AmosaaLokalisoituTeksti:
+      |      type: object
+      |      properties:
+      |        fi:
+      |          type: string
+      |          description: Suomenkielinen teksti
+      |        sv:
+      |          type: string
+      |          description: Ruotsinkielinen teksti
+      |        en:
+      |          type: string
+      |          description: Englanninkielinen teksti
+      |""".stripMargin
+
+  val AmosaaKoulutusModel: String =
+    """    AmosaaKoulutus:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |          description: Koulutuksen id
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        koulutuskoodiArvo:
+      |          type: string
+      |          description: Koulutuskoodin arvo
+      |        koulutuskoodiUri:
+      |          type: string
+      |          description: Koulutuskoodin URI
+      |        koulutusalakoodi:
+      |          type: string
+      |          description: Koulutusalakoodi
+      |        opintoalakoodi:
+      |          type: string
+      |          description: Opintoalakoodi
+      |""".stripMargin
+
+  val AmosaaPerusteModel: String =
+    """    AmosaaPeruste:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |          description: Perusteen id
+      |        diaarinumero:
+      |          type: string
+      |          description: Perusteen diaarinumero
+      |        perusteId:
+      |          type: integer
+      |          format: int64
+      |          description: Perusteen id ePerusteissa
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        koulutustyyppi:
+      |          type: string
+      |          description: Koulutustyyppi
+      |        koulutukset:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaKoulutus'
+      |""".stripMargin
+
+  val AmosaaKoulutustoimijaModel: String =
+    """    AmosaaKoulutustoimija:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |          description: Koulutustoimijan id
+      |        organisaatio:
+      |          type: string
+      |          description: Organisaation OID
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        organisaatioRyhma:
+      |          type: boolean
+      |          description: Onko organisaatio ryhmä
+      |        oppilaitostyyppi:
+      |          type: string
+      |          description: Oppilaitostyyppi
+      |        oppilaitosTyyppiKoodiUri:
+      |          type: string
+      |          description: Oppilaitostyypin koodi URI
+      |""".stripMargin
+
+  val AmosaaOpetussuunnitelmaModel: String =
+    """    AmosaaOpetussuunnitelma:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |          description: Opetussuunnitelman id
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        tila:
+      |          type: string
+      |          description: Opetussuunnitelman tila
+      |        tyyppi:
+      |          type: string
+      |          description: Opetussuunnitelman tyyppi
+      |        kuvaus:
+      |          type: string
+      |          description: Opetussuunnitelman kuvaus
+      |        koulutustoimija:
+      |          $ref: '#/components/schemas/AmosaaKoulutustoimija'
+      |        luotu:
+      |          type: integer
+      |          format: int64
+      |          description: Luontiaika (unix timestamp)
+      |        muokattu:
+      |          type: integer
+      |          format: int64
+      |          description: Muokkausaika (unix timestamp)
+      |        peruste:
+      |          $ref: '#/components/schemas/AmosaaPeruste'
+      |        jotpatyyppi:
+      |          type: string
+      |          description: JOTPA-tyyppi
+      |        julkaisukielet:
+      |          type: array
+      |          items:
+      |            type: string
+      |          description: Julkaisukielet
+      |        voimaantulo:
+      |          type: integer
+      |          format: int64
+      |          description: Voimaantuloaika (unix timestamp)
+      |        voimassaoloLoppuu:
+      |          type: integer
+      |          format: int64
+      |          description: Voimassaolon loppumisaika (unix timestamp)
+      |        esikatseltavissa:
+      |          type: boolean
+      |          description: Onko esikatseltavissa
+      |        koulutustyyppi:
+      |          type: string
+      |          description: Koulutustyyppi
+      |        oppilaitosTyyppiKoodiUri:
+      |          type: string
+      |          description: Oppilaitostyypin koodi URI
+      |""".stripMargin
+
+  val AmosaaOpetussuunnitelmatResponseModel: String =
+    """    AmosaaOpetussuunnitelmatResponse:
+      |      type: object
+      |      properties:
+      |        data:
+      |          type: array
+      |          description: Opetussuunnitelmat
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaOpetussuunnitelma'
+      |        sivuja:
+      |          type: integer
+      |          description: Sivujen lukumäärä
+      |        kokonaismäärä:
+      |          type: integer
+      |          description: Kokonaismäärä
+      |        sivu:
+      |          type: integer
+      |          description: Nykyisen sivun numero
+      |        sivukoko:
+      |          type: integer
+      |          description: Sivun koko
+      |""".stripMargin
+
+  val AmosaaVaatmusModel: String =
+    """    AmosaaVaatus:
+      |      type: object
+      |      properties:
+      |        koodi:
+      |          type: string
+      |          description: Vaatimuksen koodi
+      |        vaatimus:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |""".stripMargin
+
+  val AmosaaKohdealueModel: String =
+    """    AmosaaKohdealue:
+      |      type: object
+      |      properties:
+      |        kuvaus:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        vaatimukset:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |""".stripMargin
+
+  val AmosaaAmmattitaitovaatimuksetModel: String =
+    """    AmosaaAmmattitaitovaatimukset:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        kohde:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        kohdealueet:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaKohdealue'
+      |        vaatimukset:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |""".stripMargin
+
+  val AmosaaArvointiModel: String =
+    """    AmosaaArviointi:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        lisatiedot:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        arvioinninkohdealueet:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaKohdealue'
+      |""".stripMargin
+
+  val AmosaaKoodiModel: String =
+    """    AmosaaKoodi:
+      |      type: object
+      |      properties:
+      |        uri:
+      |          type: string
+      |          description: Koodin URI
+      |        arvo:
+      |          type: string
+      |          description: Koodin arvo
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        versio:
+      |          type: integer
+      |          description: Koodin versio
+      |        koodisto:
+      |          type: string
+      |          description: Koodisto
+      |""".stripMargin
+
+  val AmosaaOsaamistasoModel: String =
+    """    AmosaaOsaamistaso:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        koodi:
+      |          $ref: '#/components/schemas/AmosaaKoodi'
+      |        otsikko:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |""".stripMargin
+
+  val AmosaaOsaamistasonKriski: String =
+    """    AmosaaOsaamistasonKriteerit:
+      |      type: object
+      |      properties:
+      |        kriteerit:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        osaamistaso:
+      |          $ref: '#/components/schemas/AmosaaOsaamistaso'
+      |""".stripMargin
+
+  val AmosaaArviointiasteikkoModel: String =
+    """    AmosaaArviointiasteikko:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        osaamistasot:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaOsaamistaso'
+      |""".stripMargin
+
+  val AmosaaGeneerinenArviointiasteikkoModel: String =
+    """    AmosaaGeneerinenArviointiasteikko:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        kohde:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        arviointiasteikko:
+      |          $ref: '#/components/schemas/AmosaaArviointiasteikko'
+      |        osaamistasonkriteerit:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaOsaamistasonKriteerit'
+      |""".stripMargin
+
+  val AmosaaOmaTutkinnonosaModel: String =
+    """    AmosaaOmaTutkinnonosa:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        koodi:
+      |          type: string
+      |        laajuus:
+      |          type: number
+      |          format: double
+      |        arviointi:
+      |          $ref: '#/components/schemas/AmosaaArviointi'
+      |        geneerinenarviointi:
+      |          type: integer
+      |          format: int64
+      |        ammattitaitovaatimukset:
+      |          $ref: '#/components/schemas/AmosaaAmmattitaitovaatimukset'
+      |        geneerinenarviointiasteikko:
+      |          $ref: '#/components/schemas/AmosaaGeneerinenArviointiasteikko'
+      |        ammattitaidonosoittamistavat:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        ammattitaitovaatimuksetlista:
+      |          $ref: '#/components/schemas/AmosaaAmmattitaitovaatimukset'
+      |""".stripMargin
+
+  val AmosaaTekstiKappaleModel: String =
+    """    AmosaaTekstiKappale:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        luotu:
+      |          type: integer
+      |          format: int64
+      |          description: Luontiaika (unix timestamp)
+      |        teksti:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        muokattu:
+      |          type: integer
+      |          format: int64
+      |          description: Muokkausaika (unix timestamp)
+      |        tunniste:
+      |          type: string
+      |""".stripMargin
+
+  val AmosaaTosaModel: String =
+    """    AmosaaTosa:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |        tyyppi:
+      |          type: string
+      |          description: Tutkinnon osan tyyppi
+      |        muokattu:
+      |          type: integer
+      |          format: int64
+      |          description: Muokkausaika (unix timestamp)
+      |        omatutkinnonosa:
+      |          $ref: '#/components/schemas/AmosaaOmaTutkinnonosa'
+      |""".stripMargin
+
+  val AmosaaPaikallinenTutkinnonosaModel: String =
+    """    AmosaaPaikallinenTutkinnonosa:
+      |      type: object
+      |      properties:
+      |        id:
+      |          type: integer
+      |          format: int64
+      |          description: Paikallisen tutkinnon osan id
+      |        nimi:
+      |          $ref: '#/components/schemas/AmosaaLokalisoituTeksti'
+      |        tosa:
+      |          $ref: '#/components/schemas/AmosaaTosa'
+      |        tyyppi:
+      |          type: string
+      |          description: Paikallisen tutkinnon osan tyyppi
+      |        tekstikappale:
+      |          $ref: '#/components/schemas/AmosaaTekstiKappale'
+      |        lapset:
+      |          type: array
+      |          items:
+      |            $ref: '#/components/schemas/AmosaaPaikallinenTutkinnonosa'
+      |          description: Hierarkkisen rakenteen lapset
+      |        naytapohjanteksti:
+      |          type: boolean
+      |        naytaperusteenteksti:
+      |          type: boolean
+      |""".stripMargin
+
+  val AmosaaPaikallisetTutkinnonOsatResponseModel: String =
+    """    AmosaaPaikallisetTutkinnonOsatResponse:
+      |      type: array
+      |      items:
+      |        $ref: '#/components/schemas/AmosaaPaikallinenTutkinnonosa'
+      |""".stripMargin
+
   val models = List(
     KoulutustyyppiModel,
     KieliModel,
@@ -612,7 +1019,27 @@ package object domain {
     CopyResultModel,
     PistetietoModel,
     TilaChangeResultModel,
-    KorkeakoulutustyyppiModel
+    KorkeakoulutustyyppiModel,
+    AmosaaLokalisoituTekstiModel,
+    AmosaaKoulutusModel,
+    AmosaaPerusteModel,
+    AmosaaKoulutustoimijaModel,
+    AmosaaOpetussuunnitelmaModel,
+    AmosaaOpetussuunnitelmatResponseModel,
+    AmosaaVaatmusModel,
+    AmosaaKohdealueModel,
+    AmosaaAmmattitaitovaatimuksetModel,
+    AmosaaArvointiModel,
+    AmosaaKoodiModel,
+    AmosaaOsaamistasoModel,
+    AmosaaOsaamistasonKriski,
+    AmosaaArviointiasteikkoModel,
+    AmosaaGeneerinenArviointiasteikkoModel,
+    AmosaaOmaTutkinnonosaModel,
+    AmosaaTekstiKappaleModel,
+    AmosaaTosaModel,
+    AmosaaPaikallinenTutkinnonosaModel,
+    AmosaaPaikallisetTutkinnonOsatResponseModel
   )
 
   type Kielistetty = Map[Kieli, String]

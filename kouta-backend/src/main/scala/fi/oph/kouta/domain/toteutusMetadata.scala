@@ -161,28 +161,6 @@ package object toteutusMetadata {
       |          description: Onko toteutus täydennyskoulutusta?
       |""".stripMargin
 
-  val KorkeakouluOsaamisalaModel: String =
-    """    KorkeakouluOsaamisala:
-      |      type: object
-      |      properties:
-      |        nimi:
-      |          type: object
-      |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. nimi
-      |          $ref: '#/components/schemas/Nimi'
-      |        kuvaus:
-      |          type: object
-      |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. kuvaus
-      |          $ref: '#/components/schemas/Kuvaus'
-      |        linkki:
-      |          type: object
-      |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkki
-      |          $ref: '#/components/schemas/Linkki'
-      |        otsikko:
-      |          type: object
-      |          description: Korkeakoulututkinnon erikoistumisalan, opintosuunnan, pääaineen tms. linkin otsikko
-      |          $ref: '#/components/schemas/Teksti'
-      |""".stripMargin
-
   val OsaamisalaModel: String =
     """    Osaamisala:
       |      type: object
@@ -272,6 +250,9 @@ package object toteutusMetadata {
       |            isAvoinKorkeakoulutus:
       |              type: boolean
       |              description: Onko koulutus avointa korkeakoulutusta?
+      |            isPieniOsaamiskokonaisuus:
+      |              type: boolean
+      |              description: Onko toteutus pieni osaamiskokonaisuus?
       |            tunniste:
       |              type: string
       |              description: Hakijalle näkyvä tunniste
@@ -279,6 +260,14 @@ package object toteutusMetadata {
       |              type: string
       |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
       |              example: opinnontyyppi_1#1
+      |            opintojenLaajuusyksikkoKoodiUri:
+      |              type: string
+      |              description: "Opintojen laajuusyksikko. Viittaa koodistoon [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/opintojenlaajuusyksikko/1)"
+      |              example: opintojenlaajuusyksikko_6#1
+      |            opintojenLaajuusNumero:
+      |              type: integer
+      |              description: Opintojen laajuus tai kesto numeroarvona
+      |              example: 10
       |""".stripMargin
 
   val KkOpintokokonaisuusToteutusMetadataModel: String =
@@ -311,6 +300,14 @@ package object toteutusMetadata {
       |              type: string
       |              description: Opinnon tyyppi. Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-app/html/koodisto/opinnontyyppi/1)
       |              example: opinnontyyppi_1#1
+      |            liitetytOpintojaksot:
+      |              type: array
+      |              description: Opintokokonaisuuteen liitettyjen opintojaksojen toteutus-oidit
+      |              items:
+      |                type: string
+      |            isPieniOsaamiskokonaisuus:
+      |              type: boolean
+      |              description: Onko toteutus pieni osaamiskokonaisuus?
       |""".stripMargin
 
   val ErikoislaakariToteutusMetadataModel: String =
@@ -500,6 +497,11 @@ package object toteutusMetadata {
       |              type: boolean
       |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
       |              example: false
+      |            liitetytOsaamismerkit:
+      |              type: array
+      |              description: Toteutukseen liitettyjen osaamismerkkien koulutus-oidit
+      |              items:
+      |                type: string
       |""".stripMargin
 
   val VapaaSivistystyoMuuToteutusMetadataModel: String =
@@ -518,6 +520,11 @@ package object toteutusMetadata {
       |              type: boolean
       |              description: Tieto siitä suoritetaanko koulutuksen toteutus nayttönä. Jos kentän arvona ei ole true, tarkoittaa se, että toteutus suoritetaan kurssimuotoisena.
       |              example: false
+      |            liitetytOsaamismerkit:
+      |              type: array
+      |              description: Toteutukseen liitettyjen osaamismerkkien koulutus-oidit
+      |              items:
+      |                type: string
       |""".stripMargin
 
   val VapaaSivistystyoOsaamismerkkiToteutusMetadataModel: String =
@@ -663,7 +670,7 @@ package object toteutusMetadata {
       |              description: Koulutuksen kielivalikoima
       |              $ref: '#/components/schemas/Kielivalikoima'
       |            yleislinja:
-      |              type: boolean,
+      |              type: boolean
       |              description: Onko lukio-toteutuksella yleislinja?
       |            painotukset:
       |              type: array
@@ -752,7 +759,6 @@ package object toteutusMetadata {
     ApurahaModel,
     KielivalikoimaModel,
     ToteutusMetadataModel,
-    KorkeakouluOsaamisalaModel,
     OsaamisalaModel,
     AmmattikorkeaToteutusMetadataModel,
     AmmOpeErityisopeJaOpoToteutusMetadataModel,
