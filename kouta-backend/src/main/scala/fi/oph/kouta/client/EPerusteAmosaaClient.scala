@@ -154,17 +154,18 @@ class EPerusteAmosaaClient(urlProperties: OphProperties) extends HttpClient with
     throw EPerusteAmosaaQueryException(url, status, response)
 
   def getOpetussuunnitelmat(
-      organisaatio: Option[String],
+      organisaatiot: Set[String],
       nimi: Option[String],
-      sivu: Option[String]
+      paikallistaSisaltoa: Option[Boolean],
+      sivu: String,
+      sivukoko: String
   ): AmosaaOpetussuunnitelmatResponse = {
     def encodeParam(value: String): String = URLEncoder.encode(value, "UTF-8")
 
-    val queryParams = Seq(
-      organisaatio.map(org => s"organisaatio=${encodeParam(org)}"),
+    val queryParams = organisaatiot.map(org => s"organisaatio=${encodeParam(org)}") ++ Seq(
       nimi.map(n => s"nimi=${encodeParam(n)}"),
-      sivu.map(s => s"sivu=${encodeParam(s)}")
-    ).flatten
+      paikallistaSisaltoa.map(p => s"paikallistasisaltoa=${encodeParam(p.toString)}")
+    ).flatten + s"sivu=$sivu" + s"sivukoko=$sivukoko"
 
     val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelmat") +
       (if (queryParams.nonEmpty) s"?${queryParams.mkString("&")}" else "")
