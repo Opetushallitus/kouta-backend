@@ -457,9 +457,9 @@ package object domain {
     """    PaikallinenTutkinnonOsa:
       |      type: object
       |      properties:
-      |        toteutusSunnitelmaId:
+      |        opetussuunnitelmaId:
       |          type: string
-      |          description: Paikallisen tutkinnon osan toteutussuunnitelman tunniste
+      |          description: Paikallisen tutkinnon osan opetussuunnitelman tunniste
       |        tutkinnonosaId:
       |          type: string
       |          description: Paikallisen tutkinnon osan tunniste
@@ -1366,7 +1366,7 @@ package object domain {
   }
 
   case class PaikallinenTutkinnonOsa(
-      toteutusSunnitelmaId: String,
+      opetussuunnitelmaId: String,
       tutkinnonosaId: String
   )
 
