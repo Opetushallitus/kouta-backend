@@ -408,6 +408,11 @@ object Validations {
       s"Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheilijan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
     id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
+  val inconsistentPaikallinenTutkinnonOsaToteutussuunnitelmaId: ErrorMessage = ErrorMessage(
+    msg = "Kaikilla paikallisillla tutkinnon osilla täytyy olla sama toteutussuunnitelmaId",
+    id = "inconsistentPaikallinenTutkinnonOsaToteutussuunnitelmaId"
+  )
+
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 
