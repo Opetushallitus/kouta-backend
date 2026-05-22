@@ -1,18 +1,21 @@
 package fi.oph.kouta.service.validation
 
-import fi.oph.kouta.client.EPerusteKoodiClient
+import fi.oph.kouta.client.{EPerusteAmosaaClient, EPerusteAmosaaQueryException, EPerusteKoodiClient}
 import fi.oph.kouta.client.KoodiUriUtils.{koodiUriFromString, koodiUriWithEqualOrHigherVersioNbrInList, koodiUrisEqual}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.service.{KoodistoService, KoodistoValidator, ValidatingSubService}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{IsValid, KoulutusDiffResolver, NoErrors, ValidationContext}
 
+import scala.util.{Failure, Success, Try}
+
 object AmmatillinenKoulutusServiceValidation
-    extends AmmatillinenKoulutusServiceValidation(KoodistoService, EPerusteKoodiClient)
+    extends AmmatillinenKoulutusServiceValidation(KoodistoService, EPerusteKoodiClient, EPerusteAmosaaClient)
 
 class AmmatillinenKoulutusServiceValidation(
     val koodistoService: KoodistoService,
-    ePerusteKoodiClient: EPerusteKoodiClient
+    ePerusteKoodiClient: EPerusteKoodiClient,
+    ePerusteAmosaaClient: EPerusteAmosaaClient
 ) extends KoodistoValidator
     with ValidatingSubService[Koulutus] {
   def validate(koulutus: Koulutus, oldKoulutus: Option[Koulutus], vCtx: ValidationContext): IsValid = {
@@ -124,7 +127,8 @@ class AmmatillinenKoulutusServiceValidation(
             validateAmmTutkinnonosaMetadata(
               vCtx,
               m,
-              koulutusDiffResolver.newTutkinnonosat().nonEmpty
+              koulutusDiffResolver.newTutkinnonosat().nonEmpty,
+              koulutusDiffResolver.newPaikallisetTutkinnonosat().nonEmpty
             )
           case m: AmmatillinenOsaamisalaKoulutusMetadata =>
             validateAmmOsaamisalaKoulutusMetadata(
@@ -200,18 +204,31 @@ class AmmatillinenKoulutusServiceValidation(
   private def validateAmmTutkinnonosaMetadata(
       vCtx: ValidationContext,
       metadata: AmmatillinenTutkinnonOsaKoulutusMetadata,
-      newTutkinnonOsat: Boolean
+      newTutkinnonOsat: Boolean,
+      newPaikallisetTutkinnonOsat: Boolean
   ): IsValid = {
-    val tutkinnonOsatPath = "metadata.tutkinnonOsat"
-    val tutkinnonOsat     = metadata.tutkinnonOsat
+    val tutkinnonOsatPath   = "metadata.tutkinnonOsat"
+    val paikallisetPath     = "metadata.paikallisetTutkinnonOsat"
+    val tutkinnonOsat       = metadata.tutkinnonOsat
+    val paikalliset         = metadata.paikallisetTutkinnonOsat
+
+    val paikallisetConsistencyCheck = assertTrue(
+      paikalliset.map(_.opetussuunnitelmaId).distinct.size <= 1,
+      paikallisetPath,
+      inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId
+    )
+
     and(
-      validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, tutkinnonOsatPath)),
-      assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
-      assertTrue(
-        metadata.paikallisetTutkinnonOsat.map(_.opetussuunnitelmaId).distinct.size <= 1,
-        "metadata.paikallisetTutkinnonOsat",
-        inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId
+      validateIfJulkaistu(
+        vCtx.tila,
+        assertTrue(
+          tutkinnonOsat.nonEmpty || paikalliset.nonEmpty,
+          tutkinnonOsatPath,
+          missingTutkinnonOsatOrPaikallisetTutkinnonOsatMsg
+        )
       ),
+      assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
+      paikallisetConsistencyCheck,
       validateIfTrue(
         newTutkinnonOsat,
         validateIfSuccessful(
@@ -244,6 +261,38 @@ class AmmatillinenKoulutusServiceValidation(
                   tutkinnonOsatPath,
                   _.validate(vCtx, _, Map())
                 )
+            }
+          }
+        )
+      ),
+      validateIfTrue(
+        newPaikallisetTutkinnonOsat && paikalliset.nonEmpty,
+        validateIfSuccessful(
+          paikallisetConsistencyCheck,
+          {
+            val opetussuunnitelmaId = paikalliset.head.opetussuunnitelmaId
+            Try(opetussuunnitelmaId.toLong) match {
+              case Failure(_) =>
+                error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
+              case Success(opetussuunnitelmaIdLong) =>
+                Try(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(opetussuunnitelmaIdLong)) match {
+                  case Failure(e: EPerusteAmosaaQueryException) if e.status == 404 =>
+                    error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
+                  case Failure(_) =>
+                    error(s"$paikallisetPath.opetussuunnitelmaId", amosaaServiceFailureMsg)
+                  case Success(amosaaOsat) =>
+                    val validIds = amosaaOsat.map(_.id.toString).toSet
+                    validateIfNonEmpty[PaikallinenTutkinnonOsa](
+                      paikalliset,
+                      paikallisetPath,
+                      (osa, path) =>
+                        assertTrue(
+                          validIds.contains(osa.tutkinnonosaId),
+                          s"$path.tutkinnonosaId",
+                          invalidPaikallinenTutkinnonOsaId(osa.tutkinnonosaId)
+                        )
+                    )
+                }
             }
           }
         )

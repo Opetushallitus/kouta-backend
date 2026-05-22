@@ -3,7 +3,7 @@ package fi.oph.kouta.integration
 import fi.oph.kouta.TestData._
 import fi.oph.kouta.TestOids._
 import fi.oph.kouta.client.KoodiUriUtils.koodiUriFromString
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodiUri, TutkinnonOsaServiceItem}
+import fi.oph.kouta.client.{EPerusteAmosaaClient, EPerusteKoodiClient, KoodiUri, TutkinnonOsaServiceItem}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.filterTypes.koulutusTyyppi
@@ -29,7 +29,8 @@ class KoulutusServiceValidationSpec extends BaseServiceValidationSpec[Koulutus] 
   val toteutusDao                  = mock[ToteutusDAO]
   val sorakuvausDao                = mock[SorakuvausDAO]
   val ePerusteKoodiClient          = mock[EPerusteKoodiClient]
-  val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
+  val ePerusteAmosaaClient         = mock[EPerusteAmosaaClient]
+  val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient, ePerusteAmosaaClient)
 
   val sorakuvausId                  = UUID.randomUUID()
   val sorakuvausId2                 = UUID.randomUUID()
