@@ -43,7 +43,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |          schema:
       |            type: integer
       |          required: false
-      |          description: Sivunumero (oletus 1)
+      |          description: Sivunumero (oletus 0)
       |        - in: query
       |          name: sivukoko
       |          schema:
@@ -63,7 +63,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
     implicit val authenticated: Authenticated = authenticate()
     val organisaatiot = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
     val nimi = params.get("nimi")
-    val sivu = params.get("sivu").getOrElse("1")
+    val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
 

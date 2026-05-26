@@ -405,6 +405,32 @@ object Validations {
       s"Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheilijan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
     id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
+  val inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId: ErrorMessage = ErrorMessage(
+    msg = "Kaikilla paikallisillla tutkinnon osilla täytyy olla sama opetussuunnitelmaId",
+    id = "inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId"
+  )
+
+  val missingTutkinnonOsatOrPaikallisetTutkinnonOsatMsg: ErrorMessage = ErrorMessage(
+    msg = "Vähintään yksi tutkinnon osa tai paikallinen tutkinnon osa on pakollinen",
+    id = "missingTutkinnonOsatOrPaikallisetTutkinnonOsat"
+  )
+
+  def invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId: String): ErrorMessage = ErrorMessage(
+    msg = s"Paikallisen tutkinnon osan opetussuunnitelmaId '$opetussuunnitelmaId' ei ole voimassa",
+    id = "invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId"
+  )
+
+  def invalidPaikallinenTutkinnonOsaId(tutkinnonosaId: String): ErrorMessage = ErrorMessage(
+    msg = s"Paikallinen tutkinnon osa id '$tutkinnonosaId' ei ole voimassa",
+    id = "invalidPaikallinenTutkinnonOsaId"
+  )
+
+  val amosaaServiceFailureMsg: ErrorMessage = ErrorMessage(
+    msg =
+      "Paikallisen tutkinnon osan oikeellisuutta ei voitu tarkistaa, AMOSAA-palvelussa tapahtui virhe. Yritä myöhemmin uudelleen",
+    id = "amosaaServiceFailure"
+  )
+
   def lessOrEqualMsg(value: Long, comparedValue: Long): ErrorMessage =
     ErrorMessage(msg = s"$value saa olla pienempi kuin $comparedValue", id = "lessOrEqualMsg")
 

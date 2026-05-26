@@ -453,6 +453,18 @@ package object domain {
       |          example: 2449201
       |""".stripMargin
 
+  val PaikallinenTutkinnonOsaModel: String =
+    """    PaikallinenTutkinnonOsa:
+      |      type: object
+      |      properties:
+      |        opetussuunnitelmaId:
+      |          type: string
+      |          description: Paikallisen tutkinnon osan opetussuunnitelman tunniste
+      |        tutkinnonosaId:
+      |          type: string
+      |          description: Paikallisen tutkinnon osan tunniste
+      |""".stripMargin
+
   val KoulutuksenAlkamiskausiModel: String =
     """    KoulutuksenAlkamiskausi:
       |      type: object
@@ -753,8 +765,8 @@ package object domain {
       |          description: Sivun koko
       |""".stripMargin
 
-  val AmosaaVaatmusModel: String =
-    """    AmosaaVaatus:
+  val AmosaaVaatimusModel: String =
+    """    AmosaaVaatimus:
       |      type: object
       |      properties:
       |        koodi:
@@ -773,7 +785,7 @@ package object domain {
       |        vaatimukset:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |            $ref: '#/components/schemas/AmosaaVaatimus'
       |""".stripMargin
 
   val AmosaaAmmattitaitovaatimuksetModel: String =
@@ -792,7 +804,7 @@ package object domain {
       |        vaatimukset:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |            $ref: '#/components/schemas/AmosaaVaatimus'
       |""".stripMargin
 
   val AmosaaArvointiModel: String =
@@ -1011,6 +1023,7 @@ package object domain {
     ListEverythingModel,
     AuthenticatedModel,
     TutkinnonOsaModel,
+    PaikallinenTutkinnonOsaModel,
     KoulutuksenAlkamiskausiModel,
     NimettyLinkkiModel,
     ValintakokeenLisatilaisuudetModel,
@@ -1026,7 +1039,7 @@ package object domain {
     AmosaaKoulutustoimijaModel,
     AmosaaOpetussuunnitelmaModel,
     AmosaaOpetussuunnitelmatResponseModel,
-    AmosaaVaatmusModel,
+    AmosaaVaatimusModel,
     AmosaaKohdealueModel,
     AmosaaAmmattitaitovaatimuksetModel,
     AmosaaArvointiModel,
@@ -1351,6 +1364,11 @@ package object domain {
     def idValuesPopulated(): Boolean =
       ePerusteId.isDefined && tutkinnonosaViite.isDefined && tutkinnonosaId.isDefined
   }
+
+  case class PaikallinenTutkinnonOsa(
+      opetussuunnitelmaId: String,
+      tutkinnonosaId: String
+  )
 
   private def assertPostinumerokoodiuritValid(
       koodiUrit: List[String],
