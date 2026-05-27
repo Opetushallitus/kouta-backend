@@ -61,20 +61,9 @@
         </dependency>
 
         <dependency>
-            <groupId>org.scalatra.scalate</groupId>
-            <artifactId>scalate-core_2.12</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang</groupId>
-                    <artifactId>scala-library</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-xml_2.12</artifactId>
-                </exclusion>
-            </exclusions>
+            <groupId>org.scala-lang.modules</groupId>
+            <artifactId>scala-parser-combinators_2.12</artifactId>
         </dependency>
-
 
         <!-- Utility dependencies -->
         <dependency>
