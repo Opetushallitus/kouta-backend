@@ -174,6 +174,13 @@ class EPerusteAmosaaClient(urlProperties: OphProperties) extends HttpClient with
     }
   }
 
+  def getOpetussuunnitelma(opetussuunnitelmaId: Long): AmosaaOpetussuunnitelma = {
+    val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelma", opetussuunnitelmaId.toString)
+    get(url, errorHandler, followRedirects = true) { response =>
+      parse(response).extract[AmosaaOpetussuunnitelma]
+    }
+  }
+
   def getPaikallisetTutkinnonosat(opetussuunnitelmaId: Long): List[AmosaaPaikallinenTutkinnonosa] = {
     val url = urlProperties.url(
       "eperusteet-amosaa-service.opetussuunnitelman-tutkinnonosat",
