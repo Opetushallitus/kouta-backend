@@ -404,8 +404,7 @@ class ToteutusServiceValidation(
     val English                           = "oppilaitoksenopetuskieli_4"
     val Tohtorikoulutus                   = "tutkintotyyppi_16"
     val maksut                            = opetus.maksut
-
-    val maksullisuustyypit = maksut.map(maksu => maksu.maksullisuustyyppi)
+    val maksullisuustyypit                = maksut.map(maksu => maksu.maksullisuustyyppi)
 
     and(
       validateIfTrue(
@@ -423,6 +422,13 @@ class ToteutusServiceValidation(
           )
         )
       ),
+      maksullisuustyypit
+        .groupBy(_.name)
+        .toList
+        .flatMap(maksullisuustyyppi => {
+          val (key, value) = maksullisuustyyppi
+          assertTrue(value.size == 1, s"$path.maksullisuustyypit", sameMaksullisuustyyppiMultipleTimes(key))
+        }),
       maksut.flatMap(maksu =>
         and(
           validateIfTrue(
