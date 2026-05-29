@@ -118,6 +118,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit = opetuskieliKoodiUrit,
       opetusaikaKoodiUrit = opetusaikaKoodiUrit,
       opetustapaKoodiUrit = opetustapaKoodiUrit,
+      onkoApuraha = onkoApuraha,
       apuraha = apuraha,
       lisatiedot = lisatiedot,
       maksut = maksut
@@ -1232,6 +1233,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "succeed if lukuvuosimaksu is selected for amm koulutustyyppi even though opetuskieli is Finnish" in {
     passesValidation(
       ammToteutusWithOpetusParameters(
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(200.5))),
         opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
       )
     )
@@ -1244,6 +1246,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           LukioToteutuksenMetatieto.copy(opetus =
             Some(
               ToteutuksenOpetus.copy(
+                maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(200.5))),
                 opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
               )
             )
