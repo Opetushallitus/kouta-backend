@@ -1215,6 +1215,28 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "fail if maksullisuustyypit are defined twice" in {
+    failsValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+        maksut = Seq(
+          Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(500)),
+          Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(400)),
+          Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)),
+          Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(400)),
+          Maksu(maksullisuustyyppi = Maksuton),
+          Maksu(maksullisuustyyppi = Maksuton)
+        )
+      ),
+      Seq(
+        ValidationError("metadata.opetus.maksullisuustyypit", invalidMaksutonWhenMultipleMaksullisuustyypit),
+        ValidationError("metadata.opetus.maksullisuustyypit", sameMaksullisuustyyppiMultipleTimes(Maksullinen.name)),
+        ValidationError("metadata.opetus.maksullisuustyypit", sameMaksullisuustyyppiMultipleTimes(Lukuvuosimaksu.name)),
+        ValidationError("metadata.opetus.maksullisuustyypit", sameMaksullisuustyyppiMultipleTimes(Maksuton.name)),
+      )
+    )
+  }
+
   "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
     failsValidation(
       ammMuuToteutus.copy(metadata =
