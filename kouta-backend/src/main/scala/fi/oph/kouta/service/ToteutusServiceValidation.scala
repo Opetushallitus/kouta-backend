@@ -342,12 +342,22 @@ class ToteutusServiceValidation(
             val (maksu, index)     = maksuWithIndex
             val maksunMaara        = maksu.maksunMaara
             val maksullisuustyyppi = maksu.maksullisuustyyppi
-            validateIfTrue(
-              maksullisuustyyppi != Maksuton,
-              assertTrue(
-                maksunMaara.isDefined,
-                s"$path.maksut[$index].maksunMaara",
-                missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> maksullisuustyyppi)))
+            and(
+              validateIfTrue(
+                maksullisuustyyppi != Maksuton,
+                assertTrue(
+                  maksunMaara.isDefined,
+                  s"$path.maksut[$index].maksunMaara",
+                  missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> maksullisuustyyppi)))
+                )
+              ),
+              validateIfTrue(
+                maksullisuustyyppi == Maksuton,
+                assertTrue(
+                  maksunMaara.isEmpty,
+                  s"$path.maksut[$index].maksunMaara",
+                  notEmptyMsg
+                )
               )
             )
           }),
