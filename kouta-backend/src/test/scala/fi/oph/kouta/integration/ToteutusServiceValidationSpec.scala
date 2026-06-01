@@ -795,6 +795,25 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "fail if maksunMaara is defined for maksuton opetus" in {
+    failsValidation(
+      JulkaistuAmmToteutus.copy(metadata =
+        Some(
+          AmmatillinenToteutusMetadata(opetus =
+            Some(
+              ToteutuksenOpetus.copy(
+                maksut = Seq(
+                  Maksu(maksullisuustyyppi = Maksuton, maksunMaara = Some(100))
+                )
+              )
+            )
+          )
+        )
+      ),
+      Seq(ValidationError("metadata.opetus.maksut[0].maksunMaara", notEmptyMsg))
+    )
+  }
+
   it should "fail if multiple maksullisuustyyppi for yo toteutus" in {
     failsValidation(
       yoToteutus.copy(metadata =
