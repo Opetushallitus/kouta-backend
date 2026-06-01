@@ -54,6 +54,9 @@ object Validations {
       "Hakukohteelle ei voi valita kaksoistutkinnon suorittamista, kaksoistutkinto on mahdollinen vain jos kyseessä on ammatillinen perustutkinto tai lukiokoulutus (joko lukion oppimäärä tai ylioppilastutkinto, koulutuskoodi 309902 tai 301101).",
     id = "toinenAsteOnkoKaksoistutkintoNotAllowed"
   )
+
+  def missingMsgWithMetadata(metadata: Option[Map[String, AnyRef]]): ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg", meta = metadata)
+
   def invalidKoulutuskoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
