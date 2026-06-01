@@ -118,6 +118,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       opetuskieliKoodiUrit = opetuskieliKoodiUrit,
       opetusaikaKoodiUrit = opetusaikaKoodiUrit,
       opetustapaKoodiUrit = opetustapaKoodiUrit,
+      onkoApuraha = onkoApuraha,
       apuraha = apuraha,
       lisatiedot = lisatiedot,
       maksut = maksut
@@ -697,10 +698,13 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksunMaara", notNegativeMsg),
+        ValidationError("metadata.opetus.maksut[0].maksunMaara", notNegativeMsg),
         ValidationError("metadata.opetus.suunniteltuKestoVuodet", notNegativeMsg),
         ValidationError("metadata.opetus.suunniteltuKestoKuukaudet", notNegativeMsg),
-        ValidationError("metadata.opetus.lukuvuosimaksunMaara", missingMsg)
+        ValidationError(
+          "metadata.opetus.maksut[1].maksunMaara",
+          missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> Lukuvuosimaksu)))
+        )
       )
     )
   }
@@ -751,7 +755,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  it should "fail if invalid maksullinen and maksuton opetus at the same time" in {
+  it should "fail if maksullinen and maksuton opetus are defined at the same time" in {
     failsValidation(
       JulkaistuAmmToteutus.copy(metadata =
         Some(
@@ -767,11 +771,11 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           )
         )
       ),
-      Seq(ValidationError("metadata.opetus.maksullisuustyypit", invalidMaksutonWhenMultipleMaksullisuustyypit))
+      Seq(ValidationError("metadata.opetus.maksut", invalidMaksutonWhenMultipleMaksullisuustyypit))
     )
   }
 
-  it should "fail if invalid lukuvuosimaksullinen and maksuton opetus at the same time" in {
+  it should "fail if lukuvuosimaksullinen and maksuton opetus defined at the same time" in {
     failsValidation(
       JulkaistuAmmToteutus.copy(metadata =
         Some(
@@ -787,7 +791,26 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           )
         )
       ),
-      Seq(ValidationError("metadata.opetus.maksullisuustyypit", invalidMaksutonWhenMultipleMaksullisuustyypit))
+      Seq(ValidationError("metadata.opetus.maksut", invalidMaksutonWhenMultipleMaksullisuustyypit))
+    )
+  }
+
+  it should "fail if maksunMaara is defined for maksuton opetus" in {
+    failsValidation(
+      JulkaistuAmmToteutus.copy(metadata =
+        Some(
+          AmmatillinenToteutusMetadata(opetus =
+            Some(
+              ToteutuksenOpetus.copy(
+                maksut = Seq(
+                  Maksu(maksullisuustyyppi = Maksuton, maksunMaara = Some(100))
+                )
+              )
+            )
+          )
+        )
+      ),
+      Seq(ValidationError("metadata.opetus.maksut[0].maksunMaara", notEmptyMsg))
     )
   }
 
@@ -807,7 +830,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           )
         )
       ),
-      Seq(ValidationError("metadata.opetus.maksullisuustyypit", invalidMultipleMaksullisuustyypitForKoulutustyyppi))
+      Seq(ValidationError("metadata.opetus.maksut", invalidMultipleMaksullisuustyypitForKoulutustyyppi))
     )
   }
 
@@ -1214,6 +1237,28 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "fail if maksullisuustyypit are defined twice" in {
+    failsValidation(
+      ammToteutusWithOpetusParameters(
+        opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_4#1"),
+        maksut = Seq(
+          Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(500)),
+          Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(400)),
+          Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(500)),
+          Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(400)),
+          Maksu(maksullisuustyyppi = Maksuton),
+          Maksu(maksullisuustyyppi = Maksuton)
+        )
+      ),
+      Seq(
+        ValidationError("metadata.opetus.maksut", invalidMaksutonWhenMultipleMaksullisuustyypit),
+        ValidationError("metadata.opetus.maksut", sameMaksullisuustyyppiMultipleTimes(Maksullinen.name)),
+        ValidationError("metadata.opetus.maksut", sameMaksullisuustyyppiMultipleTimes(Lukuvuosimaksu.name)),
+        ValidationError("metadata.opetus.maksut", sameMaksullisuustyyppiMultipleTimes(Maksuton.name))
+      )
+    )
+  }
+
   "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
     failsValidation(
       ammMuuToteutus.copy(metadata =
@@ -1224,7 +1269,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
+        ValidationError("metadata.opetus.maksut", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
       )
     )
   }
@@ -1232,6 +1277,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
   it should "succeed if lukuvuosimaksu is selected for amm koulutustyyppi even though opetuskieli is Finnish" in {
     passesValidation(
       ammToteutusWithOpetusParameters(
+        maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(200.5))),
         opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
       )
     )
@@ -1244,6 +1290,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
           LukioToteutuksenMetatieto.copy(opetus =
             Some(
               ToteutuksenOpetus.copy(
+                maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(200.5))),
                 opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1") //Finnish
               )
             )
@@ -1260,7 +1307,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ),
       Seq(
         ValidationError(
-          "metadata.opetus.maksullisuustyyppi",
+          "metadata.opetus.maksut",
           invalidKoulutusWithLukuvuosimaksu(Seq("koulutus_855101"))
         )
       )
@@ -1275,7 +1322,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         koulutusOid = Some(yoTohtoriKoulutus.oid.get)
       ),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", koodistoServiceFailureMsg)
+        ValidationError("metadata.opetus.maksut", koodistoServiceFailureMsg)
       )
     )
   }
@@ -1284,7 +1331,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     failsValidation(
       yoToteutusWithOpetusParameters(opetuskieliKoodiUrit = Seq("oppilaitoksenopetuskieli_1#1")),
       Seq(
-        ValidationError("metadata.opetus.maksullisuustyyppi", invalidOpetuskieliWithLukuvuosimaksu)
+        ValidationError("metadata.opetus.maksut", invalidOpetuskieliWithLukuvuosimaksu)
       )
     )
   }

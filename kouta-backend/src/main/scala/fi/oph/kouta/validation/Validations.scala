@@ -54,6 +54,9 @@ object Validations {
       "Hakukohteelle ei voi valita kaksoistutkinnon suorittamista, kaksoistutkinto on mahdollinen vain jos kyseessä on ammatillinen perustutkinto tai lukiokoulutus (joko lukion oppimäärä tai ylioppilastutkinto, koulutuskoodi 309902 tai 301101).",
     id = "toinenAsteOnkoKaksoistutkintoNotAllowed"
   )
+
+  def missingMsgWithMetadata(metadata: Option[Map[String, AnyRef]]): ErrorMessage = ErrorMessage(msg = s"Pakollinen tieto puuttuu", id = "missingMsg", meta = metadata)
+
   def invalidKoulutuskoodiuri(koodiUri: String): ErrorMessage = ErrorMessage(
     msg = s"Koulutuskoodiuria $koodiUri ei löydy, tai ei ole voimassa",
     id = "invalidKoulutuskoodiuri"
@@ -127,7 +130,7 @@ object Validations {
     meta = Some(Map("toteutukset" -> toteutukset))
   )
 
-  def invalidToteutusOpintojenLaajuusMin(koulutusLaajuusMin: Option[Double], toteutusLaajuusMin: Option[Double]) = {
+  def invalidToteutusOpintojenLaajuusMin(koulutusLaajuusMin: Option[Double], toteutusLaajuusMin: Option[Double]): ErrorMessage = {
     ErrorMessage(
       msg = s"Toteutuksen laajuuden minimi ${toteutusLaajuusMin
         .getOrElse("")} on pienempi kuin koulutuksen laajuuden minimi ${koulutusLaajuusMin.getOrElse("")}",
@@ -135,7 +138,7 @@ object Validations {
     )
   }
 
-  def invalidToteutusOpintojenLaajuusMax(koulutusLaajuusMax: Option[Double], toteutusLaajuusMax: Option[Double]) = {
+  def invalidToteutusOpintojenLaajuusMax(koulutusLaajuusMax: Option[Double], toteutusLaajuusMax: Option[Double]): ErrorMessage = {
     ErrorMessage(
       msg = s"Toteutuksen laajuuden maksimi ${toteutusLaajuusMax
         .getOrElse("")} on suurempi kuin koulutuksen laajuuden maksimi ${koulutusLaajuusMax.getOrElse("")}",
@@ -146,7 +149,7 @@ object Validations {
   def invalidToteutusOpintojenLaajuusyksikkoIntegrity(
       koulutusLaajuusyksikkoKoodiUri: Option[String],
       toteutusLaajuusyksikkoKoodiUri: Option[String]
-  ) = {
+  ): ErrorMessage = {
     ErrorMessage(
       msg = s"Toteutuksella on eri opintojen laajuusyksikkö (${toteutusLaajuusyksikkoKoodiUri
         .getOrElse("-")}) kuin koulutuksella (${koulutusLaajuusyksikkoKoodiUri.getOrElse("-")})",
@@ -154,7 +157,7 @@ object Validations {
     )
   }
 
-  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
+  def invalidKoulutustyyppiForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä koulutustyyppi. Kaikkien entiteettien tulee olla tyyppiä $koulutustyyppi.",
@@ -163,7 +166,7 @@ object Validations {
     )
   }
 
-  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
+  def invalidTilaForLiitettyOnJulkaisu(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Kaikkien julkaistuun entiteettiin liitettyjen $koulutustyyppi-entiteettien tulee olla myös julkaistuja.",
@@ -172,7 +175,7 @@ object Validations {
     )
   }
 
-  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]) = {
+  def invalidTilaForLiitetty(entities: Seq[Oid], koulutustyyppi: Option[Koulutustyyppi]): ErrorMessage = {
     ErrorMessage(
       msg =
         s"Ainakin yhdellä liitetyllä entiteetillä on väärä julkaisutila. Liitettyjen $koulutustyyppi-entiteettien tulee olla luonnostilaisia tai julkaistuja.",
@@ -181,7 +184,7 @@ object Validations {
     )
   }
 
-  def invalidStateChangeForLiitetty(liitetty: LiitettyOid, mihinLiitetty: List[Option[Oid]], toteutukset: Vector[ToteutusOid]) = {
+  def invalidStateChangeForLiitetty(liitetty: LiitettyOid, mihinLiitetty: List[Option[Oid]], toteutukset: Vector[ToteutusOid]): ErrorMessage = {
     ErrorMessage(
       msg =
         s"Entiteetin $liitetty tilaa ei voi vaihtaa, koska se on liitetty entiteetteihin $mihinLiitetty, joiden tila on Julkaistu.",
@@ -629,6 +632,12 @@ object Validations {
     ErrorMessage(
       msg = "Vain ammatillisilla ja lukiokoulutuksilla voi olla useampi maksullisuustyypin samanaikaisesti",
       id = "invalidMultipleMaksullisuustyypitForKoulutustyyppi"
+    )
+
+  def sameMaksullisuustyyppiMultipleTimes(maksullisuustyyppiWithMultipleInstances: String): ErrorMessage =
+    ErrorMessage(
+      msg = s"Sama maksullisuustyyppi voi esiintyä vain kerran opetuksen maksuissa: $maksullisuustyyppiWithMultipleInstances",
+      id = "sameMaksullisuustyyppiMultipleTimes"
     )
 
   val missingTarjoajatForNonJulkinenKoulutus: ErrorMessage =

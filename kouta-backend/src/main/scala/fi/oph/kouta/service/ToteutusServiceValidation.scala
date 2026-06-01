@@ -338,15 +338,26 @@ class ToteutusServiceValidation(
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.opetustapaKuvaus, s"$path.opetustapaKuvaus"),
           assertNotEmpty(opetus.maksut, s"$path.maksut"),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.maksullisuusKuvaus, s"$path.maksullisuusKuvaus"),
-          opetus.maksut.flatMap(maksu => {
+          opetus.maksut.zipWithIndex.flatMap(maksuWithIndex => {
+            val (maksu, index)     = maksuWithIndex
+            val maksunMaara        = maksu.maksunMaara
+            val maksullisuustyyppi = maksu.maksullisuustyyppi
             and(
               validateIfTrue(
-                maksu.maksullisuustyyppi == Maksullinen,
-                assertNotOptional(maksu.maksunMaara, s"$path.maksunMaara")
+                maksullisuustyyppi != Maksuton,
+                assertTrue(
+                  maksunMaara.isDefined,
+                  s"$path.maksut[$index].maksunMaara",
+                  missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> maksullisuustyyppi)))
+                )
               ),
               validateIfTrue(
-                maksu.maksullisuustyyppi == Lukuvuosimaksu,
-                assertNotOptional(maksu.maksunMaara, s"$path.lukuvuosimaksunMaara")
+                maksullisuustyyppi == Maksuton,
+                assertTrue(
+                  maksunMaara.isEmpty,
+                  s"$path.maksut[$index].maksunMaara",
+                  notEmptyMsg
+                )
               )
             )
           }),
@@ -398,14 +409,14 @@ class ToteutusServiceValidation(
       opetus: Opetus,
       koulutustyyppi: Koulutustyyppi,
       koulutuskoodiurit: Seq[String],
-      path: String
+      basePath: String
   ): IsValid = {
     val isTutkintoonJohtavaKorkeakoulutus = Koulutustyyppi.isTutkintoonJohtavaKorkeakoulutus(koulutustyyppi)
     val English                           = "oppilaitoksenopetuskieli_4"
     val Tohtorikoulutus                   = "tutkintotyyppi_16"
     val maksut                            = opetus.maksut
-
-    val maksullisuustyypit = maksut.map(maksu => maksu.maksullisuustyyppi)
+    val maksullisuustyypit                = maksut.map(maksu => maksu.maksullisuustyyppi)
+    val path                              = s"$basePath.maksut"
 
     and(
       validateIfTrue(
@@ -413,17 +424,25 @@ class ToteutusServiceValidation(
         and(
           assertFalse(
             maksullisuustyypit.contains(Maksuton),
-            s"$path.maksullisuustyypit",
+            path,
             invalidMaksutonWhenMultipleMaksullisuustyypit
           ),
           assertTrue(
             Seq(Amm, Lk).contains(koulutustyyppi),
-            s"$path.maksullisuustyypit",
+            path,
             invalidMultipleMaksullisuustyypitForKoulutustyyppi
           )
         )
       ),
-      maksut.flatMap(maksu =>
+      maksullisuustyypit
+        .groupBy(_.name)
+        .toList
+        .flatMap(maksullisuustyyppi => {
+          val (key, value) = maksullisuustyyppi
+          assertTrue(value.size == 1, path, sameMaksullisuustyyppiMultipleTimes(key))
+        }),
+      maksut.zipWithIndex.flatMap(maksuWithIndex => {
+        val (maksu, index) = maksuWithIndex
         and(
           validateIfTrue(
             maksu.maksullisuustyyppi == Lukuvuosimaksu,
@@ -432,13 +451,13 @@ class ToteutusServiceValidation(
                 isTutkintoonJohtavaKorkeakoulutus, // kk-tyypeillä lukuvuosimaksu käytössä vain englanninkielisillä koulutuksilla
                 assertTrue(
                   opetus.opetuskieliKoodiUrit.map(koodiuri => withoutKoodiVersion(koodiuri)).contains(English),
-                  s"$path.maksullisuustyyppi",
+                  path,
                   invalidOpetuskieliWithLukuvuosimaksu
                 )
               ),
               assertTrue(
                 isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
-                s"$path.maksullisuustyyppi",
+                path,
                 invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
               ),
               validateIfTrue(
@@ -450,17 +469,17 @@ class ToteutusServiceValidation(
                       tohtorikoulutuskoodiurit.map(_.koodiUri).intersect(koulutuskoodiuritWithoutVersion)
                     assertEmpty(
                       tohtorikoulutukset,
-                      s"$path.maksullisuustyyppi",
+                      path,
                       invalidKoulutusWithLukuvuosimaksu(tohtorikoulutukset)
                     )
-                  case _ => error(s"$path.maksullisuustyyppi", koodistoServiceFailureMsg)
+                  case _ => error(path, koodistoServiceFailureMsg)
                 }
               )
             )
           ),
-          validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path.maksunMaara"))
+          validateIfDefined[Double](maksu.maksunMaara, assertNotNegative(_, s"$path[$index].maksunMaara"))
         )
-      )
+      })
     )
   }
 
