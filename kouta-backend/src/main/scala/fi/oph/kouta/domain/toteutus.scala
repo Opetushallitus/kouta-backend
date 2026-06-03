@@ -104,27 +104,17 @@ package object toteutus {
       |              opetustapaKuvaus:
       |                fi: Opetustavan suomenkielinen kuvaus
       |                sv: Opetustavan ruotsinkielinen kuvaus
-      |              maksullisuustyyppi: maksullinen,
       |              maksullisuusKuvaus:
       |                fi: Maksullisuuden suomenkielinen kuvaus
       |                sv: Maksullisuuden ruotsinkielinen kuvaus
-      |              maksunMaara: 200.50
-      |              alkamiskausiKoodiUri: kausi_k#1
-      |              alkamisvuosi : 2020
-      |              alkamisaikaKuvaus:
-      |                fi: Alkamisajan suomenkielinen kuvaus
-      |                sv: Alkamisajan ruotsinkielinen kuvaus
+      |              maksut:
+      |                - maksullisuustyyppi: maksullinen
+      |                  maksunMaara: 200.50
       |              lisatiedot:
       |                - otsikkoKoodiUri: koulutuksenlisatiedot_03#1
       |                  teksti:
       |                    fi: Suomenkielinen lisätietoteksti
       |                    sv: Ruotsinkielinen lisätietoteksti
-      |              lukuvuosimaksu:
-      |                 fi: 200 lukukaudessa
-      |                 sv: 200 på svenska
-      |              lukuvuosimaksuKuvaus:
-      |                fi: Lukuvuosimaksun suomenkielinen kuvaus
-      |                sv: Lukuvuosimaksun ruotsinkielinen kuvaus
       |            ammattinimikkeet:
       |              - kieli: fi
       |                arvo: insinööri
