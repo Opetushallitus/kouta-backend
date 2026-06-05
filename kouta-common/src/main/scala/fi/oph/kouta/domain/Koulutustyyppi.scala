@@ -61,8 +61,11 @@ object Koulutustyyppi extends Enum[Koulutustyyppi] {
   def isTutkintoonJohtava(koulutustyyppi: Koulutustyyppi): Boolean =
     tutkintoonJohtavat.contains(koulutustyyppi)
 
-  def isToisenAsteenYhteishakuKoulutustyyppi(koulutustyyppi: Koulutustyyppi) =
+  def isToisenAsteenYhteishakuKoulutustyyppi(koulutustyyppi: Koulutustyyppi): Boolean =
     toinenAsteYhteishaku.contains(koulutustyyppi)
+
+  def isKoulutustyyppiWithMultipleMaksullisuustyyppi(koulutustyyppi: Koulutustyyppi): Boolean =
+    (Lk :: Telma :: ammatilliset).contains(koulutustyyppi)
 
   val koulutusaste2koulutustyyppi: Map[String, Koulutustyyppi] = Map(
     "koulutusasteoph2002_62" -> Amk,

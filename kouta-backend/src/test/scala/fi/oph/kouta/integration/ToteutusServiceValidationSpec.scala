@@ -461,6 +461,54 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     passesValidation(muuToteutus)
   }
 
+  it should "succeed when new valid Tutkinnon osa toteutus with maksullinen and lukuvuosimaksullinen opetus" in {
+    val opetus = ToteutuksenOpetus.copy(maksut =
+      List(
+        Maksu(Maksullinen, Some(300.00)),
+        Maksu(Lukuvuosimaksu, Some(900.00))
+      )
+    )
+    passesValidation(
+      ammTutkinnonOsaToteutus.copy(metadata = Some(ammTutkinnonOsaToteutuksenMetatieto.copy(opetus = Some(opetus))))
+    )
+  }
+
+  it should "succeed when new valid Osaamisala toteutus with maksullinen and lukuvuosimaksullinen opetus" in {
+    val opetus = ToteutuksenOpetus.copy(maksut =
+      List(
+        Maksu(Maksullinen, Some(300.00)),
+        Maksu(Lukuvuosimaksu, Some(900.00))
+      )
+    )
+    passesValidation(
+      ammOsaamisalaToteutus.copy(metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(opetus = Some(opetus))))
+    )
+  }
+
+  it should "succeed when new valid Muu ammatillinen toteutus with maksullinen and lukuvuosimaksullinen opetus" in {
+    val opetus = ToteutuksenOpetus.copy(maksut =
+      List(
+        Maksu(Maksullinen, Some(300.00)),
+        Maksu(Lukuvuosimaksu, Some(900.00))
+      )
+    )
+    passesValidation(
+      ammMuuToteutus.copy(metadata = Some(AmmMuuToteutusMetatieto.copy(opetus = Some(opetus))))
+    )
+  }
+
+  it should "succeed when new valid Telma toteutus with maksullinen and lukuvuosimaksullinen opetus" in {
+    val opetus = ToteutuksenOpetus.copy(maksut =
+      List(
+        Maksu(Maksullinen, Some(300.00)),
+        Maksu(Lukuvuosimaksu, Some(900.00))
+      )
+    )
+    passesValidation(
+      telmaToteutus.copy(metadata = Some(TelmaToteutuksenMetatieto.copy(opetus = Some(opetus))))
+    )
+  }
+
   it should "succeed when tarjoajat not changed in modify operation, eventhough unknown organisaatiot" in {
     val toteutus = existingToteutus.copy(tarjoajat = List(LonelyOid, LukioOid))
     passesValidation(toteutus, toteutus)
@@ -1259,17 +1307,17 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm or lk" in {
+  "validateMaksullisuus" should "fail if lukuvuosimaksu is selected and koulutustyyppi is not yo, amk, amm, amm-tutkinnon-osa, amm-osaamisala, amm-muu, telma or lk" in {
     failsValidation(
-      ammMuuToteutus.copy(metadata =
+      tuvaToteutus.copy(metadata =
         Some(
-          AmmMuuToteutusMetatieto.copy(opetus =
+          TuvaToteutuksenMetatieto.copy(opetus =
             Some(ToteutuksenOpetus.copy(maksut = Seq(Maksu(Lukuvuosimaksu, Some(200)))))
           )
         )
       ),
       Seq(
-        ValidationError("metadata.opetus.maksut", invalidKoulutustyyppiWithLukuvuosimaksuMsg(AmmMuu))
+        ValidationError("metadata.opetus.maksut", invalidKoulutustyyppiWithLukuvuosimaksuMsg(Tuva))
       )
     )
   }

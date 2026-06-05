@@ -428,7 +428,7 @@ class ToteutusServiceValidation(
             invalidMaksutonWhenMultipleMaksullisuustyypit
           ),
           assertTrue(
-            Seq(Amm, Lk).contains(koulutustyyppi),
+            Koulutustyyppi.isKoulutustyyppiWithMultipleMaksullisuustyyppi(koulutustyyppi),
             path,
             invalidMultipleMaksullisuustyypitForKoulutustyyppi
           )
@@ -456,7 +456,9 @@ class ToteutusServiceValidation(
                 )
               ),
               assertTrue(
-                isTutkintoonJohtavaKorkeakoulutus || Seq(Amm, Lk).contains(koulutustyyppi),
+                isTutkintoonJohtavaKorkeakoulutus || Koulutustyyppi.isKoulutustyyppiWithMultipleMaksullisuustyyppi(
+                  koulutustyyppi
+                ),
                 path,
                 invalidKoulutustyyppiWithLukuvuosimaksuMsg(koulutustyyppi)
               ),

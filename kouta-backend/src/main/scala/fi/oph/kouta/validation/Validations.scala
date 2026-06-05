@@ -604,7 +604,7 @@ object Validations {
 
   val invalidMultipleMaksullisuustyypitForKoulutustyyppi: ErrorMessage =
     ErrorMessage(
-      msg = "Vain ammatillisilla ja lukiokoulutuksilla voi olla useampi maksullisuustyypin samanaikaisesti",
+      msg = "Vain ammatillisilla (amm, tutkinnon osa, osaamisala, muu ammatillinen, telma) ja lukiokoulutuksilla voi olla useampi maksullisuustyypin samanaikaisesti",
       id = "invalidMultipleMaksullisuustyypitForKoulutustyyppi"
     )
 
