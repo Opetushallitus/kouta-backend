@@ -99,7 +99,6 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   var otherRoleSession: UUID = _
   var yliopistotSession: UUID = _
   var ammAndChildSession: UUID = _
-  var raportointiSession: UUID = _
 
   private def storeTestSession(authorities: Set[Authority] = Set(), userOid: Option[UserOid] = None, session: Option[UUID] = None): UUID = {
     val sessionId = session.getOrElse(UUID.randomUUID())
@@ -116,7 +115,7 @@ trait AccessControlSpec extends ScalatraFlatSpec {
   def addTestSession(): UUID = storeTestSession(Set(), None, None)
 
   def addTestSession(roles: Seq[Role], organisaatioOids: Seq[OrganisaatioOid], userOid: Option[UserOid], session: Option[UUID]): UUID = {
-    val authorities = organisaatioOids.map(org => roles.map(Authority(_, org))).flatten
+    val authorities = organisaatioOids.flatMap(org => roles.map(Authority(_, org)))
     storeTestSession(authorities.toSet, userOid, session)
   }
 
@@ -151,7 +150,6 @@ trait AccessControlSpec extends ScalatraFlatSpec {
     indexerSession = addTestSession(Seq(Role.Indexer), Seq(OphOid), None, Option(indexerSession))
     fakeIndexerSession = addTestSession(Seq(Role.Indexer), Seq(ChildOid), None, Option(fakeIndexerSession))
     otherRoleSession = addTestSession(Seq(Role.UnknownRole("APP_OTHER")), Seq(ChildOid), None, Option(otherRoleSession))
-    raportointiSession = addTestSession(Seq(Role.Reporter), Seq(OphOid), None, Option(raportointiSession))
   }
 }
 
