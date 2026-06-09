@@ -12,8 +12,9 @@ import fi.oph.kouta.validation.Validations._
 import org.scalatest.Assertion
 
 class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidationSpec[Koulutus] {
-  val koodistoService     = mock[KoodistoService]
-  val ePerusteKoodiClient = mock[EPerusteKoodiClient]
+  val koodistoService      = mock[KoodistoService]
+  val ePerusteKoodiClient  = mock[EPerusteKoodiClient]
+  val ePerusteAmosaaClient = mock[EPerusteAmosaaClient]
 
   val amm: Koulutus   = AmmKoulutus
   val ammTk: Koulutus = AmmTutkinnonOsaKoulutus
@@ -21,7 +22,7 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
   val koulutusOid: Option[KoulutusOid] = Some(KoulutusOid("1.2.246.562.13.125"))
 
-  override def validator = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
+  override def validator = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient, ePerusteAmosaaClient)
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -79,6 +80,15 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     when(
       koodistoService.isInLisattavatKoulutukset(filter.koulutusTyypit, koodiUri)
     ).thenAnswer(itemFound)
+
+  private def ammTkWithPaikallisetTutkinnonOsat(paikalliset: Seq[PaikallinenTutkinnonOsa]) =
+    ammTk.copy(
+      metadata = Some(
+        ammTk.metadata.get
+          .asInstanceOf[AmmatillinenTutkinnonOsaKoulutusMetadata]
+          .copy(tutkinnonOsat = Seq(), paikallisetTutkinnonOsat = paikalliset)
+      )
+    )
 
   private def ammTkWithTutkinnonOsaParams(
       ePerusteId: Option[Long] = None,
@@ -305,7 +315,7 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
     failsSingleValidation(
       ammTk.copy(metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata())),
       "metadata.tutkinnonOsat",
-      missingMsg
+      missingTutkinnonOsatOrPaikallisetTutkinnonOsatMsg
     )
     failsSingleValidation(
       ammTkWithTutkinnonOsaParams(
@@ -469,5 +479,63 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
 
   it should "fail pelastusalan koulutus with ePerusteId" in {
     failsSingleValidation(PelastusalanAmmKoulutus.copy(ePerusteId = Some(11L)), "ePerusteId", notMissingMsg(Some(11L)))
+  }
+
+  it should "succeed when new valid AmmTutkinnonOsa with only paikalliset tutkinnon osat" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(1234L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(5678L, None, None, None, None, None, None, None)))
+    passesValidation(ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("1234", "5678"))))
+  }
+
+  it should "succeed when paikalliset tutkinnon osat not changed in modify operation, even if invalid" in {
+    val koulutus = ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("invalid", "invalid")))
+      .copy(oid = koulutusOid)
+    passesModifyValidation(koulutus, koulutus)
+  }
+
+  it should "fail when julkaistu AmmTutkinnonOsa has neither tutkinnonOsat nor paikalliset tutkinnon osat" in {
+    failsSingleValidation(
+      ammTk.copy(metadata = Some(AmmatillinenTutkinnonOsaKoulutusMetadata())),
+      "metadata.tutkinnonOsat",
+      missingTutkinnonOsatOrPaikallisetTutkinnonOsatMsg
+    )
+  }
+
+  it should "fail when paikallinen tutkinnon osa has non-numeric opetussuunnitelmaId" in {
+    failsSingleValidation(
+      ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("not_a_number", "5678"))),
+      "metadata.paikallisetTutkinnonOsat.opetussuunnitelmaId",
+      invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId("not_a_number")
+    )
+  }
+
+  it should "fail when paikallinen tutkinnon osa has non-existent opetussuunnitelmaId" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(9001L))
+      .thenThrow(EPerusteAmosaaQueryException("url", 404, "Not Found"))
+    failsSingleValidation(
+      ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("9001", "5678"))),
+      "metadata.paikallisetTutkinnonOsat.opetussuunnitelmaId",
+      invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId("9001")
+    )
+  }
+
+  it should "fail when AMOSAA service fails when validating paikalliset tutkinnon osat" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(9002L))
+      .thenThrow(EPerusteAmosaaQueryException("url", 500, "Internal Server Error"))
+    failsSingleValidation(
+      ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("9002", "5678"))),
+      "metadata.paikallisetTutkinnonOsat.opetussuunnitelmaId",
+      amosaaServiceFailureMsg
+    )
+  }
+
+  it should "fail when paikallinen tutkinnon osa has invalid tutkinnonosaId" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(9003L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(9999L, None, None, None, None, None, None, None)))
+    failsSingleValidation(
+      ammTkWithPaikallisetTutkinnonOsat(Seq(PaikallinenTutkinnonOsa("9003", "5678"))),
+      "metadata.paikallisetTutkinnonOsat[0].tutkinnonosaId",
+      invalidPaikallinenTutkinnonOsaId("5678")
+    )
   }
 }
