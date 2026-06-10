@@ -55,7 +55,7 @@ trait GenericKoutaFormats {
         LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -68,7 +68,7 @@ trait GenericKoutaFormats {
         Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -91,7 +91,7 @@ trait GenericKoutaFormats {
           construct(s)
         } catch {
           case NonFatal(e) =>
-            throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+            throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
         }
       case JNull => null
     }, {

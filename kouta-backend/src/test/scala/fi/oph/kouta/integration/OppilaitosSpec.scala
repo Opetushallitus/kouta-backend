@@ -11,7 +11,7 @@ import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.security.Role
 import fi.oph.kouta.servlet.KoutaServlet
 import fi.oph.kouta.validation.Validations._
-import org.json4s.JValue
+import org.json4s.JsonAST.JValue
 import org.json4s.jackson.JsonMethods
 import org.json4s.jackson.Serialization.read
 
