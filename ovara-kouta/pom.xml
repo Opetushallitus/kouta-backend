@@ -30,16 +30,6 @@
             <groupId>fi.oph.kouta</groupId>
             <artifactId>kouta-backend</artifactId>
             <version>${project.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
-                    <artifactId>dokumenttipalvelu</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>fi.vm.sade.java-utils</groupId>
-                    <artifactId>java-http</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
