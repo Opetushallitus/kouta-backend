@@ -3,13 +3,16 @@ package fi.oph.kouta.integration.fixture
 import java.util.UUID
 import fi.oph.kouta.auditlog.AuditLog
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
+import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.mocks.MockAuditLogger
 import fi.oph.kouta.service.{KeywordService, OrganisaatioServiceImpl}
 import fi.oph.kouta.servlet.{AmmattinimikeServlet, AsiasanaServlet, LuokittelutermiServlet}
 import org.json4s.jackson.Serialization.read
 import org.scalatra.test.scalatest.ScalatraFlatSpec
 
-trait KeywordFixture extends ScalatraFlatSpec {
+import java.net.URLEncoder
+
+trait KeywordFixture extends ScalatraFlatSpec with Logging {
   this: KoutaIntegrationSpec =>
   val AsiasanaPath = "/asiasana"
   val AmmattinimikePath = "/ammattinimike"
@@ -95,7 +98,8 @@ trait KeywordFixture extends ScalatraFlatSpec {
   }
 
   def searchAmmattinimikkeet(term:String, expected:List[String], params:List[(String,String)] = List(), sessionId: UUID = defaultSessionId) = {
-    get(s"$AmmattinimikePath/search/$term${paramString(params)}", headers = Seq(sessionHeader(sessionId))) {
+    val termEncoded = URLEncoder.encode(term, "UTF-8")
+    get(s"$AmmattinimikePath/search/$termEncoded${paramString(params)}", headers = Seq(sessionHeader(sessionId))) {
       status should equal(200)
       read[List[String]](body) should equal(expected)
     }

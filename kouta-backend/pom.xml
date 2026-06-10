@@ -7,14 +7,14 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>8.1.0-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>8.0.0-SNAPSHOT</version>
+    <version>8.1.0-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.24.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.25.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -150,7 +150,7 @@
         <!-- Http related dependencies -->
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.12</artifactId>
+            <artifactId>scalatra-javax_2.12</artifactId>
             <version>${scalatra.version}</version>
             <exclusions>
                 <exclusion>
@@ -161,7 +161,7 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json_2.12</artifactId>
+            <artifactId>scalatra-json-javax_2.12</artifactId>
             <version>${scalatra.version}</version>
         </dependency>
         <dependency>
