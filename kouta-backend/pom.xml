@@ -64,8 +64,8 @@
 
         <!-- Utility dependencies -->
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
+            <groupId>fi.vm.sade.java-utils</groupId>
+            <artifactId>java-properties</artifactId>
         </dependency>
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
@@ -126,7 +126,6 @@
         <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet-api.version}</version>
         </dependency>
 
         <!-- Database related properties -->
