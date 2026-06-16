@@ -4,8 +4,7 @@ import fi.oph.kouta.logging.Logging
 
 import java.net.InetAddress
 import java.util.UUID
-
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import fi.oph.kouta.security.Session
 
 case class Authenticated(id: String, session: Session, userAgent: String, ip: InetAddress)

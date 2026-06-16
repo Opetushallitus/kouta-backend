@@ -1,6 +1,6 @@
 package fi.oph.kouta.servlet
 
-import java.util.{Optional, UUID}
+import java.util.UUID
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.{CasSessionService, ServiceTicket}
 import fi.oph.kouta.util.MiscUtils.toScalaOption

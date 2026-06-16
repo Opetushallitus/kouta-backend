@@ -42,13 +42,6 @@
             <artifactId>scala-library</artifactId>
         </dependency>
 
-<!--    ASDF
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-        </dependency>
-        -->
-
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
@@ -110,17 +103,17 @@
         <!-- Http related dependencies -->
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-javax_2.12</artifactId>
+            <artifactId>scalatra-jakarta_2.12</artifactId>
             <version>${scalatra.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json-javax_2.12</artifactId>
+            <artifactId>scalatra-json-jakarta_2.12</artifactId>
             <version>${scalatra.version}</version>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
 
         <!-- Database related properties -->
@@ -160,18 +153,7 @@
             <artifactId>dokumenttipalvelu</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.softwaremill.odelay</groupId>
-            <artifactId>odelay-core_2.12</artifactId>
-            <version>0.3.0</version>
-        </dependency>
-
         <!-- Test dependencies -->
-        <dependency>
-            <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.12</artifactId>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.scalatest</groupId>
             <artifactId>scalatest-matchers-core_2.12</artifactId>
@@ -184,11 +166,9 @@
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest-javax_2.12</artifactId>
+            <artifactId>scalatra-scalatest-jakarta_2.12</artifactId>
             <scope>test</scope>
         </dependency>
-
-
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
@@ -234,10 +214,6 @@
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
             <artifactId>elastic4s-json-json4s_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-json-jackson_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

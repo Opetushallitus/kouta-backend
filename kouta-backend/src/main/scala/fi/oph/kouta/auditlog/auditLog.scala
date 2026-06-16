@@ -1,18 +1,17 @@
 package fi.oph.kouta.auditlog
 
-import java.net.InetAddress
-import java.util.UUID
-
 import fi.oph.kouta.domain.HasPrimaryId
 import fi.oph.kouta.repository.DBIOHelpers.try2DBIOCapableTry
 import fi.oph.kouta.security.{CasSession, ServiceTicket, Session}
 import fi.oph.kouta.servlet.Authenticated
 import fi.vm.sade.auditlog._
-import javax.servlet.http.HttpServletRequest
+import jakarta.servlet.http.HttpServletRequest
 import org.ietf.jgss.Oid
 import org.slf4j.LoggerFactory
 import slick.dbio.DBIO
 
+import java.net.InetAddress
+import java.util.UUID
 import scala.util.Try
 
 object AuditLogger extends Logger {
