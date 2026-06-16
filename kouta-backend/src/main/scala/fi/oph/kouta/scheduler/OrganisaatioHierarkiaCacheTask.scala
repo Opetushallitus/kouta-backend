@@ -25,6 +25,7 @@ class OrganisaatioHierarkiaCacheTask() extends Logging {
 
       try {
         cachedOrganisaatioHierarkiaClient.getWholeOrganisaatioHierarkiaCached()
+        logger.info(s"Ajastettu organisaatiohierarkia-cachen päivitys onnistui.")
       } catch {
         case error: Exception => logger.error(s"Ajastettu organisaatiohierarkia-cachen päivitys epäonnistui: $error")
       }

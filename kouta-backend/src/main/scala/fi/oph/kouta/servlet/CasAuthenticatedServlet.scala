@@ -4,7 +4,7 @@ import java.util.UUID
 
 import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
 import fi.oph.kouta.repository.SessionDAO
-import fi.oph.kouta.security.AuthenticationFailedException
+import fi.oph.kouta.security.{AuthenticationFailedException, Session}
 import fi.oph.kouta.logging.Logging
 import org.scalatra._
 
@@ -19,7 +19,7 @@ trait CasAuthenticatedServlet {
 
     logger.debug("Session cookie {}", sessionCookie)
 
-    val session = sessionCookie.map(UUID.fromString).flatMap(id => SessionDAO.get(id).map((id, _)))
+    val session: Option[(UUID, Session)] = sessionCookie.map(UUID.fromString).flatMap(id => SessionDAO.get(id).map((id, _)))
 
     logger.debug("Session found {}", session)
 
