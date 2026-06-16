@@ -28,29 +28,25 @@
 
         <!-- Utility properties -->
         <auditlogger.version>9.2.6-SNAPSHOT</auditlogger.version>
+        <elastic4s.version>8.11.5</elastic4s.version>
         <json4s.version>4.0.7</json4s.version>
-        <jackson.version>2.18.8</jackson.version>
-        <logback-access.version>1.3.0</logback-access.version>
+        <jackson.version>2.22.0</jackson.version>
+        <jackson.annotations.version>2.22</jackson.annotations.version>
+        <log4j.version>2.26.0</log4j.version>
 
         <!-- Http related properties -->
         <scalatra.version>3.1.2</scalatra.version>
-        <netty.version>4.1.135.Final</netty.version>
+        <netty.version>4.2.15.Final</netty.version>
 
         <!-- Database related properties -->
         <flyway.version>8.5.12</flyway.version>
-        <slick.version>3.4.1</slick.version>
+        <slick.version>3.5.2</slick.version>
         <jdbc.version>42.7.11</jdbc.version>
         <aws-advanced-jdbc-wrapper.version>3.2.0</aws-advanced-jdbc-wrapper.version>
 
-        <aws-sdk.version>2.33.12</aws-sdk.version>
-
         <!-- Test properties -->
         <scalatest.version>3.2.19</scalatest.version>
-        <scalatra-scalatest.version>3.1.2</scalatra-scalatest.version>
-        <jetty.version>10.0.25</jetty.version>
-
-        <commons.io.version>2.16.1</commons.io.version>
-        <commons.validator.version>1.8.0</commons.validator.version>
+        <jetty.version>12.0.16</jetty.version>
 
         <!-- Plugin properties -->
         <enforce.java.version>[1.8,)</enforce.java.version>
@@ -65,313 +61,18 @@
 
     <dependencyManagement>
         <dependencies>
-            <dependency>
-                <groupId>com.fasterxml.jackson.module</groupId>
-                <artifactId>jackson-module-scala_2.12</artifactId>
-                <version>2.18.1</version>
-            </dependency>
-            <dependency>
-                <groupId>com.sksamuel.elastic4s</groupId>
-                <artifactId>elastic4s-json-jackson_2.12</artifactId>
-                <version>8.5.0</version>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.activation</groupId>
-                <artifactId>jakarta.activation-api</artifactId>
-                <version>1.2.2</version>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.xml.bind</groupId>
-                <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>2.3.3</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains</groupId>
-                <artifactId>annotations</artifactId>
-                <version>24.0.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.yaml</groupId>
-                <artifactId>snakeyaml</artifactId>
-                <version>2.3</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.java-json-tools</groupId>
-                <artifactId>json-schema-validator</artifactId>
-                <version>2.2.14</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>1.15</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-logging</groupId>
-                <artifactId>commons-logging</artifactId>
-                <version>1.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.httpcomponents</groupId>
-                <artifactId>httpcore</artifactId>
-                <version>4.4.15</version>
-            </dependency>
-            <dependency>
-                <groupId>net.java.dev.jna</groupId>
-                <artifactId>jna</artifactId>
-                <version>5.8.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http2</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-buffer</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-resolver</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-cbor</artifactId>
-                <version>2.12.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.reactivestreams</groupId>
-                <artifactId>reactive-streams</artifactId>
-                <version>1.0.4</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-socks</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler-proxy</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>opiskelijavalinnat-utils</groupId>
-                <artifactId>java-cas</artifactId>
-                <version>2.0.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport-native-unix-common</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-<!--            https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-project-maven.html#sdk-as-dependency-->
-            <dependency>
-                <groupId>software.amazon.awssdk</groupId>
-                <artifactId>bom</artifactId>
-                <version>${aws-sdk.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.log4s</groupId>
-                <artifactId>log4s_2.12</artifactId>
-                <version>1.9.0</version>
-            </dependency>
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-core</artifactId>
-                <version>1.3.12</version>
-            </dependency>
-            <dependency>
-                <groupId>org.http4s</groupId>
-                <artifactId>blaze-core_2.12</artifactId>
-                <version>0.14.15</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jsoup</groupId>
-                <artifactId>jsoup</artifactId>
-                <version>1.18.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-collection-compat_2.12</artifactId>
-                <version>2.12.0</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-annotations</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-core</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${jackson.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.code.findbugs</groupId>
-                <artifactId>jsr305</artifactId>
-                <version>3.0.2</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>33.4.8-jre</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-beanutils</groupId>
-                <artifactId>commons-beanutils</artifactId>
-                <version>1.11.0</version>
-            </dependency>
-            <dependency>
-                <groupId>commons-io</groupId>
-                <artifactId>commons-io</artifactId>
-                <version>2.16.1</version>
-            </dependency>
-            <dependency>
-                <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
-                <artifactId>dokumenttipalvelu</artifactId>
-                <version>6.15-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>2.3.0</version>
-            </dependency>
-            <dependency>
-                <groupId>junit</groupId>
-                <artifactId>junit</artifactId>
-                <version>4.13.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.commons</groupId>
-                <artifactId>commons-lang3</artifactId>
-                <version>3.8.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-core</artifactId>
-                <version>2.22.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-api</artifactId>
-                <version>2.22.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
-                <version>2.22.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.json4s</groupId>
-                <artifactId>json4s-ast_2.12</artifactId>
-                <version>${json4s.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.wiremock</groupId>
-                <artifactId>wiremock-standalone</artifactId>
-                <version>3.13.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-library</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang</groupId>
-                <artifactId>scala-reflect</artifactId>
-                <version>${scala.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-xml_2.12</artifactId>
-                <version>1.2.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalacheck</groupId>
-                <artifactId>scalacheck_2.12</artifactId>
-                <version>1.14.0</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalaz</groupId>
-                <artifactId>scalaz-concurrent_2.12</artifactId>
-                <version>7.2.30</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalaz</groupId>
-                <artifactId>scalaz-core_2.12</artifactId>
-                <version>7.2.30</version>
-            </dependency>
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>1.7.30</version>
-            </dependency>
-            <dependency>
-                <groupId>org.spire-math</groupId>
-                <artifactId>jawn-parser_2.12</artifactId>
-                <version>0.10.4</version>
-            </dependency>
-            <dependency>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-matchers-core_2.12</artifactId>
-                <version>${scalatest.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.scalatest</groupId>
-                <artifactId>scalatest-shouldmatchers_2.12</artifactId>
-                <version>${scalatest.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.hubspot.immutables</groupId>
-                <artifactId>immutables-exceptions</artifactId>
-                <version>1.9</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_annotations</artifactId>
-                <version>2.36.0</version>
-            </dependency>
 
             <!-- Suorat riippuvuudet-->
 
             <dependency>
+                <groupId>ch.qos.logback.access</groupId>
+                <artifactId>logback-access-jetty12</artifactId>
+                <version>2.0.6</version>
+            </dependency>
+            <dependency>
                 <groupId>com.fasterxml.jackson.datatype</groupId>
                 <artifactId>jackson-datatype-jdk8</artifactId>
-                <version>2.16.1</version>
+                <version>${jackson.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -386,7 +87,7 @@
             <dependency>
                 <groupId>com.google.code.gson</groupId>
                 <artifactId>gson</artifactId>
-                <version>2.13.2</version>
+                <version>2.14.0</version>
             </dependency>
             <dependency>
                 <groupId>com.hubspot.jinjava</groupId>
@@ -394,14 +95,60 @@
                 <version>2.8.3</version>
             </dependency>
             <dependency>
+                <groupId>com.sksamuel.elastic4s</groupId>
+                <artifactId>elastic4s-client-esjava_2.12</artifactId>
+                <version>${elastic4s.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sksamuel.elastic4s</groupId>
+                <artifactId>elastic4s-core_2.12</artifactId>
+                <version>${elastic4s.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sksamuel.elastic4s</groupId>
+                <artifactId>elastic4s-json-jackson_2.12</artifactId>
+                <version>${elastic4s.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.sksamuel.elastic4s</groupId>
+                <artifactId>elastic4s-json-json4s_2.12</artifactId>
+                <version>${elastic4s.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>2.0.18</version>
+            </dependency>
+            <dependency>
+                <groupId>com.softwaremill.diffx</groupId>
+                <artifactId>diffx-scalatest-should_2.12</artifactId>
+                <version>0.9.0</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>com.typesafe</groupId>
                 <artifactId>config</artifactId>
                 <version>1.4.9</version>
             </dependency>
             <dependency>
-                <groupId>fi.vm.sade.java-utils</groupId>
-                <artifactId>java-http</artifactId>
-                <version>1.0.1-SNAPSHOT</version>
+                <groupId>com.typesafe.slick</groupId>
+                <artifactId>slick_2.12</artifactId>
+                <version>${slick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.typesafe.slick</groupId>
+                <artifactId>slick-hikaricp_2.12</artifactId>
+                <version>${slick.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-validator</groupId>
+                <artifactId>commons-validator</artifactId>
+                <version>1.10.1</version>
+            </dependency>
+            <dependency>
+                <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
+                <artifactId>dokumenttipalvelu</artifactId>
+                <version>6.16-SNAPSHOT</version>
             </dependency>
             <dependency>
                 <groupId>fi.vm.sade.java-utils</groupId>
@@ -409,9 +156,39 @@
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
             <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-resolver</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>4.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>opiskelijavalinnat-utils</groupId>
+                <artifactId>java-cas</artifactId>
+                <version>2.1.0-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j-impl</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.json4s</groupId>
+                <artifactId>json4s-ast_2.12</artifactId>
+                <version>${json4s.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.json4s</groupId>
@@ -429,41 +206,226 @@
                 <version>${json4s.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.scala-lang.modules</groupId>
-                <artifactId>scala-parser-combinators_2.12</artifactId>
-                <version>2.4.0</version>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-library</artifactId>
+                <version>${scala.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.scala-lang</groupId>
+                <artifactId>scala-reflect</artifactId>
+                <version>${scala.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.scalaj</groupId>
                 <artifactId>scalaj-http_2.12</artifactId>
                 <version>2.4.2</version>
             </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest_2.12</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-matchers-core_2.12</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-shouldmatchers_2.12</artifactId>
+                <version>${scalatest.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.scalatra</groupId>
+                <artifactId>scalatra-scalatest-javax_2.12</artifactId>
+                <version>3.1.2</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.wiremock</groupId>
+                <artifactId>wiremock-standalone</artifactId>
+                <version>3.13.2</version>
+            </dependency>
+            <dependency>
+                <!-- https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-project-maven.html#sdk-as-dependency -->
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>bom</artifactId>
+                <version>2.46.11</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- Tietoturvapäivitykset -->
-
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.0.0-SNAPSHOT tulee haavoittuva versio  -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-resolver-dns</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.0.0-SNAPSHOT tulee haavoittuva versio  -->
-                <groupId>org.asynchttpclient</groupId>
-                <artifactId>async-http-client</artifactId>
-                <version>3.0.10</version>
-            </dependency>
 
             <!-- Versioristiriitojen ratkaisut -->
 
             <dependency>
-                <!-- software.amazon.awssdk:s3:2.33.12
-                  vs fi.vm.sade.java-utils:java-http:1.0.1-20260513.093159-24
-                  vs io.swagger.parser.v3:swagger-parser:2.1.23
-                  vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.5.0 -->
+                <!-- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0
+                  vs com.hubspot.jinjava:jinjava:2.8.3 -->
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-core</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <!-- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0
+                  vs com.hubspot.jinjava:jinjava:2.8.3 -->
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${jackson.annotations.version}</version>
+            </dependency>
+            <dependency>
+                <!-- com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.22.0
+                  vs com.hubspot.jinjava:jinjava:2.8.3
+                  vs org.json4s:json4s-jackson_2.12:4.0.7 -->
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-databind</artifactId>
+                <version>${jackson.version}</version>
+            </dependency>
+            <dependency>
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.44 riippuu monesta versiosta -->
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>3.0.2</version>
+            </dependency>
+            <dependency>
+                <!-- com.hubspot.jinjava:jinjava:2.8.3
+                  vs com.github.blemale:scaffeine_2.12:5.3.0 -->
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.50.0</version>
+            </dependency>
+            <dependency>
+                <!-- com.hubspot.jinjava:jinjava:2.8.3 käyttää useita versioita -->
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>33.6.0-jre</version>
+            </dependency>
+            <dependency>
+                <!-- com.hubspot.jinjava:jinjava:2.8.3 käyttää useita versioita -->
+                <groupId>com.hubspot.immutables</groupId>
+                <artifactId>immutables-exceptions</artifactId>
+                <version>1.9</version>
+            </dependency>
+            <dependency>
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.44 käyttää useita versioita -->
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>2.22.0</version>
+            </dependency>
+            <dependency>
+                <!-- commons-validator:commons-validator:1.10.1
+                  vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.11.5 -->
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>1.3.6</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-buffer</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec-http2</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-handler</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-native-unix-common</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- org.json4s:json4s-ext_2.12:4.0.7
+                  vs io.swagger.parser.v3:swagger-parser:2.1.44 -->
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>2.14.2</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
+                  vs com.hubspot.jinjava:jinjava:2.8.3
+                  vs fi.vm.sade:auditlogger:9.2.6-20250731.093132-1
+                  vs org.scalatra:scalatra-javax_2.12:3.1.2
+                  vs io.swagger.parser.v3:swagger-parser:2.1.44 -->
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-lang3</artifactId>
+                <version>3.20.0</version>
+            </dependency>
+            <dependency>
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.44
+                  vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.11.5 -->
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
                 <version>4.5.14</version>
+            </dependency>
+            <dependency>
+                <!-- software.amazon.awssdk:s3:2.46.10
+                  vs org.scalatra:scalatra-scalatest-javax_2.12:3.1.2 -->
+                <groupId>org.apache.httpcomponents.client5</groupId>
+                <artifactId>httpclient5</artifactId>
+                <version>5.6.1</version>
+            </dependency>
+            <dependency>
+                <!-- fi.vm.sade.java-utils:java-http:1.0.1-20260513.093159-24
+                  vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.11.5 -->
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>4.4.16</version>
+            </dependency>
+            <dependency>
+                <!-- software.amazon.awssdk:s3:2.46.10 riippuvuudet käyttää kahta versiota -->
+                <groupId>org.apache.httpcomponents.core5</groupId>
+                <artifactId>httpcore5</artifactId>
+                <version>5.4.2</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-servlets</artifactId>
+                <version>${jetty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- opiskelijavalinnat-utils:java-cas:2.0.0-20260225.105805-14
+                  vs org.testcontainers:elasticsearch:1.21.4 -->
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>26.1.0</version>
             </dependency>
             <dependency>
                 <!-- org.mockito:mockito-scala-scalatest_2.12:2.2.1
@@ -474,6 +436,22 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <!-- org.gnieh:diffson-circe_2.12:4.7.0
+                  vs org.scalatra:scalatra-javax_2.12:3.1.2
+                  vs com.typesafe.slick:slick_2.12:3.5.2 -->
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-collection-compat_2.12</artifactId>
+                <version>2.14.0</version>
+            </dependency>
+            <dependency>
+                <!-- org.scalatra:scalatra-javax_2.12:3.1.2
+                  vs org.scalatra:scalatra-json-javax_2.12:3.1.2
+                  vs org.scalatest:scalatest_2.12:3.2.19 -->
+                <groupId>org.scala-lang.modules</groupId>
+                <artifactId>scala-xml_2.12</artifactId>
+                <version>2.4.0</version>
+            </dependency>
+            <dependency>
                 <!-- org.scalatest:scalatest_2.12:3.2.19
                   vs org.mockito:mockito-scala-scalatest_2.12:2.2.1 -->
                 <groupId>org.scalactic</groupId>
@@ -482,52 +460,14 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <!-- org.json4s:json4s-ext_2.12:4.0.7
-                  vs io.swagger.parser.v3:swagger-parser:2.1.23 -->
-                <groupId>joda-time</groupId>
-                <artifactId>joda-time</artifactId>
-                <version>2.10.14</version>
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.44
+                  vs com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.8 -->
+                <groupId>org.yaml</groupId>
+                <artifactId>snakeyaml</artifactId>
+                <version>2.6</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
-
-    <dependencies>
-        <!-- API, java.xml.bind module -->
-        <dependency>
-            <groupId>jakarta.xml.bind</groupId>
-            <artifactId>jakarta.xml.bind-api</artifactId>
-        </dependency>
-
-        <!-- Runtime, com.sun.xml.bind module -->
-        <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>2.3.3</version>
-        </dependency>
-        <dependency>
-            <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-scalatest-javax_2.12</artifactId>
-            <version>${scalatra-scalatest.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- Jetty -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-webapp</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-server</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
-            <version>${jetty.version}</version>
-        </dependency>
-    </dependencies>
 
     <repositories>
         <repository>

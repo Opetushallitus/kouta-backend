@@ -1,6 +1,5 @@
 package fi.oph.kouta
 
-import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.vm.sade.properties.OphProperties
 import fi.oph.kouta.logging.Logging
