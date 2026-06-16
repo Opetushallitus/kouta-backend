@@ -47,23 +47,15 @@ package object toteutusMetadata {
       |          type: object
       |          description: Koulutuksen toteutuksen opetustapoja tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
-      |        maksullisuustyyppi:
-      |          type: string
-      |          description: Maksullisuuden tyyppi
-      |          enum:
-      |            - 'maksullinen'
-      |            - 'maksuton'
-      |            - 'lukuvuosimaksu'
       |        maksullisuusKuvaus:
       |          type: object
       |          description: Koulutuksen toteutuksen maksullisuutta tarkentava kuvausteksti eri kielillä. Kielet on määritetty koulutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
-      |        maksunMaara:
-      |          type: number
-      |          format: double
-      |          minimum: 0
-      |          description: "Koulutuksen toteutuksen maksun määrä euroissa?"
-      |          example: 220.50
+      |        maksut:
+      |          type: array
+      |          description: Opetuksen maksullisuustiedot. Ammatillisilla (amm, amm-tutkinnon-osa, amm-osaamisala, amm-muu, telma) ja lukiototeutuksilla voi olla yhtäaikaa kaksi eri maksutyyppiä, 'lukuvuosimaksu' ja 'maksullinen', muilla toteutuksilla vain yksi arvo, joka on julkaistulle toteutukselle pakollinen.
+      |          items:
+      |            $ref: '#/components/schemas/Maksu'
       |        koulutuksenAlkamiskausi:
       |          type: object
       |          description: Koulutuksen alkamiskausi
@@ -118,6 +110,26 @@ package object toteutusMetadata {
       |          type: object
       |          description: Koulutuksen toteutuksen apurahaa tarkentava kuvausteksti eri kielillä. Kielet on määritetty toteutuksen kielivalinnassa.
       |          $ref: '#/components/schemas/Kuvaus'
+      |""".stripMargin
+
+  val MaksuModel: String =
+    """    Maksu:
+      |      type: object
+      |      required:
+      |        - maksullisuustyyppi
+      |      properties:
+      |        maksullisuustyyppi:
+      |          type: string
+      |          description: Maksullisuuden tyyppi.
+      |          enum:
+      |            - 'maksullinen'
+      |            - 'maksuton'
+      |            - 'lukuvuosimaksu'
+      |        maksunMaara:
+      |          type: number
+      |          format: double
+      |          description: "Koulutuksen toteutuksen maksun määrä euroissa. Pakollinen, jos maksullisuustyyppi ei ole 'maksuton'."
+      |          example: 220.50
       |""".stripMargin
 
   val ToteutusMetadataModel: String =
@@ -749,6 +761,7 @@ package object toteutusMetadata {
 
   val models = List(
     OpetusModel,
+    MaksuModel,
     ApurahaModel,
     KielivalikoimaModel,
     ToteutusMetadataModel,
@@ -1076,6 +1089,11 @@ case class Apuraha(
     kuvaus: Kielistetty = Map()
 )
 
+case class Maksu(
+    maksullisuustyyppi: Maksullisuustyyppi,
+    maksunMaara: Option[Double] = None
+)
+
 case class Opetus(
     opetuskieliKoodiUrit: Seq[String] = Seq(),
     opetuskieletKuvaus: Kielistetty = Map(),
@@ -1083,9 +1101,8 @@ case class Opetus(
     opetusaikaKuvaus: Kielistetty = Map(),
     opetustapaKoodiUrit: Seq[String] = Seq(),
     opetustapaKuvaus: Kielistetty = Map(),
-    maksullisuustyyppi: Option[Maksullisuustyyppi] = None,
     maksullisuusKuvaus: Kielistetty = Map(),
-    maksunMaara: Option[Double] = None,
+    maksut: Seq[Maksu] = Seq(),
     koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi] = None,
     lisatiedot: Seq[Lisatieto] = Seq(),
     onkoApuraha: Boolean = false,
