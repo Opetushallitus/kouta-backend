@@ -9,7 +9,6 @@ import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
-import org.jsoup.nodes.Entities
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
