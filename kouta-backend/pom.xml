@@ -104,12 +104,10 @@
         <dependency>
             <groupId>org.scalatra</groupId>
             <artifactId>scalatra-jakarta_2.12</artifactId>
-            <version>${scalatra.version}</version>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
             <artifactId>scalatra-json-jakarta_2.12</artifactId>
-            <version>${scalatra.version}</version>
         </dependency>
         <dependency>
             <groupId>jakarta.servlet</groupId>

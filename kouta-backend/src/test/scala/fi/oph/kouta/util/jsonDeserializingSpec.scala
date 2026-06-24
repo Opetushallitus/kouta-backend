@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Osaamismerkki, Puhelin, Sv, Www}
+import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Osaamismerkki, Puhelin, Sv, ToteutusMetadata, Www}
 import org.json4s.jackson.JsonMethods.parse
 
 class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
@@ -189,5 +189,10 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
 
     assert(parse(osaamismerkkiJson).extract[Osaamismerkki] == Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1010", voimassaoloLoppuu = None))
   }
-}
 
+  "toteutusMetadataSerializer" should "extract when koulutuksenAlkamiskausi is null" in {
+    val json = """{"tyyppi":"amm","kuvaus":{},"osaamistavoitteet":{},"osaamisalat":[{"koodiUri":"osaamisala_0001#1","linkki":{"fi":"http://osaamisala.fi/linkki/fi","sv":"http://osaamisala.fi/linkki/sv"},"otsikko":{"fi":"Katso osaamisalan tarkempi kuvaus tästä","sv":"Katso osaamisalan tarkempi kuvaus tästä sv"}}],"opetus":{"opetuskieliKoodiUrit":["oppilaitoksenopetuskieli_1#1"],"opetuskieletKuvaus":{"fi":"Kielikuvaus fi","sv":"Kielikuvaus sv"},"opetusaikaKoodiUrit":["opetusaikakk_1#1"],"opetusaikaKuvaus":{"fi":"Opetusaikakuvaus fi","sv":"Opetusaikakuvaus sv"},"opetustapaKoodiUrit":["opetuspaikkakk_1#1","opetuspaikkakk_2#1"],"opetustapaKuvaus":{"fi":"Opetustapakuvaus fi","sv":"Opetustapakuvaus sv"},"maksullisuusKuvaus":{"fi":"Maksullisuuskuvaus fi","sv":"Maksullisuuskuvaus sv"},"maksut":[{"maksullisuustyyppi":"maksullinen","maksunMaara":200.5}],"koulutuksenAlkamiskausi":null,"lisatiedot":[{"otsikkoKoodiUri":"koulutuksenlisatiedot_03#1","teksti":{"fi":"Opintojen rakenteen kuvaus","sv":"Rakenne kuvaus sv"}},{"otsikkoKoodiUri":"koulutuksenlisatiedot_03#1","teksti":{"fi":"Sisältö kuvaus","sv":"Sisältö kuvaus sv"}}],"onkoApuraha":false,"suunniteltuKestoVuodet":3,"suunniteltuKestoKuukaudet":10,"suunniteltuKestoKuvaus":{"fi":"Keston kuvaus fi","sv":"Keston kuvaus sv"}},"asiasanat":[{"kieli":"fi","arvo":"robotiikka"},{"kieli":"fi","arvo":"robottiautomatiikka"}],"ammattinimikkeet":[{"kieli":"fi","arvo":"insinööri"},{"kieli":"fi","arvo":"koneinsinööri"}],"yhteyshenkilot":[{"nimi":{"fi":"Aku Ankka","sv":"Aku Ankka"},"titteli":{"fi":"titteli","sv":"titteli sv"},"sahkoposti":{"fi":"aku.ankka@ankkalinnankoulu.fi","sv":"aku.ankka@ankkalinnankoulu.fi"},"puhelinnumero":{"fi":"123","sv":"123"},"wwwSivu":{"fi":"http://opintopolku.fi","sv":"http://studieinfo.fi"},"wwwSivuTeksti":{"fi":"teksti fi","sv":"teksti sv"}}],"isMuokkaajaOphVirkailija":false,"hasJotpaRahoitus":false,"isTaydennyskoulutus":false,"isTyovoimakoulutus":false}"""
+
+    parse(json).extract[ToteutusMetadata]
+  }
+}
