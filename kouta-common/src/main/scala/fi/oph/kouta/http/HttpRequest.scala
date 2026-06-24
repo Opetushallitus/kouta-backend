@@ -7,6 +7,7 @@ import scalaj.http.HttpResponse
 
 trait HttpRequest{
   def responseWithHeaders(): (Int, Map[String, Seq[String]], String)
+  def responseWithStatus: (Int, String)
   def response(): Option[String]
   def param(key: String, value: String): HttpRequest
   def header(key: String, value: String): HttpRequest
@@ -30,6 +31,17 @@ class DefaultHttpRequest(private val request: scalaj.http.HttpRequest) extends H
       case t: Throwable =>
         logUnexpectedError(t)
         (500, HashMap(), t.toString)
+    }
+  }
+
+  override def responseWithStatus: (Int, String) = {
+    try {
+      val response: HttpResponse[String] = request.asString
+      (response.code, response.body)
+    } catch {
+      case t: Throwable =>
+        logUnexpectedError(t)
+        (500, t.toString)
     }
   }
 

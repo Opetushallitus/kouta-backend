@@ -76,7 +76,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   }
 
   it should "return 401 without a valid session" in {
-    get(s"$AmmattinimikePath/search/lääk", headers = Seq()) {
+    get(s"$AmmattinimikePath/search/laak", headers = Seq()) {
       withClue(body) {
         status should equal(401)
       }

@@ -22,7 +22,7 @@ class MockSecurityContext(val casUrl: String, val casServiceIdentifier: String, 
     callerId,
     callerId,
     "").build
-  val factory: ThreadFactory = new BasicThreadFactory.Builder().namingPattern("test-async-cas-client-thread-%d").daemon(true).priority(Thread.NORM_PRIORITY).build
+  val factory: ThreadFactory = BasicThreadFactory.builder().namingPattern("test-async-cas-client-thread-%d").daemon(true).priority(Thread.NORM_PRIORITY).build
   val httpClient = asyncHttpClient(new DefaultAsyncHttpClientConfig.Builder().setThreadFactory(factory).build)
   val casSessionFetcher: CasSessionFetcher = new CasSessionFetcher(casConfig, httpClient, casConfig.getSessionTicketValidMs, casConfig.getTicketGrantingTicketValidMs) {
     override def fetchSessionToken(): CompletableFuture[String] =

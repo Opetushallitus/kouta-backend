@@ -7,37 +7,21 @@
     <parent>
         <groupId>fi.oph.kouta</groupId>
         <artifactId>kouta-backend-parent</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>8.1.0-SNAPSHOT</version>
     </parent>
     <artifactId>kouta-backend</artifactId>
-    <version>8.0.0-SNAPSHOT</version>
+    <version>8.1.0-SNAPSHOT</version>
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.24.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.25.0-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <!--Huom! Lisää vain ylimmän tason riippuvudet!
-        Älä määritä mukana tulevien riippuvuuksien versioita tässä, vaan anna niiden tulla implisiittisesti.
-        Lisää exclusion vain niihin riippuvuuksiin, joista tulee eri versio kuin muista.
-        Näin pom.xml pysyy siistinä ja lyhyenä.-->
-
     <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-            <scope>compile</scope>
-        </dependency>
         <dependency>
             <groupId>opiskelijavalinnat-utils</groupId>
             <artifactId>java-cas</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>fi.oph.kouta</groupId>
@@ -59,11 +43,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.jsoup</groupId>
-            <artifactId>jsoup</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
         </dependency>
@@ -75,18 +54,8 @@
 
         <!-- Utility dependencies -->
         <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
-        </dependency>
-        <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
-            <artifactId>java-http</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>slf4j-simple</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>java-properties</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json4s</groupId>
@@ -101,24 +70,16 @@
             <artifactId>json4s-jackson_2.12</artifactId>
         </dependency>
         <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-access</artifactId>
-            <version>${logback-access.version}</version>
+            <groupId>ch.qos.logback.access</groupId>
+            <artifactId>logback-access-jetty12</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-validator</groupId>
             <artifactId>commons-validator</artifactId>
-            <version>${commons.validator.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>commons-collections</groupId>
-                    <artifactId>commons-collections</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>commons-logging</groupId>
-                    <artifactId>commons-logging</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <!-- Audit logger -->
@@ -126,48 +87,31 @@
             <groupId>fi.vm.sade</groupId>
             <artifactId>auditlogger</artifactId>
             <version>${auditlogger.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.code.gson</groupId>
-                    <artifactId>gson</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <!--version>2.10.1</version-->
-            <version>2.9.0</version>
         </dependency>
 
         <!-- Diffson for calculating audit log changes -->
         <dependency>
             <groupId>org.gnieh</groupId>
             <artifactId>diffson-circe_2.12</artifactId>
-            <version>4.3.0</version>
+            <version>4.7.0</version>
         </dependency>
 
         <!-- Http related dependencies -->
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra_2.12</artifactId>
-            <version>${scalatra.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scala-lang.modules</groupId>
-                    <artifactId>scala-parser-combinators_2.12</artifactId>
-                </exclusion>
-            </exclusions>
+            <artifactId>scalatra-jakarta_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.scalatra</groupId>
-            <artifactId>scalatra-json_2.12</artifactId>
-            <version>${scalatra.version}</version>
+            <artifactId>scalatra-json-jakarta_2.12</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>javax.servlet-api</artifactId>
-            <version>${javax.servlet-api.version}</version>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
         </dependency>
 
         <!-- Database related properties -->
@@ -184,12 +128,10 @@
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick_2.12</artifactId>
-            <version>${slick.version}</version>
         </dependency>
         <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick-hikaricp_2.12</artifactId>
-            <version>${slick.version}</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -201,59 +143,37 @@
         <dependency>
             <groupId>com.github.kagkarlsson</groupId>
             <artifactId>db-scheduler</artifactId>
-            <version>11.2</version>
         </dependency>
 
         <dependency>
             <groupId>fi.vm.sade.dokumenttipalvelu</groupId>
             <artifactId>dokumenttipalvelu</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>io.netty</groupId>
-                    <artifactId>netty-resolver</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>com.softwaremill.odelay</groupId>
-            <artifactId>odelay-core_2.12</artifactId>
-            <version>0.3.0</version>
-        </dependency>
-        <!-- override version because of conflicting versions in aws-scala -->
-        <!-- the version of http4s used in scala-cas requires this version (7.1.13) of scalaz -->
-        <dependency>
-            <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-core_2.12</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.scalaz</groupId>
-            <artifactId>scalaz-concurrent_2.12</artifactId>
         </dependency>
 
         <!-- Test dependencies -->
         <dependency>
             <groupId>org.scalatest</groupId>
-            <artifactId>scalatest_2.12</artifactId>
-            <version>${scalatest.version}</version>
+            <artifactId>scalatest-matchers-core_2.12</artifactId>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest-shouldmatchers_2.12</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatra</groupId>
+            <artifactId>scalatra-scalatest-jakarta_2.12</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
             <scope>test</scope>
-            <version>2.1.23</version>
         </dependency>
         <dependency>
             <groupId>com.softwaremill.diffx</groupId>
             <artifactId>diffx-scalatest-should_2.12</artifactId>
-            <version>0.8.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.scalacheck</groupId>
-            <artifactId>scalacheck_2.12</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -264,14 +184,8 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-scala-scalatest_2.12</artifactId>
-            <version>1.17.7</version>
+            <version>2.2.1</version>
             <scope>test</scope>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.scalactic</groupId>
-                    <artifactId>scalactic_2.12</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -282,27 +196,20 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>localstack</artifactId>
-            <version>1.21.3</version>
+            <version>1.21.4</version>
         </dependency>
         <!-- Elasticsearch dependencies -->
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
             <artifactId>elastic4s-client-esjava_2.12</artifactId>
-            <version>8.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
             <artifactId>elastic4s-core_2.12</artifactId>
-            <version>8.5.0</version>
         </dependency>
         <dependency>
             <groupId>com.sksamuel.elastic4s</groupId>
             <artifactId>elastic4s-json-json4s_2.12</artifactId>
-            <version>8.5.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.sksamuel.elastic4s</groupId>
-            <artifactId>elastic4s-json-jackson_2.12</artifactId>
         </dependency>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>

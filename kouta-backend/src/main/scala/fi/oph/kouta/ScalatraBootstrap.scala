@@ -5,9 +5,8 @@ import fi.oph.kouta.repository.KoutaDatabase
 import fi.oph.kouta.scheduler.SchedulerConfig
 import fi.oph.kouta.servlet._
 import fi.oph.kouta.logging.Logging
+import jakarta.servlet.ServletContext
 import org.scalatra._
-
-import javax.servlet.ServletContext
 
 class ScalatraBootstrap extends LifeCycle with Logging {
 
@@ -40,7 +39,7 @@ class ScalatraBootstrap extends LifeCycle with Logging {
     context.mount(new OrganisaatioServlet(), "/organisaatio", "organisaatio")
     context.mount(new KoodistoServlet(), "/koodisto", "koodisto")
     context.mount(new SiirtotiedostoServlet(), "/siirtotiedosto", "siirtotiedosto")
-    context.mount(new SwaggerServlet, "/swagger")
+    context.mount(new SwaggerServlet, "/api-docs")
 
     val schedulerConfig = new SchedulerConfig
     schedulerConfig.startScheduler()

@@ -172,7 +172,7 @@ class ValintaperusteServlet(valintaperusteService: ValintaperusteService) extend
     implicit val authenticated: Authenticated = authenticate()
 
     (params.get("organisaatioOid"), params.get("hakuOid"), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
-      case (None, _, _, _) => NotFound()
+      case (None, _, _, _) => NotFound("")
       case (Some(oid), None, None, myosArkistoidut) => Ok(valintaperusteService.list(OrganisaatioOid(oid),
         TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
       case (Some(oid), Some(hakuOid), Some(koulutustyyppi), myosArkistoidut) =>

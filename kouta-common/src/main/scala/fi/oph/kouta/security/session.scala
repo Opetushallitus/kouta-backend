@@ -1,6 +1,7 @@
 package fi.oph.kouta.security
 
 import fi.oph.kouta.domain.oid.{HakukohderyhmaOid, OrganisaatioOid, RootOrganisaatioOid}
+import fi.oph.kouta.logging.Logging
 
 import scala.util.matching.Regex
 
@@ -50,7 +51,7 @@ object Role {
 case class Authority(authority: String) {
   import Authority.OrganisaatioRegex
 
-  lazy val  role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
+  lazy val role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
 
   lazy val organisaatioId: Option[OrganisaatioOid] = OrganisaatioRegex.findFirstIn(authority)
     .map(_.filterNot(_ == '_'))

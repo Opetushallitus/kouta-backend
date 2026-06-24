@@ -2,15 +2,14 @@ package fi.oph.kouta
 
 import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.vm.sade.properties.OphProperties
 import fi.oph.kouta.logging.Logging
+import fi.vm.sade.properties.OphProperties
+import org.eclipse.jetty.ee10.webapp.WebAppContext
+import org.eclipse.jetty.server.handler.CrossOriginHandler
 import org.eclipse.jetty.server.{RequestLog, Server}
-import org.eclipse.jetty.util.resource.Resource
-import org.eclipse.jetty.webapp.WebAppContext
-import org.eclipse.jetty.servlet.FilterHolder
-import org.eclipse.jetty.servlets.CrossOriginFilter
 
-import javax.servlet.DispatcherType
+import java.time.Duration
+import scala.jdk.CollectionConverters.setAsJavaSetConverter
 
 object JettyLauncher extends Logging {
   val DEFAULT_PORT = "8080"
@@ -25,27 +24,25 @@ object JettyLauncher extends Logging {
 class JettyLauncher(val port: Int, val enableCors: Boolean = false) {
   val server = new Server(port)
   val context = new WebAppContext()
-  context.setBaseResource(Resource.newClassPathResource("webapp"))
-  context.setDescriptor("WEB-INF/web.xml")
+  context.setBaseResource(context.getResourceFactory.newClassLoaderResource("/webapp"))
   context.setContextPath("/kouta-backend")
 
   if (enableCors) {
-    val filter = new FilterHolder
-    filter.setInitParameter("allowedOrigins", "https://localhost:3000")
-    filter.setInitParameter("allowedMethods", "POST,GET,OPTIONS,PUT,DELETE,HEAD")
-    filter.setInitParameter("allowedHeaders", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept")
-    filter.setInitParameter("preflightMaxAge", "728000")
-    filter.setInitParameter("allowCredentials", "true")
-    filter.setFilter(new CrossOriginFilter)
-
-    context.addFilter(filter, "/*", java.util.EnumSet.of[DispatcherType](DispatcherType.REQUEST))
+    val handler = new CrossOriginHandler
+    handler.setAllowedOriginPatterns(Set("https://localhost:3000").asJava)
+    handler.setAllowedMethods(Set("POST", "GET", "OPTIONS", "PUT", "DELETE", "HEAD").asJava)
+    handler.setAllowedHeaders(Set("X-PINGOTHER", "Origin", "X-Requested-With", "Content-Type", "Accept").asJava)
+    handler.setPreflightMaxAge(Duration.ofSeconds(728000))
+    handler.setAllowCredentials(true)
+    server.setHandler(handler)
   }
 
   server.setHandler(context)
 
   server.setRequestLog(requestLog(KoutaConfigurationFactory.configuration.urlProperties))
 
-  def start = {
+  def start: Server = {
+    println("JettyLauncher: starting server at http://localhost:" + port)
     server.start
     server
   }

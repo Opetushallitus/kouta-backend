@@ -3,7 +3,6 @@ package fi.oph.kouta.util
 import java.net.InetAddress
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
@@ -55,7 +54,7 @@ trait GenericKoutaFormats {
         LocalDateTime.from(ISO_LOCAL_DATE_TIME_FORMATTER.parse(i))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -68,7 +67,7 @@ trait GenericKoutaFormats {
         Modified(LocalDateTime.from(ISO_MODIFIED_FORMATTER.parse(i)))
       } catch {
         case NonFatal(e) =>
-          throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+          throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
       }
     case JNull => null
   }, {
@@ -91,7 +90,7 @@ trait GenericKoutaFormats {
           construct(s)
         } catch {
           case NonFatal(e) =>
-            throw MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
+            throw new MappingException(e.getMessage, new java.lang.IllegalArgumentException(e))
         }
       case JNull => null
     }, {
