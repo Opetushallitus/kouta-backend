@@ -39,10 +39,10 @@
         <netty.version>4.2.15.Final</netty.version>
 
         <!-- Database related properties -->
-        <flyway.version>8.5.12</flyway.version>
+        <flyway.version>12.9.0</flyway.version>
         <slick.version>3.5.2</slick.version>
         <jdbc.version>42.7.11</jdbc.version>
-        <aws-advanced-jdbc-wrapper.version>3.2.0</aws-advanced-jdbc-wrapper.version>
+        <aws-advanced-jdbc-wrapper.version>4.1.0</aws-advanced-jdbc-wrapper.version>
 
         <!-- Test properties -->
         <scalatest.version>3.2.19</scalatest.version>
@@ -93,6 +93,11 @@
                 <groupId>com.hubspot.jinjava</groupId>
                 <artifactId>jinjava</artifactId>
                 <version>2.8.3</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.kagkarlsson</groupId>
+                <artifactId>db-scheduler</artifactId>
+                <version>16.12.0</version>
             </dependency>
             <dependency>
                 <groupId>com.sksamuel.elastic4s</groupId>
@@ -156,6 +161,12 @@
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.swagger.parser.v3</groupId>
+                <artifactId>swagger-parser</artifactId>
+                <scope>test</scope>
+                <version>2.1.45</version>
+            </dependency>
+            <dependency>
                 <groupId>jakarta.servlet</groupId>
                 <artifactId>jakarta.servlet-api</artifactId>
                 <version>6.1.0</version>
@@ -163,6 +174,7 @@
             <dependency>
                 <groupId>opiskelijavalinnat-utils</groupId>
                 <artifactId>java-cas</artifactId>
+                <!-- TODO: Move to 2.0.2-SNAPSHOT PR has been merged. https://github.com/Opetushallitus/opiskelijavalinnat-utils/pull/28 -->
                 <version>2.0.2-OY-5585-SNAPSHOT</version>
             </dependency>
             <dependency>
@@ -258,7 +270,7 @@
                 <!-- https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/setup-project-maven.html#sdk-as-dependency -->
                 <groupId>software.amazon.awssdk</groupId>
                 <artifactId>bom</artifactId>
-                <version>2.46.11</version>
+                <version>2.46.17</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -299,7 +311,7 @@
                 <version>${jackson.version}</version>
             </dependency>
             <dependency>
-                <!-- io.swagger.parser.v3:swagger-parser:2.1.44 riippuu monesta versiosta -->
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.45 riippuu monesta versiosta -->
                 <groupId>com.google.code.findbugs</groupId>
                 <artifactId>jsr305</artifactId>
                 <version>3.0.2</version>
@@ -331,7 +343,7 @@
                 <version>2.8.3</version>
             </dependency>
             <dependency>
-                <!-- io.swagger.parser.v3:swagger-parser:2.1.44 käyttää useita versioita -->
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.45 käyttää useita versioita -->
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>2.22.0</version>
@@ -341,7 +353,7 @@
                   vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.11.5 -->
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
-                <version>1.3.6</version>
+                <version>1.4.0</version>
             </dependency>
             <dependency>
                 <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
@@ -394,7 +406,7 @@
             </dependency>
             <dependency>
                 <!-- org.json4s:json4s-ext_2.12:4.0.7
-                  vs io.swagger.parser.v3:swagger-parser:2.1.44 -->
+                  vs io.swagger.parser.v3:swagger-parser:2.1.45 -->
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
                 <version>2.14.2</version>
@@ -403,14 +415,14 @@
                 <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
                   vs com.hubspot.jinjava:jinjava:2.8.3
                   vs fi.vm.sade:auditlogger:9.2.6-20250731.093132-1
-                  vs org.scalatra:scalatra-javax_2.12:3.1.2
-                  vs io.swagger.parser.v3:swagger-parser:2.1.44 -->
+                  vs org.scalatra:scalatra-jakarta_2.12:3.1.2
+                  vs io.swagger.parser.v3:swagger-parser:2.1.45 -->
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-lang3</artifactId>
                 <version>3.20.0</version>
             </dependency>
             <dependency>
-                <!-- io.swagger.parser.v3:swagger-parser:2.1.44
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.45
                   vs com.sksamuel.elastic4s:elastic4s-client-esjava_2.12:8.11.5 -->
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpclient</artifactId>
@@ -418,7 +430,7 @@
             </dependency>
             <dependency>
                 <!-- software.amazon.awssdk:s3:2.46.10
-                  vs org.scalatra:scalatra-scalatest-javax_2.12:3.1.2 -->
+                  vs org.scalatra:scalatra-scalatest-jakarta_2.12:3.1.2 -->
                 <groupId>org.apache.httpcomponents.client5</groupId>
                 <artifactId>httpclient5</artifactId>
                 <version>5.6.1</version>
@@ -475,7 +487,7 @@
             </dependency>
             <dependency>
                 <!-- org.mockito:mockito-scala-scalatest_2.12:2.2.1
-                  vs org.scalatra:scalatra-scalatest-javax_2.12:3.1.2 -->
+                  vs org.scalatra:scalatra-scalatest-jakarta_2.12:3.1.2 -->
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
                 <version>5.23.0</version>
@@ -483,15 +495,15 @@
             </dependency>
             <dependency>
                 <!-- org.gnieh:diffson-circe_2.12:4.7.0
-                  vs org.scalatra:scalatra-javax_2.12:3.1.2
+                  vs org.scalatra:scalatra-jakarta_2.12:3.1.2
                   vs com.typesafe.slick:slick_2.12:3.5.2 -->
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-collection-compat_2.12</artifactId>
                 <version>2.14.0</version>
             </dependency>
             <dependency>
-                <!-- org.scalatra:scalatra-javax_2.12:3.1.2
-                  vs org.scalatra:scalatra-json-javax_2.12:3.1.2
+                <!-- org.scalatra:scalatra-jakarta_2.12:3.1.2
+                  vs org.scalatra:scalatra-json-jakarta_2.12:3.1.2
                   vs org.scalatest:scalatest_2.12:3.2.19 -->
                 <groupId>org.scala-lang.modules</groupId>
                 <artifactId>scala-xml_2.12</artifactId>
@@ -506,7 +518,7 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <!-- io.swagger.parser.v3:swagger-parser:2.1.44
+                <!-- io.swagger.parser.v3:swagger-parser:2.1.45
                   vs com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.8 -->
                 <groupId>org.yaml</groupId>
                 <artifactId>snakeyaml</artifactId>
