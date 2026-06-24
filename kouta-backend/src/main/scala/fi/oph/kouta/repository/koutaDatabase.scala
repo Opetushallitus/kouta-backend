@@ -92,6 +92,7 @@ abstract class KoutaDatabaseAccessor extends Logging {
 
 object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
   private val flywayConfig = Flyway.configure.dataSource(settings.url, settings.username, settings.password)
+  private val isTestEnvironment = KoutaConfigurationFactory.configuration.isTestEnvironment
 
   logger.warn(settings.username)
 
@@ -105,7 +106,7 @@ object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
 
   def migrate(target: String = "latest"): MigrateResult = flywayConfig.target(target).load.migrate
 
-  def clean(): CleanResult = flywayConfig.load.clean
+  def clean(): CleanResult = flywayConfig.cleanDisabled(!isTestEnvironment).load.clean
 }
 
 object SimpleDatabaseAccessor extends KoutaDatabaseAccessor {

@@ -126,6 +126,11 @@
             <version>${flyway.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>${flyway.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.typesafe.slick</groupId>
             <artifactId>slick_2.12</artifactId>
         </dependency>
@@ -143,7 +148,6 @@
         <dependency>
             <groupId>com.github.kagkarlsson</groupId>
             <artifactId>db-scheduler</artifactId>
-            <version>11.2</version>
         </dependency>
 
         <dependency>
@@ -171,7 +175,6 @@
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
             <scope>test</scope>
-            <version>2.1.44</version>
         </dependency>
         <dependency>
             <groupId>com.softwaremill.diffx</groupId>
