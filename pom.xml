@@ -39,7 +39,7 @@
         <netty.version>4.2.15.Final</netty.version>
 
         <!-- Database related properties -->
-        <flyway.version>12.9.0</flyway.version>
+        <flyway.version>8.5.13</flyway.version>
         <slick.version>3.5.2</slick.version>
         <jdbc.version>42.7.11</jdbc.version>
         <aws-advanced-jdbc-wrapper.version>4.1.0</aws-advanced-jdbc-wrapper.version>
