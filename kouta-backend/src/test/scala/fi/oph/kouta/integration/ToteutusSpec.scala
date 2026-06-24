@@ -924,6 +924,18 @@ class ToteutusSpec
     an[org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
   }
 
+  it should "accept JSON with literal null fields" in {
+    import org.json4s.jackson.Serialization.write
+
+    val toCreate = toteutus(koulutusOid).copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(koulutuksenAlkamiskausi = None)))))
+    val oid          = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val toUpdate = toCreate.copy(oid = Some(ToteutusOid(oid)), metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(koulutuksenAlkamiskausi = null)))))
+    val updateJson = write(toUpdate)
+    updateJson should include ("\"koulutuksenAlkamiskausi\":null")
+    updateRaw(ToteutusPath, updateJson, Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(defaultSessionId)))
+  }
+
   "When tutkintoon johtamaton, toteutus servlet" should "create, get and update ammatillinen osaamisala toteutus" in {
     val sorakuvausId     = put(sorakuvaus)
     val ammOaKoulutusOid = put(TestData.AmmOsaamisalaKoulutus.copy(tila = Julkaistu))
