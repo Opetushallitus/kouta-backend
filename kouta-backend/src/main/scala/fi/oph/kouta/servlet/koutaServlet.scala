@@ -9,7 +9,8 @@ import fi.oph.kouta.service.{ExternalModifyAuthorizationFailedException, Koulutu
 import fi.oph.kouta.util.KoutaJsonFormats
 import fi.oph.kouta.util.TimeUtils.{parseHttpDate, renderHttpDate}
 import fi.oph.kouta.logging.Logging
-import org.json4s.MappingException
+import org.json4s.{JValue, MappingException}
+import jakarta.servlet.http.HttpServletRequest
 import org.scalatra._
 import org.scalatra.json.JacksonJsonSupport
 
@@ -103,6 +104,13 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       logger.error(errorMsgFromRequest(), e)
       InternalServerError("error" -> "500 Internal Server Error")
   }
+
+  /**
+   * Json4s seems to have a bug when optional class values with optional values are literal nulls in JSON.
+   *
+   * Circumvent this by removing all nulls from the incoming JSON.
+   */
+  override def parsedBody(implicit request: HttpServletRequest): JValue = super.parsedBody(request).noNulls
 }
 
 object KoutaServlet {
