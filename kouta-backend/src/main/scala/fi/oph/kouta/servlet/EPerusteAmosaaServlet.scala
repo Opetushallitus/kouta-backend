@@ -2,10 +2,12 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.EPerusteAmosaaClient
+import fi.oph.kouta.domain.oid.OrganisaatioOid
+import fi.oph.kouta.service.OrganisaatioServiceImpl
 import org.scalatra.Ok
 
-class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaServlet {
-  def this() = this(EPerusteAmosaaClient)
+class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioService: OrganisaatioServiceImpl) extends KoutaServlet {
+  def this() = this(EPerusteAmosaaClient, OrganisaatioServiceImpl)
 
   registerPath(
     "/eperuste-amosaa/opetussuunnitelmat",
@@ -25,7 +27,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |          style: form
       |          explode: true
       |          required: false
-      |          description: Lista organisaatioiden OIDeja
+      |          description: Lista organisaatioiden OIDeja, joiden koulutustoimija-organisaatioilta opetussuunnitelmat haetaan.
       |        - in: query
       |          name: nimi
       |          schema:
@@ -62,12 +64,13 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
     val organisaatiot = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
+    val koulutustoimijat = organisaatioService.findParentKoulutustoimijaOids(organisaatiot).map(_.toString)
     val nimi = params.get("nimi")
     val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
 
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatiot, nimi, paikallistaSisaltoa, sivu, sivukoko))
+    Ok(amosaaClient.getOpetussuunnitelmat(koulutustoimijat, nimi, paikallistaSisaltoa, sivu, sivukoko))
   }
 
   registerPath(

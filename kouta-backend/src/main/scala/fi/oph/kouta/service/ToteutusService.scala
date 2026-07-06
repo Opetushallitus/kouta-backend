@@ -425,14 +425,14 @@ class ToteutusService(
       else currentToteutustenTarjoajatOfKoulutus - toteutus.oid.get
     val newOppilaitoksetOfKoulutus =
       newToteutustenTarjojatOfKoulutus.values.flatten.toSet
-        .flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia)
+        .flatMap(OrganisaatioServiceImpl.findParentOppilaitosOid)
     val oppilaitoksetDeletedFromToteutus =
-      tarjoajatDeletedFromToteutus.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
+      tarjoajatDeletedFromToteutus.flatMap(OrganisaatioServiceImpl.findParentOppilaitosOid).toSet
     oppilaitoksetDeletedFromToteutus diff newOppilaitoksetOfKoulutus
   }
 
   private def getTarjoajienOppilaitokset(toteutus: Toteutus): Set[OrganisaatioOid] =
-    toteutus.tarjoajat.flatMap(OrganisaatioServiceImpl.findOppilaitosOidFromOrganisaationHierarkia).toSet
+    toteutus.tarjoajat.flatMap(OrganisaatioServiceImpl.findParentOppilaitosOid).toSet
 
   private def getTarjoajat(maybeToteutusWithTime: Option[(Toteutus, Instant)]): Seq[OrganisaatioOid] =
     maybeToteutusWithTime.map(_._1.tarjoajat).getOrElse(Seq())
