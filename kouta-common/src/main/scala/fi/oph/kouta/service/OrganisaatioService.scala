@@ -27,8 +27,11 @@ trait OrganisaatioService {
   private def findParentOid(oid: OrganisaatioOid, pred: OidAndChildren => Boolean): Option[OrganisaatioOid] =
     find(pred, getHierarkiaFromCache(oid).toSet).map(_.oid)
 
-  def findParentKoulutustoimijaOids(oids: Set[String]): Set[OrganisaatioOid] =
-    oids.flatMap(oid => findParentOid(OrganisaatioOid(oid), _.isKoulutustoimija))
+  def findParentOids(oids: Set[String]): Set[OrganisaatioOid] =
+    oids.flatMap { oidStr =>
+      val oid = OrganisaatioOid(oidStr)
+      find(_.oid == oid, getHierarkiaFromCache(oid).toSet).toSeq.flatMap(parentOidsFlat)
+    }.filterNot(_ == RootOrganisaatioOid)
 
   def findParentOppilaitosOid(oid: OrganisaatioOid): Option[OrganisaatioOid] =
     findParentOid(oid, _.isOppilaitos)
@@ -139,9 +142,8 @@ trait OrganisaatioService {
     item.children.flatMap(c => c.oppilaitostyyppi +: childOppilaitostyypitFlat(c))
 
   private def parentOppilaitostyypitFlat(item: OidAndChildren, hierarkia: Option[OidAndChildren]): Seq[Option[String]] =
-    parentOidsFlat(item).map { case oid =>
-      find(_.oid == oid, hierarkia.toSet)
-    }.collect { case Some(org) =>
+    parentOidsFlat(item).map(oid =>
+      find(_.oid == oid, hierarkia.toSet)).collect { case Some(org) =>
       org.oppilaitostyyppi
     }
 
