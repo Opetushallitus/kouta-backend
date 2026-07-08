@@ -1,7 +1,6 @@
 package fi.oph.kouta.security
 
 import fi.oph.kouta.domain.oid.{HakukohderyhmaOid, OrganisaatioOid, RootOrganisaatioOid}
-import fi.oph.kouta.logging.Logging
 
 import scala.util.matching.Regex
 
