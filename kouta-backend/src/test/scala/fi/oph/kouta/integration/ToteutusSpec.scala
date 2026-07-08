@@ -635,7 +635,6 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
     post(ToteutusPath, bytes(thisToteutus), headersIfUnmodifiedSince(lastModified)) {
       status should equal(409)
@@ -665,7 +664,6 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid).copy(tila = Tallennettu))
     val thisToteutus = toteutus(oid, koulutusOid).copy(tila = Tallennettu)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus) should not equal lastModified
@@ -1260,7 +1258,7 @@ class ToteutusSpec
 
     val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
 
-    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid).copy(tarjoajat = List(ChildOid)))
+    val lastModified = get(julkaistuToteutusOid2, toteutus(julkaistuToteutusOid2, koulutusOid).copy(tarjoajat = List(AmmOid)))
     val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2

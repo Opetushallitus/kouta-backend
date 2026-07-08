@@ -416,7 +416,6 @@ class HakukohdeSpec
     val oid           = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified  = get(oid, thisHakukohde)
-    Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
     post(
       HakukohdePath,
@@ -602,7 +601,6 @@ class HakukohdeSpec
   it should "delete all hakuajat and read last modified from history" in {
     val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
-    Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde) should not equal lastModified
@@ -931,7 +929,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
 
     val metadata1 = julkaistuHakukohde1.metadata.get
@@ -973,7 +971,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, randomOid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
     response.length shouldBe 3
@@ -1015,7 +1013,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2

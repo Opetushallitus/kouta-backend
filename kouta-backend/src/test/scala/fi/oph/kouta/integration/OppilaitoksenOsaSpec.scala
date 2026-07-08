@@ -328,7 +328,6 @@ class OppilaitoksenOsaSpec extends KoutaIntegrationSpec with AccessControlSpec w
   it should "fail update if modified in between get and update" in {
     val oid = put(oppilaitoksenOsa(oppilaitoksenOsaOid))
     val lastModified = get(oid, defaultOppilaitoksenOsa)
-    Thread.sleep(1500)
     update(oppilaitoksenOsa(oid, Arkistoitu), lastModified)
     post(OppilaitoksenOsaPath, bytes(defaultOppilaitoksenOsa.copy(tila = Arkistoitu)), headersIfUnmodifiedSince(lastModified)) {
       status should equal (409)

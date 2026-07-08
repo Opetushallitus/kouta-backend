@@ -265,7 +265,6 @@ class SorakuvausSpec
   it should "fail update if modified in between get and update" in {
     val id           = put(sorakuvaus)
     val lastModified = get(id, sorakuvaus(id))
-    Thread.sleep(1500)
     update(sorakuvaus(id, Arkistoitu), lastModified, ophSession)
     post(SorakuvausPath, bytes(sorakuvaus(id)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       status should equal(409)
