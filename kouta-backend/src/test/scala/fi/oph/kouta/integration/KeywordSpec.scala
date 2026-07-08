@@ -1,5 +1,6 @@
 package fi.oph.kouta.integration
 
+import java.net.URLEncoder
 import java.util.UUID
 import fi.oph.kouta.TestOids.ParentOid
 import fi.oph.kouta.domain.{En, Fi, Sv, ToteutusEnrichedData}
@@ -76,7 +77,7 @@ class KeywordSpec extends KoutaIntegrationSpec with AccessControlSpec with Keywo
   }
 
   it should "return 401 without a valid session" in {
-    get(s"$AmmattinimikePath/search/laak", headers = Seq()) {
+    get(s"$AmmattinimikePath/search/${URLEncoder.encode("lääk", "UTF-8")}", headers = Seq()) {
       withClue(body) {
         status should equal(401)
       }
