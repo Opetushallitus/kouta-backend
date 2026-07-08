@@ -931,7 +931,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ophSession, 200)
 
     val metadata1 = julkaistuHakukohde1.metadata.get
@@ -973,7 +973,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, randomOid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, crudSessions(LonelyOid), 200)
 
     response.length shouldBe 3
@@ -1015,7 +1015,7 @@ class HakukohdeSpec
     val hakukohteet = List(julkaistuHakukohde1Oid, julkaistuHakukohde2Oid)
 
     val lastModified =
-      get(julkaistuHakukohde1Oid, julkaistuHakukohde1.copy(oid = Some(HakukohdeOid(julkaistuHakukohde1Oid))))
+      get(julkaistuHakukohde2Oid, julkaistuHakukohde2.copy(oid = Some(HakukohdeOid(julkaistuHakukohde2Oid))))
     val response = changeTila(hakukohteet, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2
