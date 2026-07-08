@@ -5,7 +5,7 @@ import fi.oph.kouta.domain.siirtotiedosto._
 import fi.oph.kouta.security.{Authority, ExternalSession, Session}
 import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
 import org.json4s.JsonAST.{JInt, JObject, JString}
-import org.json4s.{CustomSerializer, Extraction, Formats}
+import org.json4s.{CustomSerializer, Extraction, Formats, MappingException}
 
 import scala.util.Try
 
@@ -254,7 +254,7 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
       { case s: JObject =>
         s \ "authority" match {
           case JString(authority) => Authority(authority)
-          case _                  => null
+          case _                  => throw new MappingException(s"Missing or invalid 'authority' field: $s")
         }
       },
       { case j: Authority =>
