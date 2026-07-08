@@ -34,10 +34,11 @@ class JettyLauncher(val port: Int, val enableCors: Boolean = false) {
     handler.setAllowedHeaders(Set("X-PINGOTHER", "Origin", "X-Requested-With", "Content-Type", "Accept").asJava)
     handler.setPreflightMaxAge(Duration.ofSeconds(728000))
     handler.setAllowCredentials(true)
+    handler.setHandler(context)
     server.setHandler(handler)
+  } else {
+    server.setHandler(context)
   }
-
-  server.setHandler(context)
 
   server.setRequestLog(requestLog(KoutaConfigurationFactory.configuration.urlProperties))
 
