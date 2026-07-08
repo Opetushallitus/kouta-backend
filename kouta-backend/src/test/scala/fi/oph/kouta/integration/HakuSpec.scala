@@ -206,7 +206,7 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     MockAuditLogger.clean()
     update(thisHaku, lastModified, expectUpdate = true, crudSessions(haku.organisaatioOid)) // muokkaaja and modify timestamp updated
     MockAuditLogger.logs should not be empty
-    get(oid, thisHaku.copy(muokkaaja = userOidForTestSessionId(crudSessions(haku.organisaatioOid))))
+    get(oid, thisHaku.copy(muokkaaja = userOidForTestSessionId(crudSessions(haku.organisaatioOid)))) should not equal(lastModified)
   }
 
   it should "fail update if 'x-If-Unmodified-Since' header is missing" in {
@@ -297,7 +297,6 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    Thread.sleep(1500)
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
     post(HakuPath, bytes(thisHaku), headersIfUnmodifiedSince(lastModified)) {
       status should equal(409)
@@ -308,7 +307,6 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
-    Thread.sleep(1500)
     val uusiHaku = thisHaku.copy(hakuajat = List())
     update(uusiHaku, lastModified, expectUpdate = true)
     get(oid, uusiHaku) should not equal lastModified

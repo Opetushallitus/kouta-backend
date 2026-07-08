@@ -2,6 +2,7 @@ package fi.oph.kouta.servlet
 
 import java.text.ParseException
 import java.time.Instant
+import java.time.temporal.ChronoUnit
 import java.util.ConcurrentModificationException
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.security.AuthenticationFailedException
@@ -25,18 +26,23 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
   }
 
   protected def createLastModifiedHeader(instant: Instant): String = {
-    //- Last modification time is read from last_modified or system_time and is of form "2017-02-28 13:40:02.442277+02"
-    //- RFC-1123 date-time format used in headers has no millis
-    //- if x-Last-Modified/x-If-Unmodified-Since header is set to 2017-02-28 13:40:02, it will not be after last modification time
-    //-> this is why we want to set it to 2017-02-28 13:40:03 instead
-    renderHttpDate(instant.truncatedTo(java.time.temporal.ChronoUnit.SECONDS).plusSeconds(1))
+    //- Last modification time is read from last_modified or system_time and may have microsecond precision,
+    //  e.g. "2017-02-28 13:40:02.442277+02"
+    //- x-Last-Modified/x-If-Unmodified-Since are our own headers (not the standard HTTP Last-Modified), so we're
+    //  free to use ISO-8601 with millisecond precision instead of the second-granularity RFC-1123 date format
+    //- truncating to millis can still round down past the actual modification instant (microsecond remainder),
+    //  so we add 1 ms to guarantee the header is never before the last_modified it was derived from
+    instant.truncatedTo(ChronoUnit.MILLIS).plusMillis(1).toString
   }
 
   protected def parseIfUnmodifiedSince: Option[Instant] = request.headers.get(KoutaServlet.IfUnmodifiedSinceHeader) match {
     case Some(s) =>
+      // Hyväksytään sekä uusi ISO-8601-muoto että vanha RFC-1123, koska osa asiakkaista (esim. kouta-ui:n
+      // joukkotilanmuutokset) muodostaa otsakkeen arvon itse RFC-1123-muodossa sen sijaan että palauttaisi takaisin
+      // GETin x-Last-Modified-arvon
       Try(parseHttpDate(s)) match {
         case x if x.isSuccess => Some(x.get)
-        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta ${KoutaServlet.IfUnmodifiedSinceHeader} muodossa ${KoutaServlet.SampleHttpDate}.", e)
+        case Failure(e) => throw new IllegalArgumentException(s"Ei voitu jäsentää otsaketta ${KoutaServlet.IfUnmodifiedSinceHeader} muodossa ${KoutaServlet.SampleHeaderDate}.", e)
       }
     case None => None
   }
@@ -116,7 +122,10 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
 object KoutaServlet {
   val IfUnmodifiedSinceHeader: String = "x-If-Unmodified-Since"
   val LastModifiedHeader: String = "x-Last-Modified"
+  // RFC-1123 sample, used only by IndexerServlet's /modifiedSince/:since, which still uses TimeUtils.(render|parse)HttpDate
   val SampleHttpDate: String = renderHttpDate(Instant.EPOCH)
+  // ISO-8601-with-millis sample for the x-Last-Modified/x-If-Unmodified-Since headers
+  val SampleHeaderDate: String = Instant.EPOCH.toString
 }
 
 class HealthcheckServlet extends KoutaServlet {

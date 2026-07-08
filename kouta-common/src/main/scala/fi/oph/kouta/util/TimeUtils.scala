@@ -6,6 +6,8 @@ import java.time.{Instant, LocalDateTime, ZoneId, ZonedDateTime}
 
 import fi.oph.kouta.domain.Modified
 
+import scala.util.Try
+
 object TimeUtils {
   private val fiTimezoneId = ZoneId.of("Europe/Helsinki")
 
@@ -26,6 +28,7 @@ object TimeUtils {
   }
 
   def parseHttpDate(string: String): Instant = {
-    Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(string))
+    // Ensisijaisesti RFC-1123 (esim. indeksoijan käyttämä muoto), mutta hyväksytään myös ISO-8601
+    Try(Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(string))).getOrElse(Instant.parse(string))
   }
 }

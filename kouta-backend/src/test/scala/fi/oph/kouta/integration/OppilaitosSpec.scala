@@ -439,7 +439,6 @@ class OppilaitosSpec extends KoutaIntegrationSpec with AccessControlSpec with Op
       .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
 
     val lastModified = get(oid, oppilaitosWithEnrichedData)
-    Thread.sleep(1500)
 
     val arkistoituOppilaitos = oppilaitos(oid, Arkistoitu)
       .withEnrichedData(oppilaitos._enrichedData.get.copy(organisaatio = Some(organisaatio)))
