@@ -175,6 +175,15 @@
                 <artifactId>java-cas</artifactId>
                 <!-- TODO: Move to 2.0.2-SNAPSHOT PR has been merged. https://github.com/Opetushallitus/opiskelijavalinnat-utils/pull/28 -->
                 <version>2.0.2-OY-5585-SNAPSHOT</version>
+                <exclusions>
+                    <!-- competes with log4j-slf4j-impl as an SLF4J binding; both define
+                         org.slf4j.impl.StaticLoggerBinder, so whichever the shaded jar keeps
+                         silently decides the actual logging backend at runtime. -->
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
@@ -359,6 +368,20 @@
                   vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
                 <groupId>io.netty</groupId>
                 <artifactId>netty-buffer</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <!-- software.amazon.awssdk:netty-nio-client pulls in unmanaged 4.1.135.Final
+                  netty-codec/netty-transport-classes-epoll, which otherwise coexist with the
+                  4.2.15.Final netty-* family below and cause duplicate/overlapping classes in
+                  the shaded jar. -->
+                <groupId>io.netty</groupId>
+                <artifactId>netty-codec</artifactId>
+                <version>${netty.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-transport-classes-epoll</artifactId>
                 <version>${netty.version}</version>
             </dependency>
             <dependency>
