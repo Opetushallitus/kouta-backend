@@ -39,7 +39,7 @@
         <netty.version>4.2.15.Final</netty.version>
 
         <!-- Database related properties -->
-        <flyway.version>8.5.13</flyway.version>
+        <flyway.version>12.11.0</flyway.version>
         <slick.version>3.5.2</slick.version>
         <jdbc.version>42.7.11</jdbc.version>
         <aws-advanced-jdbc-wrapper.version>4.1.0</aws-advanced-jdbc-wrapper.version>
@@ -53,7 +53,7 @@
 
         <plugin.scala-maven-plugin.version>4.9.2</plugin.scala-maven-plugin.version>
         <plugin.maven-enforcer-plugin.version>3.0.0-M2</plugin.maven-enforcer-plugin.version>
-        <plugin.maven-assembly-plugin.version>3.1.1</plugin.maven-assembly-plugin.version>
+        <plugin.maven-shade-plugin.version>3.6.2</plugin.maven-shade-plugin.version>
         <plugin.maven-jar-plugin.version>3.1.1</plugin.maven-jar-plugin.version>
         <plugin.maven-surefire-plugin.version>2.22.0</plugin.maven-surefire-plugin.version>
         <plugin.scalatest-maven-plugin.version>1.0</plugin.scalatest-maven-plugin.version>

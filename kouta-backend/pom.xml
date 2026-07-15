@@ -122,7 +122,7 @@
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
+            <artifactId>flyway-database-postgresql</artifactId>
             <version>${flyway.version}</version>
         </dependency>
         <dependency>
@@ -280,26 +280,35 @@
                 </executions>
             </plugin>
             <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <version>${plugin.maven-assembly-plugin.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>${plugin.maven-shade-plugin.version}</version>
                 <executions>
                     <execution>
                         <id>make-assembly</id>
                         <phase>package</phase>
-                        <configuration>
-                            <archive>
-                                <manifest>
-                                    <mainClass>fi.oph.kouta.JettyLauncher</mainClass>
-                                </manifest>
-                            </archive>
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                            <appendAssemblyId>true</appendAssemblyId>
-                        </configuration>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <shadedClassifierName>jar-with-dependencies</shadedClassifierName>
+                            <!-- this jar is a deployable application, never consumed as a Maven dependency
+                                 by another project, so the reduced pom would serve no purpose -->
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <!-- flyway-core and flyway-database-postgresql each ship their own
+                                     META-INF/services/org.flywaydb.core.extensibility.Plugin file (Flyway 10+
+                                     split database support into separate modules). Without merging these,
+                                     the naive fat-jar build keeps only one module's registrations, dropping
+                                     entries like AwsSecretsManagerSupportStub and causing a
+                                     NullPointerException from PluginRegister.getInstanceOf() at runtime. -->
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>fi.oph.kouta.JettyLauncher</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
