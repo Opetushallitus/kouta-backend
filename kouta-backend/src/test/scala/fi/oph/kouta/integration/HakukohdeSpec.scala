@@ -416,7 +416,6 @@ class HakukohdeSpec
     val oid           = put(withValintaperusteenValintakokeet(uusiHakukohde))
     val thisHakukohde = tallennettuHakukohde(oid)
     val lastModified  = get(oid, thisHakukohde)
-    Thread.sleep(1500)
     update(tallennettuHakukohde(oid).copy(tila = Arkistoitu), lastModified)
     post(
       HakukohdePath,
@@ -602,7 +601,6 @@ class HakukohdeSpec
   it should "delete all hakuajat and read last modified from history" in {
     val oid          = put(withValintaperusteenValintakokeet(uusiHakukohde.copy(tila = Tallennettu)))
     val lastModified = get(oid, tallennettuHakukohde(oid).copy(tila = Tallennettu))
-    Thread.sleep(1500)
     val muokattuHakukohde = tallennettuHakukohde(oid).copy(hakuajat = List(), tila = Tallennettu)
     update(muokattuHakukohde, lastModified, expectUpdate = true)
     get(oid, muokattuHakukohde) should not equal lastModified

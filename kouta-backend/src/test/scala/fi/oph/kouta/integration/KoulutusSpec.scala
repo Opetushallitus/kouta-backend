@@ -9,7 +9,6 @@ import fi.oph.kouta.integration.fixture._
 import fi.oph.kouta.mocks.{LokalisointiServiceMock, MockAuditLogger}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.KoutaServlet
-import fi.oph.kouta.util.TimeUtils
 import fi.oph.kouta.util.TimeUtils.modifiedToInstant
 import fi.oph.kouta.validation.ValidationError
 import fi.oph.kouta.validation.Validations._
@@ -439,7 +438,6 @@ class KoulutusSpec
   it should "fail update if modified in between get and update" in {
     val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    Thread.sleep(1500)
     update(koulutus(oid, Arkistoitu), lastModified, expectUpdate = true, ophSession)
     post(KoulutusPath, bytes(koulutus(oid)), headersIfUnmodifiedSince(lastModified, sessionHeader(ophSession))) {
       status should equal(409)
@@ -482,7 +480,7 @@ class KoulutusSpec
       "koulutus_oid"
     ) should equal(Success(()))
     val lastModified        = get(oid, koulutus(oid))
-    val lastModifiedInstant = TimeUtils.parseHttpDate(lastModified)
+    val lastModifiedInstant = Instant.parse(lastModified)
     Duration.between(lastModifiedInstant, Instant.now).compareTo(Duration.ofMinutes(9)) should equal(1)
 
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(LonelyOid, EvilChildOid, AmmOid))
@@ -584,7 +582,6 @@ class KoulutusSpec
   it should "delete some tarjoajat and read last modified from history" in {
     val oid          = put(koulutus, ophSession)
     val lastModified = get(oid, koulutus(oid))
-    Thread.sleep(1500)
     val uusiKoulutus = koulutus(oid).copy(tarjoajat = List(GrandChildOid, EvilGrandChildOid))
     update(uusiKoulutus, lastModified, expectUpdate = true, ophSession)
     get(oid, uusiKoulutus) should not equal lastModified

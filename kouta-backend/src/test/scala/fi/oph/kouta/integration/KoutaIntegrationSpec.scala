@@ -476,6 +476,18 @@ sealed trait HttpSpec extends KoutaJsonFormats {
     }
   }
 
+  def updateRaw(
+                 path: String,
+                 entity: String,
+                 headers: Iterable[(String, String)]
+               ): Unit = {
+    post(path, entity.getBytes, headers) {
+      withClue(body) {
+        status should equal(200)
+      }
+    }
+  }
+
   def update[E <: scala.AnyRef](
       path: String,
       entity: E,

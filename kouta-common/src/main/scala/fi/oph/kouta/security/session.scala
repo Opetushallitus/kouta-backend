@@ -50,7 +50,7 @@ object Role {
 case class Authority(authority: String) {
   import Authority.OrganisaatioRegex
 
-  lazy val  role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
+  lazy val role: Role = Role(OrganisaatioRegex.replaceAllIn(authority, ""))
 
   lazy val organisaatioId: Option[OrganisaatioOid] = OrganisaatioRegex.findFirstIn(authority)
     .map(_.filterNot(_ == '_'))

@@ -40,7 +40,7 @@ class IndexerServlet(
     s"""    get:
        |      summary: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen
        |      operationId: indexerModifiedSince
-       |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten
+       |      description: Hakee listan kaikesta, mikä on muuttunut tietyn ajanhetken jälkeen. Tämä rajapinta on indeksointia varten.
        |      tags:
        |        - Indexer
        |      parameters:

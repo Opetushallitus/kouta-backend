@@ -164,7 +164,7 @@ class OppilaitosServlet(oppilaitosService: OppilaitosService) extends KoutaServl
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) => Ok(oppilaitosService.listOppilaitoksenOsat(OrganisaatioOid(params("oid")), organisaatioOid))
     }
   }

@@ -8,7 +8,6 @@ import fi.oph.kouta.TestOids._
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.security.Role
-import fi.oph.kouta.util.TimeUtils.renderHttpDate
 import org.json4s.jackson.Serialization.read
 
 class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
@@ -33,8 +32,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
   var timestampAfterAllModifications = ""
 
   def createTestData(n: Int = 10): Unit = {
-    timestampBeforeAllModifications = renderHttpDate(now())
-    Thread.sleep(1500)
+    timestampBeforeAllModifications = now().toString
     koulutusOids = List.fill(n)(put(koulutus.copy(tila = Tallennettu), ophSession))
     toteutusOids = koulutusOids.map(oid => put(toteutus(oid).copy(tila = Tallennettu)))
     hakuOids = List.fill(n)(put(haku))
@@ -43,14 +41,10 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
     hakukohdeOids = toteutusOids.zipWithIndex.map { case (oid, i) =>
       put(withValintaperusteenValintakokeet(hakukohde(oid, hakuOids(i), valintaperusteIds(i)).copy(tila = Tallennettu)))
     }
-    Thread.sleep(1500)
-    timestampAfterInserts = renderHttpDate(now())
+    timestampAfterInserts = now().toString
   }
 
   def updateTestData(): Unit = {
-    // Ilman alla olevaa sleeppiä yksi testi feilasi joissakin (nopeammissa?) ympäristöissä.
-    // Syy oli se, että timestampAfterInserts osui samalle sekunnille alla olevien update-operaatioiden kanssa.
-    Thread.sleep(1500)
     updateInKoulutusTable(0)
     updateInKoulutuksenTarjoajatTable(1)
     deleteInKoulutuksenTarjoajatTable(2)
@@ -65,8 +59,7 @@ class ModificationSpec extends KoutaIntegrationSpec with IndexerFixture {
     updateInHakukohteenValintakokeetTable(11)
     updateInValintaperusteetTable(12)
     updateInSorakuvauksetTable(13)
-    Thread.sleep(1500)
-    timestampAfterAllModifications = renderHttpDate(now())
+    timestampAfterAllModifications = now().toString
   }
 
   def updateInKoulutusTable(i: Int): Unit = update(koulutus(koulutusOids(i), Julkaistu), timestampAfterInserts, ophSession, 200)

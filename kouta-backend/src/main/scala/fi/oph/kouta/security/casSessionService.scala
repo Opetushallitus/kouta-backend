@@ -5,9 +5,9 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.repository.SessionDAO
 import fi.vm.sade.javautils.nio.cas.UserDetails
+import jakarta.servlet.http.HttpServletRequest
 
 import java.util.UUID
-import javax.servlet.http.HttpServletRequest
 import scala.collection.JavaConverters._
 
 case class AuthenticationFailedException(msg: String, cause: Throwable) extends RuntimeException(msg, cause) {

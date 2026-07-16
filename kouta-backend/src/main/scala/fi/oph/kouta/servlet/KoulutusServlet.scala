@@ -163,7 +163,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     (params.get("organisaatioOid").map(OrganisaatioOid), params.get("koulutustyyppi"), params.getOrElse("myosArkistoidut", "true").toBoolean) match {
-      case (None, _, _) => NotFound()
+      case (None, _, _) => NotFound("")
       case (Some(oid), None, myosArkistoidut) => Ok(koulutusService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
       case (Some(oid), Some(koulutustyyppi), myosArkistoidut) =>
         Ok(koulutusService.listByKoulutustyyppi(oid, Koulutustyyppi.withName(koulutustyyppi), TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut)))
@@ -207,7 +207,7 @@ class KoulutusServlet(koulutusService: KoulutusService) extends KoutaServlet {
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) => Ok(koulutusService.listToteutukset(KoulutusOid(params("oid")), organisaatioOid))
     }
   }

@@ -635,7 +635,6 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid))
     val thisToteutus = toteutus(oid, koulutusOid)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     update(toteutus(oid, koulutusOid, Arkistoitu), lastModified)
     post(ToteutusPath, bytes(thisToteutus), headersIfUnmodifiedSince(lastModified)) {
       status should equal(409)
@@ -665,7 +664,6 @@ class ToteutusSpec
     val oid          = put(toteutus(koulutusOid).copy(tila = Tallennettu))
     val thisToteutus = toteutus(oid, koulutusOid).copy(tila = Tallennettu)
     val lastModified = get(oid, thisToteutus)
-    Thread.sleep(1500) // jotta saadaan eroa lastModified-aikaan
     val uusiToteutus = thisToteutus.copy(tarjoajat = List())
     update(uusiToteutus, lastModified, expectUpdate = true)
     get(oid, uusiToteutus) should not equal lastModified
@@ -922,6 +920,18 @@ class ToteutusSpec
 
   it should "fail to extract toteutus from JSON of incorrect form" in {
     an[org.json4s.MappingException] shouldBe thrownBy(ToteutusJsonMethods.extractJsonString(incorrectJson))
+  }
+
+  it should "accept JSON with literal null fields" in {
+    import org.json4s.jackson.Serialization.write
+
+    val toCreate = toteutus(koulutusOid).copy(metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(koulutuksenAlkamiskausi = None)))))
+    val oid          = put(toteutus(koulutusOid))
+    val lastModified = get(oid, toteutus(oid, koulutusOid))
+    val toUpdate = toCreate.copy(oid = Some(ToteutusOid(oid)), metadata = Some(AmmToteutuksenMetatieto.copy(opetus = Some(ToteutuksenOpetus.copy(koulutuksenAlkamiskausi = null)))))
+    val updateJson = write(toUpdate)
+    updateJson should include ("\"koulutuksenAlkamiskausi\":null")
+    updateRaw(ToteutusPath, updateJson, Seq(KoutaServlet.IfUnmodifiedSinceHeader -> lastModified, jsonHeader, sessionHeader(defaultSessionId)))
   }
 
   "When tutkintoon johtamaton, toteutus servlet" should "create, get and update ammatillinen osaamisala toteutus" in {
@@ -1248,7 +1258,7 @@ class ToteutusSpec
 
     val toteutukset = List(julkaistuToteutusOid1, julkaistuToteutusOid2)
 
-    val lastModified = get(julkaistuToteutusOid1, toteutus(julkaistuToteutusOid1, koulutusOid).copy(tarjoajat = List(ChildOid)))
+    val lastModified = get(julkaistuToteutusOid2, toteutus(julkaistuToteutusOid2, koulutusOid).copy(tarjoajat = List(AmmOid)))
     val response = changeToteutusTila(toteutukset, "arkistoitu", lastModified, ammAndChildSession, 200)
 
     response.length shouldBe 2
