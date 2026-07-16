@@ -20,6 +20,11 @@ package object koulutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
+      |        luokittelutermit:
+      |          type: array
+      |          description: Koulutukseen liittyvät luokittelutermit
+      |          items:
+      |            type: string
       |""".stripMargin
 
   val KorkeakouluMetadataModel: String =
@@ -271,6 +276,12 @@ package object koulutusMetadata {
       |              items:
       |                type: object
       |                $ref: '#/components/schemas/TutkinnonOsa'
+      |            paikallisetTutkinnonOsat:
+      |              type: array
+      |              description: Paikalliset tutkinnon osat
+      |              items:
+      |                type: object
+      |                $ref: '#/components/schemas/PaikallinenTutkinnonOsa'
       |""".stripMargin
 
   val AmmatillinenOsaamisalaKoulutusMetadataModel: String =
@@ -674,6 +685,7 @@ case class AmmatillinenTutkinnonOsaKoulutusMetadata(
     lisatiedot: Seq[Lisatieto] = Seq(),
     luokittelutermit: List[String] = List(),
     tutkinnonOsat: Seq[TutkinnonOsa] = Seq(),
+    paikallisetTutkinnonOsat: Seq[PaikallinenTutkinnonOsa] = Seq(),
     isMuokkaajaOphVirkailija: Option[Boolean] = None
 ) extends KoulutusMetadata
 
