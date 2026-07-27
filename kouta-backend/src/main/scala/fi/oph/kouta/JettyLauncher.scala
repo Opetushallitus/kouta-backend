@@ -39,6 +39,11 @@ class JettyLauncher(val port: Int, val enableCors: Boolean = false) {
   val context = new WebAppContext()
   context.setBaseResource(context.getResourceFactory.newClassLoaderResource("/webapp"))
   context.setContextPath("/kouta-backend")
+  // HttpConfiguration.setUriCompliance yllä sallii moniselitteisesti enkoodatun polun jo
+  // HTTP-tason parsinnassa, mutta ee10-servlettikerros (ServletHandler) tekee tästä vielä oman,
+  // erillisen tarkistuksensa ja heittää HttpException.IllegalArgumentExceptionin heti kun
+  // getServletPath()/getPathInfo()-metodeja kutsutaan, ellei tätä myös sallita erikseen.
+  context.getServletHandler.setDecodeAmbiguousURIs(true)
 
   if (enableCors) {
     val handler = new CrossOriginHandler
