@@ -5,8 +5,9 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.logging.Logging
 import fi.vm.sade.properties.OphProperties
 import org.eclipse.jetty.ee10.webapp.WebAppContext
+import org.eclipse.jetty.http.UriCompliance
 import org.eclipse.jetty.server.handler.CrossOriginHandler
-import org.eclipse.jetty.server.{RequestLog, Server}
+import org.eclipse.jetty.server.{HttpConfiguration, HttpConnectionFactory, RequestLog, Server, ServerConnector}
 
 import java.time.Duration
 import scala.jdk.CollectionConverters.setAsJavaSetConverter
@@ -22,7 +23,19 @@ object JettyLauncher extends Logging {
 }
 
 class JettyLauncher(val port: Int, val enableCors: Boolean = false) {
-  val server = new Server(port)
+  val server = new Server()
+
+  // Kouta-indeksoija enkoodaa lastModified-aikaleiman kahteen kertaan polkusegmenttiin
+  // (esim. /indexer/modifiedSince/Thu%252C...), koska IndexerServlet purkaa sen itse vielä
+  // kerran URLDecoderilla Scalatran oman purun jälkeen. Jetty 12 tulkitsee tällaisen
+  // moniselitteisesti enkoodatun polun oletuksena vaaralliseksi ja palauttaa 400:n
+  // ("Ambiguous URI path encoding"), joten sallitaan se eksplisiittisesti.
+  val httpConfig = new HttpConfiguration()
+  httpConfig.setUriCompliance(UriCompliance.LEGACY)
+  val connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig))
+  connector.setPort(port)
+  server.setConnectors(Array(connector))
+
   val context = new WebAppContext()
   context.setBaseResource(context.getResourceFactory.newClassLoaderResource("/webapp"))
   context.setContextPath("/kouta-backend")
