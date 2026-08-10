@@ -27,7 +27,7 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <!-- Utility properties -->
-        <auditlogger.version>9.2.6-SNAPSHOT</auditlogger.version>
+        <auditlogger.version>9.2.7-SNAPSHOT</auditlogger.version>
         <elastic4s.version>8.11.5</elastic4s.version>
         <json4s.version>4.0.7</json4s.version>
         <jackson.version>2.22.0</jackson.version>
@@ -563,33 +563,6 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-        <repository>
-            <id>oph-sade-artifactory-snapshots</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>oph-sade-artifactory-releases</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>ext-snapshot-local-artifactory-snapshots</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
     </repositories>
 
     <build>
@@ -635,14 +608,9 @@
 
     <distributionManagement>
         <repository>
-            <id>oph-sade-artifactory</id>
-            <name>oph-sade-artifactory-releases</name>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Opetushallitus/kouta-backend</url>
         </repository>
-        <snapshotRepository>
-            <id>oph-sade-artifactory</id>
-            <name>oph-sade-artifactory-snapshots</name>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
-        </snapshotRepository>
     </distributionManagement>
 </project>

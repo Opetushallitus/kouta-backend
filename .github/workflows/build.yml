@@ -106,7 +106,7 @@ jobs:
           ./ci-tools/github-build/upload-image.sh $ARTIFACT_NAME
           ./ci-tools/github-build/upload-image.sh $OVARA_EXPORTER_NAME
 
-  deploy_to_artifactory:
+  deploy_to_github_packages:
     runs-on: ubuntu-latest
     needs: test_and_build
     if: github.ref == 'refs/heads/master'
@@ -120,9 +120,7 @@ jobs:
           path: ci-tools
           key: ${{ github.sha }}
 
-      - name: Deploy to artifactory
+      - name: Deploy to Github Packages
         env:
-          ARTIFACTORY_USERNAME: ${{ secrets.ARTIFACTORY_USERNAME }}
-          ARTIFACTORY_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
           GITHUB_TOKEN: ${{ github.token }}
         run: mvn deploy -B -DskipTests --settings settings.xml
