@@ -173,8 +173,7 @@
             <dependency>
                 <groupId>opiskelijavalinnat-utils</groupId>
                 <artifactId>java-cas</artifactId>
-                <!-- TODO: Move to 2.0.2-SNAPSHOT PR has been merged. https://github.com/Opetushallitus/opiskelijavalinnat-utils/pull/28 -->
-                <version>2.0.2-OY-5585-SNAPSHOT</version>
+                <version>2.3.0-SNAPSHOT</version>
                 <exclusions>
                     <!-- competes with log4j-slf4j-impl as an SLF4J binding; both define
                          org.slf4j.impl.StaticLoggerBinder, so whichever the shaded jar keeps
