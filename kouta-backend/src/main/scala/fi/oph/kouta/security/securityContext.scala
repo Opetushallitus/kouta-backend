@@ -1,8 +1,8 @@
 package fi.oph.kouta.security
 
 import fi.oph.kouta.config.{KoutaConfigurationFactory, SecurityConfiguration}
-import fi.oph.kouta.client.CallerId
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.oph.kouta.client.{CallerId, CasClientFactory}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 
 trait SecurityContext {
   def casUrl: String
@@ -25,7 +25,7 @@ object ProductionSecurityContext extends CallerId {
       callerId,
       "").build
 
-    val casClient: CasClient = CasClientBuilder.build(casConfig)
+    val casClient: CasClient = CasClientFactory.build(casConfig)
     ProductionSecurityContext(config.casUrl, casClient, config.casServiceIdentifier)
   }
 }

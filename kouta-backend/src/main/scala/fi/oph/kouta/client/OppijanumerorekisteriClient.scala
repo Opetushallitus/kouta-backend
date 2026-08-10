@@ -5,7 +5,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods._
 
@@ -42,7 +42,7 @@ object OppijanumerorekisteriClient
     "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   implicit val OppijanumeroCache: Cache[UserOid, Henkilo] = Scaffeine()
     .expireAfterWrite(60.minutes)
