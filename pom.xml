@@ -36,12 +36,12 @@
 
         <!-- Http related properties -->
         <scalatra.version>3.1.2</scalatra.version>
-        <netty.version>4.2.15.Final</netty.version>
+        <netty.version>4.2.17.Final</netty.version>
 
         <!-- Database related properties -->
         <flyway.version>12.11.0</flyway.version>
         <slick.version>3.5.2</slick.version>
-        <jdbc.version>42.7.11</jdbc.version>
+        <jdbc.version>42.7.12</jdbc.version>
         <aws-advanced-jdbc-wrapper.version>4.1.0</aws-advanced-jdbc-wrapper.version>
 
         <!-- Test properties -->
@@ -61,6 +61,17 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <!-- BOM:eja hallitaan ensimmäisenä, koska dependencyManagementissa ensimmäinen
+              osuma voittaa ja import puretaan paikan päällä.  -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Suorat riippuvuudet-->
 
             <dependency>
@@ -153,11 +164,6 @@
                 <groupId>fi.vm.sade.java-utils</groupId>
                 <artifactId>java-properties</artifactId>
                 <version>1.0.0-SNAPSHOT</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-resolver</artifactId>
-                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
@@ -361,69 +367,6 @@
                 <groupId>commons-logging</groupId>
                 <artifactId>commons-logging</artifactId>
                 <version>1.4.0</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-buffer</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- software.amazon.awssdk:netty-nio-client pulls in unmanaged 4.1.135.Final
-                  netty-codec/netty-transport-classes-epoll, which otherwise coexist with the
-                  4.2.15.Final netty-* family below and cause duplicate/overlapping classes in
-                  the shaded jar. -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport-classes-epoll</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http2</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport-native-unix-common</artifactId>
-                <version>${netty.version}</version>
             </dependency>
             <dependency>
                 <!-- org.json4s:json4s-ext_2.12:4.0.7
