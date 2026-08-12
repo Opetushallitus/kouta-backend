@@ -27,7 +27,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
       |          style: form
       |          explode: true
       |          required: false
-      |          description: Lista organisaatioiden OIDeja, joiden koulutustoimija-organisaatioilta opetussuunnitelmat haetaan.
+      |          description: Lista organisaatioiden OIDeja, joiden käytössä olevat opetussuunnitelmat haetaan. EPerusteista haetaan myös annettujen oidien ylätason organisaatioilla, jotta saadaan kaikki organisaation käytössä olevat opetussuunnitelmat.
       |        - in: query
       |          name: nimi
       |          schema:
@@ -63,14 +63,13 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
   )
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
-    val organisaatiot = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
-    val koulutustoimijat = organisaatioService.findParentKoulutustoimijaOids(organisaatiot).map(_.toString)
+    val organisaatioOids = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
+    val parentOids = organisaatioService.findParentOids(organisaatioOids).map(_.toString)
     val nimi = params.get("nimi")
     val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
-
-    Ok(amosaaClient.getOpetussuunnitelmat(koulutustoimijat, nimi, paikallistaSisaltoa, sivu, sivukoko))
+    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentOids, nimi, paikallistaSisaltoa, sivu, sivukoko))
   }
 
   registerPath(
