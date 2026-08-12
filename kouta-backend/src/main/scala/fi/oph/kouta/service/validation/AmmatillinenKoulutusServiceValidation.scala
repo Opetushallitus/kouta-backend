@@ -208,9 +208,9 @@ class AmmatillinenKoulutusServiceValidation(
       validateIfJulkaistu(vCtx.tila, assertNotEmpty(tutkinnonOsat, tutkinnonOsatPath)),
       assertEmptyKielistetty(metadata.kuvaus, "metadata.kuvaus"),
       assertTrue(
-        metadata.paikallisetTutkinnonOsat.map(_.toteutusSunnitelmaId).distinct.size <= 1,
+        metadata.paikallisetTutkinnonOsat.map(_.opetussuunnitelmaId).distinct.size <= 1,
         "metadata.paikallisetTutkinnonOsat",
-        inconsistentPaikallinenTutkinnonOsaToteutussuunnitelmaId
+        inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId
       ),
       validateIfTrue(
         newTutkinnonOsat,
