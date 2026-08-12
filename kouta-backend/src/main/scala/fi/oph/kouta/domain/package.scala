@@ -753,8 +753,8 @@ package object domain {
       |          description: Sivun koko
       |""".stripMargin
 
-  val AmosaaVaatmusModel: String =
-    """    AmosaaVaatus:
+  val AmosaaVaatimusModel: String =
+    """    AmosaaVaatimus:
       |      type: object
       |      properties:
       |        koodi:
@@ -773,7 +773,7 @@ package object domain {
       |        vaatimukset:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |            $ref: '#/components/schemas/AmosaaVaatimus'
       |""".stripMargin
 
   val AmosaaAmmattitaitovaatimuksetModel: String =
@@ -792,7 +792,7 @@ package object domain {
       |        vaatimukset:
       |          type: array
       |          items:
-      |            $ref: '#/components/schemas/AmosaaVaatus'
+      |            $ref: '#/components/schemas/AmosaaVaatimus'
       |""".stripMargin
 
   val AmosaaArvointiModel: String =
@@ -1026,7 +1026,7 @@ package object domain {
     AmosaaKoulutustoimijaModel,
     AmosaaOpetussuunnitelmaModel,
     AmosaaOpetussuunnitelmatResponseModel,
-    AmosaaVaatmusModel,
+    AmosaaVaatimusModel,
     AmosaaKohdealueModel,
     AmosaaAmmattitaitovaatimuksetModel,
     AmosaaArvointiModel,
