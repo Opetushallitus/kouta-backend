@@ -408,10 +408,6 @@ object Validations {
       s"Hakukohde saa järjestää ammatillista urheilijan koulutusta vain jos järjestyspaikka saa järjestää ammatillista urheilijan koulutusta. Järjestyspaikan jarjestaaUrheilijanAmmKoulutusta on ${jarjestyspaikkaJarjestaaUrheilijanAmmKoulutusta.toString}",
     id = "invalidJarjestypaikkaForHakukohdeJarjestaaUrheilijanAmmKoulutusta"
   )
-  val inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId: ErrorMessage = ErrorMessage(
-    msg = "Kaikilla paikallisillla tutkinnon osilla täytyy olla sama opetussuunnitelmaId",
-    id = "inconsistentPaikallinenTutkinnonOsaOpetussuunnitelmaId"
-  )
 
   val missingTutkinnonOsatOrPaikallisetTutkinnonOsatMsg: ErrorMessage = ErrorMessage(
     msg = "Vähintään yksi tutkinnon osa tai paikallinen tutkinnon osa on pakollinen",
