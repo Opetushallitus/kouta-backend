@@ -27,6 +27,11 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     if (osat.toSet != tutkinnonosat(oldMetadata()).toSet) osat else Seq()
   }
 
+  def newPaikallisetTutkinnonosat(): Seq[PaikallinenTutkinnonOsa] = {
+    val osat = paikallisetTutkinnonosat(koulutus.metadata)
+    if (osat.toSet != paikallisetTutkinnonosat(oldMetadata()).toSet) osat else Seq()
+  }
+
   def newOsaamisalaKoodiUri(): Option[String] = {
     val koodiUri = osaamisalaKoodiUri(koulutus.metadata)
     if (osaamisalaKoodiUri(oldMetadata()) != koodiUri) koodiUri else None
@@ -82,6 +87,13 @@ case class KoulutusDiffResolver(koulutus: Koulutus, oldKoulutus: Option[Koulutus
     metadata match {
       case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata) =>
         m.tutkinnonOsat
+      case _ => Seq()
+    }
+
+  private def paikallisetTutkinnonosat(metadata: Option[KoulutusMetadata]): Seq[PaikallinenTutkinnonOsa] =
+    metadata match {
+      case Some(m: AmmatillinenTutkinnonOsaKoulutusMetadata) =>
+        m.paikallisetTutkinnonOsat
       case _ => Seq()
     }
 

@@ -1,7 +1,7 @@
 package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{EPerusteAmosaaClient, EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
@@ -29,7 +29,7 @@ trait KoulutusFixture extends KoulutusDbFixture with AccessControlSpec {
   def koulutusService: KoulutusService = {
     val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
     val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
-    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
+    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient, new EPerusteAmosaaClient(urlProperties.get))
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
     val lokalisointiClient           = new LokalisointiClient(urlProperties.get)
     val keywordService               = new KeywordService(auditLog, organisaatioService)
