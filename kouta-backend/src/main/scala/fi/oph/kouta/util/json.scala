@@ -2,10 +2,10 @@ package fi.oph.kouta.util
 
 import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.siirtotiedosto._
-import fi.oph.kouta.security.{Authority, ExternalSession, Session}
+import fi.oph.kouta.security.{ExternalSession, Session}
 import fi.oph.kouta.util.MiscUtils.{toKieli, toKieliKoodiUri, withoutKoodiVersion}
 import org.json4s.JsonAST.{JInt, JObject, JString}
-import org.json4s.{CustomSerializer, Extraction, Formats, MappingException}
+import org.json4s.{CustomSerializer, Extraction, Formats}
 
 import scala.util.Try
 
@@ -237,27 +237,11 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
   private def sessionSerializer = new CustomSerializer[Session](_ =>
     (
       { case s: JObject =>
-        implicit def formats: Formats = genericKoutaFormats + authoritySerializer
+        implicit def formats: Formats = genericKoutaFormats
 
         s.extract[ExternalSession]
       },
       { case j: ExternalSession =>
-        implicit def formats: Formats = genericKoutaFormats
-
-        Extraction.decompose(j)
-      }
-    )
-  )
-
-  private def authoritySerializer = new CustomSerializer[Authority](_ =>
-    (
-      { case s: JObject =>
-        s \ "authority" match {
-          case JString(authority) => Authority(authority)
-          case _                  => throw new MappingException(s"Missing or invalid 'authority' field: $s")
-        }
-      },
-      { case j: Authority =>
         implicit def formats: Formats = genericKoutaFormats
 
         Extraction.decompose(j)

@@ -8,7 +8,7 @@ import fi.oph.kouta.util.MiscUtils.retryStatusCodes
 import fi.oph.kouta.util.{KoutaJsonFormats, MiscUtils}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, fromBoolean, itemFound, queryFailed}
 import fi.oph.kouta.logging.Logging
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
 
@@ -63,7 +63,7 @@ object HakemusPalveluClient extends HakemusPalveluClient with CallerId with Logg
     "/auth/cas")
     .setJsessionName("ring-session").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   implicit val ataruFormCache: Cache[String, Seq[AtaruForm]] = Scaffeine()
     .expireAfterWrite(15.minutes)

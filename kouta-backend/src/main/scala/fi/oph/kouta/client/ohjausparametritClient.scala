@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.{compact, render}
 import org.json4s.Extraction
@@ -53,7 +53,7 @@ object OhjausparametritClient extends OhjausparametritClient with CallerId with 
     "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   override def postHaunOhjausparametrit(haunOhjausparametrit: HaunOhjausparametrit): Unit = {
     val url = urlProperties.url("ohjausparametrit-service.parametri", haunOhjausparametrit.hakuOid)

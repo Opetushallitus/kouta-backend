@@ -27,7 +27,7 @@
         <maven.compiler.target>11</maven.compiler.target>
 
         <!-- Utility properties -->
-        <auditlogger.version>9.2.6-SNAPSHOT</auditlogger.version>
+        <auditlogger.version>9.2.7-SNAPSHOT</auditlogger.version>
         <elastic4s.version>8.11.5</elastic4s.version>
         <json4s.version>4.0.7</json4s.version>
         <jackson.version>2.22.0</jackson.version>
@@ -36,12 +36,12 @@
 
         <!-- Http related properties -->
         <scalatra.version>3.1.2</scalatra.version>
-        <netty.version>4.2.15.Final</netty.version>
+        <netty.version>4.2.17.Final</netty.version>
 
         <!-- Database related properties -->
         <flyway.version>12.11.0</flyway.version>
         <slick.version>3.5.2</slick.version>
-        <jdbc.version>42.7.11</jdbc.version>
+        <jdbc.version>42.7.12</jdbc.version>
         <aws-advanced-jdbc-wrapper.version>4.1.0</aws-advanced-jdbc-wrapper.version>
 
         <!-- Test properties -->
@@ -61,6 +61,16 @@
 
     <dependencyManagement>
         <dependencies>
+
+            <!-- BOM:eja hallitaan ensimmäisenä, koska dependencyManagementissa ensimmäinen
+              osuma voittaa ja import puretaan paikan päällä.  -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
             <!-- Suorat riippuvuudet-->
 
@@ -156,11 +166,6 @@
                 <version>1.0.0-SNAPSHOT</version>
             </dependency>
             <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-resolver</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.swagger.parser.v3</groupId>
                 <artifactId>swagger-parser</artifactId>
                 <scope>test</scope>
@@ -174,8 +179,7 @@
             <dependency>
                 <groupId>opiskelijavalinnat-utils</groupId>
                 <artifactId>java-cas</artifactId>
-                <!-- TODO: Move to 2.0.2-SNAPSHOT PR has been merged. https://github.com/Opetushallitus/opiskelijavalinnat-utils/pull/28 -->
-                <version>2.0.2-OY-5585-SNAPSHOT</version>
+                <version>2.3.0-OY-5723-SNAPSHOT</version>
                 <exclusions>
                     <!-- competes with log4j-slf4j-impl as an SLF4J binding; both define
                          org.slf4j.impl.StaticLoggerBinder, so whichever the shaded jar keeps
@@ -365,69 +369,6 @@
                 <version>1.4.0</version>
             </dependency>
             <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-buffer</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- software.amazon.awssdk:netty-nio-client pulls in unmanaged 4.1.135.Final
-                  netty-codec/netty-transport-classes-epoll, which otherwise coexist with the
-                  4.2.15.Final netty-* family below and cause duplicate/overlapping classes in
-                  the shaded jar. -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport-classes-epoll</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-codec-http2</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-common</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-handler</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <!-- opiskelijavalinnat-utils:java-cas:2.1.0-SNAPSHOT
-                  vs fi.vm.sade.dokumenttipalvelu:dokumenttipalvelu:6.15-20250915.084103-3 -->
-                <groupId>io.netty</groupId>
-                <artifactId>netty-transport-native-unix-common</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
                 <!-- org.json4s:json4s-ext_2.12:4.0.7
                   vs io.swagger.parser.v3:swagger-parser:2.1.45 -->
                 <groupId>joda-time</groupId>
@@ -564,33 +505,6 @@
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </repository>
-        <repository>
-            <id>oph-sade-artifactory-snapshots</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>oph-sade-artifactory-releases</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-        </repository>
-        <repository>
-            <id>ext-snapshot-local-artifactory-snapshots</id>
-            <url>https://artifactory.opintopolku.fi/artifactory/ext-snapshot-local</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <releases>
-                <enabled>false</enabled>
-            </releases>
-        </repository>
     </repositories>
 
     <build>
@@ -636,14 +550,9 @@
 
     <distributionManagement>
         <repository>
-            <id>oph-sade-artifactory</id>
-            <name>oph-sade-artifactory-releases</name>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local</url>
+            <id>github</id>
+            <name>GitHub Packages</name>
+            <url>https://maven.pkg.github.com/Opetushallitus/kouta-backend</url>
         </repository>
-        <snapshotRepository>
-            <id>oph-sade-artifactory</id>
-            <name>oph-sade-artifactory-snapshots</name>
-            <url>https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local</url>
-        </snapshotRepository>
     </distributionManagement>
 </project>
