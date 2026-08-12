@@ -33,4 +33,31 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
     val organisaatio = params("organisaatio")
     Ok(amosaaClient.getOpetussuunnitelmat(organisaatio))
   }
+
+  registerPath(
+    "/eperuste-amosaa/opetussuunnitelma/{opsId}/paikalliset-tutkinnonosat",
+    """    get:
+      |      summary: Hae opetussuunnitelman paikalliset tutkinnon osat eperusteet-amosaa-palvelusta
+      |      operationId: getPaikallisetTutkinnonosat
+      |      description: Hakee opetussuunnitelman paikalliset tutkinnon osat eperusteet-amosaa-palvelusta
+      |      tags:
+      |        - EPerusteAmosaa
+      |      parameters:
+      |        - in: path
+      |          name: opsId
+      |          schema:
+      |            type: integer
+      |          required: true
+      |          description: Opetussuunnitelman id
+      |          example: 5574388
+      |      responses:
+      |        '200':
+      |          description: Ok
+      |""".stripMargin
+  )
+  get("/opetussuunnitelma/:opsId/paikalliset-tutkinnonosat") {
+    implicit val authenticated: Authenticated = authenticate()
+    val opsId = params("opsId").toLong
+    Ok(amosaaClient.getPaikallisetTutkinnonosat(opsId))
+  }
 }
