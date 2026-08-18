@@ -14,7 +14,7 @@
     <name>kouta-backend</name>
 
     <properties>
-        <kouta-common.version>2.24.0-SNAPSHOT</kouta-common.version>
+        <kouta-common.version>2.24.1-SNAPSHOT</kouta-common.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -74,10 +74,6 @@
         </dependency>
 
         <!-- Utility dependencies -->
-        <dependency>
-            <groupId>fi.vm.sade</groupId>
-            <artifactId>scala-properties_2.12</artifactId>
-        </dependency>
         <dependency>
             <groupId>fi.vm.sade.java-utils</groupId>
             <artifactId>java-http</artifactId>
