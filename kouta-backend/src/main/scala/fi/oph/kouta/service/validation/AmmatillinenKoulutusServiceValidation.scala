@@ -260,32 +260,33 @@ class AmmatillinenKoulutusServiceValidation(
       ),
       validateIfTrue(
         newPaikallisetTutkinnonOsat && paikalliset.nonEmpty,
-        {
-          val opetussuunnitelmaId = paikalliset.head.opetussuunnitelmaId
-          Try(opetussuunnitelmaId.toLong) match {
-            case Failure(_) =>
-              error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
-            case Success(opetussuunnitelmaIdLong) =>
-              Try(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(opetussuunnitelmaIdLong)) match {
-                case Failure(e: EPerusteAmosaaQueryException) if e.status == 404 =>
-                  error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
-                case Failure(_) =>
-                  error(s"$paikallisetPath.opetussuunnitelmaId", amosaaServiceFailureMsg)
-                case Success(amosaaOsat) =>
-                  val validIds = amosaaOsat.map(_.id.toString).toSet
-                  validateIfNonEmpty[PaikallinenTutkinnonOsa](
-                    paikalliset,
-                    paikallisetPath,
-                    (osa, path) =>
-                      assertTrue(
-                        validIds.contains(osa.tutkinnonosaId),
-                        s"$path.tutkinnonosaId",
-                        invalidPaikallinenTutkinnonOsaId(osa.tutkinnonosaId)
-                      )
-                  )
-              }
-          }
-        }
+        and(
+          paikalliset.groupBy(_.opetussuunnitelmaId).map { case (opetussuunnitelmaId, osatForOpetussuunnitelma) =>
+            Try(opetussuunnitelmaId.toLong) match {
+              case Failure(_) =>
+                error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
+              case Success(opetussuunnitelmaIdLong) =>
+                Try(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(opetussuunnitelmaIdLong)) match {
+                  case Failure(e: EPerusteAmosaaQueryException) if e.status == 404 =>
+                    error(s"$paikallisetPath.opetussuunnitelmaId", invalidPaikallinenTutkinnonOsaOpetussuunnitelmaId(opetussuunnitelmaId))
+                  case Failure(_) =>
+                    error(s"$paikallisetPath.opetussuunnitelmaId", amosaaServiceFailureMsg)
+                  case Success(amosaaOsat) =>
+                    val validIds = amosaaOsat.map(_.id.toString).toSet
+                    validateIfNonEmpty[PaikallinenTutkinnonOsa](
+                      osatForOpetussuunnitelma,
+                      paikallisetPath,
+                      (osa, path) =>
+                        assertTrue(
+                          validIds.contains(osa.tutkinnonosaId),
+                          s"$path.tutkinnonosaId",
+                          invalidPaikallinenTutkinnonOsaId(osa.tutkinnonosaId)
+                        )
+                    )
+                }
+            }
+          }.toSeq: _*
+        )
       )
     )
   }
