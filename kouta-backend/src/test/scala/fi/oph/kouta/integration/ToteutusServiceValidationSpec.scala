@@ -485,6 +485,18 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
+  it should "succeed when new valid Osaamisala toteutus with lukuvuosimaksullinen opetus without maksun maara" in {
+    val opetus = ToteutuksenOpetus.copy(maksut =
+      List(
+        Maksu(Maksullinen, Some(300.00)),
+        Maksu(Lukuvuosimaksu, None)
+      )
+    )
+    passesValidation(
+      ammOsaamisalaToteutus.copy(metadata = Some(ammOsaamisalaToteutuksenMetatieto.copy(opetus = Some(opetus))))
+    )
+  }
+
   it should "succeed when new valid Muu ammatillinen toteutus with maksullinen and lukuvuosimaksullinen opetus" in {
     val opetus = ToteutuksenOpetus.copy(maksut =
       List(
@@ -737,8 +749,8 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
                 suunniteltuKestoVuodet = Some(-1),
                 suunniteltuKestoKuukaudet = Some(-1),
                 maksut = Seq(
-                  Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = Some(-1)),
-                  Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = None)
+                  Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = Some(-1)),
+                  Maksu(maksullisuustyyppi = Maksullinen, maksunMaara = None)
                 )
               )
             )
@@ -751,7 +763,7 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         ValidationError("metadata.opetus.suunniteltuKestoKuukaudet", notNegativeMsg),
         ValidationError(
           "metadata.opetus.maksut[1].maksunMaara",
-          missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> Lukuvuosimaksu)))
+          missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> Maksullinen)))
         )
       )
     )
@@ -879,6 +891,23 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
         )
       ),
       Seq(ValidationError("metadata.opetus.maksut", invalidMultipleMaksullisuustyypitForKoulutustyyppi))
+    )
+  }
+
+  it should "fail if lukuvuosimaksu without maksunMaara for yo toteutus" in {
+    failsValidation(
+      yoToteutus.copy(metadata =
+        Some(
+          YoToteutuksenMetatieto.copy(opetus =
+            Some(
+              ToteutuksenOpetusWithApuraha.copy(
+                maksut = Seq(Maksu(maksullisuustyyppi = Lukuvuosimaksu, maksunMaara = None))
+              )
+            )
+          )
+        )
+      ),
+      Seq(ValidationError("metadata.opetus.maksut[0].maksunMaara", missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> Lukuvuosimaksu)))))
     )
   }
 

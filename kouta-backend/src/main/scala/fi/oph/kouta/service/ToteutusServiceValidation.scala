@@ -342,24 +342,22 @@ class ToteutusServiceValidation(
             val (maksu, index)     = maksuWithIndex
             val maksunMaara        = maksu.maksunMaara
             val maksullisuustyyppi = maksu.maksullisuustyyppi
-            and(
-              validateIfTrue(
-                maksullisuustyyppi != Maksuton,
+            validateMatching(maksullisuustyyppi) {
+              case Maksullinen =>
                 assertTrue(
                   maksunMaara.isDefined,
                   s"$path.maksut[$index].maksunMaara",
                   missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> maksullisuustyyppi)))
                 )
-              ),
-              validateIfTrue(
-                maksullisuustyyppi == Maksuton,
+              case Lukuvuosimaksu if !Koulutustyyppi.isKoulutustyyppiWithMultipleMaksullisuustyyppi(koulutustyyppi) =>
                 assertTrue(
-                  maksunMaara.isEmpty,
+                  maksunMaara.isDefined,
                   s"$path.maksut[$index].maksunMaara",
-                  notEmptyMsg
+                  missingMsgWithMetadata(Some(Map("maksullisuustyyppi" -> maksullisuustyyppi)))
                 )
-              )
-            )
+              case Maksuton =>
+                assertEmpty(maksunMaara, s"$path.maksut[$index].maksunMaara")
+            }
           }),
           validateOptionalKielistetty(vCtx.kielivalinta, opetus.suunniteltuKestoKuvaus, s"$path.suunniteltuKestoKuvaus")
         )
