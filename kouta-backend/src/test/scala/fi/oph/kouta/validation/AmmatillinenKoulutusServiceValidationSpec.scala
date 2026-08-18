@@ -538,4 +538,30 @@ class AmmatillinenKoulutusServiceValidationSpec extends BaseSubServiceValidation
       invalidPaikallinenTutkinnonOsaId("5678")
     )
   }
+
+  it should "succeed when two valid paikalliset tutkinnon osat from different opetussuunnitelmat are given" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(1234L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(5678L, None, None, None, None, None, None, None)))
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(4321L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(8765L, None, None, None, None, None, None, None)))
+    passesValidation(
+      ammTkWithPaikallisetTutkinnonOsat(
+        Seq(PaikallinenTutkinnonOsa("1234", "5678"), PaikallinenTutkinnonOsa("4321", "8765"))
+      )
+    )
+  }
+
+  it should "fail only for the invalid one when two paikalliset tutkinnon osat from different opetussuunnitelmat are given and one is invalid" in {
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(1234L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(5678L, None, None, None, None, None, None, None)))
+    when(ePerusteAmosaaClient.getPaikallisetTutkinnonosat(4321L))
+      .thenReturn(List(AmosaaPaikallinenTutkinnonosa(9999L, None, None, None, None, None, None, None)))
+    failsSingleValidation(
+      ammTkWithPaikallisetTutkinnonOsat(
+        Seq(PaikallinenTutkinnonOsa("1234", "5678"), PaikallinenTutkinnonOsa("4321", "8765"))
+      ),
+      "metadata.paikallisetTutkinnonOsat[0].tutkinnonosaId",
+      invalidPaikallinenTutkinnonOsaId("8765")
+    )
+  }
 }
