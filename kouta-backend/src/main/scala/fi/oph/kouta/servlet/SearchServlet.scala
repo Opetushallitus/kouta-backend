@@ -236,7 +236,7 @@ class SearchServlet(
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) =>
         Ok(koulutusService.search(organisaatioOid, SearchParams(params.toMap)))
     }
@@ -268,7 +268,7 @@ class SearchServlet(
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) =>
         Ok(toteutusService.search(organisaatioOid, SearchParams(params.toMap)))
     }
@@ -300,7 +300,7 @@ class SearchServlet(
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) =>
         Ok(hakuService.search(organisaatioOid, SearchParams(params.toMap)))
     }
@@ -348,7 +348,7 @@ class SearchServlet(
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) =>
         Ok(hakukohdeService.search(organisaatioOid, SearchParams(params.toMap)))
     }
@@ -380,7 +380,7 @@ class SearchServlet(
     implicit val authenticated: Authenticated = authenticate()
 
     params.get("organisaatioOid").map(OrganisaatioOid) match {
-      case None => NotFound()
+      case None => NotFound("")
       case Some(organisaatioOid) =>
         Ok(valintaperusteService.search(organisaatioOid, SearchParams(params.toMap)))
     }

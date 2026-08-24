@@ -28,11 +28,10 @@ object KeywordDAO extends KeywordDAO with KeywordSQL {
 
 sealed trait KeywordSQL extends KeywordExtractors with SQLHelpers {
 
-  private def fieldAndTable(`type`: KeywordType) = `type` match {
+  private def fieldAndTable(`type`: KeywordType): (String, String) = `type` match {
     case Ammattinimike => ("ammattinimike", "ammattinimikkeet")
     case Asiasana => ("asiasana", "asiasanat")
     case Luokittelutermi => ("luokittelutermi", "luokittelutermit")
-    case _ =>
   }
 
   def searchKeywordsByPrefix(search: KeywordSearchBase): DBIO[Vector[String]] = {

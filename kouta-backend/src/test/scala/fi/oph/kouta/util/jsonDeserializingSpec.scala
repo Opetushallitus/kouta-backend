@@ -1,6 +1,6 @@
 package fi.oph.kouta.util
 
-import fi.oph.kouta.domain.{Email, En, Fi, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Osaamismerkki, Puhelin, Sv, Www}
+import fi.oph.kouta.domain.{Email, En, Fi, Opetus, OrgOsoite, OrganisaatioServiceOrg, OrganisaationYhteystieto, Osaamismerkki, Puhelin, Sv, ToteutusMetadata, Www}
 import org.json4s.jackson.JsonMethods.parse
 
 class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
@@ -189,5 +189,71 @@ class jsonDeserializingSpec extends UnitSpec with KoutaJsonFormats {
 
     assert(parse(osaamismerkkiJson).extract[Osaamismerkki] == Osaamismerkki(tila = "JULKAISTU", koodiUri = "osaamismerkit_1010", voimassaoloLoppuu = None))
   }
-}
 
+  "opetus Serializer" should "throw exception when koulutuksenAlkamiskausi is null" in {
+    // If this test starts failing, it might mean that a bug in Json4s (at least in 4.0.0 - 4.1.1) has been fixed.
+    // In that case, The workaround in fi.oph.kouta.servlet.KoutaServlet.parsedBody can be removed.
+
+    val json = """{
+                 |  "opetuskieliKoodiUrit": [
+                 |    "oppilaitoksenopetuskieli_1#1"
+                 |  ],
+                 |  "opetuskieletKuvaus": {
+                 |    "fi": "Kielikuvaus fi",
+                 |    "sv": "Kielikuvaus sv"
+                 |  },
+                 |  "opetusaikaKoodiUrit": [
+                 |    "opetusaikakk_1#1"
+                 |  ],
+                 |  "opetusaikaKuvaus": {
+                 |    "fi": "Opetusaikakuvaus fi",
+                 |    "sv": "Opetusaikakuvaus sv"
+                 |  },
+                 |  "opetustapaKoodiUrit": [
+                 |    "opetuspaikkakk_1#1",
+                 |    "opetuspaikkakk_2#1"
+                 |  ],
+                 |  "opetustapaKuvaus": {
+                 |    "fi": "Opetustapakuvaus fi",
+                 |    "sv": "Opetustapakuvaus sv"
+                 |  },
+                 |  "maksullisuusKuvaus": {
+                 |    "fi": "Maksullisuuskuvaus fi",
+                 |    "sv": "Maksullisuuskuvaus sv"
+                 |  },
+                 |  "maksut": [
+                 |    {
+                 |      "maksullisuustyyppi": "maksullinen",
+                 |      "maksunMaara": 200.5
+                 |    }
+                 |  ],
+                 |  "koulutuksenAlkamiskausi": null,
+                 |  "lisatiedot": [
+                 |    {
+                 |      "otsikkoKoodiUri": "koulutuksenlisatiedot_03#1",
+                 |      "teksti": {
+                 |        "fi": "Opintojen rakenteen kuvaus",
+                 |        "sv": "Rakenne kuvaus sv"
+                 |      }
+                 |    },
+                 |    {
+                 |      "otsikkoKoodiUri": "koulutuksenlisatiedot_03#1",
+                 |      "teksti": {
+                 |        "fi": "Sisältö kuvaus",
+                 |        "sv": "Sisältö kuvaus sv"
+                 |      }
+                 |    }
+                 |  ],
+                 |  "onkoApuraha": false,
+                 |  "suunniteltuKestoVuodet": 3,
+                 |  "suunniteltuKestoKuukaudet": 10,
+                 |  "suunniteltuKestoKuvaus": {
+                 |    "fi": "Keston kuvaus fi",
+                 |    "sv": "Keston kuvaus sv"
+                 |  }
+                 |}""".stripMargin
+    assertThrows[org.json4s.MappingException] {
+      parse(json).extract[Opetus]
+    }
+  }
+}

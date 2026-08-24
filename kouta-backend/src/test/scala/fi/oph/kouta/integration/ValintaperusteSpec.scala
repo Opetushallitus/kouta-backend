@@ -280,7 +280,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "fail update if modified in between get and update" in {
     val id           = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    Thread.sleep(1500)
     update(getIds(valintaperuste(id, Arkistoitu)), lastModified)
     post(ValintaperustePath, bytes(valintaperuste(id)), headersIfUnmodifiedSince(lastModified)) {
       status should equal(409)
@@ -385,7 +384,6 @@ class ValintaperusteSpec extends KoutaIntegrationSpec with ValintaperusteFixture
   it should "delete all valintakokeet and read last modified from history" in {
     val id           = put(valintaperuste)
     val lastModified = get(id, valintaperuste(id))
-    Thread.sleep(1500)
     val uusiValintaperuste = getIds(valintaperuste(id).copy(valintakokeet = List()))
     update(uusiValintaperuste, lastModified, expectUpdate = true)
     get(id, uusiValintaperuste) should not equal lastModified

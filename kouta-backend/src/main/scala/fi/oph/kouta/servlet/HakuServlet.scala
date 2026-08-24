@@ -163,7 +163,7 @@ class HakuServlet(hakuService: HakuService) extends KoutaServlet {
     (params.get("organisaatioOid").map(OrganisaatioOid),
       params.getOrElse("myosArkistoidut", "true").toBoolean,
       params.getOrElse("yhteishaut", "true").toBoolean) match {
-      case (None, _, _) => NotFound()
+      case (None, _, _) => NotFound("")
       case (Some(oid), myosArkistoidut, yhteishaut) =>
         Ok(hakuService.list(oid, TilaFilter.alsoArkistoidutAddedToOlemassaolevat(myosArkistoidut), yhteishaut))
     }

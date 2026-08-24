@@ -3,7 +3,7 @@ package fi.oph.kouta.client
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
 
@@ -57,7 +57,7 @@ object ValintaperusteetServiceClient extends ValintaperusteetServiceClient with 
     "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   def getValintatapajono(valintatapajonoOid: String): ValintatapajonoDTO = {
     val request = new RequestBuilder().setMethod("GET").setUrl(urlProperties.url("valintaperusteet-service.valintatapajono.oid", valintatapajonoOid)).build
