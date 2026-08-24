@@ -2,7 +2,7 @@ package fi.oph.kouta.integration.fixture
 
 import fi.oph.kouta.SqsInTransactionServiceIgnoringIndexing
 import fi.oph.kouta.auditlog.AuditLog
-import fi.oph.kouta.client.{EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
+import fi.oph.kouta.client.{EPerusteAmosaaClient, EPerusteKoodiClient, KoodistoClient, LokalisointiClient, MockKoutaIndeksoijaClient}
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.integration.{AccessControlSpec, KoutaIntegrationSpec}
 import fi.oph.kouta.mocks.{MockAuditLogger, MockOhjausparametritClient, MockS3ImageService}
@@ -55,7 +55,7 @@ trait KoulutusFixtureWithIndexing extends KoulutusFixture {
     val organisaatioService          = new OrganisaatioServiceImpl(urlProperties.get)
     val koodistoService              = new KoodistoService(new KoodistoClient(urlProperties.get))
     val ePerusteKoodiClient          = new EPerusteKoodiClient(urlProperties.get)
-    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient)
+    val ammKoulutusServiceValidation = new AmmatillinenKoulutusServiceValidation(koodistoService, ePerusteKoodiClient, new EPerusteAmosaaClient(urlProperties.get))
     val koutaIndeksoijaClient        = new MockKoutaIndeksoijaClient
     val lokalisointiClient           = new LokalisointiClient(urlProperties.get)
     val keywordService               = new KeywordService(auditLog, organisaatioService)

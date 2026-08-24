@@ -58,6 +58,10 @@ eperusteet-service.tutkinnonosat-by-eperuste=https://{{host_virkailija}}/eperust
 eperusteet-service.osaamisalat-by-eperuste=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1/osaamisalakuvaukset
 eperusteet-service.osaamismerkki-by-id=https://{{host_virkailija}}/eperusteet-service/api/external/osaamismerkki/koodi/$1
 
+eperusteet-amosaa-service.opetussuunnitelmat=https://{{host_virkailija}}/eperusteet-amosaa-service/api/external/opetussuunnitelmat
+eperusteet-amosaa-service.opetussuunnitelma=https://{{host_virkailija}}/eperusteet-amosaa-service/api/external/opetussuunnitelma/$1
+eperusteet-amosaa-service.opetussuunnitelman-tutkinnonosat=https://{{host_virkailija}}/eperusteet-amosaa-service/api/external/opetussuunnitelma/$1/tutkinnonOsat
+
 ohjausparametrit-service.service=https://{{host_virkailija}}/ohjausparametrit-service
 ohjausparametrit-service.parametri=https://{{host_virkailija}}/ohjausparametrit-service/api/v1/rest/parametri/$1
 
