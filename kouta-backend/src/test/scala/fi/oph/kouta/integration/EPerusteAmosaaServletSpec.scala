@@ -20,30 +20,31 @@ class EPerusteAmosaaServletSpec extends KoutaIntegrationSpec {
     mocker.mockServer.foreach(_.resetRequests())
   }
 
-  private def verifyAmosaaCalledWithOrganisaatio(oid: String): Unit =
-    mocker.mockServer.get.verify(
-      getRequestedFor(urlPathEqualTo(amosaaOpetussuunnitelmatPath))
-        .withQueryParam("organisaatio", equalTo(oid))
-    )
+  private def verifyAmosaaCalledWithOrganisaatiot(oids: String*): Unit = {
+    val requestPattern = oids.foldLeft(getRequestedFor(urlPathEqualTo(amosaaOpetussuunnitelmatPath))) {
+      (pattern, oid) => pattern.withQueryParam("organisaatio", equalTo(oid))
+    }
+    mocker.mockServer.get.verify(requestPattern)
+  }
 
-  "GET /eperuste-amosaa/opetussuunnitelmat" should "resolve oppilaitos OID to koulutustoimija before calling amosaa" in {
+  "GET /eperuste-amosaa/opetussuunnitelmat" should "pass both the oppilaitos OID and its koulutustoimija ancestor to amosaa" in {
     get(s"/eperuste-amosaa/opetussuunnitelmat?organisaatiot=${ChildOid.s}", headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
-    verifyAmosaaCalledWithOrganisaatio(ParentOid.s)
+    verifyAmosaaCalledWithOrganisaatiot(ChildOid.s, ParentOid.s)
   }
 
   it should "pass koulutustoimija OID directly to amosaa unchanged" in {
     get(s"/eperuste-amosaa/opetussuunnitelmat?organisaatiot=${ParentOid.s}", headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
-    verifyAmosaaCalledWithOrganisaatio(ParentOid.s)
+    verifyAmosaaCalledWithOrganisaatiot(ParentOid.s)
   }
 
-  it should "resolve toimipiste OID to koulutustoimija before calling amosaa" in {
+  it should "pass toimipiste OID and all its ancestors up to koulutustoimija to amosaa" in {
     get(s"/eperuste-amosaa/opetussuunnitelmat?organisaatiot=${GrandChildOid.s}", headers = Seq(defaultSessionHeader)) {
       status should equal(200)
     }
-    verifyAmosaaCalledWithOrganisaatio(ParentOid.s)
+    verifyAmosaaCalledWithOrganisaatiot(GrandChildOid.s, ChildOid.s, ParentOid.s)
   }
 }
