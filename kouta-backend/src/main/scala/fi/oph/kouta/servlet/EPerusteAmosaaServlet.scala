@@ -17,11 +17,15 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |        - EPerusteAmosaa
       |      parameters:
       |        - in: query
-      |          name: organisaatio
+      |          name: organisaatiot
       |          schema:
-      |            type: string
+      |            type: array
+      |            items:
+      |              type: string
+      |          style: form
+      |          explode: true
       |          required: false
-      |          description: Organisaation OID
+      |          description: Lista organisaatioiden OIDeja
       |        - in: query
       |          name: nimi
       |          schema:
@@ -29,11 +33,23 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |          required: false
       |          description: Opetussunnitelman nimen osa
       |        - in: query
+      |          name: paikallistasisaltoa
+      |          schema:
+      |            type: boolean
+      |          required: false
+      |          description: Suodattaa paikallisten tutkinnon osien perusteella. true = sisältää, false = ei sisällä, pois jätettynä suodatinta ei käytetä.
+      |        - in: query
       |          name: sivu
       |          schema:
       |            type: integer
       |          required: false
-      |          description: Sivunumero (oletus 1)
+      |          description: Sivunumero (oletus 0)
+      |        - in: query
+      |          name: sivukoko
+      |          schema:
+      |            type: integer
+      |          required: false
+      |          description: Sivun koko (oletus 15)
       |      responses:
       |        '200':
       |          description: Opetussuunnitelmat
@@ -45,11 +61,13 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
   )
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
-    val organisaatio = params.get("organisaatio")
+    val organisaatiot = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
     val nimi = params.get("nimi")
-    val sivu = params.get("sivu")
+    val sivu = params.get("sivu").getOrElse("0")
+    val sivukoko = params.get("sivukoko").getOrElse("15")
+    val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
 
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatio, nimi, sivu))
+    Ok(amosaaClient.getOpetussuunnitelmat(organisaatiot, nimi, paikallistaSisaltoa, sivu, sivukoko))
   }
 
   registerPath(
