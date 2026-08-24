@@ -7,8 +7,7 @@ import fi.oph.kouta.mocks.MockSiirtotiedostoPalveluClient
 import fi.oph.kouta.repository.SiirtotiedostoDAO
 import fi.oph.kouta.service.{HakukohdeUtil, KoodistoService, SiirtotiedostoService}
 import fi.oph.kouta.servlet.SiirtotiedostoServlet
-import org.json4s.JValue
-import org.json4s.JsonAST.JArray
+import org.json4s.JsonAST.{JArray, JValue}
 import org.json4s.jackson.JsonMethods.parse
 import org.scalatest.Assertion
 

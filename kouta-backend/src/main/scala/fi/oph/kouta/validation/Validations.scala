@@ -9,7 +9,6 @@ import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.validation.CrudOperations.{CrudOperation, update}
 import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFound, queryFailed}
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
-import org.jsoup.nodes.Entities
 
 import java.time.temporal.ChronoUnit
 import java.time.{LocalDate, LocalDateTime}
@@ -678,7 +677,7 @@ object Validations {
   def assertValid(oid: Oid, path: String): IsValid                  = assertTrue(oid.isValid, path, validationMsg(oid.toString))
   def assertNotOptional[T](value: Option[T], path: String): IsValid = assertTrue(value.isDefined, path, missingMsg)
   def assertNotEmpty[T](value: Seq[T], path: String): IsValid       = assertTrue(value.nonEmpty, path, missingMsg)
-  def assertEmpty[T](value: Seq[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid =
+  def assertEmpty[T](value: Iterable[T], path: String, errorMessage: ErrorMessage = notEmptyMsg): IsValid =
     assertTrue(value.isEmpty, path, errorMessage)
   def assertEmptyKielistetty(kielistetty: Kielistetty, path: String): IsValid =
     assertTrue(kielistetty.isEmpty, path, notEmptyMsg)
@@ -866,6 +865,10 @@ object Validations {
   def validateIfTrue(b: Boolean, f: => IsValid): IsValid                      = if (b) f else NoErrors
   def validateIfTrueOrElse(b: Boolean, f: => IsValid, o: => IsValid): IsValid = if (b) f else o
   def validateIfFalse(b: Boolean, f: => IsValid): IsValid                     = if (!b) f else NoErrors
+
+  /** Validate if f is defined for the value, otherwise passing. */
+  def validateMatching[T](value: T)(f: PartialFunction[T, IsValid]): IsValid =
+    f.applyOrElse(value, (_: T) => NoErrors)
 
   def validateIfJulkaistu(tila: Julkaisutila, f: => IsValid): IsValid    = validateIfTrue(tila == Julkaistu, f)
   def validateIfAnyDefined(args: Seq[Option[_]], f: => IsValid): IsValid = validateIfTrue(args.exists(_.isDefined), f)

@@ -4,7 +4,7 @@ import com.github.blemale.scaffeine.{Cache, Scaffeine}
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.logging.Logging
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
 
@@ -36,7 +36,7 @@ trait KayttooikeusClient extends HttpClient with CallerId with Logging {
     "/j_spring_cas_security_check")
     .setJsessionName("JSESSIONID").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   implicit val kayttooikeusCache: Cache[UserOid, List[OrganisaatioHenkilo]] = Scaffeine()
     .expireAfterWrite(45.minutes)

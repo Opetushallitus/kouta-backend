@@ -2,15 +2,15 @@ package fi.oph.kouta
 
 import ch.qos.logback.access.jetty.RequestLogImpl
 import fi.oph.kouta.config.KoutaConfigurationFactory
-import fi.vm.sade.properties.OphProperties
 import fi.oph.kouta.logging.Logging
-import org.eclipse.jetty.server.{RequestLog, Server}
-import org.eclipse.jetty.util.resource.Resource
-import org.eclipse.jetty.webapp.WebAppContext
-import org.eclipse.jetty.servlet.FilterHolder
-import org.eclipse.jetty.servlets.CrossOriginFilter
+import fi.vm.sade.properties.OphProperties
+import org.eclipse.jetty.ee10.webapp.WebAppContext
+import org.eclipse.jetty.http.UriCompliance
+import org.eclipse.jetty.server.handler.CrossOriginHandler
+import org.eclipse.jetty.server.{HttpConfiguration, HttpConnectionFactory, RequestLog, Server, ServerConnector}
 
-import javax.servlet.DispatcherType
+import java.time.Duration
+import scala.jdk.CollectionConverters.setAsJavaSetConverter
 
 object JettyLauncher extends Logging {
   val DEFAULT_PORT = "8080"
@@ -23,29 +23,45 @@ object JettyLauncher extends Logging {
 }
 
 class JettyLauncher(val port: Int, val enableCors: Boolean = false) {
-  val server = new Server(port)
+  val server = new Server()
+
+  // Kouta-indeksoija enkoodaa lastModified-aikaleiman kahteen kertaan polkusegmenttiin
+  // (esim. /indexer/modifiedSince/Thu%252C...), koska IndexerServlet purkaa sen itse vielä
+  // kerran URLDecoderilla Scalatran oman purun jälkeen. Jetty 12 tulkitsee tällaisen
+  // moniselitteisesti enkoodatun polun oletuksena vaaralliseksi ja palauttaa 400:n
+  // ("Ambiguous URI path encoding"), joten sallitaan se eksplisiittisesti.
+  val httpConfig = new HttpConfiguration()
+  httpConfig.setUriCompliance(UriCompliance.LEGACY)
+  val connector = new ServerConnector(server, new HttpConnectionFactory(httpConfig))
+  connector.setPort(port)
+  server.setConnectors(Array(connector))
+
   val context = new WebAppContext()
-  context.setBaseResource(Resource.newClassPathResource("webapp"))
-  context.setDescriptor("WEB-INF/web.xml")
+  context.setBaseResource(context.getResourceFactory.newClassLoaderResource("/webapp"))
   context.setContextPath("/kouta-backend")
+  // HttpConfiguration.setUriCompliance yllä sallii moniselitteisesti enkoodatun polun jo
+  // HTTP-tason parsinnassa, mutta ee10-servlettikerros (ServletHandler) tekee tästä vielä oman,
+  // erillisen tarkistuksensa ja heittää HttpException.IllegalArgumentExceptionin heti kun
+  // getServletPath()/getPathInfo()-metodeja kutsutaan, ellei tätä myös sallita erikseen.
+  context.getServletHandler.setDecodeAmbiguousURIs(true)
 
   if (enableCors) {
-    val filter = new FilterHolder
-    filter.setInitParameter("allowedOrigins", "https://localhost:3000")
-    filter.setInitParameter("allowedMethods", "POST,GET,OPTIONS,PUT,DELETE,HEAD")
-    filter.setInitParameter("allowedHeaders", "X-PINGOTHER, Origin, X-Requested-With, Content-Type, Accept")
-    filter.setInitParameter("preflightMaxAge", "728000")
-    filter.setInitParameter("allowCredentials", "true")
-    filter.setFilter(new CrossOriginFilter)
-
-    context.addFilter(filter, "/*", java.util.EnumSet.of[DispatcherType](DispatcherType.REQUEST))
+    val handler = new CrossOriginHandler
+    handler.setAllowedOriginPatterns(Set("https://localhost:3000").asJava)
+    handler.setAllowedMethods(Set("POST", "GET", "OPTIONS", "PUT", "DELETE", "HEAD").asJava)
+    handler.setAllowedHeaders(Set("X-PINGOTHER", "Origin", "X-Requested-With", "Content-Type", "Accept").asJava)
+    handler.setPreflightMaxAge(Duration.ofSeconds(728000))
+    handler.setAllowCredentials(true)
+    handler.setHandler(context)
+    server.setHandler(handler)
+  } else {
+    server.setHandler(context)
   }
-
-  server.setHandler(context)
 
   server.setRequestLog(requestLog(KoutaConfigurationFactory.configuration.urlProperties))
 
-  def start = {
+  def start: Server = {
+    println("JettyLauncher: starting server at http://localhost:" + port)
     server.start
     server
   }

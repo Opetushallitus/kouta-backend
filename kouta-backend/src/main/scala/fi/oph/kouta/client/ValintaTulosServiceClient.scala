@@ -4,7 +4,7 @@ import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.HakuOid
 import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.util.KoutaJsonFormats
-import fi.vm.sade.javautils.nio.cas.{CasClient, CasClientBuilder, CasConfig}
+import fi.vm.sade.javautils.nio.cas.{CasClient, CasConfig}
 import org.asynchttpclient.RequestBuilder
 import org.json4s.jackson.JsonMethods.parse
 
@@ -36,7 +36,7 @@ object ValintaTulosServiceClient extends ValintaTulosServiceClient with HttpClie
     "/auth/login")
     .setJsessionName("session").build
 
-  val casClient: CasClient = CasClientBuilder.build(casConfig)
+  val casClient: CasClient = CasClientFactory.build(casConfig)
 
   def fetchPisteet(hakuOid: HakuOid): List[JononAlimmatPisteet] = {
     val request = new RequestBuilder().setMethod("GET").setUrl(urlProperties.url("valinta-tulos-service.haku.alimmatpisteet", hakuOid.toString)).build

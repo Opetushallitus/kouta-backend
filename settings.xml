@@ -28,15 +28,5 @@
             <username>private-token</username>
             <password>${env.GITHUB_TOKEN}</password>
         </server>
-        <server>
-            <id>oph-sade-artifactory</id>
-            <username>${env.ARTIFACTORY_USERNAME}</username>
-            <password>${env.ARTIFACTORY_PASSWORD}</password>
-        </server>
-        <server>
-            <id>oph-nexus</id>
-            <username>${env.ARTIFACTORY_USERNAME}</username>
-            <password>${env.ARTIFACTORY_PASSWORD}</password>
-        </server>
     </servers>
 </settings>
