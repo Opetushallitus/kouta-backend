@@ -24,6 +24,15 @@ trait OrganisaatioService {
     )
   }
 
+  private def findParentOid(oid: OrganisaatioOid, pred: OidAndChildren => Boolean): Option[OrganisaatioOid] =
+    find(pred, getHierarkiaFromCache(oid).toSet).map(_.oid)
+
+  def findParentKoulutustoimijaOids(oids: Set[String]): Set[OrganisaatioOid] =
+    oids.flatMap(oid => findParentOid(OrganisaatioOid(oid), _.isKoulutustoimija))
+
+  def findParentOppilaitosOid(oid: OrganisaatioOid): Option[OrganisaatioOid] =
+    findParentOid(oid, _.isOppilaitos)
+
   def findMatchingOppilaitosBranches(organisaatioOids: Seq[OrganisaatioOid]): List[OidAndChildren] = {
     if (organisaatioOids.isEmpty) List()
     else findMatchingTopLevelOrgs(
@@ -41,7 +50,7 @@ trait OrganisaatioService {
     case _                   => (children(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
   }
 
-  def withoutOppilaitostyypit(oids: Seq[OrganisaatioOid], oppilaitostyypit: Seq[String]) = {
+  def withoutOppilaitostyypit(oids: Seq[OrganisaatioOid], oppilaitostyypit: Seq[String]): Seq[OrganisaatioOid] = {
     if (oppilaitostyypit.isEmpty) {
       Seq()
     } else {
@@ -54,9 +63,6 @@ trait OrganisaatioService {
       case RootOrganisaatioOid => (Seq(RootOrganisaatioOid), Koulutustyyppi.values)
       case _                   => (parentsAndChildren(getPartialHierarkia(oid)), hierarkiaToKoulutustyypit(getHierarkiaFromCache(oid)))
     }
-
-  def findOppilaitosOidFromOrganisaationHierarkia(oid: OrganisaatioOid): Option[OrganisaatioOid] =
-    find(_.isOppilaitos, getHierarkiaFromCache(oid).toSet).map(_.oid)
 
   def findOrganisaatioOidsFlatByMemberOid(oid: OrganisaatioOid): Seq[OrganisaatioOid] =
     getHierarkiaFromCache(oid) match {
