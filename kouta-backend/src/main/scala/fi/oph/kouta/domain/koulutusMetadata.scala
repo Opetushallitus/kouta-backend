@@ -20,6 +20,11 @@ package object koulutusMetadata {
       |          items:
       |            type: object
       |            $ref: '#/components/schemas/Lisatieto'
+      |        luokittelutermit:
+      |          type: array
+      |          description: Koulutukseen liittyvät luokittelutermit
+      |          items:
+      |            type: string
       |""".stripMargin
 
   val KorkeakouluMetadataModel: String =
