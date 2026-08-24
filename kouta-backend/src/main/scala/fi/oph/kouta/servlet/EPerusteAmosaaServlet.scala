@@ -10,7 +10,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
   registerPath(
     "/eperuste-amosaa/opetussuunnitelmat",
     """    get:
-      |      summary: Hae opetussuunnitelmat eperusteet-amosaa-palvelusta
+      |      summary: Hae opetussuunnitelmia eperusteet-amosaa-palvelusta parametrien perusteella sivutettuna
       |      operationId: getOpetussuunnitelmat
       |      description: Hakee opetussuunnitelmat eperusteet-amosaa-palvelusta organisaatio-oidien perusteella
       |      tags:
@@ -20,18 +20,36 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |          name: organisaatio
       |          schema:
       |            type: string
-      |          required: true
+      |          required: false
       |          description: Organisaation OID
-      |          example: "1.2.246.562.10.00000000001"
+      |        - in: query
+      |          name: nimi
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Opetussunnitelman nimen osa
+      |        - in: query
+      |          name: sivu
+      |          schema:
+      |            type: integer
+      |          required: false
+      |          description: Sivunumero (oletus 1)
       |      responses:
       |        '200':
-      |          description: Ok
+      |          description: Opetussuunnitelmat
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/AmosaaOpetussuunnitelmatResponse'
       |""".stripMargin
   )
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
-    val organisaatio = params("organisaatio")
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatio))
+    val organisaatio = params.get("organisaatio")
+    val nimi = params.get("nimi")
+    val sivu = params.get("sivu")
+
+    Ok(amosaaClient.getOpetussuunnitelmat(organisaatio, nimi, sivu))
   }
 
   registerPath(
@@ -52,7 +70,11 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient) extends KoutaSer
       |          example: 5574388
       |      responses:
       |        '200':
-      |          description: Ok
+      |          description: Paikalliset tutkinnon osat
+      |          content:
+      |            application/json:
+      |              schema:
+      |                $ref: '#/components/schemas/AmosaaPaikallisetTutkinnonOsatResponse'
       |""".stripMargin
   )
   get("/opetussuunnitelma/:opsId/paikalliset-tutkinnonosat") {
