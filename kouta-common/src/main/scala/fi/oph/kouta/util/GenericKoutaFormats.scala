@@ -7,6 +7,7 @@ import fi.oph.kouta.domain._
 import fi.oph.kouta.domain.oid._
 import org.json4s.JsonAST.JString
 import org.json4s.ext.JavaTypesSerializers
+import org.json4s.prefs.ExtractionNullStrategy
 import org.json4s.jackson.Serialization.write
 import org.json4s.{CustomKeySerializer, CustomSerializer, DefaultFormats, Formats, JNull, MappingException, Serialization}
 
@@ -23,7 +24,31 @@ trait GenericKoutaFormats {
   val ISO_LOCAL_DATE_TIME_FORMATTER: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
   val ISO_MODIFIED_FORMATTER: DateTimeFormatter        = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss")
 
-  def genericKoutaFormats: Formats = DefaultFormats.strict
+  def genericKoutaFormats: Formats = withKoutaSerializers(DefaultFormats.strict)
+
+  /**
+   * Formaatit indeksistä luettaville dokumenteille.
+   *
+   * Json4s 4.0 tiukensi kahta asiaa, jotka 3.6 hyväksyi:
+   *  - uusi strictMapExtraction-lippu (mukana DefaultFormats.strictissä) hylkää literaalin nullin
+   *    Map- tai Kielistetty-kentässä; 3.6 palautti Map.empty
+   *  - strictOptionParsing sai uuden tarkistuksen ("No value set for Option properties"), joka
+   *    hylkää case classin, jonka kaikki Option-kentät ovat asettamatta
+   * Kouta-indeksoijan kirjoittamissa dokumenteissa esim. haun metadata.koulutuksenAlkamiskausi voi
+   * puuttua kokonaan tai olla null, ja tällainen dokumentti katosi hakutuloksista päivityksen
+   * jälkeen. Luetaan indeksidokumentit siksi 3.6:n tapaan sallivasti - kokoelmien tiukkuus
+   * (strictArrayExtraction) säilyy. Sisääntulevan JSONin validointi pysyy ennallaan, koska se
+   * käyttää genericKoutaFormatsia.
+   *
+   * TreatAsAbsent tarvitaan, jotta literaali null käsitellään puuttuvana kenttänä ja case classin
+   * oletusarvo kelpaa. Oletuksena (Keep) nullista tulisi Scala-null keskelle valmista objektia, ja
+   * dokumentti hajoaisi vasta myöhemmin NullPointerExceptioniin.
+   */
+  def indexedDocumentFormats: Formats = withKoutaSerializers(
+    DefaultFormats.withStrictArrayExtraction.withExtractionNullStrategy(ExtractionNullStrategy.TreatAsAbsent)
+  )
+
+  private def withKoutaSerializers(base: Formats): Formats = base
     .addKeySerializers(Seq(kieliKeySerializer)) ++ JavaTypesSerializers.all ++
     Seq(
       LocalDateTimeSerializer,

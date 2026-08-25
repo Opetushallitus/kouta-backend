@@ -352,7 +352,7 @@ package object searchResults {
 }
 
 case class KoulutusSearchItem (oid: KoulutusOid,
-                               nimi: Kielistetty,
+                               nimi: Kielistetty = Map(),
                                organisaatio: IndexedOrganisaatio,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
@@ -363,7 +363,7 @@ case class KoulutusSearchItem (oid: KoulutusOid,
                                toteutusCount: Int = 0) extends KoulutusItemCommon
 
 case class KoulutusSearchItemFromIndex (oid: KoulutusOid,
-                                        nimi: Kielistetty,
+                                        nimi: Kielistetty = Map(),
                                         organisaatio: IndexedOrganisaatio,
                                         muokkaaja: Muokkaaja,
                                         modified: Modified,
@@ -389,7 +389,7 @@ case class EPeruste(id: String,
                     koulutukset: List[KoulutusKoodiUri] = List())
 
 case class KoulutusSearchItemToteutus(oid: ToteutusOid,
-                                      nimi: Kielistetty,
+                                      nimi: Kielistetty = Map(),
                                       tila: Julkaisutila,
                                       modified: Modified,
                                       organisaatio: IndexedOrganisaatio,
@@ -403,7 +403,7 @@ case class ToteutusSearchResult(totalCount: Long = 0,
                                 result: Seq[ToteutusSearchItem] = Seq())
 
 case class ToteutusSearchItem(oid: ToteutusOid,
-                              nimi: Kielistetty,
+                              nimi: Kielistetty = Map(),
                               organisaatio: IndexedOrganisaatio,
                               muokkaaja: Muokkaaja,
                               modified: Modified,
@@ -415,7 +415,7 @@ case class ToteutusSearchItem(oid: ToteutusOid,
 
 case class ToteutusHakutieto(hakukohteet: Seq[ToteutusSearchItemHakukohde] = Seq.empty)
 case class ToteutusSearchItemFromIndex(oid: ToteutusOid,
-                                       nimi: Kielistetty,
+                                       nimi: Kielistetty = Map(),
                                        organisaatio: IndexedOrganisaatio,
                                        muokkaaja: Muokkaaja,
                                        modified: Modified,
@@ -434,7 +434,7 @@ trait ToteutusItemCommon extends HasTila {
 }
 
 case class ToteutusSearchItemHakukohde(hakukohdeOid: HakukohdeOid, // TODO: Why is this hakukohdeOid?
-                                       nimi: Kielistetty,
+                                       nimi: Kielistetty = Map(),
                                        tila: Julkaisutila,
                                        modified: Modified,
                                        organisaatio: IndexedOrganisaatio)
@@ -443,7 +443,7 @@ case class HakuSearchResult(totalCount: Long = 0,
                             result: Seq[HakuSearchItem] = Seq())
 
 case class HakuSearchItem(oid: HakuOid,
-                          nimi: Kielistetty,
+                          nimi: Kielistetty = Map(),
                           organisaatio: IndexedOrganisaatio,
                           muokkaaja: Muokkaaja,
                           modified: Modified,
@@ -452,16 +452,23 @@ case class HakuSearchItem(oid: HakuOid,
                           koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem,
                           hakukohdeCount: Int = 0) extends HakuItemCommon
 
-case class HakuMetadataIndexed(koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem)
+// Oletusarvot indeksistä luettaville kentille: kouta-indeksoija jättää metadatan tai
+// koulutuksenAlkamiskausen pois (tai kirjoittaa nullin) niiltä hauilta, joilla alkamisajankohtaa ei
+// ole, ja Kielistetty-kentät voivat olla nulleja. Json4s 3.6 palautti nullista Map.empty; 4.0:n
+// kanssa käytetty TreatAsAbsent tarvitsee oletusarvon, muuten dokumentti ei deserialisoidu ja haku
+// katoaa hakutuloksista kesken sivutuksen. Pakolliset tunnistetiedot (oid, tila, modified,
+// organisaatio, muokkaaja, hakutapa) jätetään tarkoituksella ilman oletusarvoa: niiden puuttuminen
+// on datavirhe, joka halutaan nähdä lokista pudotettuna dokumenttina.
+case class HakuMetadataIndexed(koulutuksenAlkamiskausi: KoulutuksenAlkamiskausiSearchItem = KoulutuksenAlkamiskausiSearchItem())
 
 case class HakuSearchItemFromIndex(oid: HakuOid,
-                                   nimi: Kielistetty,
+                                   nimi: Kielistetty = Map(),
                                    organisaatio: IndexedOrganisaatio,
                                    muokkaaja: Muokkaaja,
                                    modified: Modified,
                                    tila: Julkaisutila,
                                    hakutapa: Hakutapa,
-                                   metadata: HakuMetadataIndexed,
+                                   metadata: HakuMetadataIndexed = HakuMetadataIndexed(),
                                    hakukohteet: Seq[HakuSearchItemHakukohde] = Seq()) extends HakuItemCommon with Logging
 
 trait HakuItemCommon extends HasTila {
@@ -473,13 +480,13 @@ trait HakuItemCommon extends HasTila {
 }
 
 case class HakuSearchItemHakukohde(oid: HakukohdeOid,
-                                   nimi: Kielistetty,
+                                   nimi: Kielistetty = Map(),
                                    tila: Julkaisutila,
                                    modified: Modified,
                                    organisaatio: IndexedOrganisaatio)
 
 case class HakukohdeSearchItem(oid: HakukohdeOid,
-                               nimi: Kielistetty,
+                               nimi: Kielistetty = Map(),
                                organisaatio: IndexedOrganisaatio,
                                muokkaaja: Muokkaaja,
                                modified: Modified,
@@ -490,7 +497,7 @@ case class HakukohdeSearchItem(oid: HakukohdeOid,
                               ) extends HasTila
 
 case class ValintaperusteSearchItem(id: UUID,
-                                    nimi: Kielistetty,
+                                    nimi: Kielistetty = Map(),
                                     organisaatio: IndexedOrganisaatio,
                                     muokkaaja: Muokkaaja,
                                     modified: Modified,
@@ -499,13 +506,13 @@ case class ValintaperusteSearchItem(id: UUID,
                                     julkinen: Option[Boolean] = None) extends HasTila
 
 case class IndexedOrganisaatio(oid: OrganisaatioOid,
-                               nimi: Kielistetty)
+                               nimi: Kielistetty = Map())
 
 case class Muokkaaja(nimi: Option[String] = None,
                      oid: UserOid)
 
 case class Hakutapa(koodiUri: String,
-                    nimi: Kielistetty)
+                    nimi: Kielistetty = Map())
 
 case class KoulutuksenAlkamiskausiSearchItem(
   alkamiskausityyppi: Option[Alkamiskausityyppi] = None,
@@ -520,4 +527,4 @@ case class KoulutuksenAlkamiskausiSearchItem(
 )
 
 case class KoulutuksenAlkamisKausiObject(koodiUri: String,
-                                         nimi: Kielistetty)
+                                         nimi: Kielistetty = Map())
