@@ -15,7 +15,7 @@ trait KoutaJsonFormats extends GenericKoutaJsonFormats with DefaultKoutaJsonForm
 
 sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
 
-  def koutaJsonFormats: Formats = genericKoutaFormats ++ Seq(
+  private def koutaSerializers = Seq(
     koulutusMetadataSerializer,
     koulutusMetadataRaporttiItemSerializer,
     toteutusMetadataSerializer,
@@ -26,6 +26,15 @@ sealed trait DefaultKoutaJsonFormats extends GenericKoutaFormats {
     organisaationYhteystietoSerializer,
     osaamismerkkiSerializer
   )
+
+  def koutaJsonFormats: Formats = genericKoutaFormats ++ koutaSerializers
+
+  /**
+   * Indeksistä luettavien dokumenttien formaatit, ks. GenericKoutaFormats.indexedDocumentFormats.
+   * Samat serialisoijat kuin koutaJsonFormatsissa, jotta polymorfiset metadata-tyypit toimivat myös
+   * indeksiä luettaessa, jos jokin hakutulostyyppi joskus saa sellaisen kentän.
+   */
+  def indexedDocumentKoutaFormats: Formats = indexedDocumentFormats ++ koutaSerializers
 
   private def koulutusMetadataSerializer = new CustomSerializer[KoulutusMetadata](_ =>
     (

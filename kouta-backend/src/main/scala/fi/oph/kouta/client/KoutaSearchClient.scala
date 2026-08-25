@@ -1,7 +1,6 @@
 package fi.oph.kouta.client
 
 import com.sksamuel.elastic4s.ElasticDsl._
-import com.sksamuel.elastic4s.json4s.ElasticJson4s.Implicits._
 import com.sksamuel.elastic4s.requests.searches.SearchRequest
 import com.sksamuel.elastic4s.requests.searches.sort.SortOrder
 import com.sksamuel.elastic4s.{ElasticClient, HitReader}
