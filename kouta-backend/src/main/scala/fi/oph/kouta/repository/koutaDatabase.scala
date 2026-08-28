@@ -73,7 +73,7 @@ abstract class KoutaDatabaseAccessor extends Logging {
   def runBlocking[R](operations: DBIO[R], timeout: Duration = Duration(10, TimeUnit.MINUTES)): R = {
     Await.result(
       db.run(operations.withStatementParameters(statementInit = st => st.setQueryTimeout(timeout.toSeconds.toInt))),
-      timeout + Duration(1, TimeUnit.SECONDS)
+      timeout + Duration(1, TimeUnit.SECONDS) + Duration(hikariConfig.getConnectionTimeout, TimeUnit.MILLISECONDS)
     )
   }
 
