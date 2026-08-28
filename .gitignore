@@ -14,3 +14,5 @@ kouta_backend.sql
 
 kouta-backend/src/test/resources/dev-vars.yml
 kouta-common/src/test/resources/dev-vars.yml
+
+.claude/
