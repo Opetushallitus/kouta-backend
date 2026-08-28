@@ -9,7 +9,7 @@ import org.json4s.jackson.JsonMethods.parse
 
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import scala.concurrent.ExecutionContext.Implicits.global
+import fi.oph.kouta.client.BlockingHttpExecutionContext.blockingHttpEc
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 

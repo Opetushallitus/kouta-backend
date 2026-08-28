@@ -12,7 +12,7 @@ import org.json4s.jackson.JsonMethods._
 import java.util.concurrent.TimeUnit
 import scala.compat.java8.FutureConverters.toScala
 import scala.concurrent.{Await, Future}
-import scala.concurrent.ExecutionContext.Implicits.global
+import fi.oph.kouta.client.BlockingHttpExecutionContext.blockingHttpEc
 import scala.concurrent.duration._
 
 case class Henkilo(kutsumanimi: Option[String],
