@@ -37,8 +37,10 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
     when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_02#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_03#1")).thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(HakutapaKoodisto, "hakutapa_04#1")).thenAnswer(itemFound)
-    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_17#1")).thenAnswer(itemFound)
-    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, "haunkohdejoukontarkenne_1#1")).thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukkoKoodisto, "haunkohdejoukko_17#1"))
+      .thenAnswer(itemFound)
+    when(koodistoService.koodiUriExistsInKoodisto(HaunKohdejoukonTarkenneKoodisto, "haunkohdejoukontarkenne_1#1"))
+      .thenAnswer(itemFound)
     when(koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, "kausi_k#1")).thenAnswer(itemFound)
     when(hakemusPalveluClient.isExistingAtaruIdFromCache(ataruId)).thenAnswer(itemFound)
 
@@ -105,10 +107,7 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
   it should "fail when given ataruid not found" in {
     val randomUUID = UUID.randomUUID()
     failsValidation(
-      max.copy(
-        hakulomaketyyppi = Some(Ataru),
-        hakulomakeLinkki = Map(),
-        hakulomakeAtaruId = Some(randomUUID)),
+      max.copy(hakulomaketyyppi = Some(Ataru), hakulomakeLinkki = Map(), hakulomakeAtaruId = Some(randomUUID)),
       Seq(
         ValidationError("hakulomakeAtaruId", unknownAtaruId(randomUUID)),
         ValidationError("hakulomakeAtaruId", invalidAtaruFormAllowsOnlyYhteishaku(randomUUID))
@@ -134,6 +133,59 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
       max.copy(metadata = Some(maxMetadata.copy(tulevaisuudenAikataulu = Seq(ajanJakso)))),
       "metadata.tulevaisuudenAikataulu[0]",
       invalidAjanjaksoMsg(ajanJakso)
+    )
+  }
+
+  it should "succeed when varasijatayttoPaattyy is after hakuaika paattyy" in {
+    val hakuaikaPaattyy       = inFuture().plusDays(10)
+    val hakuajat              = List(Ajanjakso(alkaa = now(), paattyy = Some(hakuaikaPaattyy)))
+    val varasijatayttoPaattyy = Some(hakuaikaPaattyy.plusHours(1))
+
+    passesValidation(
+      max.copy(hakuajat = hakuajat, metadata = Some(maxMetadata.copy(varasijatayttoPaattyy = varasijatayttoPaattyy)))
+    )
+  }
+
+  it should "fail when varasijatayttoPaattyy is before hakuaika paattyy" in {
+    val now                   = inFuture()
+    val hakuaikaPaattyy       = now.plusDays(10)
+    val hakuajat              = List(Ajanjakso(alkaa = now, paattyy = Some(hakuaikaPaattyy)))
+    val varasijatayttoPaattyy = Some(now.plusDays(1))
+
+    failsValidation(
+      max.copy(hakuajat = hakuajat, metadata = Some(maxMetadata.copy(varasijatayttoPaattyy = varasijatayttoPaattyy))),
+      "metadata.varasijatayttoPaattyy",
+      invalidVarasijatayttoPaattyyMsg
+    )
+  }
+
+  it should "succeed to set varasijatayttoPaattyy when hakuaika doesn't have paattyy time" in {
+    val now                   = inFuture()
+    val hakuajat              = List(Ajanjakso(alkaa = now, paattyy = None))
+    val varasijatayttoPaattyy = Some(now.plusDays(1))
+
+    passesValidation(
+      max.copy(hakuajat = hakuajat, metadata = Some(maxMetadata.copy(varasijatayttoPaattyy = varasijatayttoPaattyy)))
+    )
+  }
+
+  it should "fail when varasijatayttoPaattyy is before one of the hakuaika paattyy values" in {
+    val now              = inFuture()
+    val hakuaikaPaattyy1 = now.plusDays(10)
+    val hakuaikaAlkaa2   = now.plusDays(20)
+    val hakuaikaPaattyy2 = now.plusDays(30)
+    val hakuaikaAlkaa3   = now.plusDays(40)
+    val hakuajat         = List(
+      Ajanjakso(alkaa = hakuaikaAlkaa2, paattyy = Some(hakuaikaPaattyy2)),
+      Ajanjakso(alkaa = hakuaikaAlkaa3),
+      Ajanjakso(alkaa = now, paattyy = Some(hakuaikaPaattyy1))
+    )
+    val varasijatayttoPaattyy = Some(now.plusDays(21))
+
+    failsValidation(
+      max.copy(hakuajat = hakuajat, metadata = Some(maxMetadata.copy(varasijatayttoPaattyy = varasijatayttoPaattyy))),
+      "metadata.varasijatayttoPaattyy",
+      invalidVarasijatayttoPaattyyMsg
     )
   }
 
