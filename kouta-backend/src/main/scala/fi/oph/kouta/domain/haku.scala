@@ -227,6 +227,7 @@ case class HakuListItem(oid: HakuOid,
 case class HakuMetadata(yhteyshenkilot: Seq[Yhteyshenkilo] = Seq(),
                         tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
                         koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+                        varasijatayttoPaattyy: Option[LocalDateTime] = None,
                         isMuokkaajaOphVirkailija: Option[Boolean])
 
 case class HakuEnrichedData(muokkaajanNimi: Option[String] = None)
