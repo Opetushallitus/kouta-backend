@@ -648,6 +648,9 @@ object Validations {
       id = "onlyTeemakuvaOrEsittelyvideo"
     )
 
+  val invalidVarasijatayttoPaattyyMsg: ErrorMessage =
+    ErrorMessage(msg = s"Varasijatäytön päättymisen ajankohdan tulee olla hakuajan jälkeen", id = "invalidVarasijatayttoPaattyyMsg")
+
   def hakukohteenLiittaminenNotAllowed(koulutustyyppi: Koulutustyyppi): ErrorMessage =
     ErrorMessage(msg = s"Hakukohteita ei voi liittää tälle koulutustyypille: $koulutustyyppi", id = "hakukohteenLiittaminenNotAllowed")
 

@@ -845,6 +845,7 @@ object TestData {
     metadata = Some(
       HakuMetadata(
         yhteyshenkilot = Seq(Yhteystieto1),
+        varasijatayttoPaattyy = None,
         tulevaisuudenAikataulu = Seq(Ajanjakso(alkaa = now(), paattyy = Some(inFuture().plusYears(200)))),
         koulutuksenAlkamiskausi = Some(
           KoulutuksenAlkamiskausi(
