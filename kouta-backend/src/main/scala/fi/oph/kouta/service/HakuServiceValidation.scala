@@ -19,12 +19,9 @@ class HakuServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     organisaatioService: OrganisaatioService
 ) extends ValidatingService[Haku] {
-  private def isYhteisHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_01")
-  private def isJatkuvaHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_03")
-  private def isJoustavaHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_04")
+  private def isYhteisHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_01")
+  private def isJatkuvaHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_03")
+  private def isJoustavaHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_04")
 
   override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = {
     val hakuDiffResolver = HakuDiffResolver(haku, oldHaku)
