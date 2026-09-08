@@ -51,5 +51,6 @@ case class HakuMetadataRaporttiItem(
     yhteyshenkilot: Seq[YhteyshenkiloRaporttiItem] = Seq(),
     tulevaisuudenAikataulu: Seq[Ajanjakso] = Seq(),
     koulutuksenAlkamiskausi: Option[KoulutuksenAlkamiskausiRaporttiItem],
+    varasijatayttoPaattyy: Option[LocalDateTime] = None,
     isMuokkaajaOphVirkailija: Option[Boolean]
 )
