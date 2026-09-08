@@ -14,7 +14,7 @@ import org.json4s.jackson.JsonMethods.parse
 
 import java.util.UUID
 import java.util.concurrent.TimeUnit
-import scala.concurrent.ExecutionContext.Implicits.global
+import fi.oph.kouta.client.BlockingHttpExecutionContext.blockingHttpEc
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.{Duration, DurationInt}
 

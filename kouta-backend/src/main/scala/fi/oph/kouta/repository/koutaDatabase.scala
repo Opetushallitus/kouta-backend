@@ -21,8 +21,18 @@ import scala.util.{Failure, Success, Try}
 abstract class KoutaDatabaseAccessor extends Logging {
   val settings: KoutaDatabaseConfiguration = KoutaConfigurationFactory.configuration.databaseConfiguration
 
+  // Poolikohtainen nimi, jotta Hikarin lokit ja MBeanit erottelevat poolit toisistaan. Nimien on oltava
+  // uniikkeja, koska registerMbeans=true rekisteröi MBeanin poolin nimellä.
+  protected def poolName: String = getClass.getSimpleName.stripSuffix("$")
+
   def hikariConfig: HikariConfig = {
     val config = new HikariConfig()
+    config.setPoolName(poolName)
+    // Yhteyden odottamisen on aikakatkaistava selvästi ennen kuin kutsujan Await ehtii aikakatkaista
+    // (ks. runBlockingTransactionally, 20 s + 1 s). Hikarin oletus on 30 s, jolloin pooliruuhka näkyi
+    // lokissa pelkkänä TimeoutExceptionina eikä Hikarin omana "Connection is not available" -virheenä.
+    config.setConnectionTimeout(5000)
+    config.setValidationTimeout(3000)
     if (settings.useAwsJdbcWrapper) {
       config.setDriverClassName("software.amazon.jdbc.Driver")
       config.setJdbcUrl(settings.url.replace("jdbc:postgresql:", "jdbc:aws-wrapper:postgresql:"))
@@ -45,15 +55,17 @@ abstract class KoutaDatabaseAccessor extends Logging {
   }
 
   val db = {
-    val executor = AsyncExecutor("kouta", hikariConfig.getMaximumPoolSize, 1000)
+    val config = hikariConfig
+    // Slick vaatii queueSize > 0 -tapauksessa, että säiemäärä == maxConnections.
+    val executor = AsyncExecutor(poolName, config.getMaximumPoolSize, 1000)
     logger.info(
       s"Configured Hikari with ${classOf[HikariConfig].getSimpleName} " +
-        s"${ToStringBuilder.reflectionToString(hikariConfig).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
+        s"${ToStringBuilder.reflectionToString(config).replaceAll("password=.*?,", "password=<HIDDEN>,")}" +
         s" and executor ${ToStringBuilder.reflectionToString(executor)}"
     )
     Database.forDataSource(
-      new HikariDataSource(hikariConfig),
-      maxConnections = Some(hikariConfig.getMaximumPoolSize),
+      new HikariDataSource(config),
+      maxConnections = Some(config.getMaximumPoolSize),
       executor
     )
   }
@@ -61,7 +73,7 @@ abstract class KoutaDatabaseAccessor extends Logging {
   def runBlocking[R](operations: DBIO[R], timeout: Duration = Duration(10, TimeUnit.MINUTES)): R = {
     Await.result(
       db.run(operations.withStatementParameters(statementInit = st => st.setQueryTimeout(timeout.toSeconds.toInt))),
-      timeout + Duration(1, TimeUnit.SECONDS)
+      timeout + Duration(1, TimeUnit.SECONDS) + Duration(hikariConfig.getConnectionTimeout, TimeUnit.MILLISECONDS)
     )
   }
 
@@ -100,8 +112,14 @@ object KoutaDatabase extends KoutaDatabaseAccessor with Logging {
 
   def init(): Unit = {}
 
+  // Oma, tarkoituksella pieni pooli db-schedulerille (SchedulerConfig ajaa yhdellä säikeellä). Aiemmin tämä varasi
+  // saman maxConnections-määrän kuin sovelluksen pääpooli, eli instanssi otti kantaan tuplasti yhteyksiä.
   val dataSource: javax.sql.DataSource = {
-    new HikariDataSource(hikariConfig)
+    val config = hikariConfig
+    config.setPoolName("kouta-scheduler")
+    config.setMaximumPoolSize(4)
+    config.setMinimumIdle(0)
+    new HikariDataSource(config)
   }
 
   def migrate(target: String = "latest"): MigrateResult = flywayConfig.target(target).load.migrate
