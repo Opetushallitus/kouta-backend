@@ -19,8 +19,8 @@ class HakuServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     organisaatioService: OrganisaatioService
 ) extends ValidatingService[Haku] {
-  private def isYhteisHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_01")
-  private def isJatkuvaHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_03")
+  private def isYhteisHaku(haku: Haku): Boolean   = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_01")
+  private def isJatkuvaHaku(haku: Haku): Boolean  = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_03")
   private def isJoustavaHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_04")
 
   override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = {
@@ -116,7 +116,21 @@ class HakuServiceValidation(
             isYhteisHaku(haku),
             assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
           ),
-          validateHakukohteenLiittajaOrganisaatiot(haku.hakukohteenLiittajaOrganisaatiot)
+          validateHakukohteenLiittajaOrganisaatiot(haku.hakukohteenLiittajaOrganisaatiot),
+          validateIfDefined[HakuMetadata](
+            haku.metadata,
+            m =>
+              validateIfDefined[LocalDateTime](
+                m.varasijatayttoPaattyy,
+                varasijatayttoPaattyy => {
+                  assertTrue(
+                    haku.hakuajat.flatMap(_.paattyy).forall(_.isBefore(varasijatayttoPaattyy)),
+                    "metadata.varasijatayttoPaattyy",
+                    invalidVarasijatayttoPaattyyMsg
+                  )
+                }
+              )
+          )
         )
       )
     )
@@ -189,16 +203,6 @@ class HakuServiceValidation(
             validateIfDefined[KoulutuksenAlkamiskausi](
               m.koulutuksenAlkamiskausi,
               _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
-            ),
-            validateIfDefined[LocalDateTime](
-              m.varasijatayttoPaattyy,
-              varasijatayttoPaattyy => {
-                assertTrue(
-                  hakuajat.flatMap(_.paattyy).forall(_.isBefore(varasijatayttoPaattyy)),
-                  "metadata.varasijatayttoPaattyy",
-                  invalidVarasijatayttoPaattyyMsg
-                )
-              }
             )
           )
       )
