@@ -64,12 +64,12 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
     val organisaatioOids = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
-    val parentOids = organisaatioService.findParentOids(organisaatioOids).map(_.toString)
+    val parentAndChildOids = organisaatioService.findParentAndChildOids(organisaatioOids).map(_.toString)
     val nimi = params.get("nimi")
     val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentOids, nimi, paikallistaSisaltoa, sivu, sivukoko))
+    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentAndChildOids, nimi, paikallistaSisaltoa, sivu, sivukoko))
   }
 
   registerPath(
