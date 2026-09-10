@@ -27,10 +27,10 @@ trait OrganisaatioService {
   private def findParentOid(oid: OrganisaatioOid, pred: OidAndChildren => Boolean): Option[OrganisaatioOid] =
     find(pred, getHierarkiaFromCache(oid).toSet).map(_.oid)
 
-  def findParentOids(oids: Set[String]): Set[OrganisaatioOid] =
+  def findParentAndChildOids(oids: Set[String]): Set[OrganisaatioOid] =
     oids.flatMap { oidStr =>
       val oid = OrganisaatioOid(oidStr)
-      find(_.oid == oid, getHierarkiaFromCache(oid).toSet).toSeq.flatMap(parentOidsFlat)
+      parentsAndChildren(getPartialHierarkia(oid))
     }.filterNot(_ == RootOrganisaatioOid)
 
   def findParentOppilaitosOid(oid: OrganisaatioOid): Option[OrganisaatioOid] =
