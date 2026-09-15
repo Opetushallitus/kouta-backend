@@ -7,6 +7,7 @@ kouta-backend.quick-index-timeout-seconds={{kouta_backend_quick_index_timeout_se
 kouta-backend.test-environment={{kouta_backend_test_environment | default('false')}}
 
 kouta-backend.db.useAwsJdbcWrapper={{kouta_backend_db_use_aws_jdbc_wrapper | default('false')}}
+kouta-backend.db.clusterInstanceHostPattern={{host_postgresql_kouta_instance_host_pattern | default('')}}
 kouta-backend.db.url=jdbc:postgresql://{{host_postgresql_kouta}}:{{host_postgresql_kouta_port}}/kouta
 kouta-backend.db.port={{host_postgresql_kouta_port}}
 kouta-backend.db.user={{postgres_app_user}}
