@@ -36,6 +36,9 @@ abstract class KoutaDatabaseAccessor extends Logging {
     if (settings.useAwsJdbcWrapper) {
       config.setDriverClassName("software.amazon.jdbc.Driver")
       config.setJdbcUrl(settings.url.replace("jdbc:postgresql:", "jdbc:aws-wrapper:postgresql:"))
+      // Tarvitaan, kun yhteysosoite ei ole RDS:n oma endpoint (esim. proxy tai custom DNS), jotta wrapper
+      // osaa muodostaa klusterin instanssien osoitteet topologiaa varten.
+      settings.clusterInstanceHostPattern.foreach(config.addDataSourceProperty("clusterInstanceHostPattern", _))
     } else {
       config.setJdbcUrl(settings.url)
     }

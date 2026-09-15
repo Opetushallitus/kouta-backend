@@ -17,7 +17,8 @@ case class KoutaDatabaseConfiguration(
     registerMbeans: Option[Boolean],
     initializationFailTimeout: Option[Int],
     leakDetectionThresholdMillis: Option[Int],
-    useAwsJdbcWrapper: Boolean
+    useAwsJdbcWrapper: Boolean,
+    clusterInstanceHostPattern: Option[String]
 )
 
 case class SecurityConfiguration(
@@ -72,7 +73,16 @@ case class KoutaConfiguration(config: TypesafeConfig, urlProperties: OphProperti
     registerMbeans = Option(config.getBoolean("kouta-backend.db.registerMbeans")),
     initializationFailTimeout = Option(config.getInt("kouta-backend.db.initializationFailTimeout")),
     leakDetectionThresholdMillis = Option(config.getInt("kouta-backend.db.leakDetectionThresholdMillis")),
-    useAwsJdbcWrapper = Try(config.getBoolean("kouta-backend.db.useAwsJdbcWrapper")).getOrElse(false)
+    useAwsJdbcWrapper = Try(config.getBoolean("kouta-backend.db.useAwsJdbcWrapper")).getOrElse(false),
+    clusterInstanceHostPattern =
+      Try(config.getString("kouta-backend.db.clusterInstanceHostPattern")).filter(_.trim.nonEmpty).toOption
+  )
+
+  // Wrapper ei osaa lukea klusterin topologiaa ilman hostPatternia, jos yhteysosoite ei ole RDS:n oma
+  // endpoint. Kaadetaan sovellus käynnistyksessä sen sijaan, että vika näkyisi vasta ajonaikaisina virheinä.
+  require(
+    !databaseConfiguration.useAwsJdbcWrapper || databaseConfiguration.clusterInstanceHostPattern.isDefined,
+    "kouta-backend.db.clusterInstanceHostPattern on pakollinen, kun kouta-backend.db.useAwsJdbcWrapper=true"
   )
 
   val indexingConfiguration: IndexingConfiguration = IndexingConfiguration(
