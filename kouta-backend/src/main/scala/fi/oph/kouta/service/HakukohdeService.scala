@@ -7,12 +7,12 @@ import fi.oph.kouta.domain.oid._
 import fi.oph.kouta.domain.searchResults.HakukohdeSearchResult
 import fi.oph.kouta.indexing.SqsInTransactionService
 import fi.oph.kouta.indexing.indexing.{HighPriority, IndexTypeHakukohde}
-import fi.oph.kouta.repository.{HakukohdeDAO, KoutaDatabase, ToteutusDAO}
+import fi.oph.kouta.repository.{HakuDAO, HakukohdeDAO, KoulutusDAO, KoutaDatabase, ToteutusDAO}
 import fi.oph.kouta.security.{Role, RoleEntity}
 import fi.oph.kouta.servlet.{Authenticated, EntityNotFoundException, SearchParams}
 import fi.oph.kouta.util.MiscUtils.{isDIAlukiokoulutus, isEBlukiokoulutus}
 import fi.oph.kouta.util.NameHelper.{mergeNames, notFullyPopulated}
-import fi.oph.kouta.util.{NameHelper, ServiceUtils}
+import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper, ServiceUtils}
 
 import java.time.Instant
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -79,12 +79,35 @@ class HakukohdeService(
       authenticated: Authenticated
   ): Option[(Hakukohde, Instant)] = {
     val hakukohdeWithTime = HakukohdeDAO.get(oid, tilaFilter)
-
     val enrichedHakukohde = hakukohdeWithTime match {
       case Some((h, i)) =>
+        val haku     = HakuDAO.get(h.hakuOid, tilaFilter).map(_._1)
+        val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+        val koulutus =
+          toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
+        val paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(h, haku, toteutus)
+        val johtaaTutkintoon     = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
+        val koulutusasteKoodiUrit =
+          koulutus.toSeq.flatMap(_.koulutuksetKoodiUri).flatMap(koodistoService.getKoulutusasteKoodiUrit)
+        val kuuluuYosinPiiriin = YosService.kuuluukoHakutoiveYossinpiiriin(
+          haku,
+          h,
+          paateltyAlkamiskausi,
+          johtaaTutkintoon,
+          koulutusasteKoodiUrit
+        )
         Some(
           h.copy(_enrichedData =
-            Some(hakukohdeUtil.getHakukohdeEnrichedData(h.muokkaaja, h.nimi, h.toteutusOid, h.hakukohdeKoodiUri))
+            Some(
+              hakukohdeUtil
+                .getHakukohdeEnrichedData(h.muokkaaja, h.nimi, h.toteutusOid, h.hakukohdeKoodiUri)
+                .copy(
+                  kuuluuYosinPiiriin = kuuluuYosinPiiriin,
+                  paateltyAlkamiskausi = paateltyAlkamiskausi,
+                  johtaaTutkintoon = johtaaTutkintoon,
+                  koulutusasteKoodiUrit = koulutusasteKoodiUrit
+                )
+            )
           ),
           i
         )

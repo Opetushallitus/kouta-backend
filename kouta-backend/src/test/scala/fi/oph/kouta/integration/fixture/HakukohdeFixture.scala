@@ -12,7 +12,7 @@ import fi.oph.kouta.mocks.{MockAuditLogger, MockS3ImageService}
 import fi.oph.kouta.repository._
 import fi.oph.kouta.service._
 import fi.oph.kouta.servlet.HakukohdeServlet
-import fi.oph.kouta.util.TimeUtils
+import fi.oph.kouta.util.{HakukohdeServiceUtil, TimeUtils}
 import org.junit.Assert
 import org.scalactic.Equality
 import slick.jdbc.PostgresProfile.api._
@@ -299,9 +299,27 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     )
 
   def get(oid: String, expected: Hakukohde): String =
-    get(HakukohdePath, oid, expected.copy(modified = Some(readHakukohdeModified(oid))))
+    get(HakukohdePath, oid, withPaatellytTiedot(oid, expected).copy(modified = Some(readHakukohdeModified(oid))))
   def get(oid: String, sessionId: UUID, expected: Hakukohde): String =
-    get(HakukohdePath, oid, sessionId, expected.copy(modified = Some(readHakukohdeModified(oid))))
+    get(HakukohdePath, oid, sessionId, withPaatellytTiedot(oid, expected).copy(modified = Some(readHakukohdeModified(oid))))
+
+  // Haku-, toteutus- ja koulutustiedoista päätellyt tiedot, jotka HakukohdeService lisää _enrichedDataan.
+  // YOS-päättely ja koulutusasteet jäävät oletusarvoiksi, koska organisaatio- ja koodistokutsuja ei mockata.
+  def withPaatellytTiedot(oid: String, expected: Hakukohde): Hakukohde = {
+    val haku     = HakuDAO.get(expected.hakuOid, TilaFilter.all()).map(_._1)
+    val toteutus = ToteutusDAO.get(expected.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+    val koulutus =
+      toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
+    expected.copy(_enrichedData =
+      expected._enrichedData.map(
+        _.copy(
+          paateltyAlkamiskausi =
+            HakukohdeServiceUtil.paatteleAlkamiskausi(expected.copy(oid = Some(HakukohdeOid(oid))), haku, toteutus),
+          johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
+        )
+      )
+    )
+  }
 
   def update(haku: Hakukohde, lastModified: String, expectedStatus: Int, sessionId: UUID): Unit =
     update(HakukohdePath, haku, lastModified, sessionId, expectedStatus)
