@@ -93,6 +93,26 @@ trait KoodistoServiceMock extends ServiceMockBase {
     mockGet(path, Map.empty, koodiUriResponse("koulutus", koodiUrit))
   }
 
+  def mockAlakooditResponse(
+      koodiUri: String,
+      alakoodit: Seq[(String, String, Int, Option[String])],
+      koodiVersio: Option[Int] = None
+  ): StubMapping =
+    mockAlakoodit(koodiUri, koodiVersio, koodiUriResponseWithMultipleKoodisto(alakoodit), 200)
+
+  def mockAlakooditFailure(koodiUri: String, statusCode: Int): StubMapping =
+    mockAlakoodit(koodiUri, None, s"Failure in koodisto-service for koodiUri $koodiUri", statusCode)
+
+  private def mockAlakoodit(koodiUri: String, koodiVersio: Option[Int], response: String, statusCode: Int) =
+    koodiVersio match {
+      case Some(versio) =>
+        val path = getMockPath("koodisto-service.sisaltyy-alakoodit-versio", Seq(koodiUri, versio.toString))
+        mockGet(path, Map("koodiVersio" -> versio.toString), response, statusCode)
+      case None =>
+        val path = getMockPath("koodisto-service.sisaltyy-alakoodit", Some(koodiUri))
+        mockGet(path, Map.empty, response, statusCode)
+    }
+
   def mockKoulutusByTutkintotyyppiFailure(koodisto: String) = {
     val path = getMockPath("koodisto-service.sisaltyy-ylakoodit", Some(koodisto))
     mockGet(path, Map.empty, s"Failure in koodisto-service for koodisto $koodisto", 500)

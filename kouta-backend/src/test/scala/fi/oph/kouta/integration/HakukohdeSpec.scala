@@ -869,7 +869,7 @@ class HakukohdeSpec
     // järjestys vaihtuu, tämä havaittu ainakin liitteet-listan osalta. Seuraava metodi tarkistaa listojen sisällön
     // välittämättä järjestyksestä
     def checkHakukohde(hkOid: HakukohdeOid, hk: Hakukohde): Unit = {
-      val expectedHakukohde = hk.copy(modified = Some(readHakukohdeModified(hkOid)))
+      val expectedHakukohde = withPaatellytTiedot(hkOid.s, hk).copy(modified = Some(readHakukohdeModified(hkOid)))
       get(s"$HakukohdePath/${hkOid.s}", headers = Seq(sessionHeader(defaultSessionId))) {
         withClue(body) {
           status should equal(200)

@@ -489,6 +489,19 @@ case class HakukohdeListItem(
     toteutusMetadata: Option[ToteutusMetadata] = None
 ) extends OidListItem
 
-case class HakukohdeEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+case class HakukohdeEnrichedData(
+                                  esitysnimi: Kielistetty = Map(),
+                                  muokkaajanNimi: Option[String] = None,
+                                  kuuluuYosinPiiriin: Boolean = false,
+                                  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
+                                  johtaaTutkintoon: Option[Boolean] = None,
+                                  koulutusasteKoodiUrit: Seq[String] = Seq())
+
+case class PaateltyAlkamiskausi(
+    alkamiskausityyppi: Alkamiskausityyppi,
+    kausiUri: String,
+    vuosi: String,
+    source: String
+)
 
 case class ExternalHakukohdeRequest(authenticated: Authenticated, hakukohde: Hakukohde) extends ExternalRequest

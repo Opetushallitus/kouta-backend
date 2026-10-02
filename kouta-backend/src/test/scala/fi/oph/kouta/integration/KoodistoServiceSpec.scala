@@ -746,4 +746,50 @@ class KoodistoServiceSpec extends SpecWithMocks with KoodistoServiceMock {
       Seq(("some_twitter", 1), ("some_facebook", 1))
     )
   }
+
+  val koulutusasteTaso1 = "kansallinenkoulutusluokitus2016koulutusastetaso1"
+  val koulutusasteTaso2 = "kansallinenkoulutusluokitus2016koulutusastetaso2"
+
+  "Getting koulutusaste koodiUrit" should "return alakoodit from koulutusaste taso1 and taso2 koodistot" in {
+    mockAlakooditResponse(
+      "koulutus_671101",
+      Seq(
+        (koulutusasteTaso2, "kansallinenkoulutusluokitus2016koulutusastetaso2_62", 1, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso1", "kansallinenkoulutusluokitus2016koulutusalataso1_07", 1, None),
+        (koulutusasteTaso1, "kansallinenkoulutusluokitus2016koulutusastetaso1_6", 1, None)
+      )
+    )
+    koodistoService.getKoulutusasteKoodiUrit("koulutus_671101") should equal(
+      Seq("kansallinenkoulutusluokitus2016koulutusastetaso1_6", "kansallinenkoulutusluokitus2016koulutusastetaso2_62")
+    )
+  }
+
+  it should "use koodiVersio when koulutusKoodiUri is versioned" in {
+    mockAlakooditResponse(
+      "koulutus_772101",
+      Seq((koulutusasteTaso2, "kansallinenkoulutusluokitus2016koulutusastetaso2_72", 1, None)),
+      Some(2)
+    )
+    koodistoService.getKoulutusasteKoodiUrit("koulutus_772101#2") should equal(
+      Seq("kansallinenkoulutusluokitus2016koulutusastetaso2_72")
+    )
+  }
+
+  it should "return empty when koulutus has no koulutusaste alakoodit" in {
+    mockAlakooditResponse(
+      "koulutus_371101",
+      Seq(("kansallinenkoulutusluokitus2016koulutusalataso1", "kansallinenkoulutusluokitus2016koulutusalataso1_07", 1, None))
+    )
+    koodistoService.getKoulutusasteKoodiUrit("koulutus_371101") should equal(Seq.empty)
+  }
+
+  it should "return empty when koodiUri is not found" in {
+    mockAlakooditFailure("koulutus_000000", 404)
+    koodistoService.getKoulutusasteKoodiUrit("koulutus_000000") should equal(Seq.empty)
+  }
+
+  it should "return empty when koodisto-service fails" in {
+    mockAlakooditFailure("koulutus_999999", 500)
+    koodistoService.getKoulutusasteKoodiUrit("koulutus_999999") should equal(Seq.empty)
+  }
 }
