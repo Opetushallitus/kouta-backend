@@ -8,6 +8,7 @@ import fi.oph.kouta.integration.KoutaIntegrationSpec
 import fi.oph.kouta.security.{Authority, ExternalSession}
 import fi.oph.kouta.service.KoodistoService
 import fi.oph.kouta.servlet.{Authenticated, ExternalServlet}
+import fi.oph.kouta.util.HakukohdeServiceUtil
 import slick.jdbc.PostgresProfile.api._
 
 import java.net.InetAddress
@@ -205,11 +206,13 @@ trait ExternalFixture
           HakukohdePath,
           oidOrId,
           sessionId,
-          tallennettuHakukohde(oidOrId).copy(
-            muokkaaja = hakukohde.muokkaaja,
-            tila = hakukohde.tila,
-            modified = Some(readHakukohdeModified(oidOrId)),
-            metadata = hakukohde.metadata
+          withExternalPaatellytTiedot(
+            tallennettuHakukohde(oidOrId).copy(
+              muokkaaja = hakukohde.muokkaaja,
+              tila = hakukohde.tila,
+              modified = Some(readHakukohdeModified(oidOrId)),
+              metadata = hakukohde.metadata
+            )
           )
         )
       case valintaperuste: Valintaperuste =>
@@ -223,6 +226,18 @@ trait ExternalFixture
         get(SorakuvausPath, oidOrId, sessionId, sorakuvaus.copy(modified = Some(readSorakuvausModified(oidOrId))))
     }
   }
+
+  // External-testien hakukohteella on aina oma alkamiskausi ja koulutuksena yoKoulutus,
+  // joten päätellyt tiedot ovat vakioita eikä niitä tarvitse hakea kannasta.
+  private def withExternalPaatellytTiedot(expected: Hakukohde): Hakukohde =
+    expected.copy(_enrichedData =
+      expected._enrichedData.map(
+        _.copy(
+          paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(expected, None, None),
+          johtaaTutkintoon = Some(true)
+        )
+      )
+    )
 
   def doUpdate[E](request: E, lastModified: String, sessionId: UUID = defaultSessionId): Unit = {
     request match {
