@@ -34,6 +34,17 @@ class HakukohdeSpec
 
   override def beforeAll(): Unit = {
     super.beforeAll()
+    // Korkeakouluhaun kohdejoukko (YOS-testit) lisätään ennen ensimmäistä hakua, koska koodistovastaus cachetetaan
+    // nämä liittyvät vain yos-caseihin, cache ei vaikuta muihin testeihin
+    mockKoodistoResponse(
+      "haunkohdejoukko",
+      Seq(
+        ("haunkohdejoukko_17", 1, None),
+        ("haunkohdejoukko_15", 1, None),
+        ("haunkohdejoukko_05", 3, None),
+        ("haunkohdejoukko_12", 1, None)
+      )
+    )
     koulutusOid = put(koulutus, ophSession)
     toteutusOid = put(toteutus(koulutusOid).copy(tarjoajat = List(AmmOid, OtherOid, ChildOid)))
     hakuOid = put(haku)
@@ -1021,5 +1032,85 @@ class HakukohdeSpec
     response.head.status shouldBe "success"
     response.last.oid.toString shouldBe julkaistuHakukohde2Oid
     response.last.status shouldBe "success"
+  }
+
+  // YOS-päättelyn säännöt testataan YosServiceSpecissä, tässä varmistetaan että tiedot kulkevat
+  // HakukohdeServicen läpi koodisto- ja organisaatiopalvelusta päätellyiksi tiedoiksi.
+  val YosKoulutusKoodiUri           = "koulutus_201001"
+  val YlempiKorkeakoulututkintoAste = "kansallinenkoulutusluokitus2016koulutusastetaso2_72"
+  val KorkeakoulutusAste            = "kansallinenkoulutusluokitus2016koulutusastetaso1_7"
+
+  lazy val (yosToteutusOid, yosHakuOid, yosValintaperusteId) = {
+    mockAlakooditResponse(
+      YosKoulutusKoodiUri,
+      Seq(
+        ("kansallinenkoulutusluokitus2016koulutusastetaso1", KorkeakoulutusAste, 1, None),
+        ("kansallinenkoulutusluokitus2016koulutusastetaso2", YlempiKorkeakoulututkintoAste, 1, None),
+        ("kansallinenkoulutusluokitus2016koulutusalataso1", "kansallinenkoulutusluokitus2016koulutusalataso1_01", 1, None)
+      ),
+      Some(1)
+    )
+    mockGet(
+      getMockPath("organisaatio-service.organisaatio.with.oid", Some(HkiYoOid.s)),
+      Map.empty,
+      s"""{"oid": "${HkiYoOid.s}", "parentOidPath": "|${RootOrganisaatioOid.s}|", "nimi": {"fi": "Helsingin yliopisto"}, "status": "AKTIIVINEN"}"""
+    )
+    val yoKoulutusOid = put(yoKoulutus.copy(koulutuksetKoodiUri = Seq(s"$YosKoulutusKoodiUri#1")), ophSession)
+    val toteutusOid   = put(TestData.JulkaistuYoToteutus.copy(koulutusOid = KoulutusOid(yoKoulutusOid)), ophSession)
+    val hakuOid = put(
+      haku.copy(
+        kohdejoukkoKoodiUri = Some("haunkohdejoukko_12#1"),
+        hakuajat = List(
+          Ajanjakso(LocalDateTime.parse("2027-01-07T08:00:00"), Some(LocalDateTime.parse("2027-01-21T15:00:00")))
+        )
+      ),
+      ophSession
+    )
+    (toteutusOid, hakuOid, put(TestData.YoValintaperuste, ophSession))
+  }
+
+  def yosHakukohde(tila: Julkaisutila): Hakukohde = withValintaperusteenValintakokeet(
+    hakukohde.copy(
+      toteutusOid = ToteutusOid(yosToteutusOid),
+      hakuOid = HakuOid(yosHakuOid),
+      valintaperusteId = Some(yosValintaperusteId),
+      jarjestyspaikkaOid = Some(HkiYoOid),
+      tila = tila,
+      metadata = hakukohde.metadata.map(
+        _.copy(koulutuksenAlkamiskausi =
+          Some(
+            KoulutuksenAlkamiskausi(
+              alkamiskausityyppi = Some(AlkamiskausiJaVuosi),
+              koulutuksenAlkamiskausiKoodiUri = Some("kausi_k#1"),
+              koulutuksenAlkamisvuosi = Some("2027")
+            )
+          )
+        )
+      )
+    )
+  )
+
+  def getEnrichedData(oid: String): HakukohdeEnrichedData =
+    get(s"$HakukohdePath/$oid", headers = Seq(sessionHeader(ophSession))) {
+      withClue(body) {
+        status should equal(200)
+      }
+      read[Hakukohde](body)._enrichedData.get
+    }
+
+  "YOS-päättely" should "mark a julkaistu hakukohde in a korkeakouluhaku as kuuluuYosinPiiriin" in {
+    val oid          = put(yosHakukohde(Julkaistu), ophSession)
+    val enrichedData = getEnrichedData(oid)
+    enrichedData.koulutusasteKoodiUrit should equal(Seq(KorkeakoulutusAste, YlempiKorkeakoulututkintoAste))
+    enrichedData.johtaaTutkintoon should equal(Some(true))
+    enrichedData.paateltyAlkamiskausi.map(_.vuosi) should equal(Some("2027"))
+    enrichedData.kuuluuYosinPiiriin should equal(true)
+  }
+
+  it should "not mark a tallennettu hakukohde as kuuluuYosinPiiriin" in {
+    val oid          = put(yosHakukohde(Tallennettu), ophSession)
+    val enrichedData = getEnrichedData(oid)
+    enrichedData.koulutusasteKoodiUrit should equal(Seq(KorkeakoulutusAste, YlempiKorkeakoulututkintoAste))
+    enrichedData.kuuluuYosinPiiriin should equal(false)
   }
 }

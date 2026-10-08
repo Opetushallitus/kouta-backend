@@ -304,7 +304,9 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     get(HakukohdePath, oid, sessionId, withPaatellytTiedot(oid, expected).copy(modified = Some(readHakukohdeModified(oid))))
 
   // Haku-, toteutus- ja koulutustiedoista päätellyt tiedot, jotka HakukohdeService lisää _enrichedDataan.
-  // YOS-päättely ja koulutusasteet jäävät oletusarvoiksi, koska organisaatio- ja koodistokutsuja ei mockata.
+  // kuuluuYosinPiiriin ja koulutusasteKoodiUrit jäävät oletusarvoiksi: koodistopalvelun alakoodikutsulle ja
+  // järjestyspaikan organisaatiokutsulle ei ole oletuksena mock-vastausta, joten mock-palvelin palauttaa 404.
+  // YOS-päättelyä testataan erikseen HakukohdeSpecissä.
   def withPaatellytTiedot(oid: String, expected: Hakukohde): Hakukohde = {
     val haku     = HakuDAO.get(expected.hakuOid, TilaFilter.all()).map(_._1)
     val toteutus = ToteutusDAO.get(expected.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
