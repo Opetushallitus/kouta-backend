@@ -96,11 +96,4 @@ class YosPredicateSpec extends UnitSpec {
   it should "return true when koulutuksen alkamisvuosi is exactly leikkurivuosi" in {
     YosPredicate.kuuluukoHakutoiveYosinPiiriin(yosHakutoive.copy(koulutuksenAlkamisvuosi = Some("2027"))) shouldBe true
   }
-
-  it should "return true when haun alkamisaika is before leikkuripäivä but voimassaolo is not checked" in {
-    YosPredicate.kuuluukoHakutoiveYosinPiiriin(
-      yosHakutoive.copy(haunAlkamisaika = Some(LocalDateTime.parse("2026-07-31T23:59:59"))),
-      tarkistaVoimassaOlo = false
-    ) shouldBe true
-  }
 }

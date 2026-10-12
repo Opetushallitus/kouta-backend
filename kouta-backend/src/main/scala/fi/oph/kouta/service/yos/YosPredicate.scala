@@ -7,8 +7,8 @@ import java.time.{LocalDateTime, ZoneId}
 
 object YosPredicate {
 
-  def kuuluukoHakutoiveYosinPiiriin(hakutoive: YosHakutoive, tarkistaVoimassaOlo: Boolean = true): Boolean = {
-    if (tarkistaVoimassaOlo && !onkoYosVoimassa(hakutoive.haunAlkamisaika, hakutoive.koulutuksenAlkamisvuosi)) {
+  def kuuluukoHakutoiveYosinPiiriin(hakutoive: YosHakutoive): Boolean = {
+    if (!onkoYosVoimassa(hakutoive.haunAlkamisaika, hakutoive.koulutuksenAlkamisvuosi)) {
       false
     } else {
       hakutoive match {
