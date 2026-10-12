@@ -146,6 +146,11 @@ package object haku {
       |          type: object
       |          description: Koulutuksen alkamiskausi
       |          $ref: '#/components/schemas/KoulutuksenAlkamiskausi'
+      |        varasijatayttoPaattyy:
+      |          type: string
+      |          format: date-time
+      |          description: Haun varasijatäytön päättymisen ajankohta. Käytetään oma-opiskelijavalinnassa hakijan tiedottamiseen.
+      |          example: 2019-08-23T09:55
       |""".stripMargin
 
   val HakuListItemModel: String =
