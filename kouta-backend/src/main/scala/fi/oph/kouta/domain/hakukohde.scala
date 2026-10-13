@@ -494,6 +494,7 @@ case class HakukohdeEnrichedData(
                                   muokkaajanNimi: Option[String] = None,
                                   kuuluuYosinPiiriin: Boolean = false,
                                   paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
+                                  paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
                                   johtaaTutkintoon: Option[Boolean] = None,
                                   koulutusasteKoodiUrit: Seq[String] = Seq())
 
@@ -502,6 +503,13 @@ case class PaateltyAlkamiskausi(
     kausiUri: String,
     vuosi: String,
     source: String
+)
+
+case class PaateltyAlkamisajankohta(
+    alkamiskausityyppi: Option[Alkamiskausityyppi],
+    pvm: Option[String],
+    source: String,
+    henkilokohtainenSuunnitelma: Boolean
 )
 
 case class ExternalHakukohdeRequest(authenticated: Authenticated, hakukohde: Hakukohde) extends ExternalRequest

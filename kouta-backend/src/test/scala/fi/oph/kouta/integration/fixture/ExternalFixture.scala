@@ -234,6 +234,7 @@ trait ExternalFixture
       expected._enrichedData.map(
         _.copy(
           paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(expected, None, None),
+          paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(expected, None, None),
           johtaaTutkintoon = Some(true)
         )
       )

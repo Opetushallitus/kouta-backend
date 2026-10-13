@@ -85,8 +85,9 @@ class HakukohdeService(
         val toteutus = ToteutusDAO.get(h.toteutusOid, tilaFilter).map(_._1)
         val koulutus =
           toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, tilaFilter)).map(_._1)
-        val paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(h, haku, toteutus)
-        val johtaaTutkintoon     = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
+        val paateltyAlkamiskausi     = HakukohdeServiceUtil.paatteleAlkamiskausi(h, haku, toteutus)
+        val paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(h, haku, toteutus)
+        val johtaaTutkintoon         = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
         val koulutusasteKoodiUrit =
           koulutus.toSeq.flatMap(_.koulutuksetKoodiUri).flatMap(koodistoService.getKoulutusasteKoodiUrit)
         val kuuluuYosinPiiriin = YosService.kuuluukoHakutoiveYossinpiiriin(
@@ -104,6 +105,7 @@ class HakukohdeService(
                 .copy(
                   kuuluuYosinPiiriin = kuuluuYosinPiiriin,
                   paateltyAlkamiskausi = paateltyAlkamiskausi,
+                  paateltyAlkamisajankohta = paateltyAlkamisajankohta,
                   johtaaTutkintoon = johtaaTutkintoon,
                   koulutusasteKoodiUrit = koulutusasteKoodiUrit
                 )

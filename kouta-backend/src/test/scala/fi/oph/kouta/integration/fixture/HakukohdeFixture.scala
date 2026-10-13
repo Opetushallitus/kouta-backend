@@ -312,11 +312,12 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     val toteutus = ToteutusDAO.get(expected.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
     val koulutus =
       toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
+    val hakukohde = expected.copy(oid = Some(HakukohdeOid(oid)))
     expected.copy(_enrichedData =
       expected._enrichedData.map(
         _.copy(
-          paateltyAlkamiskausi =
-            HakukohdeServiceUtil.paatteleAlkamiskausi(expected.copy(oid = Some(HakukohdeOid(oid))), haku, toteutus),
+          paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(hakukohde, haku, toteutus),
+          paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(hakukohde, haku, toteutus),
           johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
         )
       )
