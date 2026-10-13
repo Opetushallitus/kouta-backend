@@ -82,9 +82,9 @@ class HakukohdeService(
     val enrichedHakukohde = hakukohdeWithTime match {
       case Some((h, i)) =>
         val haku     = HakuDAO.get(h.hakuOid, tilaFilter).map(_._1)
-        val toteutus = ToteutusDAO.get(h.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+        val toteutus = ToteutusDAO.get(h.toteutusOid, tilaFilter).map(_._1)
         val koulutus =
-          toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
+          toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, tilaFilter)).map(_._1)
         val paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(h, haku, toteutus)
         val johtaaTutkintoon     = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
         val koulutusasteKoodiUrit =

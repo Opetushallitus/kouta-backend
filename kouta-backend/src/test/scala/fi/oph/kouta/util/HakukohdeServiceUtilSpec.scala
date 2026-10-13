@@ -138,7 +138,7 @@ class HakukohdeServiceUtilSpec extends UnitSpec {
     val result = HakukohdeServiceUtil.paatteleAlkamiskausi(
       hakukohde(Some(KoulutuksenAlkamiskausi(alkamiskausityyppi = Some(HenkilökohtainenSuunnitelma)))),
       Some(haku(Some(kausiJaVuosi("kausi_k#1", "2028")))),
-      None
+      Some(toteutus(Some(kausiJaVuosi("kausi_s#1", "2029"))))
     )
     result shouldBe Some(PaateltyAlkamiskausi(AlkamiskausiJaVuosi, "kausi_k#1", "2028", hakuOid))
   }
