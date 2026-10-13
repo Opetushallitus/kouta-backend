@@ -18,6 +18,7 @@ import fi.oph.kouta.domain.{
   Hakukohde,
   HenkilökohtainenSuunnitelma,
   KoulutuksenAlkamiskausi,
+  PaateltyAlkamisajankohta,
   PaateltyAlkamiskausi,
   TarkkaAlkamisajankohta,
   Toteutus,
@@ -160,6 +161,61 @@ class HakukohdeServiceUtilSpec extends UnitSpec {
   it should "return None when no source has a usable alkamiskausi" in {
     val result = HakukohdeServiceUtil.paatteleAlkamiskausi(hakukohde(None), Some(haku(None)), Some(toteutus(None)))
     result shouldBe None
+  }
+
+  "paatteleAlkamisajankohta" should "use hakukohde's tarkka alkamisajankohta as such" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(
+      hakukohde(Some(tarkkaAjankohta(LocalDateTime.of(2027, 3, 24, 9, 49)))),
+      Some(haku(Some(kausiJaVuosi("kausi_k#1", "2028")))),
+      None
+    )
+    result shouldBe Some(PaateltyAlkamisajankohta(Some(TarkkaAlkamisajankohta), Some("2027-03-24T09:49"), hakukohdeOid, false))
+  }
+
+  it should "use the first day of kevät from alkamiskausi ja -vuosi" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(hakukohde(Some(kausiJaVuosi("kausi_k#1", "2027"))), None, None)
+    result shouldBe Some(PaateltyAlkamisajankohta(Some(AlkamiskausiJaVuosi), Some("2027-01-01"), hakukohdeOid, false))
+  }
+
+  it should "use the first day of syksy from alkamiskausi ja -vuosi" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(hakukohde(Some(kausiJaVuosi("kausi_s#1", "2027"))), None, None)
+    result shouldBe Some(PaateltyAlkamisajankohta(Some(AlkamiskausiJaVuosi), Some("2027-08-01"), hakukohdeOid, false))
+  }
+
+  it should "use haku's alkamisajankohta before toteutus' when hakukohde has henkilökohtainen suunnitelma" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(
+      hakukohde(Some(KoulutuksenAlkamiskausi(alkamiskausityyppi = Some(HenkilökohtainenSuunnitelma)))),
+      Some(haku(Some(kausiJaVuosi("kausi_s#1", "2028")))),
+      Some(toteutus(Some(kausiJaVuosi("kausi_k#1", "2029"))))
+    )
+    result shouldBe Some(PaateltyAlkamisajankohta(Some(AlkamiskausiJaVuosi), Some("2028-08-01"), hakuOid, true))
+  }
+
+  it should "fall back to toteutus' alkamisajankohta when hakukohde and haku have none" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(
+      hakukohde(None),
+      Some(haku(None)),
+      Some(toteutus(Some(tarkkaAjankohta(LocalDateTime.of(2029, 9, 1, 12, 0)))))
+    )
+    result shouldBe Some(PaateltyAlkamisajankohta(Some(TarkkaAlkamisajankohta), Some("2029-09-01T12:00"), toteutusOid, false))
+  }
+
+  it should "take henkilökohtainen suunnitelma only from hakukohde" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(
+      hakukohde(None),
+      Some(haku(Some(KoulutuksenAlkamiskausi(alkamiskausityyppi = Some(HenkilökohtainenSuunnitelma))))),
+      None
+    )
+    result shouldBe Some(PaateltyAlkamisajankohta(None, None, hakukohdeOid, false))
+  }
+
+  it should "return henkilökohtainen suunnitelma without pvm when no source has a usable alkamisajankohta" in {
+    val result = HakukohdeServiceUtil.paatteleAlkamisajankohta(
+      hakukohde(Some(KoulutuksenAlkamiskausi(alkamiskausityyppi = Some(HenkilökohtainenSuunnitelma)))),
+      Some(haku(None)),
+      Some(toteutus(None))
+    )
+    result shouldBe Some(PaateltyAlkamisajankohta(None, None, hakukohdeOid, true))
   }
 
   "paatteleJohtaaTutkintoon" should "return true when koulutus johtaa tutkintoon" in {
