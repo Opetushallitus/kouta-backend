@@ -33,7 +33,15 @@ object HakukohdeServiceUtil {
       haku: Option[Haku],
       toteutus: Option[Toteutus]
   ): Option[PaateltyAlkamiskausi] =
-    parseAlkamiskausi(hakukohde.metadata.flatMap(_.koulutuksenAlkamiskausi), hakukohde.oid.map(_.s))
+    paatteleAlkamiskausi(hakukohde.oid.map(_.s), hakukohde.metadata.flatMap(_.koulutuksenAlkamiskausi), haku, toteutus)
+
+  def paatteleAlkamiskausi(
+      hakukohdeOid: Option[String],
+      hakukohteenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+      haku: Option[Haku],
+      toteutus: Option[Toteutus]
+  ): Option[PaateltyAlkamiskausi] =
+    parseAlkamiskausi(hakukohteenAlkamiskausi, hakukohdeOid)
       .orElse(parseAlkamiskausi(haku.flatMap(_.metadata).flatMap(_.koulutuksenAlkamiskausi), haku.flatMap(_.oid).map(_.s)))
       .orElse(
         parseAlkamiskausi(
@@ -51,8 +59,15 @@ object HakukohdeServiceUtil {
       haku: Option[Haku],
       toteutus: Option[Toteutus]
   ): Option[PaateltyAlkamisajankohta] =
-    hakukohde.oid.map(_.s).map { hakukohdeOid =>
-      val hakukohteenAlkamiskausi = hakukohde.metadata.flatMap(_.koulutuksenAlkamiskausi)
+    paatteleAlkamisajankohta(hakukohde.oid.map(_.s), hakukohde.metadata.flatMap(_.koulutuksenAlkamiskausi), haku, toteutus)
+
+  def paatteleAlkamisajankohta(
+      hakukohdeOid: Option[String],
+      hakukohteenAlkamiskausi: Option[KoulutuksenAlkamiskausi],
+      haku: Option[Haku],
+      toteutus: Option[Toteutus]
+  ): Option[PaateltyAlkamisajankohta] =
+    hakukohdeOid.map { hakukohdeOid =>
       val henkilokohtainenSuunnitelma =
         hakukohteenAlkamiskausi.flatMap(_.alkamiskausityyppi).contains(HenkilökohtainenSuunnitelma)
       parseAlkamisajankohta(hakukohteenAlkamiskausi, Some(hakukohdeOid))

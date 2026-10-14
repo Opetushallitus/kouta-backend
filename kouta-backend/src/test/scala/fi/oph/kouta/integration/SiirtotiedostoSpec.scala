@@ -5,6 +5,8 @@ import fi.oph.kouta.TestOids.{AmmOid, ChildOid, EvilChildOid, EvilGrandChildOid,
 import fi.oph.kouta.domain.oid.{KoulutusOid, OrganisaatioOid}
 import fi.oph.kouta.integration.fixture.SiirtotiedostoFixture
 import fi.oph.kouta.mocks.LokalisointiServiceMock
+import org.json4s.JsonAST.{JArray, JNothing}
+import org.json4s.jackson.JsonMethods.parse
 
 import java.util.UUID
 
@@ -107,6 +109,32 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   "Save hakukohteet" should "save hakukohteet as requested with given timerange" in {
     doGet("hakukohteet", dayBefore, dayAfter, 200)
     verifyLatestContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
+  }
+
+  it should "add paateltyAlkamiskausi paateltyAlkamisajankohta and johtaaTutkintoon" in {
+    doGet("hakukohteet", dayBefore, dayAfter, 200)
+    val raporttiItem = parse(lastSiirtotiedostoContent())
+      .asInstanceOf[JArray]
+      .arr
+      .find(item => (item \ "oid").extract[String] == hakukohdeOid1)
+      .get
+    get(s"$HakukohdePath/$hakukohdeOid1", headers = Seq(sessionHeader(ophSession))) {
+      status should equal(200)
+      val apiEnrichedData = parse(body) \ "_enrichedData"
+      for (field <- Seq("paateltyAlkamiskausi", "paateltyAlkamisajankohta", "johtaaTutkintoon")) {
+        withClue(field) {
+          apiEnrichedData \ field should not equal JNothing
+          raporttiItem \ "enrichedData" \ field should equal(apiEnrichedData \ field)
+        }
+      }
+      // YOS-tiedot palautetaan rajapinnassa, mutta niitä ei viedä siirtotiedostoon
+      for (field <- Seq("kuuluuYosinPiiriin", "koulutusasteKoodiUrit")) {
+        withClue(field) {
+          apiEnrichedData \ field should not equal JNothing
+          raporttiItem \ "enrichedData" \ field should equal(JNothing)
+        }
+      }
+    }
   }
 
   it should "fail to create hakukohteet transfer file without OPH Pääkäyttäjä role" in {
