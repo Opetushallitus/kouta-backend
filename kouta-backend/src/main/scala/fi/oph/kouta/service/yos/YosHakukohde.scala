@@ -4,7 +4,7 @@ import fi.oph.kouta.service.yos.YosKoulutusAsteLuokka.YosKoulutusAsteLuokka
 
 import java.time.LocalDateTime
 
-case class YosHakutoive(
+case class YosHakukohde(
                          korkeakoulutus: Boolean,
                          tutkintoonJohtava: Boolean,
                          jatkoTutkinto: Boolean,

@@ -39,7 +39,7 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
     )
   )
 
-  private val HakutoiveJokaKuuluuYosPiiriin: Hakukohde = JulkaistuHakukohde.copy(
+  private val HakukohdeJokaKuuluuYosPiiriin: Hakukohde = JulkaistuHakukohde.copy(
     oid = Some(HakukohdeOid(HakukohdeOidStr)),
     hakuOid = HakuOid(HakuOidStr),
     jarjestyspaikkaOid = Some(OrganisaatioOid(OrganisaatioOidStr))
@@ -63,12 +63,12 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
 
   private def kuuluukoYosPiiriin(
       haku: Option[Haku] = Some(HakuJokaKuuluuYosPiiriin),
-      hakukohde: Hakukohde = HakutoiveJokaKuuluuYosPiiriin,
+      hakukohde: Hakukohde = HakukohdeJokaKuuluuYosPiiriin,
       paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = AlkamiskausiJokaKuuluuYosPiiriin,
       johtaaTutkintoon: Option[Boolean] = Some(true),
       koulutusasteKoodiUrit: Seq[String] = YlempiKoulutusaste
   ): Boolean =
-    yosService.kuuluukoHakutoiveYossinpiiriin(
+    yosService.kuuluukoHakukohdeYossinpiiriin(
       haku,
       hakukohde,
       paateltyAlkamiskausi,
@@ -82,7 +82,7 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
     mockOrganisaatio(ParentOidStr)
   }
 
-  "kuuluukoHakutoiveYossinpiiriin" should "return true for hakutoive that kuuluu YOS piiriin" in {
+  "kuuluukoHakukohdeYossinpiiriin" should "return true for hakukohde that kuuluu YOS piiriin" in {
     kuuluukoYosPiiriin() shouldBe true
   }
 
@@ -95,7 +95,7 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
   }
 
   it should "return false when hakukohde has no järjestyspaikka" in {
-    kuuluukoYosPiiriin(hakukohde = HakutoiveJokaKuuluuYosPiiriin.copy(jarjestyspaikkaOid = None)) shouldBe false
+    kuuluukoYosPiiriin(hakukohde = HakukohdeJokaKuuluuYosPiiriin.copy(jarjestyspaikkaOid = None)) shouldBe false
   }
 
   it should "return false when organisaatio is not found" in {
@@ -110,12 +110,12 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
   }
 
   it should "return false when hakukohde is luonnos" in {
-    kuuluukoYosPiiriin(hakukohde = HakutoiveJokaKuuluuYosPiiriin.copy(tila = Tallennettu)) shouldBe false
+    kuuluukoYosPiiriin(hakukohde = HakukohdeJokaKuuluuYosPiiriin.copy(tila = Tallennettu)) shouldBe false
     verify(organisaatioService, never).getOrganisaatio(any[OrganisaatioOid])
   }
 
   // Yksityiskohtainen leikkuripäivä/-vuosirajojen testaus tehdään YosPredicateSpec:ssä. Tässä varmistetaan
-  // vain että YosService kytkee haku- ja hakukohdetiedot oikein YosHakutoiveelle.
+  // vain että YosService kytkee haku- ja hakukohdetiedot oikein YosHakukohteelle.
   it should "return false when YOS is not voimassa by haun hakuaika" in {
     kuuluukoYosPiiriin(haku =
       Some(

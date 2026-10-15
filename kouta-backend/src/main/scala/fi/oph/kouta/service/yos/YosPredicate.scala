@@ -7,15 +7,15 @@ import java.time.{LocalDateTime, ZoneId}
 
 object YosPredicate {
 
-  def kuuluukoHakutoiveYosinPiiriin(hakutoive: YosHakutoive): Boolean = {
-    if (!onkoYosVoimassa(hakutoive.haunAlkamisaika, hakutoive.koulutuksenAlkamisvuosi)) {
+  def kuuluukoHakukohdeYosinPiiriin(hakukohde: YosHakukohde): Boolean = {
+    if (!onkoYosVoimassa(hakukohde.haunAlkamisaika, hakukohde.koulutuksenAlkamisvuosi)) {
       false
     } else {
-      hakutoive match {
-        case YosHakutoive(true, true, false, false, _, ALEMMAT_ASTEET, _, _) =>
-          kuuluukoOrganisaatioYosinPiiriin(hakutoive.organisaatioJaVanhemmat)
-        case YosHakutoive(true, true, false, false, _, YLEMMAT_JA_ALEMMAT_ASTEET, _, _) =>
-          kuuluukoOrganisaatioYosinPiiriin(hakutoive.organisaatioJaVanhemmat)
+      hakukohde match {
+        case YosHakukohde(true, true, false, false, _, ALEMMAT_ASTEET, _, _) =>
+          kuuluukoOrganisaatioYosinPiiriin(hakukohde.organisaatioJaVanhemmat)
+        case YosHakukohde(true, true, false, false, _, YLEMMAT_JA_ALEMMAT_ASTEET, _, _) =>
+          kuuluukoOrganisaatioYosinPiiriin(hakukohde.organisaatioJaVanhemmat)
         case _ =>
           false
       }

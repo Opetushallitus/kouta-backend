@@ -90,7 +90,7 @@ class HakukohdeService(
         val johtaaTutkintoon         = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
         val koulutusasteKoodiUrit =
           koulutus.toSeq.flatMap(_.koulutuksetKoodiUri).flatMap(koodistoService.getKoulutusasteKoodiUrit)
-        val kuuluuYosinPiiriin = YosService.kuuluukoHakutoiveYossinpiiriin(
+        val kuuluuYosinPiiriin = YosService.kuuluukoHakukohdeYossinpiiriin(
           haku,
           h,
           paateltyAlkamiskausi,
