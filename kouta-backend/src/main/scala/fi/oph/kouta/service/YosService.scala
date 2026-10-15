@@ -46,7 +46,7 @@ class YosService (
           if (organisaatio.isEmpty)
             false
           else {
-            val yosHakukohde = muodostaYosHakukohde(haku.get, hakukohde, organisaatio.get, paateltyAlkamiskausi, johtaaTutkintoon, koulutusasteKoodiUrit)
+            val yosHakukohde = muodostaYosHakukohde(haku.get, organisaatio.get, paateltyAlkamiskausi, johtaaTutkintoon, koulutusasteKoodiUrit)
             logger.info(
               s"""Tarkistetaan kuuluuko hakukohde ${hakukohde.oid} haussa ${hakukohde.hakuOid} YOSin piiriin.
                  |Hakukohteen arvot ovat:
