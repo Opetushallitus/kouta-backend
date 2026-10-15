@@ -3,7 +3,7 @@ package fi.oph.kouta.service
 import fi.oph.kouta.domain.{Haku, Hakukohde, Organisaatio, PaateltyAlkamiskausi, Tallennettu}
 import fi.oph.kouta.logging.Logging
 import fi.oph.kouta.service.yos.YosConstants.{KOULUTUSASTE_ALEMMAT, KOULUTUSASTE_YLEMMAT}
-import fi.oph.kouta.service.yos.{YosHakutoive, YosPredicate}
+import fi.oph.kouta.service.yos.{YosHakukohde, YosPredicate}
 import fi.oph.kouta.service.yos.YosKoulutusAsteLuokka.{ALEMMAT_ASTEET, EI_YOS_KOULUTUSASTETTA, YLEMMAT_JA_ALEMMAT_ASTEET, YosKoulutusAsteLuokka}
 import fi.oph.kouta.util.OrganisaatioServiceUtil
 
@@ -25,7 +25,7 @@ class YosService (
   val hakemusmaksullinenKaksoistutkintoKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_11"
   val jatkotutkintoKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_3"
 
-  def kuuluukoHakutoiveYossinpiiriin(haku: Option[Haku], hakukohde: Hakukohde, paateltyAlkamiskausi: Option[PaateltyAlkamiskausi], johtaaTutkintoon: Option[Boolean], koulutusasteKoodiUrit: Seq[String]): Boolean = {
+  def kuuluukoHakukohdeYossinpiiriin(haku: Option[Haku], hakukohde: Hakukohde, paateltyAlkamiskausi: Option[PaateltyAlkamiskausi], johtaaTutkintoon: Option[Boolean], koulutusasteKoodiUrit: Seq[String]): Boolean = {
     try {
       (haku, hakukohde.jarjestyspaikkaOid) match {
         case (None, _) =>
@@ -35,7 +35,7 @@ class YosService (
           logger.warn(s"Virhe yos-päättelyssä: hakukohteelle ${hakukohde.oid} ei löytynyt järjestyspaikkaa")
           false
         case (Some(h), _) if h.tila == Tallennettu || hakukohde.tila == Tallennettu =>
-          logger.info(s"Hakutoive ${hakukohde.oid} haussa ${hakukohde.hakuOid} ei kuulu YOS piiriin, koska haku tai hakukohde on luonnos")
+          logger.info(s"Hakukohde ${hakukohde.oid} haussa ${hakukohde.hakuOid} ei kuulu YOS piiriin, koska haku tai hakukohde on luonnos")
           false
         case _ =>
           val organisaatio = organisaatioService.getOrganisaatio(hakukohde.jarjestyspaikkaOid.get) match {
@@ -46,16 +46,16 @@ class YosService (
           if (organisaatio.isEmpty)
             false
           else {
-            val yosHakutoive = muodostaYosHakutoive(haku.get, hakukohde, organisaatio.get, paateltyAlkamiskausi, johtaaTutkintoon, koulutusasteKoodiUrit)
+            val yosHakukohde = muodostaYosHakukohde(haku.get, hakukohde, organisaatio.get, paateltyAlkamiskausi, johtaaTutkintoon, koulutusasteKoodiUrit)
             logger.info(
-              s"""Tarkistetaan kuuluuko hakutoive ${hakukohde.oid} haussa ${hakukohde.hakuOid} YOSin piiriin.
-                 |Hakutoiveen arvot ovat:
-                 | korkeakoulutus: ${yosHakutoive.korkeakoulutus}, tutkintoonJohtava: ${yosHakutoive.tutkintoonJohtava},
-                 | jatkoTutkinto: ${yosHakutoive.jatkoTutkinto}, kaksoisTutkinto: ${yosHakutoive.kaksoisTutkinto},
-                 | organisaatioJaVanhemmat: ${yosHakutoive.organisaatioJaVanhemmat.mkString(", ")}, koulutusAste: ${yosHakutoive.koulutusAste},
-                 | haunAlkamisaika: ${yosHakutoive.haunAlkamisaika.map(_.toString).orNull}, koulutuksenAlkamisvuosi: ${yosHakutoive.koulutuksenAlkamisvuosi.orNull}""".stripMargin)
-            val kuuluukoYOSsinPiiriin = YosPredicate.kuuluukoHakutoiveYosinPiiriin(yosHakutoive)
-            logger.info(s"Hakutoive ${hakukohde.oid} haussa ${hakukohde.hakuOid} ${if (kuuluukoYOSsinPiiriin) "kuuluu" else "ei kuulu"} YOS piiriin: $yosHakutoive")
+              s"""Tarkistetaan kuuluuko hakukohde ${hakukohde.oid} haussa ${hakukohde.hakuOid} YOSin piiriin.
+                 |Hakukohteen arvot ovat:
+                 | korkeakoulutus: ${yosHakukohde.korkeakoulutus}, tutkintoonJohtava: ${yosHakukohde.tutkintoonJohtava},
+                 | jatkoTutkinto: ${yosHakukohde.jatkoTutkinto}, kaksoisTutkinto: ${yosHakukohde.kaksoisTutkinto},
+                 | organisaatioJaVanhemmat: ${yosHakukohde.organisaatioJaVanhemmat.mkString(", ")}, koulutusAste: ${yosHakukohde.koulutusAste},
+                 | haunAlkamisaika: ${yosHakukohde.haunAlkamisaika.map(_.toString).orNull}, koulutuksenAlkamisvuosi: ${yosHakukohde.koulutuksenAlkamisvuosi.orNull}""".stripMargin)
+            val kuuluukoYOSsinPiiriin = YosPredicate.kuuluukoHakukohdeYosinPiiriin(yosHakukohde)
+            logger.info(s"Hakukohde ${hakukohde.oid} haussa ${hakukohde.hakuOid} ${if (kuuluukoYOSsinPiiriin) "kuuluu" else "ei kuulu"} YOS piiriin: $yosHakukohde")
             kuuluukoYOSsinPiiriin
           }
       }
@@ -67,19 +67,19 @@ class YosService (
     }
   }
 
-  private def muodostaYosHakutoive(haku: Haku, hakukohde: Hakukohde, organisaatio: Organisaatio, paateltyAlkamiskausi: Option[PaateltyAlkamiskausi], johtaaTutkintoon: Option[Boolean], koulutusasteKoodiUrit: Seq[String]): YosHakutoive = {
+  private def muodostaYosHakukohde(haku: Haku, organisaatio: Organisaatio, paateltyAlkamiskausi: Option[PaateltyAlkamiskausi], johtaaTutkintoon: Option[Boolean], koulutusasteKoodiUrit: Seq[String]): YosHakukohde = {
 
-    val koulutusAste = getKoulutusAsteHakutoiveelle(koulutusasteKoodiUrit)
+    val koulutusAste = getKoulutusAsteHakukohteelle(koulutusasteKoodiUrit)
 
     val haunAlkamisaika = haku.hakuajat.map(_.alkaa).sortWith(_.isBefore(_)).headOption
     val koulutuksenAlkamisvuosi = paateltyAlkamiskausi.map(_.vuosi)
     val organisaatioJaVanhemmat: List[String] = organisaatio.parentOids.map(_.s) :+ organisaatio.oid
 
-    YosHakutoive(isKorkeakouluHaku(haku), johtaaTutkintoon.getOrElse(false), isJatkotutkinto(haku),
+    YosHakukohde(isKorkeakouluHaku(haku), johtaaTutkintoon.getOrElse(false), isJatkotutkinto(haku),
       isErasmusMundusTaiKaksoistutkinto(haku), organisaatioJaVanhemmat, koulutusAste, haunAlkamisaika, koulutuksenAlkamisvuosi)
   }
 
-  private def getKoulutusAsteHakutoiveelle(koulutusasteKoodiUrit: Seq[String]): YosKoulutusAsteLuokka = {
+  private def getKoulutusAsteHakukohteelle(koulutusasteKoodiUrit: Seq[String]): YosKoulutusAsteLuokka = {
     val koodit = koulutusasteKoodiUrit.map(_.split("_").last)
     val containsAlempi: Boolean = koodit.exists(k => KOULUTUSASTE_ALEMMAT.contains(k))
     val containsYlempi: Boolean = koodit.exists(k => KOULUTUSASTE_YLEMMAT.contains(k))
