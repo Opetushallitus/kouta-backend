@@ -1,6 +1,7 @@
 package fi.oph.kouta.client
 
 import fi.oph.kouta.config.KoutaConfigurationFactory
+import fi.oph.kouta.domain.Kieli
 import fi.oph.kouta.logging.Logging
 import fi.vm.sade.properties.OphProperties
 import org.json4s.DefaultFormats
@@ -158,14 +159,15 @@ class EPerusteAmosaaClient(urlProperties: OphProperties) extends HttpClient with
     nimi: Option[String],
     paikallistaSisaltoa: Option[Boolean],
     sivu: String,
-    sivukoko: String
+    sivukoko: String,
+    kieli: Kieli
   ): AmosaaOpetussuunnitelmatResponse = {
     def encodeParam(value: String): String = URLEncoder.encode(value, "UTF-8")
 
     val queryParams = organisaatioOids.map(org => s"organisaatio=${encodeParam(org)}") ++ Seq(
       nimi.map(n => s"nimi=${encodeParam(n)}"),
       paikallistaSisaltoa.map(p => s"paikallistasisaltoa=${encodeParam(p.toString)}")
-    ).flatten + s"sivu=$sivu" + s"sivukoko=$sivukoko"
+    ).flatten + s"sivu=$sivu" + s"sivukoko=$sivukoko" + s"kieli=$kieli"
 
     val url = urlProperties.url("eperusteet-amosaa-service.opetussuunnitelmat") +
       (if (queryParams.nonEmpty) s"?${queryParams.mkString("&")}" else "")
