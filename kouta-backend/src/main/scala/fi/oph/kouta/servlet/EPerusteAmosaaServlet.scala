@@ -2,6 +2,7 @@ package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
 import fi.oph.kouta.client.EPerusteAmosaaClient
+import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.OrganisaatioServiceImpl
 import org.scalatra.Ok
@@ -52,6 +53,12 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
       |            type: integer
       |          required: false
       |          description: Sivun koko (oletus 15)
+      |        - in: query
+      |          name: kieli
+      |          schema:
+      |            type: string
+      |          required: false
+      |          description: Kieli jolla opetussuunnitelmia haetaan (oletus fi)
       |      responses:
       |        '200':
       |          description: Opetussuunnitelmat
@@ -69,7 +76,8 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
     val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentAndChildOids, nimi, paikallistaSisaltoa, sivu, sivukoko))
+    val kieli = params.get("kieli").map(Kieli.withName).getOrElse(Fi)
+    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentAndChildOids, nimi, paikallistaSisaltoa, sivu, sivukoko, kieli))
   }
 
   registerPath(
