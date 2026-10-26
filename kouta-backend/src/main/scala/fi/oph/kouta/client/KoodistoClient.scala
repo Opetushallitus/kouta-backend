@@ -142,6 +142,17 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
       followRedirects = true
     ) { response => parse(response).extract[List[KoodistoElement]] })
 
+  val getAlakoodit = new CachedMethod[String, Seq[KoodistoElement]](
+    Scaffeine().expireAfterWrite(10.minutes).build(),
+    koodiUri => getWithRetry(
+      getVersio(koodiUri) match {
+        case Some(versio) =>
+          urlProperties.url("koodisto-service.sisaltyy-alakoodit-versio", removeVersio(koodiUri), versio.toString)
+        case None => urlProperties.url("koodisto-service.sisaltyy-alakoodit", koodiUri)
+      },
+      followRedirects = true
+    ) { response => parse(response).extract[List[KoodistoElement]] })
+
   val getRinnasteisetKoodit = new CachedMethod[String, Seq[KoodistoElement]](
     Scaffeine().expireAfterWrite(10.minutes).build(),
     koodiUri => getWithRetry(
@@ -165,6 +176,7 @@ class KoodistoClient(urlProperties: OphProperties) extends HttpClient with Calle
   def invalidateCaches(): Unit = {
     getKoodistoKoodit.clearCache()
     getYlakoodit.clearCache()
+    getAlakoodit.clearCache()
     getRinnasteisetKoodit.clearCache()
     getKoodistoElementVersion.clearCache()
     getKoodistoElementLatestVersion.clearCache()

@@ -53,6 +53,23 @@ class KoodistoService(koodistoClient: KoodistoClient) extends Object with Loggin
     }
   }
 
+  val koulutusasteKoodistot: Seq[String] = Seq(
+    "kansallinenkoulutusluokitus2016koulutusastetaso1",
+    "kansallinenkoulutusluokitus2016koulutusastetaso2"
+  )
+
+  // Vastaa kouta-indeksoijan logiikkaa (koodisto-tools/koulutusasteet).
+  def getKoulutusasteKoodiUrit(koulutusKoodiUri: String): Seq[String] = {
+    koodistoClient.getAlakoodit(koulutusKoodiUri) match {
+      case Right(alakoodit) =>
+        koulutusasteKoodistot.flatMap(koodisto => alakoodit.filter(_.belongsToKoodisto(koodisto)).map(_.koodiUri))
+      case Left(exp) if exp.status.exists(_ == 404) => Seq.empty
+      case Left(exp) =>
+        logger.error(s"Koulutusasteiden haku koulutukselle $koulutusKoodiUri epäonnistui: ", exp)
+        Seq.empty
+    }
+  }
+
   def getLatestVersion(koodiUri: String): Either[Throwable, KoodistoElement] = {
     koodistoClient.getKoodistoElementLatestVersion(removeVersio(koodiUri))
   }
