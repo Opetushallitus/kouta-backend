@@ -342,23 +342,38 @@ case class ToteutusLiitettyListItem(
     muokkaaja: UserOid,
     modified: Modified,
     koulutustyyppi: Koulutustyyppi,
-    julkinen: Boolean = false
+    julkinen: Boolean = false,
+    metadata: Option[ToteutusLiitettyMetadata] = None
 ) extends LiitettyListItem
     with AuthorizableMaybeJulkinen[ToteutusLiitettyListItem] {
 
   def withMuokkaaja(oid: UserOid): ToteutusLiitettyListItem = this.copy(muokkaaja = oid)
 }
 
+case class ToteutusLiitettyMetadata(
+    kuvaus: Kielistetty,
+    opintojenLaajuusNumero: Option[Double],
+    opintojenLaajuusyksikkoKoodiUri: Option[String]
+)
+
 object ToteutusLiitettyListItem {
   def apply(t: Toteutus): ToteutusLiitettyListItem = {
     new ToteutusLiitettyListItem(
-      t.oid.get,
-      t.nimi,
-      t.tila,
-      t.organisaatioOid,
-      t.muokkaaja,
-      t.modified.get,
-      t.metadata.get.tyyppi
+      oid = t.oid.get,
+      nimi = t.nimi,
+      tila = t.tila,
+      organisaatioOid = t.organisaatioOid,
+      muokkaaja = t.muokkaaja,
+      modified = t.modified.get,
+      koulutustyyppi = t.metadata.get.tyyppi,
+      metadata = t.metadata.collect {
+        case metadata: KkOpintojaksoToteutusMetadata =>
+          ToteutusLiitettyMetadata(
+            kuvaus = metadata.kuvaus,
+            opintojenLaajuusNumero = metadata.opintojenLaajuusNumero,
+            opintojenLaajuusyksikkoKoodiUri = metadata.opintojenLaajuusyksikkoKoodiUri
+          )
+      }
     )
   }
 }
