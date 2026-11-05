@@ -2,8 +2,9 @@ package fi.oph.kouta.repository
 
 import fi.oph.kouta.domain.keyword.Keyword
 import fi.oph.kouta.domain.siirtotiedosto.{HakuRaporttiItem, HakukohdeLiiteRaporttiItem, HakukohdeRaporttiItem, KoulutusEnrichmentData, KoulutusRaporttiItem, OppilaitoksenOsa, Oppilaitos, OppilaitosOrOsaRaporttiItem, PistetietoRaporttiItem, Siirtotiedosto, SorakuvausRaporttiItem, ToteutusRaporttiItem, ValintakoeRaporttiItem, ValintaperusteRaporttiItem}
-import fi.oph.kouta.domain.{Ajanjakso, TilaFilter, Toteutus}
-import fi.oph.kouta.domain.oid.{KoulutusOid, ToteutusOid}
+import fi.oph.kouta.domain.{Ajanjakso, Haku, Koulutus, TilaFilter, Toteutus}
+import fi.oph.kouta.domain.oid.{HakuOid, KoulutusOid, ToteutusOid}
+import fi.oph.kouta.repository.KoulutusDAO.getKoulutusResult
 import fi.oph.kouta.repository.ToteutusDAO.getToteutusResult
 import slick.dbio.{DBIO, DBIOAction}
 import slick.jdbc.PostgresProfile.api._
@@ -46,6 +47,12 @@ class SiirtotiedostoDAO(
 
   def getSingleTotetutus(oid: ToteutusOid, tilaFilter: TilaFilter): Option[Toteutus] =
     databaseAccessor.runBlocking(selectToteutus(oid, tilaFilter)).headOption
+
+  def getSingleHaku(oid: HakuOid, tilaFilter: TilaFilter): Option[Haku] =
+    databaseAccessor.runBlocking(HakuDAO.selectHaku(oid, tilaFilter))
+
+  def getSingleKoulutus(oid: KoulutusOid, tilaFilter: TilaFilter): Option[Koulutus] =
+    databaseAccessor.runBlocking(KoulutusDAO.selectKoulutus(oid, tilaFilter).as[Koulutus].headOption)
 
   def listHakukohteet(
       startTime: Option[LocalDateTime],

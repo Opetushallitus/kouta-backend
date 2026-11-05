@@ -376,6 +376,72 @@ package object hakukohde {
       |        esitysnimi:
       |          description: Koulutustyyppikohtainen esittämistä varten muodostettu nimi käytettäväksi kouta-uin puolella
       |          $ref: '#/components/schemas/Nimi'
+      |        muokkaajanNimi:
+      |          type: string
+      |          description: Hakukohdetta viimeksi muokanneen henkilön nimi
+      |        kuuluuYosinPiiriin:
+      |          type: boolean
+      |          description: Kuuluuko hakukohde yhden opiskeluoikeuden säännön (YOS) piiriin
+      |        paateltyAlkamiskausi:
+      |          type: object
+      |          description: Koulutuksen alkamiskausi päätellään järjestyksessä hakukohteelta, haulta tai toteutukselta.
+      |            Käytetään ensimmäistä tarkkaa alkamisajankohtaa tai alkamiskautta ja -vuotta. Henkilökohtainen
+      |            suunnitelma tai puutteellinen alkamiskausi ohitetaan.
+      |          properties:
+      |            alkamiskausityyppi:
+      |              type: string
+      |              description: Sen alkamiskauden tyyppi, josta kausi on päätelty
+      |              enum:
+      |                - 'tarkka alkamisajankohta'
+      |                - 'alkamiskausi ja -vuosi'
+      |            kausiUri:
+      |              type: string
+      |              description: Alkamiskausi. Tarkasta alkamisajankohdasta päätellään kevät, jos kuukausi on ennen elokuuta.
+      |                Viittaa [koodistoon](https://virkailija.testiopintopolku.fi/koodisto-ui/html/koodisto/kausi/1)
+      |              example: kausi_k#1
+      |            vuosi:
+      |              type: string
+      |              description: Alkamisvuosi
+      |              example: "2027"
+      |            source:
+      |              type: string
+      |              description: Sen hakukohteen, haun tai toteutuksen oid, jolta alkamiskausi on päätelty
+      |              example: "1.2.246.562.20.00000000000000000009"
+      |        paateltyAlkamisajankohta:
+      |          type: object
+      |          description: Koulutuksen alkamisajankohta päätellään samassa järjestyksessä kuin paateltyAlkamiskausi.
+      |            Jos alkamisajankohtaa ei löydy, pvm ja alkamiskausityyppi puuttuvat.
+      |          properties:
+      |            alkamiskausityyppi:
+      |              type: string
+      |              description: Sen alkamiskauden tyyppi, josta alkamisajankohta on päätelty
+      |              enum:
+      |                - 'tarkka alkamisajankohta'
+      |                - 'alkamiskausi ja -vuosi'
+      |            pvm:
+      |              type: string
+      |              description: Tarkka alkamisajankohta sellaisenaan, tai alkamiskauden ja -vuoden ensimmäinen päivä
+      |                (kevät 1.1., syksy 1.8.)
+      |              example: "2027-08-01"
+      |            source:
+      |              type: string
+      |              description: Sen hakukohteen, haun tai toteutuksen oid, jolta alkamisajankohta on päätelty
+      |              example: "1.2.246.562.20.00000000000000000009"
+      |            henkilokohtainenSuunnitelma:
+      |              type: boolean
+      |              description: Onko hakukohteen oma alkamiskausi henkilökohtainen suunnitelma
+      |        johtaaTutkintoon:
+      |          type: boolean
+      |          description: Johtaako hakukohteen toteutuksen koulutus tutkintoon
+      |        koulutusasteKoodiUrit:
+      |          type: array
+      |          description: Hakukohteen toteutuksen koulutusten koulutusasteet (koulutuskoodien alakoodit koodistoista
+      |            kansallinenkoulutusluokitus2016koulutusastetaso1 ja kansallinenkoulutusluokitus2016koulutusastetaso2)
+      |          items:
+      |            type: string
+      |          example:
+      |            - kansallinenkoulutusluokitus2016koulutusastetaso1_7
+      |            - kansallinenkoulutusluokitus2016koulutusastetaso2_72
       |""".stripMargin
 
   def models: Seq[String] = List(
@@ -489,6 +555,27 @@ case class HakukohdeListItem(
     toteutusMetadata: Option[ToteutusMetadata] = None
 ) extends OidListItem
 
-case class HakukohdeEnrichedData(esitysnimi: Kielistetty = Map(), muokkaajanNimi: Option[String] = None)
+case class HakukohdeEnrichedData(
+                                  esitysnimi: Kielistetty = Map(),
+                                  muokkaajanNimi: Option[String] = None,
+                                  kuuluuYosinPiiriin: Boolean = false,
+                                  paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
+                                  paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
+                                  johtaaTutkintoon: Option[Boolean] = None,
+                                  koulutusasteKoodiUrit: Seq[String] = Seq())
+
+case class PaateltyAlkamiskausi(
+    alkamiskausityyppi: Alkamiskausityyppi,
+    kausiUri: String,
+    vuosi: String,
+    source: String
+)
+
+case class PaateltyAlkamisajankohta(
+    alkamiskausityyppi: Option[Alkamiskausityyppi],
+    pvm: Option[String],
+    source: String,
+    henkilokohtainenSuunnitelma: Boolean
+)
 
 case class ExternalHakukohdeRequest(authenticated: Authenticated, hakukohde: Hakukohde) extends ExternalRequest
