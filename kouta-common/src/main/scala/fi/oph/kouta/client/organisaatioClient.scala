@@ -1,6 +1,8 @@
 package fi.oph.kouta.client
 
 import com.github.blemale.scaffeine.{Cache, Scaffeine}
+import fi.oph.kouta.domain.AmmTutkinnonOsa
+import fi.oph.kouta.domain.Koulutustyyppi.oppilaitostyyppi2koulutustyyppi
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.util.GenericKoutaJsonFormats
 import org.json4s._
@@ -41,4 +43,9 @@ case class OidAndChildren(oid: OrganisaatioOid,
   def isOppilaitos: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_02")
 
   def isKoulutustoimija: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_01")
+
+  def isToimipiste: Boolean = organisaatiotyypit.contains("organisaatiotyyppi_03")
+
+  def isOppilaitosForAmmTutkinnonOsa: Boolean =
+    isOppilaitos && oppilaitostyyppi.exists(oppilaitostyyppi2koulutustyyppi.getOrElse(_, Seq()).contains(AmmTutkinnonOsa))
 }

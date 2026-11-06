@@ -1,11 +1,13 @@
 package fi.oph.kouta.servlet
 
 import fi.oph.kouta.SwaggerPaths.registerPath
-import fi.oph.kouta.client.EPerusteAmosaaClient
+import fi.oph.kouta.client.{AmosaaOpetussuunnitelmatResponse, EPerusteAmosaaClient}
 import fi.oph.kouta.domain.{Fi, Kieli}
 import fi.oph.kouta.domain.oid.OrganisaatioOid
 import fi.oph.kouta.service.OrganisaatioServiceImpl
 import org.scalatra.Ok
+
+import scala.util.Try
 
 class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioService: OrganisaatioServiceImpl) extends KoutaServlet {
   def this() = this(EPerusteAmosaaClient, OrganisaatioServiceImpl)
@@ -28,7 +30,7 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
       |          style: form
       |          explode: true
       |          required: false
-      |          description: Lista organisaatioiden OIDeja, joiden käytössä olevat opetussuunnitelmat haetaan. EPerusteista haetaan myös annettujen oidien ylätason organisaatioilla, jotta saadaan kaikki organisaation käytössä olevat opetussuunnitelmat.
+      |          description: Lista organisaatioiden OIDeja, joiden käytössä olevat opetussuunnitelmat haetaan. Huomioitavia oppilaitoksia ovat ne, joiden oppilaitostyyppi sallii tutkinnon osa -koulutusten järjestämisen. Koulutustoimijalle haetaan koulutustoimijan ja sen alla olevien huomioitavien oppilaitosten opetussuunnitelmat, oppilaitokselle oppilaitoksen opetussuunnitelmat jos se on huomioitava oppilaitos ja toimipisteelle sen yläpuolella olevan oppilaitoksen opetussuunnitelmat jos se on huomioitava oppilaitos. Jos sopivia organisaatioita ei löydy, palautetaan tyhjä lista.
       |        - in: query
       |          name: nimi
       |          schema:
@@ -71,13 +73,31 @@ class EPerusteAmosaaServlet(amosaaClient: EPerusteAmosaaClient, organisaatioServ
   get("/opetussuunnitelmat") {
     implicit val authenticated: Authenticated = authenticate()
     val organisaatioOids = multiParams.get("organisaatiot").map(_.toSet).getOrElse(Set.empty[String])
-    val parentAndChildOids = organisaatioService.findParentAndChildOids(organisaatioOids).map(_.toString)
     val nimi = params.get("nimi")
     val sivu = params.get("sivu").getOrElse("0")
     val sivukoko = params.get("sivukoko").getOrElse("15")
     val paikallistaSisaltoa = params.get("paikallistasisaltoa").map(_.toBoolean)
     val kieli = params.get("kieli").map(Kieli.withName).getOrElse(Fi)
-    Ok(amosaaClient.getOpetussuunnitelmat(organisaatioOids ++ parentAndChildOids, nimi, paikallistaSisaltoa, sivu, sivukoko, kieli))
+    val rajausOids =
+      if (organisaatioOids.isEmpty) Set.empty[String]
+      else
+        organisaatioService
+          .findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(organisaatioOids.map(OrganisaatioOid))
+          .map(_.toString)
+
+    if (organisaatioOids.nonEmpty && rajausOids.isEmpty) {
+      Ok(
+        AmosaaOpetussuunnitelmatResponse(
+          data = List(),
+          sivuja = Some(0),
+          `kokonaismäärä` = Some(0),
+          sivu = Try(sivu.toInt).toOption,
+          sivukoko = Try(sivukoko.toInt).toOption
+        )
+      )
+    } else {
+      Ok(amosaaClient.getOpetussuunnitelmat(rajausOids, nimi, paikallistaSisaltoa, sivu, sivukoko, kieli))
+    }
   }
 
   registerPath(
