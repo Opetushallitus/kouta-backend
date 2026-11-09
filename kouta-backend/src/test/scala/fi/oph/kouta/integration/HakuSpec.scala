@@ -163,12 +163,33 @@ class HakuSpec extends KoutaIntegrationSpec with HakuFixture {
     }
   }
 
+  it should "fail to create haku when haku paattyy is later than varasijatayttoPaattyy" in {
+    val metadata = haku.metadata.get.copy(varasijatayttoPaattyy = Some(inFuture()))
+    put(HakuPath, bytes(haku.copy(metadata = Some(metadata))), Seq(jsonHeader, defaultSessionHeader)) {
+      withClue(body) {
+        status should equal(400)
+      }
+      body should equal(validationErrorBody(invalidVarasijatayttoPaattyyMsg, "metadata.varasijatayttoPaattyy"))
+    }
+  }
+
   "Update haku" should "update haku" in {
     val oid          = put(haku)
     val thisHaku     = haku(oid)
     val lastModified = get(oid, thisHaku)
     update(thisHaku.copy(tila = Arkistoitu), lastModified)
     get(oid, thisHaku.copy(tila = Arkistoitu))
+  }
+
+  it should "fail to update haku when haku paattyy is later than varasijatayttoPaattyy" in {
+    val oid          = put(haku)
+    val thisHaku     = haku(oid)
+    val lastModified = get(oid, thisHaku)
+    val metadata = haku.metadata.get.copy(varasijatayttoPaattyy = Some(inFuture()))
+    post(HakuPath, bytes(thisHaku.copy(metadata = Some(metadata))), headersIfUnmodifiedSince(lastModified)) {
+      status should equal(400)
+      body should equal(validationErrorBody(invalidVarasijatayttoPaattyyMsg, "metadata.varasijatayttoPaattyy"))
+    }
   }
 
   it should "read muokkaaja from the session" in {
