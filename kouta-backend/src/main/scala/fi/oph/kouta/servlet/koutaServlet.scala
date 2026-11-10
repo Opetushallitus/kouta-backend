@@ -65,6 +65,14 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
     s"Error ${request.getMethod} $contextPath${request.getServletPath}$requestPath${queryStr} => $msgBody"
   }
 
+  private def logAuthorizationFailure(e: Throwable): Unit = {
+    val user = authenticatedPersonOid.getOrElse("tuntematon")
+    logger.warn(
+      s"""authorization failed for user $user: ${e.getMessage}
+         |  ${errorMsgFromRequest()}
+         |""".stripMargin, e.getCause)
+  }
+
   def badRequest(t: Throwable): ActionResult = {
     logger.warn(errorMsgFromRequest(), t)
     BadRequest("error" -> t.getMessage)
@@ -75,16 +83,16 @@ trait KoutaServlet extends ScalatraServlet with JacksonJsonSupport
       logger.warn(s"authentication failed: ${e.getMessage}", e.cause)
       Unauthorized("error" -> "Unauthorized")
     case e: RoleAuthorizationFailedException =>
-      logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
+      logAuthorizationFailure(e)
       Forbidden("error" -> "Forbidden")
     case e: OrganizationAuthorizationFailedException =>
-      logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
+      logAuthorizationFailure(e)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
     case e: KoulutustyyppiAuthorizationFailedException =>
-      logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
+      logAuthorizationFailure(e)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
     case e: ExternalModifyAuthorizationFailedException =>
-      logger.warn(s"authorization failed: ${e.getMessage}", e.getCause)
+      logAuthorizationFailure(e)
       Forbidden("error" -> s"Forbidden ${e.getMessage}")
     case e: KoutaValidationException =>
       logger.warn(

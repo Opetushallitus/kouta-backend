@@ -27,7 +27,18 @@ trait CasAuthenticatedServlet {
       case None =>
         throw new AuthenticationFailedException(s"No session found. Session cookie: ${sessionCookie}.")
       case Some((id, s)) =>
-        Authenticated(id, s)
+        val authenticated = Authenticated(id, s)
+        request.setAttribute(CasAuthenticatedServlet.AuthenticatedAttribute, authenticated)
+        authenticated
     }
   }
+
+  protected def authenticatedPersonOid: Option[String] =
+    Option(request.getAttribute(CasAuthenticatedServlet.AuthenticatedAttribute)).collect {
+      case a: Authenticated => a.session.personOid
+    }
+}
+
+object CasAuthenticatedServlet {
+  val AuthenticatedAttribute: String = "fi.oph.kouta.authenticated"
 }
