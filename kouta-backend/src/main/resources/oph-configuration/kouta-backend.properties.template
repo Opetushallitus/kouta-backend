@@ -53,6 +53,8 @@ koodisto-service.koodisto-koodit.rinnasteiset=https://{{host_virkailija}}/koodis
 koodisto-service.latest-koodiuri=https://{{host_virkailija}}/koodisto-service/rest/codeelement/latest/$1
 koodisto-service.koodiuri-version=https://{{host_virkailija}}/koodisto-service/rest/codeelement/$1/$2
 koodisto-service.sisaltyy-ylakoodit=https://{{host_virkailija}}/koodisto-service/rest/json/relaatio/sisaltyy-ylakoodit/$1
+koodisto-service.sisaltyy-alakoodit=https://{{host_virkailija}}/koodisto-service/rest/json/relaatio/sisaltyy-alakoodit/$1
+koodisto-service.sisaltyy-alakoodit-versio=https://{{host_virkailija}}/koodisto-service/rest/json/relaatio/sisaltyy-alakoodit/$1?koodiVersio=$2
 
 eperusteet-service.peruste-by-id=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1
 eperusteet-service.tutkinnonosat-by-eperuste=https://{{host_virkailija}}/eperusteet-service/api/perusteet/$1/suoritustavat/reformi/tutkinnonosat

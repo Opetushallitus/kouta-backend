@@ -4,9 +4,9 @@ import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluCl
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.siirtotiedosto._
-import fi.oph.kouta.domain.{LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
+import fi.oph.kouta.domain.{KoulutuksenAlkamiskausi, LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
 import fi.oph.kouta.repository.{SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
-import fi.oph.kouta.util.NameHelper
+import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper}
 
 import java.time.LocalDateTime
 import java.util.UUID
@@ -149,15 +149,35 @@ class SiirtotiedostoService(
   private def enrichHakukohteet(hakukohdeItems: Seq[HakukohdeRaporttiItem]): Seq[HakukohdeRaporttiItem] = {
     hakukohdeItems.map(hri => {
       val toteutusItem = siirtotiedostoDAO.getSingleTotetutus(hri.toteutusOid, TilaFilter.onlyOlemassaolevat())
+      val hakuItem     = siirtotiedostoDAO.getSingleHaku(hri.hakuOid, TilaFilter.onlyOlemassaolevat())
+      val koulutusItem =
+        toteutusItem.flatMap(t => siirtotiedostoDAO.getSingleKoulutus(t.koulutusOid, TilaFilter.onlyOlemassaolevat()))
+      val hakukohteenAlkamiskausi = hri.metadata.flatMap(_.koulutuksenAlkamiskausi).map(toKoulutuksenAlkamiskausi)
       hri.copy(enrichedData =
         Some(
           new HakukohdeEnrichedDataRaporttiItem(
             hakukohdeUtil.getHakukohdeEnrichedData(hri.muokkaaja, hri.nimi, toteutusItem.flatMap(_.metadata), hri.hakukohdeKoodiUri)
+          ).copy(
+            paateltyAlkamiskausi = HakukohdeServiceUtil
+              .paatteleAlkamiskausi(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem),
+            paateltyAlkamisajankohta = HakukohdeServiceUtil
+              .paatteleAlkamisajankohta(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem),
+            johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutusItem)
           )
         )
       )
     })
   }
+
+  private def toKoulutuksenAlkamiskausi(a: KoulutuksenAlkamiskausiRaporttiItem): KoulutuksenAlkamiskausi =
+    KoulutuksenAlkamiskausi(
+      alkamiskausityyppi = a.alkamiskausityyppi,
+      henkilokohtaisenSuunnitelmanLisatiedot = a.henkilokohtaisenSuunnitelmanLisatiedot,
+      koulutuksenAlkamispaivamaara = a.koulutuksenAlkamispaivamaara,
+      koulutuksenPaattymispaivamaara = a.koulutuksenPaattymispaivamaara,
+      koulutuksenAlkamiskausiKoodiUri = a.koulutuksenAlkamiskausiKoodiUri,
+      koulutuksenAlkamisvuosi = a.koulutuksenAlkamisvuosi
+    )
 
   private def getMuokkaajanNimi(userOid: UserOid): Option[String] = {
     val muokkaaja = oppijanumerorekisteriClient.getHenkilöFromCache(userOid)

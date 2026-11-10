@@ -105,4 +105,49 @@ class OrganisaatioServiceSpec extends SpecWithMocks with OrganisaatioFixture {
       Set(ChildOid, OrganisaatioOid("1.2.246.562.10.121212121212"))
     ) should equal(Right(Set(OrganisaatioOid("1.2.246.562.10.121212121212"))))
   }
+
+  "findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat" should "return koulutustoimija and its ammatilliset oppilaitokset" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(Set(ParentOid)) should
+      contain theSameElementsAs Set(ParentOid, ChildOid)
+  }
+
+  it should "return only koulutustoimija when it has no ammatilliset oppilaitokset" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(
+      Set(OrganisaatioOid("1.2.246.562.10.53814745062"))
+    ) should contain theSameElementsAs Set(OrganisaatioOid("1.2.246.562.10.53814745062"))
+  }
+
+  it should "return ammatillinen oppilaitos itself" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(Set(ChildOid, AmmOid)) should
+      contain theSameElementsAs Set(ChildOid, AmmOid)
+  }
+
+  it should "return other oppilaitos allowed to järjestää AmmTutkinnonOsa itself" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(
+      Set(OrganisaatioOid("1.2.246.562.10.463122068777"))
+    ) should contain theSameElementsAs Set(OrganisaatioOid("1.2.246.562.10.463122068777"))
+  }
+
+  it should "return nothing for oppilaitos not allowed to järjestää AmmTutkinnonOsa" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(
+      Set(YoOid, LukioOid, OrganisaatioOid("1.2.246.562.10.71396759145"), OrganisaatioOid("1.2.246.562.10.88417511545"))
+    ) shouldBe empty
+  }
+
+  it should "return ammatillinen oppilaitos above toimipiste" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(Set(GrandChildOid)) should
+      contain theSameElementsAs Set(ChildOid)
+  }
+
+  it should "return nothing for toimipiste under non-ammatillinen oppilaitos, also several levels down" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(
+      Set(LutYoChildOid, OrganisaatioOid("1.2.246.562.10.27277224708"))
+    ) shouldBe empty
+  }
+
+  it should "return nothing for unknown oid and organisaatio without known tyyppi" in {
+    organisaatioService.findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(
+      Set(OrganisaatioOid("1.2.3"), EvilChildOid)
+    ) shouldBe empty
+  }
 }

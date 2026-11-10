@@ -33,6 +33,26 @@ trait OrganisaatioService {
       parentsAndChildren(getPartialHierarkia(oid))
     }.filterNot(_ == RootOrganisaatioOid)
 
+  /**
+   * Päättelee annettujen organisaatioiden perusteella ne organisaatiot, joilla haetaan ammatillisia opetussuunnitelmia.
+   * Oppilaitos huomioidaan, jos sen oppilaitostyyppi sallii tutkinnon osa -koulutusten (AmmTutkinnonOsa) järjestämisen:
+   *  - koulutustoimija: koulutustoimija itse ja kaikki sen alla olevat tällaiset oppilaitokset
+   *  - oppilaitos: oppilaitos itse, jos se on tällainen oppilaitos
+   *  - toimipiste: lähin yläpuolella oleva oppilaitos, jos se on tällainen oppilaitos
+   */
+  def findOrganisaatioOidsForAmmatillisetOpetussuunnitelmat(oids: Set[OrganisaatioOid]): Set[OrganisaatioOid] =
+    oids.flatMap { oid =>
+      getHierarkiaFromCache(oid).map(pathTo(oid, _)).getOrElse(Nil).reverse match {
+        case org :: _ if org.isKoulutustoimija =>
+          org.oid +: descendantsFlat(org).filter(_.isOppilaitosForAmmTutkinnonOsa).map(_.oid)
+        case org :: _ if org.isOppilaitos =>
+          Seq(org.oid).filter(_ => org.isOppilaitosForAmmTutkinnonOsa)
+        case org :: parents if org.isToimipiste =>
+          parents.find(_.isOppilaitos).filter(_.isOppilaitosForAmmTutkinnonOsa).map(_.oid).toSeq
+        case _ => Seq()
+      }
+    }
+
   def findParentOppilaitosOid(oid: OrganisaatioOid): Option[OrganisaatioOid] =
     findParentOid(oid, _.isOppilaitos)
 
@@ -134,6 +154,17 @@ trait OrganisaatioService {
 
   private def childOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.children.flatMap(c => c.oid +: childOidsFlat(c))
+
+  private def descendantsFlat(item: OidAndChildren): Seq[OidAndChildren] =
+    item.children.flatMap(c => c +: descendantsFlat(c))
+
+  private def pathTo(oid: OrganisaatioOid, current: OidAndChildren): List[OidAndChildren] =
+    if (current.oid == oid) List(current)
+    else
+      current.children.iterator
+        .map(pathTo(oid, _))
+        .collectFirst { case path if path.nonEmpty => current :: path }
+        .getOrElse(Nil)
 
   private def parentOidsFlat(item: OidAndChildren): Seq[OrganisaatioOid] =
     item.parentOidPath.split('/').toSeq.reverse.map(OrganisaatioOid)

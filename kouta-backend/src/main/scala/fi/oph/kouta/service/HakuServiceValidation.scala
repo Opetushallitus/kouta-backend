@@ -8,6 +8,7 @@ import fi.oph.kouta.validation.CrudOperations.{create, update}
 import fi.oph.kouta.validation.Validations._
 import fi.oph.kouta.validation.{HakuDiffResolver, IsValid, ValidationContext}
 
+import java.time.LocalDateTime
 import java.util.UUID
 
 object HakuServiceValidation
@@ -18,12 +19,9 @@ class HakuServiceValidation(
     hakukohdeDAO: HakukohdeDAO,
     organisaatioService: OrganisaatioService
 ) extends ValidatingService[Haku] {
-  private def isYhteisHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_01")
-  private def isJatkuvaHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_03")
-  private def isJoustavaHaku(haku: Haku): Boolean =
-    haku.hakutapaKoodiUri.map(_.toString).getOrElse("").startsWith("hakutapa_04")
+  private def isYhteisHaku(haku: Haku): Boolean   = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_01")
+  private def isJatkuvaHaku(haku: Haku): Boolean  = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_03")
+  private def isJoustavaHaku(haku: Haku): Boolean = haku.hakutapaKoodiUri.getOrElse("").startsWith("hakutapa_04")
 
   override def validateEntity(haku: Haku, oldHaku: Option[Haku]): IsValid = {
     val hakuDiffResolver = HakuDiffResolver(haku, oldHaku)
@@ -118,18 +116,36 @@ class HakuServiceValidation(
             isYhteisHaku(haku),
             assertNotOptional(haku.metadata.flatMap(_.koulutuksenAlkamiskausi), "metadata.koulutuksenAlkamiskausi")
           ),
-          validateHakukohteenLiittajaOrganisaatiot(haku.hakukohteenLiittajaOrganisaatiot)
+          validateHakukohteenLiittajaOrganisaatiot(haku.hakukohteenLiittajaOrganisaatiot),
+          validateIfDefined[HakuMetadata](
+            haku.metadata,
+            m =>
+              validateIfDefined[LocalDateTime](
+                m.varasijatayttoPaattyy,
+                varasijatayttoPaattyy => {
+                  assertTrue(
+                    haku.hakuajat.flatMap(_.paattyy).forall(_.isBefore(varasijatayttoPaattyy)),
+                    "metadata.varasijatayttoPaattyy",
+                    invalidVarasijatayttoPaattyyMsg
+                  )
+                }
+              )
+          )
         )
       )
     )
   }
 
   private def validateHakukohteenLiittajaOrganisaatiot(liittajat: Seq[OrganisaatioOid]): IsValid = {
-    assertTrue(if (liittajat.isEmpty) true else liittajat.forall(liittaja =>
-      organisaatioService.findOrganisaatioOidsFlatByMemberOid(liittaja).contains(liittaja)
-      ),
+    assertTrue(
+      if (liittajat.isEmpty) true
+      else
+        liittajat
+          .forall(liittaja => organisaatioService.findOrganisaatioOidsFlatByMemberOid(liittaja).contains(liittaja)),
       "hakukohteenLiittajaOrganisaatiot",
-      invalidHakukohteenLiittajaOrganisaatio(liittajat.filterNot(l => organisaatioService.findOrganisaatioOidsFlatByMemberOid(l).contains(l)))
+      invalidHakukohteenLiittajaOrganisaatio(
+        liittajat.filterNot(l => organisaatioService.findOrganisaatioOidsFlatByMemberOid(l).contains(l))
+      )
     )
   }
 
@@ -167,26 +183,29 @@ class HakuServiceValidation(
     integrityViolationMsg("Hakua", "hakukohteita")
   )
 
-  override def validateEntityOnJulkaisu(haku: Haku): IsValid = and(
-    validateIfTrueOrElse(
-      isJatkuvaHaku(haku) || isJoustavaHaku(haku),
-      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaOrJoustavaHaku(_)),
-      validateIfNonEmpty[Ajanjakso](haku.hakuajat, "hakuajat", _.validateOnJulkaisu(_))
-    ),
-    validateIfDefined[HakuMetadata](
-      haku.metadata,
-      m =>
-        and(
-          validateIfNonEmpty[Ajanjakso](
-            m.tulevaisuudenAikataulu,
-            "metadata.tulevaisuudenAikataulu",
-            _.validateOnJulkaisu(_)
-          ),
-          validateIfDefined[KoulutuksenAlkamiskausi](
-            m.koulutuksenAlkamiskausi,
-            _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
+  override def validateEntityOnJulkaisu(haku: Haku): IsValid = {
+    val hakuajat = haku.hakuajat
+    and(
+      validateIfTrueOrElse(
+        isJatkuvaHaku(haku) || isJoustavaHaku(haku),
+        validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisuForJatkuvaOrJoustavaHaku(_)),
+        validateIfNonEmpty[Ajanjakso](hakuajat, "hakuajat", _.validateOnJulkaisu(_))
+      ),
+      validateIfDefined[HakuMetadata](
+        haku.metadata,
+        m =>
+          and(
+            validateIfNonEmpty[Ajanjakso](
+              m.tulevaisuudenAikataulu,
+              "metadata.tulevaisuudenAikataulu",
+              _.validateOnJulkaisu(_)
+            ),
+            validateIfDefined[KoulutuksenAlkamiskausi](
+              m.koulutuksenAlkamiskausi,
+              _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
+            )
           )
-        )
+      )
     )
-  )
+  }
 }
