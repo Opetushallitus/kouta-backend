@@ -175,7 +175,7 @@ class SiirtotiedostoService(
             paateltyAlkamisajankohta = HakukohdeServiceUtil
               .paatteleAlkamisajankohta(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem),
             johtaaTutkintoon = johtaaTutkintoon,
-            kuuluuYosinPiiriin = Some(kuuluuYosinPiiriin)
+            kuuluuYosinPiiriin = kuuluuYosinPiiriin
           )
         )
       )
