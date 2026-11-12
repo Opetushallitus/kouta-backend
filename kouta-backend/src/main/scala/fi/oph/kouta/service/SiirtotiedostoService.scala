@@ -153,16 +153,29 @@ class SiirtotiedostoService(
       val koulutusItem =
         toteutusItem.flatMap(t => siirtotiedostoDAO.getSingleKoulutus(t.koulutusOid, TilaFilter.onlyOlemassaolevat()))
       val hakukohteenAlkamiskausi = hri.metadata.flatMap(_.koulutuksenAlkamiskausi).map(toKoulutuksenAlkamiskausi)
+      val paateltyAlkamiskausi =
+        HakukohdeServiceUtil.paatteleAlkamiskausi(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem)
+      val johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutusItem)
+      val kuuluuYosinPiiriin = hakukohdeUtil.paatteleKuuluuYosinPiiriin(
+        hakuItem,
+        Some(hri.oid),
+        hri.hakuOid,
+        hri.tila,
+        hri.jarjestyspaikkaOid,
+        paateltyAlkamiskausi,
+        johtaaTutkintoon,
+        hakukohdeUtil.paatteleKoulutusasteKoodiUrit(koulutusItem)
+      )
       hri.copy(enrichedData =
         Some(
           new HakukohdeEnrichedDataRaporttiItem(
             hakukohdeUtil.getHakukohdeEnrichedData(hri.muokkaaja, hri.nimi, toteutusItem.flatMap(_.metadata), hri.hakukohdeKoodiUri)
           ).copy(
-            paateltyAlkamiskausi = HakukohdeServiceUtil
-              .paatteleAlkamiskausi(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem),
+            paateltyAlkamiskausi = paateltyAlkamiskausi,
             paateltyAlkamisajankohta = HakukohdeServiceUtil
               .paatteleAlkamisajankohta(Some(hri.oid.s), hakukohteenAlkamiskausi, hakuItem, toteutusItem),
-            johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutusItem)
+            johtaaTutkintoon = johtaaTutkintoon,
+            kuuluuYosinPiiriin = Some(kuuluuYosinPiiriin)
           )
         )
       )
