@@ -12,7 +12,7 @@ case class HakukohdeEnrichedDataRaporttiItem(
     paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
     paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
     johtaaTutkintoon: Option[Boolean] = None,
-    kuuluuYosinPiiriin: Option[Boolean] = None
+    kuuluuYosinPiiriin: Boolean = false
 ) {
   def this(e: HakukohdeEnrichedData) = this(
     e.esitysnimi,
@@ -20,7 +20,7 @@ case class HakukohdeEnrichedDataRaporttiItem(
     e.paateltyAlkamiskausi,
     e.paateltyAlkamisajankohta,
     e.johtaaTutkintoon,
-    Some(e.kuuluuYosinPiiriin)
+    e.kuuluuYosinPiiriin
   )
 }
 
