@@ -11,14 +11,16 @@ case class HakukohdeEnrichedDataRaporttiItem(
     muokkaajanNimi: Option[String] = None,
     paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
     paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
-    johtaaTutkintoon: Option[Boolean] = None
+    johtaaTutkintoon: Option[Boolean] = None,
+    kuuluuYosinPiiriin: Option[Boolean] = None
 ) {
   def this(e: HakukohdeEnrichedData) = this(
     e.esitysnimi,
     e.muokkaajanNimi,
     e.paateltyAlkamiskausi,
     e.paateltyAlkamisajankohta,
-    e.johtaaTutkintoon
+    e.johtaaTutkintoon,
+    Some(e.kuuluuYosinPiiriin)
   )
 }
 

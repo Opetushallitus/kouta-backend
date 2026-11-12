@@ -88,11 +88,13 @@ class HakukohdeService(
         val paateltyAlkamiskausi     = HakukohdeServiceUtil.paatteleAlkamiskausi(h, haku, toteutus)
         val paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(h, haku, toteutus)
         val johtaaTutkintoon         = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
-        val koulutusasteKoodiUrit =
-          koulutus.toSeq.flatMap(_.koulutuksetKoodiUri).flatMap(koodistoService.getKoulutusasteKoodiUrit)
-        val kuuluuYosinPiiriin = YosService.kuuluukoHakukohdeYossinpiiriin(
+        val koulutusasteKoodiUrit    = hakukohdeUtil.paatteleKoulutusasteKoodiUrit(koulutus)
+        val kuuluuYosinPiiriin = hakukohdeUtil.paatteleKuuluuYosinPiiriin(
           haku,
-          h,
+          h.oid,
+          h.hakuOid,
+          h.tila,
+          h.jarjestyspaikkaOid,
           paateltyAlkamiskausi,
           johtaaTutkintoon,
           koulutusasteKoodiUrit
@@ -503,4 +505,28 @@ class HakukohdeUtil(
         }
     }
   }
+
+  def paatteleKoulutusasteKoodiUrit(koulutus: Option[Koulutus]): Seq[String] =
+    koulutus.toSeq.flatMap(_.koulutuksetKoodiUri).flatMap(koodistoService.getKoulutusasteKoodiUrit)
+
+  def paatteleKuuluuYosinPiiriin(
+      haku: Option[Haku],
+      hakukohdeOid: Option[HakukohdeOid],
+      hakuOid: HakuOid,
+      hakukohdeTila: Julkaisutila,
+      jarjestyspaikkaOid: Option[OrganisaatioOid],
+      paateltyAlkamiskausi: Option[PaateltyAlkamiskausi],
+      johtaaTutkintoon: Option[Boolean],
+      koulutusasteKoodiUrit: Seq[String]
+  ): Boolean =
+    YosService.kuuluukoHakukohdeYossinpiiriin(
+      haku,
+      hakukohdeOid,
+      hakuOid,
+      hakukohdeTila,
+      jarjestyspaikkaOid,
+      paateltyAlkamiskausi,
+      johtaaTutkintoon,
+      koulutusasteKoodiUrit
+    )
 }
