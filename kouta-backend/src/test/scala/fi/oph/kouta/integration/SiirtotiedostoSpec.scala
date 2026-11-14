@@ -111,7 +111,7 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
     verifyLatestContents(Seq(hakukohdeOid1, hakukohdeOid2, hakukohdeOid3), "oid")
   }
 
-  it should "add paateltyAlkamiskausi paateltyAlkamisajankohta and johtaaTutkintoon" in {
+  it should "add paateltyAlkamiskausi paateltyAlkamisajankohta johtaaTutkintoon and kuuluuYosinPiiriin" in {
     doGet("hakukohteet", dayBefore, dayAfter, 200)
     val raporttiItem = parse(lastSiirtotiedostoContent())
       .asInstanceOf[JArray]
@@ -121,18 +121,16 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
     get(s"$HakukohdePath/$hakukohdeOid1", headers = Seq(sessionHeader(ophSession))) {
       status should equal(200)
       val apiEnrichedData = parse(body) \ "_enrichedData"
-      for (field <- Seq("paateltyAlkamiskausi", "paateltyAlkamisajankohta", "johtaaTutkintoon")) {
+      for (field <- Seq("paateltyAlkamiskausi", "paateltyAlkamisajankohta", "johtaaTutkintoon", "kuuluuYosinPiiriin")) {
         withClue(field) {
           apiEnrichedData \ field should not equal JNothing
           raporttiItem \ "enrichedData" \ field should equal(apiEnrichedData \ field)
         }
       }
-      // YOS-tiedot palautetaan rajapinnassa, mutta niitä ei viedä siirtotiedostoon
-      for (field <- Seq("kuuluuYosinPiiriin", "koulutusasteKoodiUrit")) {
-        withClue(field) {
-          apiEnrichedData \ field should not equal JNothing
-          raporttiItem \ "enrichedData" \ field should equal(JNothing)
-        }
+      // koulutusasteKoodiUrit palautetaan rajapinnassa, mutta sitä ei viedä siirtotiedostoon
+      withClue("koulutusasteKoodiUrit") {
+        apiEnrichedData \ "koulutusasteKoodiUrit" should not equal JNothing
+        raporttiItem \ "enrichedData" \ "koulutusasteKoodiUrit" should equal(JNothing)
       }
     }
   }
