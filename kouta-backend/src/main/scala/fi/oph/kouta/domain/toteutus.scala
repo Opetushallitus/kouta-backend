@@ -419,3 +419,30 @@ case class ToteutusEnrichmentSourceData(
     hasLukioYleislinja: Boolean = false,
     opintojenLaajuusNumero: Option[Double] = None
 )
+
+case class LukioToteutusNimenOsat(lukioLinjat: Seq[LukiolinjaTieto], hasYleislinja: Boolean)
+
+object ToteutusEnrichmentSourceData {
+  // Yhteinen esitysnimen lähtödatan muodostus Kouta-API:lle ja siirtotiedostoille, jotta esitysnimi muodostuu
+  // molempiin samoista tiedoista. Lukiototeutuksen nimi generoidaan vain, jos sekä toteutus että koulutus ovat lukiota.
+  def build(
+      toteutusNimi: Kielistetty,
+      koulutuksetKoodiUri: Seq[String],
+      muokkaaja: UserOid,
+      koulutusMetadata: Option[KoulutusMetadata],
+      lukioToteutus: Option[LukioToteutusNimenOsat]
+  ): ToteutusEnrichmentSourceData =
+    (koulutusMetadata, lukioToteutus) match {
+      case (Some(lukioKoulutusMetadata: LukioKoulutusMetadata), Some(lukio)) =>
+        ToteutusEnrichmentSourceData(
+          toteutusNimi,
+          koulutuksetKoodiUri,
+          muokkaaja,
+          isLukioToteutus = true,
+          lukio.lukioLinjat,
+          lukio.hasYleislinja,
+          lukioKoulutusMetadata.opintojenLaajuusNumero
+        )
+      case _ => ToteutusEnrichmentSourceData(toteutusNimi, koulutuksetKoodiUri, muokkaaja)
+    }
+}
