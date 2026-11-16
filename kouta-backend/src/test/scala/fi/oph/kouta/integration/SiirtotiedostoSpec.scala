@@ -7,6 +7,7 @@ import fi.oph.kouta.integration.fixture.SiirtotiedostoFixture
 import fi.oph.kouta.mocks.LokalisointiServiceMock
 import org.json4s.JsonAST.{JArray, JNothing}
 import org.json4s.jackson.JsonMethods.parse
+import slick.jdbc.PostgresProfile.api._
 
 import java.util.UUID
 
@@ -15,6 +16,8 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   var valintaperusteId1, valintaperusteId2, valintaperusteId3: UUID            = _
   var koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid: String       = _
   var toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid: String       = _
+  var ebKoulutusOid, ebToteutusOid: String                                     = _
+  var tarjoajatonKoulutusOid, tarjoajatonToteutusOid: String                   = _
   var hakuOid1, hakuOid2, hakuOid3: String                                     = _
   var hakukohdeOid1, hakukohdeOid2, hakukohdeOid3: String                      = _
   val oppilaitosOid1                                                           = ChildOid
@@ -51,6 +54,14 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
     toteutusOid2 = put(toteutus(koulutusOid2), ophSession)
     toteutusOid3 = put(toteutus(koulutusOid3), ophSession)
     lukioToteutusOid = put(TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(lukioKoulutusOid), nimi = Map()), ophSession)
+    ebKoulutusOid = put(TestData.LukioKoulutus.copy(koulutuksetKoodiUri = Seq("koulutus_301104#1")), ophSession)
+    ebToteutusOid = put(TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(ebKoulutusOid)), ophSession)
+    tarjoajatonKoulutusOid = put(TestData.LukioKoulutus, ophSession)
+    tarjoajatonToteutusOid =
+      put(TestData.LukioToteutus.copy(koulutusOid = KoulutusOid(tarjoajatonKoulutusOid), nimi = Map()), ophSession)
+    // Koulutus, jolla on toteutus mutta ei yhtään tarjoajaa, ei pitäisi olla mahdollinen normaalisti, mutta
+    // sellainen ei saa kaataa siirtotiedoston muodostusta
+    db.runBlocking(sqlu"""delete from koulutusten_tarjoajat where koulutus_oid = $tarjoajatonKoulutusOid""")
     hakuOid1 = put(haku, ophSession);
     hakuOid2 = put(haku, ophSession);
     hakuOid3 = put(haku, ophSession);
@@ -87,8 +98,24 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
 
   "Save koulutukset" should "save koulutukset in bulks according to max limit with given timerange" in {
     doGet("koulutukset", dayBefore, dayAfter, 200)
-    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
+    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid, ebKoulutusOid, tarjoajatonKoulutusOid), "oid")
     nbrOfContentItems() should equal(2)
+  }
+
+  it should "save koulutuksen tarjoajat as organisaatio oids and koulutuksetKoodiUri as koodiUris" in {
+    doGet("koulutukset", dayBefore, dayAfter, 200)
+    val items = parse(lastSiirtotiedostoContent()).asInstanceOf[JArray].arr
+    def item(oid: String) = items.find(item => (item \ "oid").extract[String] == oid).get
+
+    // Toteutuksen tallennus lisää tarjoajien oppilaitokset koulutuksen tarjoajiksi, joten verrataan kannan sisältöön
+    val lukioKoulutuksenTarjoajat = db.runBlocking(
+      sql"""select tarjoaja_oid from koulutusten_tarjoajat where koulutus_oid = $lukioKoulutusOid""".as[String]
+    )
+    lukioKoulutuksenTarjoajat should not be empty
+    (item(lukioKoulutusOid) \ "tarjoajat").extract[List[String]] should contain theSameElementsAs lukioKoulutuksenTarjoajat
+    (item(lukioKoulutusOid) \ "koulutuksetKoodiUri").extract[List[String]] should equal(List("koulutus_301101#1"))
+    (item(tarjoajatonKoulutusOid) \ "tarjoajat").extract[List[String]] shouldBe empty
+    (item(tarjoajatonKoulutusOid) \ "koulutuksetKoodiUri").extract[List[String]] should equal(List("koulutus_301101#1"))
   }
 
   it should "fail to create koulutukset transfer file without OPH Pääkäyttäjä role" in {
@@ -98,8 +125,19 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
   "Save toteutukset" should "save toteutukset in bulks according to max limit with given timerange" in {
     clearSiirtotiedostoContents()
     doGet("toteutukset", None, dayAfter, 200)
-    verifyLatestContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid), "oid")
+    verifyLatestContents(Seq(toteutusOid1, toteutusOid2, toteutusOid3, lukioToteutusOid, ebToteutusOid, tarjoajatonToteutusOid), "oid")
     nbrOfContentItems() should equal(2)
+  }
+
+  it should "use toteutus nimi as esitysnimi for EB- and DIA-lukiokoulutus and generate esitysnimi for other lukiokoulutus" in {
+    doGet("toteutukset", None, dayAfter, 200)
+    val items = parse(lastSiirtotiedostoContent()).asInstanceOf[JArray].arr
+    def esitysnimi(oid: String) =
+      (items.find(item => (item \ "oid").extract[String] == oid).get \ "enrichedData" \ "esitysnimi").extract[Map[String, String]]
+
+    esitysnimi(ebToteutusOid) should equal(Map("fi" -> "nimi", "sv" -> "nimi sv"))
+    esitysnimi(lukioToteutusOid) should not be empty
+    esitysnimi(tarjoajatonToteutusOid) should equal(esitysnimi(lukioToteutusOid))
   }
 
   it should "fail to create toteutukset transfer file without OPH Pääkäyttäjä role" in {
@@ -190,7 +228,7 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
 
   "Save entities without timerange" should "save entities ok" in {
     doGet("koulutukset", None, None, 200)
-    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid), "oid")
+    verifyLatestContents(Seq(koulutusOid1, koulutusOid2, koulutusOid3, lukioKoulutusOid, ebKoulutusOid, tarjoajatonKoulutusOid), "oid")
   }
 
   "Save entities with invalid time definition" should "return error" in {
