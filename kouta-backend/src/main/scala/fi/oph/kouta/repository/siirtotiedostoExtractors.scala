@@ -10,15 +10,19 @@ import slick.jdbc.GetResult
 import java.util.UUID
 
 trait SiirtotiedostoExtractors extends ExtractorBase {
+  // array_agg yhdessä left joinin kanssa palauttaa {NULL}, jos liitettäviä rivejä ei ole. Suodatetaan null-arvot pois,
+  // jotta yksittäinen puutteellinen rivi ei kaada koko siirtotiedoston muodostusta.
+  private def extractNonNullStrings(o: Option[Object]): Seq[String] = extractArray[String](o).filter(_ != null)
+
   implicit val getKoulutusRaporttiItemResult: GetResult[KoulutusRaporttiItem] = GetResult(r =>
     KoulutusRaporttiItem(
       oid = KoulutusOid(r.nextString()),
       externalId = r.nextStringOption(),
       johtaaTutkintoon = r.nextBooleanOption(),
       koulutustyyppi = Koulutustyyppi.withName(r.nextString()),
-      koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+      koulutuksetKoodiUri = extractNonNullStrings(r.nextObjectOption()),
       tila = Julkaisutila.withName(r.nextString()),
-      tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+      tarjoajat = extractNonNullStrings(r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
       nimi = extractKielistetty(r.nextStringOption()),
       sorakuvausId = r.nextStringOption().map(UUID.fromString),
       metadata = r.nextStringOption().map(read[KoulutusMetadataRaporttiItem]),
@@ -36,7 +40,7 @@ trait SiirtotiedostoExtractors extends ExtractorBase {
   implicit val getKoulutusEnrichmentDataResult: GetResult[KoulutusEnrichmentData] = GetResult(r =>
     KoulutusEnrichmentData(
       oid = KoulutusOid(r.nextString()),
-      koulutuksetKoodiUri = extractArray[String](r.nextObjectOption()),
+      koulutuksetKoodiUri = extractNonNullStrings(r.nextObjectOption()),
       metadata = r.nextStringOption().map(read[KoulutusMetadata])
     )
   )
@@ -47,7 +51,7 @@ trait SiirtotiedostoExtractors extends ExtractorBase {
       externalId = r.nextStringOption(),
       koulutusOid = KoulutusOid(r.nextString()),
       tila = Julkaisutila.withName(r.nextString()),
-      tarjoajat = extractArray[String](r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
+      tarjoajat = extractNonNullStrings(r.nextObjectOption()).map(oid => OrganisaatioOid(oid)).toList,
       nimi = extractKielistetty(r.nextStringOption()),
       metadata = r.nextStringOption().map(read[ToteutusMetadataRaporttiItem]),
       muokkaaja = r.nextStringOption().map(UserOid),
@@ -75,7 +79,7 @@ trait SiirtotiedostoExtractors extends ExtractorBase {
       hakulomakeLinkki = extractKielistetty(r.nextStringOption()),
       kaytetaanHaunHakulomaketta = r.nextBooleanOption(),
       jarjestyspaikkaOid = r.nextStringOption().map(OrganisaatioOid),
-      pohjakoulutusvaatimusKoodiUrit = extractArray[String](r.nextObjectOption()),
+      pohjakoulutusvaatimusKoodiUrit = extractNonNullStrings(r.nextObjectOption()),
       pohjakoulutusvaatimusTarkenne = extractKielistetty(r.nextStringOption()),
       muuPohjakoulutusvaatimus = extractKielistetty(r.nextStringOption()),
       toinenAsteOnkoKaksoistutkinto = r.nextBooleanOption(),

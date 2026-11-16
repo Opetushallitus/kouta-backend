@@ -212,11 +212,9 @@ sealed trait EntitySQL extends SiirtotiedostoExtractors with SQLHelpers {
   }
 
   def selectKoulutusEnrichmentDataItems(oids: Seq[KoulutusOid]): DBIO[Seq[KoulutusEnrichmentData]] = {
-    sql"""select k.oid, array_agg(distinct kt.tarjoaja_oid) as koulutuksen_tarjoajat, k.metadata
+    sql"""select k.oid, k.koulutukset_koodi_uri, k.metadata
          from koulutukset k
-         left join koulutusten_tarjoajat kt on k.oid = kt.koulutus_oid
          where k.oid in (#${createOidInParams(oids)})
-         group by k.oid
        """.as[KoulutusEnrichmentData]
   }
 
