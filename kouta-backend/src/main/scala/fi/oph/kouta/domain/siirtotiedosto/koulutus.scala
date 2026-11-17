@@ -47,17 +47,7 @@ case class KoulutusEnrichmentData(
     oid: KoulutusOid,
     koulutuksetKoodiUri: Seq[String] = Seq(),
     metadata: Option[KoulutusMetadata]
-) {
-  def opintojenLaajuusNumero(): Option[Double] =
-    metadata match {
-      case Some(metadata) =>
-        metadata match {
-          case lukioKoulutusMetadata: LukioKoulutusMetadata => lukioKoulutusMetadata.opintojenLaajuusNumero
-          case _ => None
-        }
-      case _ => None
-    }
-}
+)
 
 trait KorkeakoulutusKoulutusMetadataRaporttiItem extends KoulutusMetadataRaporttiItem with LaajuusSingle {
   val tutkintonimikeKoodiUrit: Seq[String]
