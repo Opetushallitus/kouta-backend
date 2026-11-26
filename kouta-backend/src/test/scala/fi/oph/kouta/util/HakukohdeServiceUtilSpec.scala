@@ -9,7 +9,8 @@ import fi.oph.kouta.TestData.{
   JulkaistuHakukohde,
   TelmaToteutuksenMetatieto,
   ToteutuksenOpetus,
-  TuvaToteutuksenMetatieto
+  TuvaToteutuksenMetatieto,
+  YoKoulutus
 }
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, ToteutusOid}
 import fi.oph.kouta.domain.{
@@ -20,9 +21,11 @@ import fi.oph.kouta.domain.{
   KoulutuksenAlkamiskausi,
   PaateltyAlkamisajankohta,
   PaateltyAlkamiskausi,
+  Tallennettu,
   TarkkaAlkamisajankohta,
   Toteutus,
-  TuvaToteutusMetadata
+  TuvaToteutusMetadata,
+  YhdenPaikanSaanto
 }
 
 import java.time.LocalDateTime
@@ -228,5 +231,84 @@ class HakukohdeServiceUtilSpec extends UnitSpec {
 
   it should "return None when koulutus is missing" in {
     HakukohdeServiceUtil.paatteleJohtaaTutkintoon(None) shouldBe None
+  }
+
+  def ypsHaku(kohdejoukonTarkenne: Option[String]): Haku =
+    haku(None).copy(kohdejoukonTarkenneKoodiUri = kohdejoukonTarkenne)
+
+  def alkamiskausi(kausiUri: String, vuosi: String): Option[PaateltyAlkamiskausi] =
+    Some(PaateltyAlkamiskausi(AlkamiskausiJaVuosi, kausiUri, vuosi, hakukohdeOid))
+
+  def paatteleYps(
+      ypsHakukohde: Hakukohde = hakukohde(None),
+      ypsHakuOpt: Option[Haku] = Some(ypsHaku(None)),
+      koulutus: Option[fi.oph.kouta.domain.Koulutus] = Some(YoKoulutus),
+      paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = alkamiskausi("kausi_s#1", "2027")
+  ): YhdenPaikanSaanto =
+    HakukohdeServiceUtil.paatteleYhdenPaikanSaanto(ypsHakukohde, ypsHakuOpt, koulutus, paateltyAlkamiskausi)
+
+  def eiYps(syy: String): YhdenPaikanSaanto = YhdenPaikanSaanto(voimassa = false, syy = syy)
+
+  "paatteleYhdenPaikanSaanto" should "be voimassa for julkaistu tutkintoon johtava korkeakoulutus without kohdejoukon tarkenne" in {
+    paatteleYps() shouldBe HakukohdeServiceUtil.YpsVoimassa
+  }
+
+  it should "be voimassa when haun kohdejoukon tarkenne is blank" in {
+    paatteleYps(ypsHakuOpt = Some(ypsHaku(Some(" ")))) shouldBe HakukohdeServiceUtil.YpsVoimassa
+  }
+
+  it should "be voimassa when alkamiskausi is missing" in {
+    paatteleYps(paateltyAlkamiskausi = None) shouldBe HakukohdeServiceUtil.YpsVoimassa
+  }
+
+  it should "not be voimassa when haku is missing" in {
+    paatteleYps(ypsHakuOpt = None) shouldBe eiYps("Hakukohteen hakua ei löytynyt")
+  }
+
+  it should "not be voimassa when haku is luonnos" in {
+    paatteleYps(ypsHakuOpt = Some(ypsHaku(None).copy(tila = Tallennettu))) shouldBe eiYps("Haku on luonnos tilassa")
+  }
+
+  it should "not be voimassa when hakukohde is luonnos" in {
+    paatteleYps(ypsHakukohde = hakukohde(None).copy(tila = Tallennettu)) shouldBe eiYps("Hakukohde on luonnos tilassa")
+  }
+
+  it should "not be voimassa when koulutus is not korkeakoulutus" in {
+    paatteleYps(koulutus = Some(AmmKoulutus)) shouldBe eiYps("Ei korkeakoulutus koulutusta")
+  }
+
+  it should "not be voimassa when koulutus is missing" in {
+    paatteleYps(koulutus = None) shouldBe eiYps("Ei korkeakoulutus koulutusta")
+  }
+
+  it should "not be voimassa when koulutus does not johtaa tutkintoon" in {
+    paatteleYps(koulutus = Some(YoKoulutus.copy(johtaaTutkintoon = false))) shouldBe
+      eiYps("Ei tutkintoon johtavaa koulutusta")
+  }
+
+  it should "not be voimassa when alkamiskausi is before autumn 2016" in {
+    paatteleYps(paateltyAlkamiskausi = alkamiskausi("kausi_s#1", "2015")) shouldBe
+      eiYps("Koulutuksen alkamiskausi on ennen syksyä 2016")
+    paatteleYps(paateltyAlkamiskausi = alkamiskausi("kausi_k#1", "2016")) shouldBe
+      eiYps("Koulutuksen alkamiskausi on ennen syksyä 2016")
+  }
+
+  it should "be voimassa when alkamiskausi is autumn 2016" in {
+    paatteleYps(paateltyAlkamiskausi = alkamiskausi("kausi_s#1", "2016")) shouldBe HakukohdeServiceUtil.YpsVoimassa
+  }
+
+  it should "be voimassa for jatkotutkintohaku, Erasmus Mundus and hakemusmaksullinen kaksoistutkinto" in {
+    for (tarkenne <- Seq("haunkohdejoukontarkenne_3#1", "haunkohdejoukontarkenne_010#1", "haunkohdejoukontarkenne_11#1")) {
+      withClue(tarkenne) {
+        paatteleYps(ypsHakuOpt = Some(ypsHaku(Some(tarkenne)))) shouldBe HakukohdeServiceUtil.YpsVoimassa
+      }
+    }
+  }
+
+  it should "not be voimassa for other kohdejoukon tarkenne, e.g. Högskolan på Åland" in {
+    paatteleYps(ypsHakuOpt = Some(ypsHaku(Some("haunkohdejoukontarkenne_12#1")))) shouldBe
+      eiYps("Haun kohdejoukon tarkenne on haunkohdejoukontarkenne_12#1")
+    paatteleYps(ypsHakuOpt = Some(ypsHaku(Some("haunkohdejoukontarkenne_1#1")))) shouldBe
+      eiYps("Haun kohdejoukon tarkenne on haunkohdejoukontarkenne_1#1")
   }
 }

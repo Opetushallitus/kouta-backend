@@ -442,6 +442,17 @@ package object hakukohde {
       |          example:
       |            - kansallinenkoulutusluokitus2016koulutusastetaso1_7
       |            - kansallinenkoulutusluokitus2016koulutusastetaso2_72
+      |        yhdenPaikanSaanto:
+      |          type: object
+      |          description: Kuuluuko hakukohde yhden paikan säännön (YPS) piiriin
+      |          properties:
+      |            voimassa:
+      |              type: boolean
+      |              description: Onko yhden paikan sääntö voimassa hakukohteelle
+      |            syy:
+      |              type: string
+      |              description: Syy, miksi yhden paikan sääntö on tai ei ole voimassa
+      |              example: Hakukohde on yhden paikan säännön piirissä
       |""".stripMargin
 
   def models: Seq[String] = List(
@@ -562,7 +573,10 @@ case class HakukohdeEnrichedData(
                                   paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
                                   paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
                                   johtaaTutkintoon: Option[Boolean] = None,
-                                  koulutusasteKoodiUrit: Seq[String] = Seq())
+                                  koulutusasteKoodiUrit: Seq[String] = Seq(),
+                                  yhdenPaikanSaanto: Option[YhdenPaikanSaanto] = None)
+
+case class YhdenPaikanSaanto(voimassa: Boolean, syy: String)
 
 case class PaateltyAlkamiskausi(
     alkamiskausityyppi: Alkamiskausityyppi,

@@ -7,15 +7,19 @@ import fi.oph.kouta.domain.{
   HenkilökohtainenSuunnitelma,
   KoulutuksenAlkamiskausi,
   Koulutus,
+  Koulutustyyppi,
   PaateltyAlkamisajankohta,
   PaateltyAlkamiskausi,
+  Tallennettu,
   TarkkaAlkamisajankohta,
   Toteutus,
   ToteutusMetadata,
-  TuvaToteutusMetadata
+  TuvaToteutusMetadata,
+  YhdenPaikanSaanto
 }
 
 import java.time.format.DateTimeFormatter
+import scala.util.Try
 
 object HakukohdeServiceUtil {
   def getJarjestetaanErityisopetuksena(toteutuksenMetadata: ToteutusMetadata): Boolean = {
@@ -86,6 +90,52 @@ object HakukohdeServiceUtil {
   // Vastaa aiempaa kouta-indeksoijan logiikkaa (johtaa-tutkintoon?).
   def paatteleJohtaaTutkintoon(koulutus: Option[Koulutus]): Option[Boolean] =
     koulutus.map(_.johtaaTutkintoon)
+
+  // Haun kohdejoukon tarkenteet, joilla haun hakukohteet voivat kuulua yhden paikan säännön piiriin.
+  // Muut tarkenteet (esim. Högskolan på Åland) rajaavat hakukohteet yhden paikan säännön ulkopuolelle.
+  private val YpsKohdejoukonTarkenteet: Seq[String] = Seq(
+    "haunkohdejoukontarkenne_3#",   // jatkotutkintohaku
+    "haunkohdejoukontarkenne_010#", // Erasmus Mundus
+    "haunkohdejoukontarkenne_11#"   // hakemusmaksulliset kv-kaksoistutkinto-ohjelmat
+  )
+
+  val YpsVoimassa: YhdenPaikanSaanto = YhdenPaikanSaanto(voimassa = true, syy = "Hakukohde on yhden paikan säännön piirissä")
+
+  private def eiYps(syy: String): YhdenPaikanSaanto = YhdenPaikanSaanto(voimassa = false, syy = syy)
+
+  // Päätellään, kuuluuko hakukohde yhden paikan säännön (YPS) piiriin.
+  // Vastaa aiempaa kouta-indeksoijan logiikkaa (assoc-yps).
+  def paatteleYhdenPaikanSaanto(
+      hakukohde: Hakukohde,
+      haku: Option[Haku],
+      koulutus: Option[Koulutus],
+      paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
+  ): YhdenPaikanSaanto = {
+    val kohdejoukonTarkenne = haku.flatMap(_.kohdejoukonTarkenneKoodiUri).filter(_.trim.nonEmpty)
+    if (haku.isEmpty)
+      eiYps("Hakukohteen hakua ei löytynyt")
+    else if (haku.exists(_.tila == Tallennettu))
+      eiYps("Haku on luonnos tilassa")
+    else if (hakukohde.tila == Tallennettu)
+      eiYps("Hakukohde on luonnos tilassa")
+    else if (!koulutus.exists(k => Koulutustyyppi.isKorkeakoulu(k.koulutustyyppi)))
+      eiYps("Ei korkeakoulutus koulutusta")
+    else if (!koulutus.exists(_.johtaaTutkintoon))
+      eiYps("Ei tutkintoon johtavaa koulutusta")
+    else if (alkamiskausiEnnenSyksya2016(paateltyAlkamiskausi))
+      eiYps("Koulutuksen alkamiskausi on ennen syksyä 2016")
+    else
+      kohdejoukonTarkenne match {
+        case Some(tarkenne) if !YpsKohdejoukonTarkenteet.exists(tarkenne.startsWith) =>
+          eiYps(s"Haun kohdejoukon tarkenne on $tarkenne")
+        case _ => YpsVoimassa
+      }
+  }
+
+  private def alkamiskausiEnnenSyksya2016(paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]): Boolean =
+    paateltyAlkamiskausi.exists { ak =>
+      Try(ak.vuosi.trim.toInt).toOption.exists(vuosi => vuosi < 2016 || (vuosi == 2016 && ak.kausiUri.startsWith("kausi_k#")))
+    }
 
   private def parseAlkamiskausi(
       alkamiskausi: Option[KoulutuksenAlkamiskausi],

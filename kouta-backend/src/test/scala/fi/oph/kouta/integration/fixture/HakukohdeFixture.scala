@@ -312,15 +312,32 @@ trait HakukohdeFixture extends SQLHelpers with AccessControlSpec with ToteutusFi
     val toteutus = ToteutusDAO.get(expected.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
     val koulutus =
       toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
-    val hakukohde = expected.copy(oid = Some(HakukohdeOid(oid)))
+    val hakukohde            = expected.copy(oid = Some(HakukohdeOid(oid)))
+    val paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(hakukohde, haku, toteutus)
     expected.copy(_enrichedData =
       expected._enrichedData.map(
         _.copy(
-          paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(hakukohde, haku, toteutus),
+          paateltyAlkamiskausi = paateltyAlkamiskausi,
           paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(hakukohde, haku, toteutus),
-          johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus)
+          johtaaTutkintoon = HakukohdeServiceUtil.paatteleJohtaaTutkintoon(koulutus),
+          yhdenPaikanSaanto =
+            Some(HakukohdeServiceUtil.paatteleYhdenPaikanSaanto(hakukohde, haku, koulutus, paateltyAlkamiskausi))
         )
       )
+    )
+  }
+
+  // Yhden paikan säännön päättely hakukohteelle kannassa olevien haun, toteutuksen ja koulutuksen perusteella
+  def paatteleYhdenPaikanSaanto(hakukohde: Hakukohde): YhdenPaikanSaanto = {
+    val haku     = HakuDAO.get(hakukohde.hakuOid, TilaFilter.all()).map(_._1)
+    val toteutus = ToteutusDAO.get(hakukohde.toteutusOid, TilaFilter.onlyOlemassaolevat()).map(_._1)
+    val koulutus =
+      toteutus.flatMap(t => KoulutusDAO.get(t.koulutusOid, TilaFilter.onlyOlemassaolevat())).map(_._1)
+    HakukohdeServiceUtil.paatteleYhdenPaikanSaanto(
+      hakukohde,
+      haku,
+      koulutus,
+      HakukohdeServiceUtil.paatteleAlkamiskausi(hakukohde, haku, toteutus)
     )
   }
 

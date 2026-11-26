@@ -228,14 +228,16 @@ trait ExternalFixture
   }
 
   // External-testien hakukohteella on aina oma alkamiskausi ja koulutuksena yoKoulutus,
-  // joten päätellyt tiedot ovat vakioita eikä niitä tarvitse hakea kannasta.
+  // joten päätellyt tiedot ovat vakioita eikä niitä tarvitse hakea kannasta. Yhden paikan sääntö
+  // riippuu myös haun tiedoista, joten se päätellään kannassa olevan haun perusteella.
   private def withExternalPaatellytTiedot(expected: Hakukohde): Hakukohde =
     expected.copy(_enrichedData =
       expected._enrichedData.map(
         _.copy(
           paateltyAlkamiskausi = HakukohdeServiceUtil.paatteleAlkamiskausi(expected, None, None),
           paateltyAlkamisajankohta = HakukohdeServiceUtil.paatteleAlkamisajankohta(expected, None, None),
-          johtaaTutkintoon = Some(true)
+          johtaaTutkintoon = Some(true),
+          yhdenPaikanSaanto = Some(paatteleYhdenPaikanSaanto(expected))
         )
       )
     )
