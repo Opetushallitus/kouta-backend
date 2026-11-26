@@ -24,6 +24,7 @@ class YosService (
   val erasmusMundusTaiKaksoisTutkintoKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_010"
   val hakemusmaksullinenKaksoistutkintoKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_11"
   val jatkotutkintoKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_3"
+  val ahvenanmaaKohdejoukonTarkenneUri = "haunkohdejoukontarkenne_12"
 
   def kuuluukoHakukohdeYossinpiiriin(haku: Option[Haku], hakukohde: Hakukohde, paateltyAlkamiskausi: Option[PaateltyAlkamiskausi], johtaaTutkintoon: Option[Boolean], koulutusasteKoodiUrit: Seq[String]): Boolean = {
     try {
@@ -101,7 +102,8 @@ class YosService (
   def isErasmusMundusTaiKaksoistutkinto(haku: Haku): Boolean = {
     val kohdejoukkoPrefix = haku.kohdejoukonTarkenneKoodiUri.flatMap(_.split("#").headOption).getOrElse("")
     kohdejoukkoPrefix.equals(erasmusMundusTaiKaksoisTutkintoKohdejoukonTarkenneUri) ||
-      kohdejoukkoPrefix.equals(hakemusmaksullinenKaksoistutkintoKohdejoukonTarkenneUri)
+      kohdejoukkoPrefix.equals(hakemusmaksullinenKaksoistutkintoKohdejoukonTarkenneUri) ||
+      kohdejoukkoPrefix.equals(ahvenanmaaKohdejoukonTarkenneUri)
   }
 
   def isJatkotutkinto(haku: Haku): Boolean = {

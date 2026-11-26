@@ -193,6 +193,12 @@ class YosServiceSpec extends AnyFlatSpec with Matchers with BeforeAndAfterEach w
     ) shouldBe false
   }
 
+  it should "return false for Högskolan på Åland haku" in {
+    kuuluukoYosPiiriin(haku =
+      Some(HakuJokaKuuluuYosPiiriin.copy(kohdejoukonTarkenneKoodiUri = Some("haunkohdejoukontarkenne_12#1")))
+    ) shouldBe false
+  }
+
   it should "return false when koulutusaste does not kuulu YOS piiriin" in {
     kuuluukoYosPiiriin(koulutusasteKoodiUrit = Seq("kansallinenkoulutusluokitus2016koulutusastetaso2_82")) shouldBe false
   }
