@@ -4,7 +4,7 @@ import fi.oph.kouta.client.{OppijanumerorekisteriClient, SiirtotiedostoPalveluCl
 import fi.oph.kouta.config.KoutaConfigurationFactory
 import fi.oph.kouta.domain.oid.UserOid
 import fi.oph.kouta.domain.siirtotiedosto._
-import fi.oph.kouta.domain.{KoulutuksenAlkamiskausi, LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
+import fi.oph.kouta.domain.{KoulutuksenAlkamiskausi, LukioToteutusNimenOsat, LukiolinjaTieto, TilaFilter, ToteutusEnrichmentSourceData, keyword}
 import fi.oph.kouta.repository.{SiirtotiedostoDAO, SiirtotiedostoRaportointiDAO}
 import fi.oph.kouta.util.{HakukohdeServiceUtil, NameHelper}
 
@@ -103,33 +103,14 @@ class SiirtotiedostoService(
       LukiolinjaTieto(l.koodiUri, l.kuvaus)
     )
 
-  private def toteutusEnrichmentSourceData(t: ToteutusRaporttiItem, k: Option[KoulutusEnrichmentData]) = {
-    val m = t.lukioToteutusMetadata()
-    (k, m) match {
-      case (Some(k), Some(m)) =>
-        ToteutusEnrichmentSourceData(
-          t.nimi,
-          k.koulutuksetKoodiUri,
-          t.muokkaaja.get,
-          isLukioToteutus = true,
-          lukioLinjat(m),
-          m.yleislinja,
-          k.opintojenLaajuusNumero()
-        )
-      case (Some(k), _) => ToteutusEnrichmentSourceData(t.nimi, k.koulutuksetKoodiUri, t.muokkaaja.get)
-      case (_, Some(m)) =>
-        ToteutusEnrichmentSourceData(
-          t.nimi,
-          Seq(),
-          t.muokkaaja.get,
-          isLukioToteutus = true,
-          lukioLinjat(m),
-          m.yleislinja,
-          None
-        )
-      case (_, _) => ToteutusEnrichmentSourceData(t.nimi, Seq(), t.muokkaaja.get)
-    }
-  }
+  private def toteutusEnrichmentSourceData(t: ToteutusRaporttiItem, k: Option[KoulutusEnrichmentData]) =
+    ToteutusEnrichmentSourceData.build(
+      t.nimi,
+      k.map(_.koulutuksetKoodiUri).getOrElse(Seq()),
+      t.muokkaaja.get,
+      k.flatMap(_.metadata),
+      t.lukioToteutusMetadata().map(m => LukioToteutusNimenOsat(lukioLinjat(m), m.yleislinja))
+    )
 
   def saveHakukohteet(
       operationId: UUID,

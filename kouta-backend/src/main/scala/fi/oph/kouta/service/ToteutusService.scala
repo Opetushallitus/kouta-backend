@@ -212,23 +212,19 @@ class ToteutusService(
     }
   }
 
-  def toteutusEnrichmentSourceData(t: Toteutus): ToteutusEnrichmentSourceData = (t.metadata, t.koulutusMetadata) match {
-    case (Some(toteutusMetadata), Some(koulutusMetadata)) =>
-      (toteutusMetadata, koulutusMetadata) match {
-        case (lukioToteutusMetadata: LukioToteutusMetadata, lukioKoulutusMetadata: LukioKoulutusMetadata) =>
-          ToteutusEnrichmentSourceData(
-            t.nimi,
-            t.koulutuksetKoodiUri,
-            t.muokkaaja,
-            isLukioToteutus = true,
-            lukioToteutusMetadata.painotukset ++ lukioToteutusMetadata.erityisetKoulutustehtavat,
-            lukioToteutusMetadata.yleislinja,
-            lukioKoulutusMetadata.opintojenLaajuusNumero
-          )
-        case _ => ToteutusEnrichmentSourceData(t.nimi, t.koulutuksetKoodiUri, t.muokkaaja)
+  def toteutusEnrichmentSourceData(t: Toteutus): ToteutusEnrichmentSourceData =
+    ToteutusEnrichmentSourceData.build(
+      t.nimi,
+      t.koulutuksetKoodiUri,
+      t.muokkaaja,
+      t.koulutusMetadata,
+      t.metadata.collect { case lukioToteutusMetadata: LukioToteutusMetadata =>
+        LukioToteutusNimenOsat(
+          lukioToteutusMetadata.painotukset ++ lukioToteutusMetadata.erityisetKoulutustehtavat,
+          lukioToteutusMetadata.yleislinja
+        )
       }
-    case _ => ToteutusEnrichmentSourceData(t.nimi, t.koulutuksetKoodiUri, t.muokkaaja)
-  }
+    )
 
   def enrichToteutus(source: ToteutusEnrichmentSourceData): ToteutusEnrichedData = {
     val esitysnimi     = generateToteutusEsitysnimi(source)
