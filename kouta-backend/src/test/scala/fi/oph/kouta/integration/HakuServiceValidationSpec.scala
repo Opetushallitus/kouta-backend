@@ -314,31 +314,29 @@ class HakuServiceValidationSpec extends BaseServiceValidationSpec[Haku] {
     )
   }
 
-  it should "fail when koulutuksenAlkamiskausi not in future" in {
-    val alkaa        = inPast(1000)
-    val paattyy      = inPast(500)
-    val alkamisvuosi = "2020"
+  it should "succeed when koulutuksenAlkamiskausi in the past" in {
     val alkamiskausi = Some(
       maxMetadata.koulutuksenAlkamiskausi.get.copy(
-        koulutuksenAlkamisvuosi = Some(alkamisvuosi),
-        koulutuksenAlkamispaivamaara = Some(alkaa),
-        koulutuksenPaattymispaivamaara = Some(paattyy)
+        koulutuksenAlkamisvuosi = Some("2020"),
+        koulutuksenAlkamispaivamaara = Some(inPast(1000)),
+        koulutuksenPaattymispaivamaara = Some(inPast(500))
       )
     )
+    passesValidation(max.copy(metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = alkamiskausi))))
+  }
 
-    failsValidation(
-      max.copy(metadata =
-        Some(
-          maxMetadata.copy(
-            koulutuksenAlkamiskausi = alkamiskausi
-          )
-        )
-      ),
-      Seq(
-        ValidationError("metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi", pastDateMsg(alkamisvuosi)),
-        ValidationError("metadata.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(alkaa)),
-        ValidationError("metadata.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(paattyy))
+  it should "fail when koulutuksenAlkamiskausi in the past and end before start" in {
+    val alkamiskausi = Some(
+      maxMetadata.koulutuksenAlkamiskausi.get.copy(
+        koulutuksenAlkamisvuosi = Some("2020"),
+        koulutuksenAlkamispaivamaara = Some(inPast(500)),
+        koulutuksenPaattymispaivamaara = Some(inPast(1000))
       )
+    )
+    failsValidation(
+      max.copy(metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = alkamiskausi))),
+      "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara",
+      InvalidKoulutuspaivamaarat
     )
   }
 

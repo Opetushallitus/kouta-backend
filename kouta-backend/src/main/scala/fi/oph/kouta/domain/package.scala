@@ -1448,7 +1448,7 @@ package object domain {
       koulutuksenPaattymispaivamaara: Option[LocalDateTime] = None,
       koulutuksenAlkamiskausiKoodiUri: Option[String] = None,
       koulutuksenAlkamisvuosi: Option[String] = None
-  ) extends JulkaisuValidatableSubEntity {
+  ) {
     def validate(
         path: String,
         entityWithNewValues: Option[KoulutuksenAlkamiskausi],
@@ -1499,22 +1499,6 @@ package object domain {
           )
         )
       )
-
-    override def validateOnJulkaisu(path: String): IsValid = and(
-      validateIfDefined[String](
-        koulutuksenAlkamisvuosi,
-        v => assertAlkamisvuosiInFuture(v, s"$path.koulutuksenAlkamisvuosi")
-      ),
-      validateIfDefined[LocalDateTime](
-        koulutuksenAlkamispaivamaara,
-        assertInFuture(_, s"$path.koulutuksenAlkamispaivamaara")
-      ),
-      validateIfDefined[LocalDateTime](
-        koulutuksenPaattymispaivamaara,
-        assertInFuture(_, s"$path.koulutuksenPaattymispaivamaara")
-      )
-    )
-
   }
 
   case class ListEverything(

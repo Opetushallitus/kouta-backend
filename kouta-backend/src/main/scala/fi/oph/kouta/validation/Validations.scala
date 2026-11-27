@@ -11,7 +11,7 @@ import fi.oph.kouta.validation.ExternalQueryResults.{ExternalQueryResult, itemFo
 import org.apache.commons.validator.routines.{EmailValidator, UrlValidator}
 
 import java.time.temporal.ChronoUnit
-import java.time.{LocalDate, LocalDateTime}
+import java.time.LocalDateTime
 import java.util.UUID
 import java.util.regex.Pattern
 
@@ -719,9 +719,6 @@ object Validations {
       path: String
   ): IsValid =
     if (other.isEmpty && value.nonEmpty) error(path, notEmptyAlthoughOtherEmptyMsg(otherField)) else NoErrors
-  def assertAlkamisvuosiInFuture(alkamisvuosi: String, path: String): IsValid =
-    assertTrue(LocalDate.now().getYear <= Integer.parseInt(alkamisvuosi), path, pastDateMsg(alkamisvuosi))
-
   def assertValidUrl(url: String, path: String): IsValid = assertTrue(urlValidator.isValid(url), path, invalidUrl(url))
   def assertValidEmail(email: String, path: String): IsValid =
     assertTrue(emailValidator.isValid(email), path, invalidEmail(email))

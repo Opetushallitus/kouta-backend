@@ -892,16 +892,10 @@ class HakukohdeServiceValidation(
       validateIfDefined[HakukohdeMetadata](
         hk.metadata,
         metadata =>
-          and(
-            validateIfDefined[KoulutuksenAlkamiskausi](
-              metadata.koulutuksenAlkamiskausi,
-              _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
-            ),
-            validateIfNonEmpty[ValintakokeenLisatilaisuudet](
-              metadata.valintaperusteenValintakokeidenLisatilaisuudet,
-              "metadata.valintaperusteenValintakokeidenLisatilaisuudet",
-              _.validateOnJulkaisu(_)
-            )
+          validateIfNonEmpty[ValintakokeenLisatilaisuudet](
+            metadata.valintaperusteenValintakokeidenLisatilaisuudet,
+            "metadata.valintaperusteenValintakokeidenLisatilaisuudet",
+            _.validateOnJulkaisu(_)
           )
       )
     )
