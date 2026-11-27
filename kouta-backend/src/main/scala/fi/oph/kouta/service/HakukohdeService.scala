@@ -97,6 +97,7 @@ class HakukohdeService(
           johtaaTutkintoon,
           koulutusasteKoodiUrit
         )
+        val yhdenPaikanSaanto = HakukohdeServiceUtil.paatteleYhdenPaikanSaanto(h, haku, koulutus, paateltyAlkamiskausi)
         Some(
           h.copy(_enrichedData =
             Some(
@@ -107,7 +108,8 @@ class HakukohdeService(
                   paateltyAlkamiskausi = paateltyAlkamiskausi,
                   paateltyAlkamisajankohta = paateltyAlkamisajankohta,
                   johtaaTutkintoon = johtaaTutkintoon,
-                  koulutusasteKoodiUrit = koulutusasteKoodiUrit
+                  koulutusasteKoodiUrit = koulutusasteKoodiUrit,
+                  yhdenPaikanSaanto = Some(yhdenPaikanSaanto)
                 )
             )
           ),

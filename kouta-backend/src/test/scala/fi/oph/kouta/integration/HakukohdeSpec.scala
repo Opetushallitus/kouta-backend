@@ -1113,4 +1113,36 @@ class HakukohdeSpec
     enrichedData.koulutusasteKoodiUrit should equal(Seq(KorkeakoulutusAste, YlempiKorkeakoulututkintoAste))
     enrichedData.kuuluuYosinPiiriin should equal(false)
   }
+
+  // YPS-päättelyn säännöt testataan HakukohdeServiceUtilSpecissä, tässä varmistetaan että tieto palautuu
+  // hakukohteen _enrichedDatassa.
+  def ypsHakuOid(kohdejoukonTarkenne: Option[String]): String =
+    put(
+      haku.copy(kohdejoukkoKoodiUri = Some("haunkohdejoukko_12#1"), kohdejoukonTarkenneKoodiUri = kohdejoukonTarkenne),
+      ophSession
+    )
+
+  "YPS-päättely" should "mark a julkaistu hakukohde in a korkeakouluhaku without kohdejoukon tarkenne as yhdenPaikanSaanto voimassa" in {
+    val oid = put(yosHakukohde(Julkaistu).copy(hakuOid = HakuOid(ypsHakuOid(None))), ophSession)
+    getEnrichedData(oid).yhdenPaikanSaanto should equal(
+      Some(YhdenPaikanSaanto(voimassa = true, syy = "Hakukohde on yhden paikan säännön piirissä"))
+    )
+  }
+
+  it should "not mark a hakukohde in a haku with other than YPS kohdejoukon tarkenne as yhdenPaikanSaanto voimassa" in {
+    val oid = put(
+      yosHakukohde(Julkaistu).copy(hakuOid = HakuOid(ypsHakuOid(Some("haunkohdejoukontarkenne_1#1")))),
+      ophSession
+    )
+    getEnrichedData(oid).yhdenPaikanSaanto should equal(
+      Some(YhdenPaikanSaanto(voimassa = false, syy = "Haun kohdejoukon tarkenne on haunkohdejoukontarkenne_1#1"))
+    )
+  }
+
+  it should "not mark a tallennettu hakukohde as yhdenPaikanSaanto voimassa" in {
+    val oid = put(yosHakukohde(Tallennettu).copy(hakuOid = HakuOid(ypsHakuOid(None))), ophSession)
+    getEnrichedData(oid).yhdenPaikanSaanto should equal(
+      Some(YhdenPaikanSaanto(voimassa = false, syy = "Hakukohde on luonnos tilassa"))
+    )
+  }
 }

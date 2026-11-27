@@ -127,8 +127,8 @@ class SiirtotiedostoSpec extends KoutaIntegrationSpec with SiirtotiedostoFixture
           raporttiItem \ "enrichedData" \ field should equal(apiEnrichedData \ field)
         }
       }
-      // YOS-tiedot palautetaan rajapinnassa, mutta niitä ei viedä siirtotiedostoon
-      for (field <- Seq("kuuluuYosinPiiriin", "koulutusasteKoodiUrit")) {
+      // YOS- ja YPS-tiedot palautetaan rajapinnassa, mutta niitä ei viedä siirtotiedostoon
+      for (field <- Seq("kuuluuYosinPiiriin", "koulutusasteKoodiUrit", "yhdenPaikanSaanto")) {
         withClue(field) {
           apiEnrichedData \ field should not equal JNothing
           raporttiItem \ "enrichedData" \ field should equal(JNothing)
