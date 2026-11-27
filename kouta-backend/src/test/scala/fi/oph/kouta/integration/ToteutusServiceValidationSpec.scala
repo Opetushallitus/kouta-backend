@@ -2543,39 +2543,43 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
     )
   }
 
-  "Julkaisu" should "fail when changing state to julkaistu and invalid koulutuksen alkamiskausi" in {
+  "Julkaisu" should "succeed when changing state to julkaistu and koulutuksen alkamiskausi in the past" in {
     val yearAgo   = LocalDateTime.now().minusYears(1)
     val startDate = yearAgo.minusDays(1)
     val endDate   = yearAgo.plusDays(1)
-    failsStageChangeValidation(
+    passesValidation(
       ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate))
         .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
-      JulkaistuAmmToteutus.copy(tila = Tallennettu),
-      Seq(
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi",
-          pastDateMsg(yearAgo.getYear.toString)
-        ),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(startDate)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(endDate))
-      )
+      JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
 
-  it should "fail when new julkaistu toteutus with invalid koulutuksen alkamiskausi" in {
+  it should "succeed when new julkaistu toteutus with koulutuksen alkamiskausi in the past" in {
     val yearAgo   = LocalDateTime.now().minusYears(1)
     val startDate = yearAgo.minusDays(1)
     val endDate   = yearAgo.plusDays(1)
-    failsValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)),
-      Seq(
-        ValidationError(
-          "metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi",
-          pastDateMsg(yearAgo.getYear.toString)
-        ),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara", pastDateMsg(startDate)),
-        ValidationError("metadata.opetus.koulutuksenAlkamiskausi.koulutuksenPaattymispaivamaara", pastDateMsg(endDate))
-      )
+    passesValidation(ammToteutusWithKoulutuksenAlkamiskausi(Some(startDate), Some(endDate)))
+  }
+
+  it should "succeed when changing state to julkaistu and koulutuksen alkamisvuosi in the past without dates" in {
+    passesValidation(
+      ammToteutusWithKoulutuksenAlkamiskausi(
+        None,
+        None,
+        startYear = Some(LocalDateTime.now().minusYears(1).getYear.toString)
+      ).copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
+      JulkaistuAmmToteutus.copy(tila = Tallennettu)
+    )
+  }
+
+  it should "succeed when changing state to julkaistu and only koulutuksen paattymispaivamaara given in the past" in {
+    passesValidation(
+      ammToteutusWithKoulutuksenAlkamiskausi(
+        None,
+        Some(LocalDateTime.now().minusYears(1)),
+        startYear = Some(LocalDateTime.now().getYear.toString)
+      ).copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
+      JulkaistuAmmToteutus.copy(tila = Tallennettu)
     )
   }
 
@@ -2584,22 +2588,6 @@ class ToteutusServiceValidationSpec extends BaseServiceValidationSpec[Toteutus] 
       ammToteutusWithKoulutuksenAlkamiskausi(None, None, startYear = Some(LocalDateTime.now().getYear.toString))
         .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
       JulkaistuAmmToteutus.copy(tila = Tallennettu)
-    )
-  }
-
-  it should "succeed when modifying already julkaistu toteutus" in {
-    passesValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(Some(inPast(2000)), Some(inPast(1000)))
-        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
-      JulkaistuAmmToteutus
-    )
-  }
-
-  it should "succeed when state changes from arkistoitu to julkaistu, eventhough timestamps not in future" in {
-    passesValidation(
-      ammToteutusWithKoulutuksenAlkamiskausi(Some(inPast(2000)), Some(inPast(1000)))
-        .copy(oid = Some(ToteutusOid("1.2.246.562.17.00000000000000000123"))),
-      JulkaistuAmmToteutus.copy(tila = Arkistoitu)
     )
   }
 

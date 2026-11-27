@@ -42,15 +42,6 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
       case errors   => errors should contain theSameElementsAs expected
     }
 
-  def failsValidationOnJulkaisu(
-      e: KoulutuksenAlkamiskausi,
-      expected: Seq[ValidationError]
-  ): Assertion =
-    e.validateOnJulkaisu("path") match {
-      case NoErrors => fail("Expecting validation failure, but it succeeded")
-      case errors   => errors should contain theSameElementsAs expected
-    }
-
   "KoulutuksenAlkamiskausi validation" should "Succeed if alkamiskausiKoodiUri not changed in modify operation" in {
     KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
@@ -126,30 +117,19 @@ class CommonServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach wi
     )
   }
 
-  it should "fail if alkamiskausi not in future in julkaistu KoulutuksenAlkamiskausi" in {
+  it should "succeed if alkamiskausi in the past in julkaistu KoulutuksenAlkamiskausi" in {
     val inPastJakso = KoulutuksenAlkamiskausi(
       alkamiskausityyppi = Some(TarkkaAlkamisajankohta),
       koulutuksenAlkamispaivamaara = Some(inPast(1000)),
       koulutuksenPaattymispaivamaara = Some(inPast(500)),
       koulutuksenAlkamisvuosi = Some("2020")
     )
-    failsValidationOnJulkaisu(
-      inPastJakso,
-      Seq(
-        ValidationError(
-          "path.koulutuksenAlkamisvuosi",
-          pastDateMsg(inPastJakso.koulutuksenAlkamisvuosi.get)
-        ),
-        ValidationError(
-          "path.koulutuksenAlkamispaivamaara",
-          pastDateMsg(inPastJakso.koulutuksenAlkamispaivamaara.get)
-        ),
-        ValidationError(
-          "path.koulutuksenPaattymispaivamaara",
-          pastDateMsg(inPastJakso.koulutuksenPaattymispaivamaara.get)
-        )
-      )
-    )
+    inPastJakso.validate(
+      "path",
+      Some(inPastJakso),
+      ValidationContext(Julkaistu, kielet, create),
+      koodistoService.koodiUriExistsInKoodisto(KausiKoodisto, _)
+    ) should equal(NoErrors)
   }
 
   def failsValidation(e: Lisatieto, tila: Julkaisutila, expected: Seq[ValidationError]): Assertion =

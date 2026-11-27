@@ -849,13 +849,6 @@ class ToteutusServiceValidation(
       validateTutkintoonJohtamatonMetadata(vCtx, m)
     )
 
-  override def validateEntityOnJulkaisu(toteutus: Toteutus): IsValid =
-    toteutus.metadata
-      .flatMap(_.opetus)
-      .flatMap(_.koulutuksenAlkamiskausi)
-      .map(_.validateOnJulkaisu("metadata.opetus.koulutuksenAlkamiskausi"))
-      .getOrElse(NoErrors)
-
   override def validateInternalDependenciesWhenDeletingEntity(toteutus: Toteutus): IsValid = assertTrue(
     hakukohdeDAO.listByToteutusOid(toteutus.oid.get, TilaFilter.onlyOlemassaolevat()).isEmpty,
     "tila",

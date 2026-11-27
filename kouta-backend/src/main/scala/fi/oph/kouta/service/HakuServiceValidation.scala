@@ -194,16 +194,10 @@ class HakuServiceValidation(
       validateIfDefined[HakuMetadata](
         haku.metadata,
         m =>
-          and(
-            validateIfNonEmpty[Ajanjakso](
-              m.tulevaisuudenAikataulu,
-              "metadata.tulevaisuudenAikataulu",
-              _.validateOnJulkaisu(_)
-            ),
-            validateIfDefined[KoulutuksenAlkamiskausi](
-              m.koulutuksenAlkamiskausi,
-              _.validateOnJulkaisu("metadata.koulutuksenAlkamiskausi")
-            )
+          validateIfNonEmpty[Ajanjakso](
+            m.tulevaisuudenAikataulu,
+            "metadata.tulevaisuudenAikataulu",
+            _.validateOnJulkaisu(_)
           )
       )
     )

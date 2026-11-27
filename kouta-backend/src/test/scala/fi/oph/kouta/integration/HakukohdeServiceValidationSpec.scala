@@ -1622,12 +1622,25 @@ class HakukohdeServiceValidationSpec extends AnyFlatSpec with BeforeAndAfterEach
     )
   }
 
-  it should "fail if koulutuksenAlkamiskausi not in future" in {
-    val metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = Some(inPastKoulutuksenAlkamiskausi)))
+  it should "succeed if koulutuksenAlkamiskausi in the past" in {
+    val alkamiskausi = inPastKoulutuksenAlkamiskausi.copy(
+      koulutuksenAlkamispaivamaara = Some(inPast(1000)),
+      koulutuksenPaattymispaivamaara = Some(inPast(500))
+    )
+    val metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi)))
+    passesValidation(initMockSeq(max.copy(metadata = metadata)))
+  }
+
+  it should "fail if koulutuksenAlkamiskausi in the past and end before start" in {
+    val alkamiskausi = inPastKoulutuksenAlkamiskausi.copy(
+      koulutuksenAlkamispaivamaara = Some(inPast(500)),
+      koulutuksenPaattymispaivamaara = Some(inPast(1000))
+    )
+    val metadata = Some(maxMetadata.copy(koulutuksenAlkamiskausi = Some(alkamiskausi)))
     failsValidation(
       initMockSeq(max.copy(metadata = metadata)),
-      "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamisvuosi",
-      pastDateMsg(inPastKoulutuksenAlkamiskausi.koulutuksenAlkamisvuosi.get)
+      "metadata.koulutuksenAlkamiskausi.koulutuksenAlkamispaivamaara",
+      InvalidKoulutuspaivamaarat
     )
   }
 
