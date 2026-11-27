@@ -1,6 +1,6 @@
 package fi.oph.kouta.domain.siirtotiedosto
 
-import fi.oph.kouta.domain.{Ajanjakso, Aloituspaikat, HakukohdeEnrichedData, Hakulomaketyyppi, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, LiitteenToimitustapa, Modified, Osoite, PaateltyAlkamisajankohta, PaateltyAlkamiskausi, Tallennettu, ValintakokeenLisatilaisuudet}
+import fi.oph.kouta.domain.{Ajanjakso, Aloituspaikat, HakukohdeEnrichedData, Hakulomaketyyppi, Julkaisutila, Kieli, Kielistetty, KoulutuksenAlkamiskausi, LiitteenToimitustapa, Modified, Osoite, PaateltyAlkamisajankohta, PaateltyAlkamiskausi, Tallennettu, ValintakokeenLisatilaisuudet, YhdenPaikanSaanto}
 import fi.oph.kouta.domain.oid.{HakuOid, HakukohdeOid, OrganisaatioOid, ToteutusOid, UserOid}
 
 import java.time.LocalDateTime
@@ -11,14 +11,16 @@ case class HakukohdeEnrichedDataRaporttiItem(
     muokkaajanNimi: Option[String] = None,
     paateltyAlkamiskausi: Option[PaateltyAlkamiskausi] = None,
     paateltyAlkamisajankohta: Option[PaateltyAlkamisajankohta] = None,
-    johtaaTutkintoon: Option[Boolean] = None
+    johtaaTutkintoon: Option[Boolean] = None,
+    yhdenPaikanSaanto: Option[YhdenPaikanSaanto] = None
 ) {
   def this(e: HakukohdeEnrichedData) = this(
     e.esitysnimi,
     e.muokkaajanNimi,
     e.paateltyAlkamiskausi,
     e.paateltyAlkamisajankohta,
-    e.johtaaTutkintoon
+    e.johtaaTutkintoon,
+    e.yhdenPaikanSaanto
   )
 }
 

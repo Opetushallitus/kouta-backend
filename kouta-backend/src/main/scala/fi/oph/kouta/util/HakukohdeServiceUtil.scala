@@ -5,6 +5,7 @@ import fi.oph.kouta.domain.{
   Haku,
   Hakukohde,
   HenkilökohtainenSuunnitelma,
+  Julkaisutila,
   KoulutuksenAlkamiskausi,
   Koulutus,
   Koulutustyyppi,
@@ -110,13 +111,21 @@ object HakukohdeServiceUtil {
       haku: Option[Haku],
       koulutus: Option[Koulutus],
       paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
+  ): YhdenPaikanSaanto =
+    paatteleYhdenPaikanSaanto(hakukohde.tila, haku, koulutus, paateltyAlkamiskausi)
+
+  def paatteleYhdenPaikanSaanto(
+      hakukohteenTila: Julkaisutila,
+      haku: Option[Haku],
+      koulutus: Option[Koulutus],
+      paateltyAlkamiskausi: Option[PaateltyAlkamiskausi]
   ): YhdenPaikanSaanto = {
     val kohdejoukonTarkenne = haku.flatMap(_.kohdejoukonTarkenneKoodiUri).filter(_.trim.nonEmpty)
     if (haku.isEmpty)
       eiYps("Hakukohteen hakua ei löytynyt")
     else if (haku.exists(_.tila == Tallennettu))
       eiYps("Haku on luonnos tilassa")
-    else if (hakukohde.tila == Tallennettu)
+    else if (hakukohteenTila == Tallennettu)
       eiYps("Hakukohde on luonnos tilassa")
     else if (!koulutus.exists(k => Koulutustyyppi.isKorkeakoulu(k.koulutustyyppi)))
       eiYps("Ei korkeakoulutus koulutusta")
